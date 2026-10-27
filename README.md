@@ -51,10 +51,11 @@ npm run dev:fe
 | Method | URL | Chuc nang |
 | --- | --- | --- |
 | GET | `/api/health` | Kiem tra BE va ket noi MongoDB |
+| GET | `/api/homepage` | So xe niem yet, dia diem va chinh sach cong khai dang hieu luc |
 | GET | `/api/listings` | Danh sach tin xe da published va xe da approved |
 | GET | `/api/listings/:id` | Chi tiet tin xe theo listing ObjectId |
 
-Query ho tro: `page`, `limit`, `q` (tim trong tieu de), `minPrice`, `maxPrice`, `fuelType`, `transmission`, `vehicleType`, `seats`, `sort` (`newest`, `price_asc`, `price_desc`).
+Query ho tro: `page`, `limit`, `q` (tim trong tieu de), `city`, `startAt`, `endAt`, `minPrice`, `maxPrice`, `fuelType`, `transmission`, `vehicleType`, `seats`, `sort` (`newest`, `price_asc`, `price_desc`). `startAt` va `endAt` la cap thoi gian ISO; API loai xe trung booking dang cho xu ly/thanh toan, da xac nhan, dang thue hoac khoang lich bi khoa. Ket qua tim kiem khong giu cho; tao booking sau nay can kiem tra lai va chong tranh chap dong thoi.
 
 Vi du: `/api/listings?fuelType=electric&sort=price_asc&page=1&limit=6`.
 
@@ -62,7 +63,13 @@ FE co proxy `/api` den BE khi chay `npm start`; goi `fetch('/api/listings')` tu 
 
 ## Pham vi hien tai
 
-Giu giao dien React hien co; chua chuyen cac mockup HTML trong ZIP thanh React. API hien tai phuc vu buoc dau cho man danh sach/chi tiet xe, chua loc lich trong theo ngay thue. Chua cung cap API ghi du lieu nghiep vu, dang nhap/RBAC, dat xe, thanh toan, eKYC hay ky so. Cac tich hop that se duoc them sau khi chot nha cung cap va tai khoan sandbox.
+Homepage trong `FE/src/pages/HomePage.js` da duoc chuyen sang React theo mau `xedi_trang_ch_thu_xe_t_l_i_p2p`. Header, footer, the xe va dialog duoc tach thanh component. Tim theo dia diem/thoi gian, loc xe, sap xep gia, xem thong tin xe va cong cu uoc tinh thu nhap su dung API/MongoDB. Nut luu xe luu danh sach tren trinh duyet hien tai.
+
+Noi dung duyet booking, nhan/tra tai gara, hoan coc, phi hoa hong theo database va UC. Thoi han hoan coc, dieu kien huy va phi mac dinh doc tu `platform_policies` dang hieu luc. Uoc tinh thu nhap la gia niem yet x so ngay x (1 - hoa hong mac dinh), chua tru thue/chi phi phat sinh; hop dong rieng co the co muc phi khac.
+
+Anh trong `FE/public/images/home` lay tu ban thiet ke duoc cung cap, gan nhan minh hoa khi tin xe chua co anh truy cap duoc. Khong thay doi du lieu mau de gia lap anh that hay danh gia khach hang. Phan danh gia trong mockup duoc thay bang cau hoi thuong gap do chua co nguon danh gia da xac minh.
+
+Chua cung cap API ghi du lieu nghiep vu, dang nhap/RBAC, dang ky chu xe, dat xe, thanh toan, eKYC hay ky so; cac nut lien quan hien thong tin cho tinh nang sap mo, khong tao yeu cau gia. Cac tich hop that se duoc them sau khi chot nha cung cap va tai khoan sandbox.
 
 Du lieu mau duoc giu nguyen nhu nhom cung cap (bao gom mat khau null, giao dich DEMO, file anh/tai lieu minh hoa va mot so moc thoi gian chua hop ly). Khong dung du lieu mau de chung minh thanh toan hay xac minh danh tinh that.
 

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { env } from './config/env.js';
 import { createListingsRouter } from './routes/listings.js';
+import { createHomepageRouter } from './routes/homepage.js';
 
 export function createApp(database) {
   const app = express();
@@ -18,6 +19,7 @@ export function createApp(database) {
     }
   });
   app.use('/api/listings', createListingsRouter(database));
+  app.use('/api/homepage', createHomepageRouter(database));
 
   app.use((_request, response) => response.status(404).json({ error: { message: 'API route not found.' } }));
   app.use((error, _request, response, _next) => {
