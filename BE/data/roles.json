@@ -1,0 +1,177 @@
+[
+  {
+    "_id": {
+      "$oid": "010000000000000000000001"
+    },
+    "code": "OWNER",
+    "display_name": "Car Owner",
+    "permissions": [
+      "vehicle.register",
+      "vehicle.view_own",
+      "agreement.sign_own",
+      "withdrawal.request",
+      "finance.view_own",
+      "incident.report"
+    ],
+    "description": "Primary project role",
+    "updated_at": {
+      "$date": "2026-10-01T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "010000000000000000000002"
+    },
+    "code": "RENTER",
+    "display_name": "Renter",
+    "permissions": [
+      "listing.view",
+      "booking.create",
+      "booking.view_own",
+      "booking.cancel_own",
+      "rental.sign_own",
+      "payment.pay_own",
+      "incident.report"
+    ],
+    "description": "Primary project role",
+    "updated_at": {
+      "$date": "2026-10-01T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "010000000000000000000003"
+    },
+    "code": "GARAGE_STAFF",
+    "display_name": "Garage Staff",
+    "permissions": [
+      "vehicle.inspect",
+      "vehicle.intake",
+      "handover.record",
+      "withdrawal.handover",
+      "case.report"
+    ],
+    "description": "Primary project role",
+    "updated_at": {
+      "$date": "2026-10-01T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "010000000000000000000004"
+    },
+    "code": "OPERATION_STAFF",
+    "display_name": "Operation Staff",
+    "permissions": [
+      "listing.create",
+      "listing.update",
+      "booking.review",
+      "withdrawal.process",
+      "incident.review",
+      "settlement.prepare"
+    ],
+    "description": "Primary project role",
+    "updated_at": {
+      "$date": "2026-10-01T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "010000000000000000000005"
+    },
+    "code": "MANAGER",
+    "display_name": "Manager",
+    "permissions": [
+      "vehicle.approve",
+      "compensation.approve",
+      "policy.manage",
+      "staff.manage",
+      "report.view"
+    ],
+    "description": "Primary project role",
+    "updated_at": {
+      "$date": "2026-10-01T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "010000000000000000000006"
+    },
+    "code": "ADMIN",
+    "display_name": "System Admin",
+    "permissions": [
+      "user.manage",
+      "role.assign",
+      "audit.view",
+      "security.manage"
+    ],
+    "description": "Primary project role",
+    "updated_at": {
+      "$date": "2026-10-01T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "010000000000000000000007"
+    },
+    "code": "GARAGE_LEAD",
+    "display_name": "Garage Staff Lead (optional RBAC subtype)",
+    "permissions": [
+      "vehicle.inspect",
+      "vehicle.intake",
+      "handover.record",
+      "garage.tasks.assign"
+    ],
+    "description": "Optional permission profile; not an additional Context Diagram actor",
+    "updated_at": {
+      "$date": "2026-10-01T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "010000000000000000000008"
+    },
+    "code": "OPERATION_LEAD",
+    "display_name": "Operation Staff Lead (optional RBAC subtype)",
+    "permissions": [
+      "listing.create",
+      "booking.review",
+      "withdrawal.process",
+      "incident.review",
+      "operation.tasks.assign"
+    ],
+    "description": "Optional permission profile; not an additional Context Diagram actor",
+    "updated_at": {
+      "$date": "2026-10-01T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "010000000000000000000009"
+    },
+    "code": "FINANCE_VIEWER",
+    "display_name": "Finance Viewer (optional permission profile)",
+    "permissions": [
+      "finance.view",
+      "report.view"
+    ],
+    "description": "Optional permission profile; not an additional Context Diagram actor",
+    "updated_at": {
+      "$date": "2026-10-01T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "01000000000000000000000a"
+    },
+    "code": "AUDIT_VIEWER",
+    "display_name": "Audit Viewer (optional permission profile)",
+    "permissions": [
+      "audit.view"
+    ],
+    "description": "Optional permission profile; not an additional Context Diagram actor",
+    "updated_at": {
+      "$date": "2026-10-01T09:00:00+07:00"
+    }
+  }
+]

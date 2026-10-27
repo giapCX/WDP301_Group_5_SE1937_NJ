@@ -1,0 +1,714 @@
+[
+  {
+    "_id": {
+      "$oid": "050000000000000000000001"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0001",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 15,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0001.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "050000000000000000000002"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0002",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 15,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0002.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "050000000000000000000003"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0003",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 18,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0003.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "050000000000000000000004"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0004",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 15,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0004.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "050000000000000000000005"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000005"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0005",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 15,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0005.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "050000000000000000000006"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000006"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000006"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0006",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 18,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0006.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "050000000000000000000007"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000007"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000007"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0007",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 15,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0007.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "050000000000000000000008"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000008"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0008",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 15,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0008.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "050000000000000000000009"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000009"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0009",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 18,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0009.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "05000000000000000000000a"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000a"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0010",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 15,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0010.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "05000000000000000000000b"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000b"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0011",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 15,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0011.pdf",
+    "status": "active",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "05000000000000000000000c"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000c"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0012",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 18,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0012.pdf",
+    "status": "terminated",
+    "termination_info": {
+      "legal_effective_at": {
+        "$date": "2026-10-15T10:00:00+07:00"
+      },
+      "reason": "owner_withdrawal",
+      "notice_method": "in_app_and_signed_document"
+    },
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "05000000000000000000000d"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000d"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000006"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-2026-0013",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2026-10-15T00:00:00+07:00"
+    },
+    "commission_rate_pct": 15,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-09-13T10:00:00+07:00"
+      },
+      "platform_signed_at": {
+        "$date": "2026-09-13T10:30:00+07:00"
+      }
+    },
+    "signed_document_key": "private/demo/agreements/MGMT-2026-0013.pdf",
+    "status": "terminated",
+    "termination_info": {
+      "legal_effective_at": {
+        "$date": "2026-10-15T10:00:00+07:00"
+      },
+      "reason": "owner_withdrawal",
+      "notice_method": "in_app_and_signed_document"
+    },
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "05000000000000000000000e"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000e"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000007"
+    },
+    "platform_signer_id": null,
+    "agreement_number": "MGMT-2026-0014",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 15,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": null,
+    "signed_document_key": null,
+    "status": "pending_signatures",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "05000000000000000000000f"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000f"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "platform_signer_id": null,
+    "agreement_number": "MGMT-2026-0015",
+    "start_date": {
+      "$date": "2026-09-15T00:00:00+07:00"
+    },
+    "end_date": {
+      "$date": "2027-09-14T00:00:00+07:00"
+    },
+    "commission_rate_pct": 18,
+    "authorization_scope": {
+      "rental_contract_signing": true,
+      "vehicle_custody": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": null,
+    "signed_document_key": null,
+    "status": "pending_signatures",
+    "termination_info": null,
+    "created_at": {
+      "$date": "2026-09-11T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-16T10:00:00+07:00"
+    }
+  }
+]

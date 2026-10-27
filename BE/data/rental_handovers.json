@@ -1,0 +1,393 @@
+[
+  {
+    "_id": {
+      "$oid": "0a0000000000000000000001"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000001"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "handover_type": "pickup",
+    "occurred_at": {
+      "$date": "2026-10-20T09:00:00+07:00"
+    },
+    "odometer_km": 16020,
+    "fuel_level_pct": 70,
+    "vehicle_condition": {
+      "condition": "good",
+      "photo_keys": [
+        "demo/handovers/book-01/pickup-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-20T09:00:00+07:00"
+    },
+    "calculated_surcharges": [],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-20T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0a0000000000000000000002"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000001"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "handover_type": "return",
+    "occurred_at": {
+      "$date": "2026-10-22T09:00:00+07:00"
+    },
+    "odometer_km": 16180,
+    "fuel_level_pct": 65,
+    "vehicle_condition": {
+      "condition": "minor_damage_reported",
+      "photo_keys": [
+        "demo/handovers/book-01/return-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-22T09:00:00+07:00"
+    },
+    "calculated_surcharges": [],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-22T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0a0000000000000000000003"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000002"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "handover_type": "pickup",
+    "occurred_at": {
+      "$date": "2026-10-21T09:00:00+07:00"
+    },
+    "odometer_km": 17020,
+    "fuel_level_pct": 70,
+    "vehicle_condition": {
+      "condition": "good",
+      "photo_keys": [
+        "demo/handovers/book-02/pickup-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-21T09:00:00+07:00"
+    },
+    "calculated_surcharges": [],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-21T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0a0000000000000000000004"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000002"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "handover_type": "return",
+    "occurred_at": {
+      "$date": "2026-10-23T09:00:00+07:00"
+    },
+    "odometer_km": 17190,
+    "fuel_level_pct": 65,
+    "vehicle_condition": {
+      "condition": "good",
+      "photo_keys": [
+        "demo/handovers/book-02/return-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-23T09:00:00+07:00"
+    },
+    "calculated_surcharges": [],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-23T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0a0000000000000000000005"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000003"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "handover_type": "pickup",
+    "occurred_at": {
+      "$date": "2026-10-22T09:00:00+07:00"
+    },
+    "odometer_km": 18020,
+    "fuel_level_pct": 70,
+    "vehicle_condition": {
+      "condition": "good",
+      "photo_keys": [
+        "demo/handovers/book-03/pickup-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-22T09:00:00+07:00"
+    },
+    "calculated_surcharges": [],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-22T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0a0000000000000000000006"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000003"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "handover_type": "return",
+    "occurred_at": {
+      "$date": "2026-10-24T09:00:00+07:00"
+    },
+    "odometer_km": 18200,
+    "fuel_level_pct": 65,
+    "vehicle_condition": {
+      "condition": "good",
+      "photo_keys": [
+        "demo/handovers/book-03/return-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-24T09:00:00+07:00"
+    },
+    "calculated_surcharges": [],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-24T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0a0000000000000000000007"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000004"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "handover_type": "pickup",
+    "occurred_at": {
+      "$date": "2026-10-24T09:00:00+07:00"
+    },
+    "odometer_km": 19020,
+    "fuel_level_pct": 70,
+    "vehicle_condition": {
+      "condition": "good",
+      "photo_keys": [
+        "demo/handovers/book-04/pickup-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-24T09:00:00+07:00"
+    },
+    "calculated_surcharges": [],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-24T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0a0000000000000000000008"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000004"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "handover_type": "return",
+    "occurred_at": {
+      "$date": "2026-10-26T18:00:00+07:00"
+    },
+    "odometer_km": 19210,
+    "fuel_level_pct": 65,
+    "vehicle_condition": {
+      "condition": "good",
+      "photo_keys": [
+        "demo/handovers/book-04/return-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-26T18:00:00+07:00"
+    },
+    "calculated_surcharges": [
+      {
+        "type": "late_return",
+        "amount": 100000,
+        "basis": "contractual_late_return"
+      }
+    ],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-26T18:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0a0000000000000000000009"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000005"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "handover_type": "pickup",
+    "occurred_at": {
+      "$date": "2026-10-25T09:00:00+07:00"
+    },
+    "odometer_km": 16220,
+    "fuel_level_pct": 70,
+    "vehicle_condition": {
+      "condition": "good",
+      "photo_keys": [
+        "demo/handovers/book-05/pickup-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-25T09:00:00+07:00"
+    },
+    "calculated_surcharges": [],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0a000000000000000000000a"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000006"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "handover_type": "pickup",
+    "occurred_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "odometer_km": 17220,
+    "fuel_level_pct": 70,
+    "vehicle_condition": {
+      "condition": "good",
+      "photo_keys": [
+        "demo/handovers/book-06/pickup-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "calculated_surcharges": [],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0a000000000000000000000b"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000007"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "handover_type": "pickup",
+    "occurred_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "odometer_km": 18220,
+    "fuel_level_pct": 70,
+    "vehicle_condition": {
+      "condition": "good",
+      "photo_keys": [
+        "demo/handovers/book-07/pickup-front.jpg"
+      ],
+      "renter_signature_recorded": true
+    },
+    "renter_confirmed_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "calculated_surcharges": [],
+    "status": "confirmed",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  }
+]

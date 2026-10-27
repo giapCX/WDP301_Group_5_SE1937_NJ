@@ -1,0 +1,17 @@
+{
+  "name": "xedi",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --kill-others --names BE,FE \"npm run dev --prefix BE\" \"npm start --prefix FE\"",
+    "dev:be": "npm run dev --prefix BE",
+    "dev:fe": "npm start --prefix FE",
+    "db:setup": "npm run db:setup --prefix BE",
+    "db:seed": "npm run db:seed --prefix BE",
+    "install:all": "npm install && npm ci --prefix BE && npm ci --prefix FE",
+    "build": "npm run build --prefix FE"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

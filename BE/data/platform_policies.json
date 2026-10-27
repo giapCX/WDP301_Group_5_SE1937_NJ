@@ -1,0 +1,267 @@
+[
+  {
+    "_id": {
+      "$oid": "100000000000000000000001"
+    },
+    "policy_type": "commission_default",
+    "version": 1,
+    "config": {
+      "default_commission_pct": 15,
+      "existing_agreements_unaffected": true
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "100000000000000000000002"
+    },
+    "policy_type": "cancellation",
+    "version": 1,
+    "config": {
+      "free_cancel_before_hours": 48,
+      "refund_if_eligible": true
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "100000000000000000000003"
+    },
+    "policy_type": "deposit_refund",
+    "version": 1,
+    "config": {
+      "refund_within_business_days": 3,
+      "deduct_only_with_verified_basis": true
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "100000000000000000000004"
+    },
+    "policy_type": "late_return",
+    "version": 1,
+    "config": {
+      "late_fee_per_hour": 100000
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "100000000000000000000005"
+    },
+    "policy_type": "mileage",
+    "version": 1,
+    "config": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "100000000000000000000006"
+    },
+    "policy_type": "damage_handling",
+    "version": 1,
+    "config": {
+      "evidence_required": true,
+      "manager_approval_required": true,
+      "renter_may_dispute": true
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "100000000000000000000007"
+    },
+    "policy_type": "traffic_violation",
+    "version": 1,
+    "config": {
+      "requires_official_confirmation": true,
+      "handle_after_deposit_refund": true
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "100000000000000000000008"
+    },
+    "policy_type": "withdrawal",
+    "version": 1,
+    "config": {
+      "new_booking_suspension_after_request": true,
+      "honor_or_resolve_existing_bookings": true
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "100000000000000000000009"
+    },
+    "policy_type": "vehicle_approval",
+    "version": 1,
+    "config": {
+      "inspection_report_required": true,
+      "manager_approval_required": true
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "10000000000000000000000a"
+    },
+    "policy_type": "listing_publication",
+    "version": 1,
+    "config": {
+      "signed_management_agreement_required": true,
+      "garage_intake_required": true,
+      "created_by_operation_staff": true
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "10000000000000000000000b"
+    },
+    "policy_type": "overdue",
+    "version": 1,
+    "config": {
+      "escalation_after_hours": 6,
+      "contacts_required": true
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "10000000000000000000000c"
+    },
+    "policy_type": "privacy_retention",
+    "version": 1,
+    "config": {
+      "store_private_files_in_restricted_storage": true,
+      "minimize_sensitive_data": true
+    },
+    "effective_from": {
+      "$date": "2026-09-01T00:00:00+07:00"
+    },
+    "effective_until": null,
+    "updated_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "status": "active",
+    "created_at": {
+      "$date": "2026-08-25T09:00:00+07:00"
+    }
+  }
+]

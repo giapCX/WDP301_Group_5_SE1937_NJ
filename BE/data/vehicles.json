@@ -1,0 +1,1002 @@
+[
+  {
+    "_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "license_plate": "30A-12001",
+    "vin": "DEMOVIN202600000000001",
+    "brand": "Toyota",
+    "model": "Vios",
+    "manufacture_year": 2021,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "rented",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG001",
+        "file_key": "private/demo/vehicle-01/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-01/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000001"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "license_plate": "30A-12002",
+    "vin": "DEMOVIN202600000000002",
+    "brand": "Hyundai",
+    "model": "Accent",
+    "manufacture_year": 2022,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "rented",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG002",
+        "file_key": "private/demo/vehicle-02/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-02/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000002"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "license_plate": "30A-12003",
+    "vin": "DEMOVIN202600000000003",
+    "brand": "Kia",
+    "model": "Seltos",
+    "manufacture_year": 2023,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "SUV",
+    "physical_status": "rented",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG003",
+        "file_key": "private/demo/vehicle-03/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-03/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000003"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "license_plate": "30A-12004",
+    "vin": "DEMOVIN202600000000004",
+    "brand": "Mazda",
+    "model": "CX-5",
+    "manufacture_year": 2024,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "at_garage",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG004",
+        "file_key": "private/demo/vehicle-04/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-04/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000004"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000005"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "license_plate": "30A-12005",
+    "vin": "DEMOVIN202600000000005",
+    "brand": "VinFast",
+    "model": "VF 5",
+    "manufacture_year": 2025,
+    "seats": 5,
+    "fuel_type": "electric",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "at_garage",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG005",
+        "file_key": "private/demo/vehicle-05/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-05/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000005"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000006"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000006"
+    },
+    "license_plate": "30A-12006",
+    "vin": "DEMOVIN202600000000006",
+    "brand": "Honda",
+    "model": "City",
+    "manufacture_year": 2020,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "SUV",
+    "physical_status": "at_garage",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG006",
+        "file_key": "private/demo/vehicle-06/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-06/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000006"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000007"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000007"
+    },
+    "license_plate": "30A-12007",
+    "vin": "DEMOVIN202600000000007",
+    "brand": "Mitsubishi",
+    "model": "Xpander",
+    "manufacture_year": 2021,
+    "seats": 7,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "at_garage",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG007",
+        "file_key": "private/demo/vehicle-07/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-07/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000007"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000008"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "license_plate": "30A-12008",
+    "vin": "DEMOVIN202600000000008",
+    "brand": "Toyota",
+    "model": "Innova",
+    "manufacture_year": 2022,
+    "seats": 7,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "at_garage",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG008",
+        "file_key": "private/demo/vehicle-08/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-08/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000001"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000009"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "license_plate": "30A-12009",
+    "vin": "DEMOVIN202600000000009",
+    "brand": "Ford",
+    "model": "Territory",
+    "manufacture_year": 2023,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "SUV",
+    "physical_status": "at_garage",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG009",
+        "file_key": "private/demo/vehicle-09/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-09/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000002"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "03000000000000000000000a"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "license_plate": "30A-12010",
+    "vin": "DEMOVIN202600000000010",
+    "brand": "Kia",
+    "model": "Sonet",
+    "manufacture_year": 2024,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "at_garage",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG010",
+        "file_key": "private/demo/vehicle-10/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-10/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000003"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "03000000000000000000000b"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "license_plate": "30A-12011",
+    "vin": "DEMOVIN202600000000011",
+    "brand": "Suzuki",
+    "model": "XL7",
+    "manufacture_year": 2025,
+    "seats": 7,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "at_garage",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG011",
+        "file_key": "private/demo/vehicle-11/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-11/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000004"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "03000000000000000000000c"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "license_plate": "30A-12012",
+    "vin": "DEMOVIN202600000000012",
+    "brand": "Toyota",
+    "model": "Corolla Cross",
+    "manufacture_year": 2020,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "SUV",
+    "physical_status": "returned_to_owner",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG012",
+        "file_key": "private/demo/vehicle-12/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-12/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000005"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "03000000000000000000000d"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000006"
+    },
+    "license_plate": "30A-12013",
+    "vin": "DEMOVIN202600000000013",
+    "brand": "Honda",
+    "model": "HR-V",
+    "manufacture_year": 2021,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "returned_to_owner",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG013",
+        "file_key": "private/demo/vehicle-13/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-13/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000006"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "03000000000000000000000e"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000007"
+    },
+    "license_plate": "30A-12014",
+    "vin": "DEMOVIN202600000000014",
+    "brand": "Hyundai",
+    "model": "Creta",
+    "manufacture_year": 2022,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "with_owner",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG014",
+        "file_key": "private/demo/vehicle-14/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-14/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000007"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "03000000000000000000000f"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "license_plate": "30A-12015",
+    "vin": "DEMOVIN202600000000015",
+    "brand": "Mazda",
+    "model": "Mazda3",
+    "manufacture_year": 2023,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "SUV",
+    "physical_status": "with_owner",
+    "onboarding_status": "approved",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG015",
+        "file_key": "private/demo/vehicle-15/registration.pdf",
+        "verified": true
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-15/inspection.pdf",
+        "verified": true
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000001"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000010"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "license_plate": "30A-12016",
+    "vin": "DEMOVIN202600000000016",
+    "brand": "VinFast",
+    "model": "VF 6",
+    "manufacture_year": 2024,
+    "seats": 5,
+    "fuel_type": "electric",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "with_owner",
+    "onboarding_status": "revision_required",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG016",
+        "file_key": "private/demo/vehicle-16/registration.pdf",
+        "verified": false
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-16/inspection.pdf",
+        "verified": false
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000002"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000011"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "license_plate": "30A-12017",
+    "vin": "DEMOVIN202600000000017",
+    "brand": "Kia",
+    "model": "K3",
+    "manufacture_year": 2025,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "with_owner",
+    "onboarding_status": "revision_required",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG017",
+        "file_key": "private/demo/vehicle-17/registration.pdf",
+        "verified": false
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-17/inspection.pdf",
+        "verified": false
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000003"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000012"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "license_plate": "30A-12018",
+    "vin": "DEMOVIN202600000000018",
+    "brand": "Toyota",
+    "model": "Yaris Cross",
+    "manufacture_year": 2020,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "SUV",
+    "physical_status": "with_owner",
+    "onboarding_status": "rejected",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG018",
+        "file_key": "private/demo/vehicle-18/registration.pdf",
+        "verified": false
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-18/inspection.pdf",
+        "verified": false
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000004"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000013"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "license_plate": "30A-12019",
+    "vin": "DEMOVIN202600000000019",
+    "brand": "Hyundai",
+    "model": "Tucson",
+    "manufacture_year": 2021,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "with_owner",
+    "onboarding_status": "submitted",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG019",
+        "file_key": "private/demo/vehicle-19/registration.pdf",
+        "verified": false
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-19/inspection.pdf",
+        "verified": false
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000005"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000014"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000006"
+    },
+    "license_plate": "30A-12020",
+    "vin": "DEMOVIN202600000000020",
+    "brand": "Mitsubishi",
+    "model": "Xforce",
+    "manufacture_year": 2022,
+    "seats": 5,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "Sedan",
+    "physical_status": "with_owner",
+    "onboarding_status": "submitted",
+    "documents": {
+      "registration": {
+        "number_masked": "***REG020",
+        "file_key": "private/demo/vehicle-20/registration.pdf",
+        "verified": false
+      },
+      "inspection_certificate": {
+        "valid_until": {
+          "$date": "2027-06-30T00:00:00+07:00"
+        },
+        "file_key": "private/demo/vehicle-20/inspection.pdf",
+        "verified": false
+      }
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000006"
+        },
+        "at": {
+          "$date": "2026-09-06T08:30:00+07:00"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-09-06T08:30:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  }
+]

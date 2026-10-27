@@ -1,0 +1,570 @@
+[
+  {
+    "_id": {
+      "$oid": "0e0000000000000000000001"
+    },
+    "case_number": "CASE-2026-0001",
+    "reported_by_user_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000001"
+    },
+    "case_type": "damage",
+    "description": "Minor bumper damage identified during vehicle return and accepted by renter",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-01/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "02000000000000000000000f"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "completed",
+      "renter_response": "accepted"
+    },
+    "traffic_violation_details": null,
+    "compensation_claims": [
+      {
+        "requested_amount": 200000,
+        "proposed_amount": 200000,
+        "approved_amount": 200000,
+        "decision": "approved",
+        "decision_at": {
+          "$date": "2026-10-26T10:00:00+07:00"
+        },
+        "reviewed_by_manager_id": {
+          "$oid": "020000000000000000000013"
+        },
+        "renter_response": "accepted",
+        "evidence_basis": "pickup_return_photo_comparison"
+      }
+    ],
+    "resolution": {
+      "outcome": "deduction_approved_with_renter_acceptance",
+      "amount": 200000,
+      "resolved_at": {
+        "$date": "2026-10-26T10:00:00+07:00"
+      }
+    },
+    "status": "resolved",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e0000000000000000000002"
+    },
+    "case_number": "CASE-2026-0002",
+    "reported_by_user_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000002"
+    },
+    "case_type": "traffic_violation",
+    "description": "Demo traffic violation report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-02/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "020000000000000000000002"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": {
+      "reported_at": {
+        "$date": "2026-10-27T10:00:00+07:00"
+      },
+      "notice_number": "DEMO-VIOLATION-0002",
+      "official_confirmation": "not_confirmed",
+      "fine_amount_claimed": 0
+    },
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "investigating",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e0000000000000000000003"
+    },
+    "case_number": "CASE-2026-0003",
+    "reported_by_user_id": {
+      "$oid": "02000000000000000000000a"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000003"
+    },
+    "case_type": "complaint",
+    "description": "Demo complaint report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-03/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "02000000000000000000000a"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": null,
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "investigating",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e0000000000000000000004"
+    },
+    "case_number": "CASE-2026-0004",
+    "reported_by_user_id": {
+      "$oid": "02000000000000000000000b"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000004"
+    },
+    "case_type": "dispute",
+    "description": "Demo dispute report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-04/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "02000000000000000000000b"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": null,
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "investigating",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e0000000000000000000005"
+    },
+    "case_number": "CASE-2026-0005",
+    "reported_by_user_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000004"
+    },
+    "case_type": "overdue",
+    "description": "Demo overdue report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-05/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "020000000000000000000011"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": null,
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "investigating",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e0000000000000000000006"
+    },
+    "case_number": "CASE-2026-0006",
+    "reported_by_user_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000005"
+    },
+    "case_type": "missing_vehicle",
+    "description": "Demo missing vehicle report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-06/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "020000000000000000000011"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": null,
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "investigating",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e0000000000000000000007"
+    },
+    "case_number": "CASE-2026-0007",
+    "reported_by_user_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000005"
+    },
+    "booking_id": null,
+    "case_type": "traffic_violation",
+    "description": "Demo traffic violation report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-07/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "020000000000000000000005"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": {
+      "reported_at": {
+        "$date": "2026-10-27T10:00:00+07:00"
+      },
+      "notice_number": "DEMO-VIOLATION-0007",
+      "official_confirmation": "not_confirmed",
+      "fine_amount_claimed": 0
+    },
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "investigating",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e0000000000000000000008"
+    },
+    "case_number": "CASE-2026-0008",
+    "reported_by_user_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000002"
+    },
+    "case_type": "damage",
+    "description": "Demo damage report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-08/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "020000000000000000000010"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": null,
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "investigating",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e0000000000000000000009"
+    },
+    "case_number": "CASE-2026-0009",
+    "reported_by_user_id": {
+      "$oid": "020000000000000000000009"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000007"
+    },
+    "case_type": "complaint",
+    "description": "Demo complaint report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-09/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "020000000000000000000009"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": null,
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "reported",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e000000000000000000000a"
+    },
+    "case_number": "CASE-2026-0010",
+    "reported_by_user_id": {
+      "$oid": "02000000000000000000000c"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000006"
+    },
+    "case_type": "other",
+    "description": "Demo other report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-10/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "02000000000000000000000c"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": null,
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "reported",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e000000000000000000000b"
+    },
+    "case_number": "CASE-2026-0011",
+    "reported_by_user_id": {
+      "$oid": "020000000000000000000007"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000007"
+    },
+    "booking_id": null,
+    "case_type": "traffic_violation",
+    "description": "Demo traffic violation report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-11/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "020000000000000000000007"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": {
+      "reported_at": {
+        "$date": "2026-10-27T10:00:00+07:00"
+      },
+      "notice_number": "DEMO-VIOLATION-0011",
+      "official_confirmation": "not_confirmed",
+      "fine_amount_claimed": 0
+    },
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "reported",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0e000000000000000000000c"
+    },
+    "case_number": "CASE-2026-0012",
+    "reported_by_user_id": {
+      "$oid": "020000000000000000000008"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "reviewed_by_manager_id": null,
+    "vehicle_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000001"
+    },
+    "case_type": "dispute",
+    "description": "Demo dispute report, pending verification",
+    "evidence": [
+      {
+        "kind": "photo",
+        "file_key": "private/demo/cases/case-12/evidence.jpg",
+        "uploaded_by_user_id": {
+          "$oid": "020000000000000000000008"
+        }
+      }
+    ],
+    "investigation": {
+      "review_status": "pending",
+      "renter_response": "not_yet_confirmed"
+    },
+    "traffic_violation_details": null,
+    "compensation_claims": [],
+    "resolution": null,
+    "status": "reported",
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:30:00+07:00"
+    }
+  }
+]

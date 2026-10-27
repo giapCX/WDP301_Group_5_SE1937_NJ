@@ -1,0 +1,536 @@
+[
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000001"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000001"
+    },
+    "collection_payment_id": {
+      "$oid": "0b000000000000000000000a"
+    },
+    "required_amount": 3100000,
+    "collected_amount": 3100000,
+    "deducted_amount": 200000,
+    "refunded_amount": 2900000,
+    "refundable_amount": 0,
+    "movements": [
+      {
+        "type": "collected",
+        "amount": 3100000,
+        "transaction_id": {
+          "$oid": "0b000000000000000000000a"
+        },
+        "at": {
+          "$date": "2026-10-19T09:05:00+07:00"
+        }
+      },
+      {
+        "type": "deducted",
+        "amount": 200000,
+        "incident_case_id": {
+          "$oid": "0e0000000000000000000001"
+        },
+        "at": {
+          "$date": "2026-10-26T10:00:00+07:00"
+        }
+      },
+      {
+        "type": "refunded",
+        "amount": 2900000,
+        "transaction_id": {
+          "$oid": "0b0000000000000000000013"
+        },
+        "at": {
+          "$date": "2026-10-27T11:00:00+07:00"
+        }
+      }
+    ],
+    "deduction_decisions": [
+      {
+        "incident_case_id": {
+          "$oid": "0e0000000000000000000001"
+        },
+        "amount": 200000,
+        "status": "approved_after_evidence_review",
+        "approved_by_user_id": {
+          "$oid": "020000000000000000000013"
+        },
+        "renter_response": "accepted",
+        "contract_basis": "damage_liability_clause"
+      }
+    ],
+    "status": "refunded",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000002"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000002"
+    },
+    "collection_payment_id": {
+      "$oid": "0b000000000000000000000b"
+    },
+    "required_amount": 3200000,
+    "collected_amount": 3200000,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 3200000,
+    "movements": [
+      {
+        "type": "collected",
+        "amount": 3200000,
+        "transaction_id": {
+          "$oid": "0b000000000000000000000b"
+        },
+        "at": {
+          "$date": "2026-10-19T09:05:00+07:00"
+        }
+      }
+    ],
+    "deduction_decisions": [],
+    "status": "pending_refund",
+    "refund_due_at": {
+      "$date": "2026-10-29T17:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000003"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000003"
+    },
+    "collection_payment_id": {
+      "$oid": "0b000000000000000000000c"
+    },
+    "required_amount": 3300000,
+    "collected_amount": 3300000,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 3300000,
+    "movements": [
+      {
+        "type": "collected",
+        "amount": 3300000,
+        "transaction_id": {
+          "$oid": "0b000000000000000000000c"
+        },
+        "at": {
+          "$date": "2026-10-19T09:05:00+07:00"
+        }
+      }
+    ],
+    "deduction_decisions": [],
+    "status": "pending_refund",
+    "refund_due_at": {
+      "$date": "2026-10-29T17:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000004"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000004"
+    },
+    "collection_payment_id": {
+      "$oid": "0b000000000000000000000d"
+    },
+    "required_amount": 3400000,
+    "collected_amount": 3400000,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 3400000,
+    "movements": [
+      {
+        "type": "collected",
+        "amount": 3400000,
+        "transaction_id": {
+          "$oid": "0b000000000000000000000d"
+        },
+        "at": {
+          "$date": "2026-10-19T09:05:00+07:00"
+        }
+      }
+    ],
+    "deduction_decisions": [],
+    "status": "pending_refund",
+    "refund_due_at": {
+      "$date": "2026-10-29T17:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000005"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000005"
+    },
+    "collection_payment_id": {
+      "$oid": "0b000000000000000000000e"
+    },
+    "required_amount": 3100000,
+    "collected_amount": 3100000,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 3100000,
+    "movements": [
+      {
+        "type": "collected",
+        "amount": 3100000,
+        "transaction_id": {
+          "$oid": "0b000000000000000000000e"
+        },
+        "at": {
+          "$date": "2026-10-19T09:05:00+07:00"
+        }
+      }
+    ],
+    "deduction_decisions": [],
+    "status": "collected",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000006"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000006"
+    },
+    "collection_payment_id": {
+      "$oid": "0b000000000000000000000f"
+    },
+    "required_amount": 3200000,
+    "collected_amount": 3200000,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 3200000,
+    "movements": [
+      {
+        "type": "collected",
+        "amount": 3200000,
+        "transaction_id": {
+          "$oid": "0b000000000000000000000f"
+        },
+        "at": {
+          "$date": "2026-10-19T09:05:00+07:00"
+        }
+      }
+    ],
+    "deduction_decisions": [],
+    "status": "collected",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000007"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000007"
+    },
+    "collection_payment_id": {
+      "$oid": "0b0000000000000000000010"
+    },
+    "required_amount": 3300000,
+    "collected_amount": 3300000,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 3300000,
+    "movements": [
+      {
+        "type": "collected",
+        "amount": 3300000,
+        "transaction_id": {
+          "$oid": "0b0000000000000000000010"
+        },
+        "at": {
+          "$date": "2026-10-19T09:05:00+07:00"
+        }
+      }
+    ],
+    "deduction_decisions": [],
+    "status": "collected",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000008"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000008"
+    },
+    "collection_payment_id": {
+      "$oid": "0b0000000000000000000011"
+    },
+    "required_amount": 3400000,
+    "collected_amount": 3400000,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 3400000,
+    "movements": [
+      {
+        "type": "collected",
+        "amount": 3400000,
+        "transaction_id": {
+          "$oid": "0b0000000000000000000011"
+        },
+        "at": {
+          "$date": "2026-10-19T09:05:00+07:00"
+        }
+      }
+    ],
+    "deduction_decisions": [],
+    "status": "collected",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000009"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000009"
+    },
+    "collection_payment_id": {
+      "$oid": "0b0000000000000000000012"
+    },
+    "required_amount": 3500000,
+    "collected_amount": 3500000,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 3500000,
+    "movements": [
+      {
+        "type": "collected",
+        "amount": 3500000,
+        "transaction_id": {
+          "$oid": "0b0000000000000000000012"
+        },
+        "at": {
+          "$date": "2026-10-19T09:05:00+07:00"
+        }
+      }
+    ],
+    "deduction_decisions": [],
+    "status": "collected",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c000000000000000000000a"
+    },
+    "booking_id": {
+      "$oid": "08000000000000000000000a"
+    },
+    "collection_payment_id": null,
+    "required_amount": 3600000,
+    "collected_amount": 0,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 0,
+    "movements": [],
+    "deduction_decisions": [],
+    "status": "unpaid",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c000000000000000000000b"
+    },
+    "booking_id": {
+      "$oid": "08000000000000000000000b"
+    },
+    "collection_payment_id": null,
+    "required_amount": 3700000,
+    "collected_amount": 0,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 0,
+    "movements": [],
+    "deduction_decisions": [],
+    "status": "unpaid",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c000000000000000000000c"
+    },
+    "booking_id": {
+      "$oid": "08000000000000000000000c"
+    },
+    "collection_payment_id": null,
+    "required_amount": 3100000,
+    "collected_amount": 0,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 0,
+    "movements": [],
+    "deduction_decisions": [],
+    "status": "unpaid",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c000000000000000000000d"
+    },
+    "booking_id": {
+      "$oid": "08000000000000000000000d"
+    },
+    "collection_payment_id": null,
+    "required_amount": 3200000,
+    "collected_amount": 0,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 0,
+    "movements": [],
+    "deduction_decisions": [],
+    "status": "unpaid",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c000000000000000000000e"
+    },
+    "booking_id": {
+      "$oid": "08000000000000000000000e"
+    },
+    "collection_payment_id": null,
+    "required_amount": 3300000,
+    "collected_amount": 0,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 0,
+    "movements": [],
+    "deduction_decisions": [],
+    "status": "unpaid",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c000000000000000000000f"
+    },
+    "booking_id": {
+      "$oid": "08000000000000000000000f"
+    },
+    "collection_payment_id": null,
+    "required_amount": 3400000,
+    "collected_amount": 0,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 0,
+    "movements": [],
+    "deduction_decisions": [],
+    "status": "unpaid",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000010"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000010"
+    },
+    "collection_payment_id": null,
+    "required_amount": 3500000,
+    "collected_amount": 0,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 0,
+    "movements": [],
+    "deduction_decisions": [],
+    "status": "unpaid",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000011"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000011"
+    },
+    "collection_payment_id": null,
+    "required_amount": 3600000,
+    "collected_amount": 0,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 0,
+    "movements": [],
+    "deduction_decisions": [],
+    "status": "unpaid",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0c0000000000000000000012"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000012"
+    },
+    "collection_payment_id": null,
+    "required_amount": 3700000,
+    "collected_amount": 0,
+    "deducted_amount": 0,
+    "refunded_amount": 0,
+    "refundable_amount": 0,
+    "movements": [],
+    "deduction_decisions": [],
+    "status": "unpaid",
+    "refund_due_at": null,
+    "updated_at": {
+      "$date": "2026-10-27T12:00:00+07:00"
+    }
+  }
+]

@@ -1,0 +1,518 @@
+[
+  {
+    "_id": {
+      "$oid": "110000000000000000000001"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000008"
+    },
+    "notification_type": "booking_confirmed",
+    "title": "Booking Confirmed",
+    "content": "Thông báo dữ liệu mẫu #01: booking confirmed.",
+    "related_entity_type": "booking",
+    "related_entity_id": {
+      "$oid": "080000000000000000000002"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000002"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000009"
+    },
+    "notification_type": "deposit_received",
+    "title": "Deposit Received",
+    "content": "Thông báo dữ liệu mẫu #02: deposit received.",
+    "related_entity_type": "booking",
+    "related_entity_id": {
+      "$oid": "080000000000000000000003"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000003"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "notification_type": "vehicle_approved",
+    "title": "Vehicle Approved",
+    "content": "Thông báo dữ liệu mẫu #03: vehicle approved.",
+    "related_entity_type": "vehicle",
+    "related_entity_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": true,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000004"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "notification_type": "listing_published",
+    "title": "Listing Published",
+    "content": "Thông báo dữ liệu mẫu #04: listing published.",
+    "related_entity_type": "vehicle",
+    "related_entity_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000005"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "notification_type": "inspection_completed",
+    "title": "Inspection Completed",
+    "content": "Thông báo dữ liệu mẫu #05: inspection completed.",
+    "related_entity_type": "vehicle",
+    "related_entity_id": {
+      "$oid": "030000000000000000000005"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000006"
+    },
+    "recipient_user_id": {
+      "$oid": "02000000000000000000000d"
+    },
+    "notification_type": "payment_received",
+    "title": "Payment Received",
+    "content": "Thông báo dữ liệu mẫu #06: payment received.",
+    "related_entity_type": "booking",
+    "related_entity_id": {
+      "$oid": "080000000000000000000007"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": true,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000007"
+    },
+    "recipient_user_id": {
+      "$oid": "02000000000000000000000e"
+    },
+    "notification_type": "vehicle_returned",
+    "title": "Vehicle Returned",
+    "content": "Thông báo dữ liệu mẫu #07: vehicle returned.",
+    "related_entity_type": "booking",
+    "related_entity_id": {
+      "$oid": "080000000000000000000008"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000008"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000008"
+    },
+    "notification_type": "deposit_refund_processed",
+    "title": "Deposit Refund Processed",
+    "content": "Thông báo dữ liệu mẫu #08: deposit refund processed.",
+    "related_entity_type": "booking",
+    "related_entity_id": {
+      "$oid": "080000000000000000000009"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000009"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "notification_type": "incident_reported",
+    "title": "Incident Reported",
+    "content": "Thông báo dữ liệu mẫu #09: incident reported.",
+    "related_entity_type": "case",
+    "related_entity_id": {
+      "$oid": "0e000000000000000000000a"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": true,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "11000000000000000000000a"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "notification_type": "withdrawal_requested",
+    "title": "Withdrawal Requested",
+    "content": "Thông báo dữ liệu mẫu #10: withdrawal requested.",
+    "related_entity_type": "withdrawal",
+    "related_entity_id": {
+      "$oid": "0f0000000000000000000001"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "11000000000000000000000b"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "notification_type": "withdrawal_completed",
+    "title": "Withdrawal Completed",
+    "content": "Thông báo dữ liệu mẫu #11: withdrawal completed.",
+    "related_entity_type": "withdrawal",
+    "related_entity_id": {
+      "$oid": "0f0000000000000000000002"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "11000000000000000000000c"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "notification_type": "traffic_violation_reported",
+    "title": "Traffic Violation Reported",
+    "content": "Thông báo dữ liệu mẫu #12: traffic violation reported.",
+    "related_entity_type": "case",
+    "related_entity_id": {
+      "$oid": "0e0000000000000000000001"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": true,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "11000000000000000000000d"
+    },
+    "recipient_user_id": {
+      "$oid": "02000000000000000000000d"
+    },
+    "notification_type": "booking_pending",
+    "title": "Booking Pending",
+    "content": "Thông báo dữ liệu mẫu #13: booking pending.",
+    "related_entity_type": "booking",
+    "related_entity_id": {
+      "$oid": "080000000000000000000005"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "11000000000000000000000e"
+    },
+    "recipient_user_id": {
+      "$oid": "02000000000000000000000e"
+    },
+    "notification_type": "contract_signed",
+    "title": "Contract Signed",
+    "content": "Thông báo dữ liệu mẫu #14: contract signed.",
+    "related_entity_type": "booking",
+    "related_entity_id": {
+      "$oid": "080000000000000000000006"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "11000000000000000000000f"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "notification_type": "settlement_paid",
+    "title": "Settlement Paid",
+    "content": "Thông báo dữ liệu mẫu #15: settlement paid.",
+    "related_entity_type": "case",
+    "related_entity_id": {
+      "$oid": "0e0000000000000000000004"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": true,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000010"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000009"
+    },
+    "notification_type": "booking_confirmed",
+    "title": "Booking Confirmed",
+    "content": "Thông báo dữ liệu mẫu #16: booking confirmed.",
+    "related_entity_type": "booking",
+    "related_entity_id": {
+      "$oid": "080000000000000000000008"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000011"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "notification_type": "review_requested",
+    "title": "Review Requested",
+    "content": "Thông báo dữ liệu mẫu #17: review requested.",
+    "related_entity_type": "case",
+    "related_entity_id": {
+      "$oid": "0e0000000000000000000006"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": false,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": null
+  },
+  {
+    "_id": {
+      "$oid": "110000000000000000000012"
+    },
+    "recipient_user_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "notification_type": "system_message",
+    "title": "System Message",
+    "content": "Thông báo dữ liệu mẫu #18: system message.",
+    "related_entity_type": "case",
+    "related_entity_id": {
+      "$oid": "0e0000000000000000000007"
+    },
+    "delivery_channels": {
+      "in_app": {
+        "status": "delivered"
+      },
+      "email": {
+        "status": "not_requested"
+      }
+    },
+    "is_read": true,
+    "created_at": {
+      "$date": "2026-10-27T08:00:00+07:00"
+    },
+    "read_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  }
+]

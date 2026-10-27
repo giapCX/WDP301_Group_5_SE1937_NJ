@@ -1,0 +1,465 @@
+[
+  {
+    "_id": {
+      "$oid": "0f0000000000000000000001"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000c"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "management_agreement_id": {
+      "$oid": "05000000000000000000000c"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "request_type": "early",
+    "reason": "Owner requests vehicle returned for personal use",
+    "requested_return_at": {
+      "$date": "2026-10-16T15:00:00+07:00"
+    },
+    "requested_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    },
+    "affected_bookings": [],
+    "termination_notice": {
+      "legal_effective_at": {
+        "$date": "2026-10-15T10:00:00+07:00"
+      },
+      "notice_method": "written_record",
+      "status": "effective"
+    },
+    "final_settlement": {
+      "status": "reconciled",
+      "amount_due": 0
+    },
+    "owner_return_handover": {
+      "garage_staff_id": {
+        "$oid": "020000000000000000000010"
+      },
+      "returned_at": {
+        "$date": "2026-10-16T10:00:00+07:00"
+      },
+      "odometer_km": 27050,
+      "fuel_level_pct": 60,
+      "photo_keys": [
+        "demo/returns/vehicle-12/receipt.jpg"
+      ],
+      "owner_confirmed_at": {
+        "$date": "2026-10-16T10:20:00+07:00"
+      }
+    },
+    "status": "withdrawn",
+    "completed_at": {
+      "$date": "2026-10-16T10:20:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0f0000000000000000000002"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000d"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000006"
+    },
+    "management_agreement_id": {
+      "$oid": "05000000000000000000000d"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "request_type": "normal",
+    "reason": "Owner requests vehicle returned for personal use",
+    "requested_return_at": {
+      "$date": "2026-10-16T15:00:00+07:00"
+    },
+    "requested_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    },
+    "affected_bookings": [],
+    "termination_notice": {
+      "legal_effective_at": {
+        "$date": "2026-10-15T10:00:00+07:00"
+      },
+      "notice_method": "written_record",
+      "status": "effective"
+    },
+    "final_settlement": {
+      "status": "reconciled",
+      "amount_due": 0
+    },
+    "owner_return_handover": {
+      "garage_staff_id": {
+        "$oid": "02000000000000000000000f"
+      },
+      "returned_at": {
+        "$date": "2026-10-16T10:00:00+07:00"
+      },
+      "odometer_km": 28050,
+      "fuel_level_pct": 60,
+      "photo_keys": [
+        "demo/returns/vehicle-13/receipt.jpg"
+      ],
+      "owner_confirmed_at": {
+        "$date": "2026-10-16T10:20:00+07:00"
+      }
+    },
+    "status": "withdrawn",
+    "completed_at": {
+      "$date": "2026-10-16T10:20:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0f0000000000000000000003"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000004"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "request_type": "early",
+    "reason": "Owner requests vehicle returned for personal use",
+    "requested_return_at": {
+      "$date": "2026-10-31T15:00:00+07:00"
+    },
+    "requested_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    },
+    "affected_bookings": [],
+    "termination_notice": {
+      "legal_effective_at": null,
+      "notice_method": "written_record",
+      "status": "withdrawal_request_cancelled_by_owner"
+    },
+    "final_settlement": {
+      "status": "not_required",
+      "amount_due": 0
+    },
+    "owner_return_handover": null,
+    "status": "closed",
+    "completed_at": {
+      "$date": "2026-10-16T10:20:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0f0000000000000000000004"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000005"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000005"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "request_type": "early",
+    "reason": "Owner requests vehicle returned for personal use",
+    "requested_return_at": {
+      "$date": "2026-10-31T15:00:00+07:00"
+    },
+    "requested_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    },
+    "affected_bookings": [
+      {
+        "booking_id": {
+          "$oid": "080000000000000000000009"
+        },
+        "arrangement": "honor_existing_booking"
+      }
+    ],
+    "termination_notice": {
+      "legal_effective_at": null,
+      "notice_method": "written_record",
+      "status": "withdrawal_request_cancelled_by_owner"
+    },
+    "final_settlement": {
+      "status": "not_required",
+      "amount_due": 0
+    },
+    "owner_return_handover": null,
+    "status": "closed",
+    "completed_at": {
+      "$date": "2026-10-16T10:20:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0f0000000000000000000005"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000006"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000006"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000006"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "request_type": "early",
+    "reason": "Owner requests vehicle returned for personal use",
+    "requested_return_at": {
+      "$date": "2026-10-31T15:00:00+07:00"
+    },
+    "requested_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    },
+    "affected_bookings": [],
+    "termination_notice": {
+      "legal_effective_at": null,
+      "notice_method": "written_record",
+      "status": "withdrawal_request_cancelled_by_owner"
+    },
+    "final_settlement": {
+      "status": "not_required",
+      "amount_due": 0
+    },
+    "owner_return_handover": null,
+    "status": "closed",
+    "completed_at": {
+      "$date": "2026-10-16T10:20:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0f0000000000000000000006"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000007"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000007"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000007"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "request_type": "early",
+    "reason": "Owner requests vehicle returned for personal use",
+    "requested_return_at": {
+      "$date": "2026-10-31T15:00:00+07:00"
+    },
+    "requested_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    },
+    "affected_bookings": [],
+    "termination_notice": {
+      "legal_effective_at": null,
+      "notice_method": "written_record",
+      "status": "withdrawal_request_cancelled_by_owner"
+    },
+    "final_settlement": {
+      "status": "not_required",
+      "amount_due": 0
+    },
+    "owner_return_handover": null,
+    "status": "closed",
+    "completed_at": {
+      "$date": "2026-10-16T10:20:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-10T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0f0000000000000000000007"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000008"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000008"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "request_type": "early",
+    "reason": "Owner requests vehicle returned for personal use",
+    "requested_return_at": {
+      "$date": "2026-10-31T15:00:00+07:00"
+    },
+    "requested_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "affected_bookings": [],
+    "termination_notice": {
+      "legal_effective_at": null,
+      "notice_method": "written_record",
+      "status": "under_review"
+    },
+    "final_settlement": {
+      "status": "pending",
+      "amount_due": 0
+    },
+    "owner_return_handover": null,
+    "status": "requested",
+    "completed_at": null,
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0f0000000000000000000008"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000009"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000009"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "request_type": "early",
+    "reason": "Owner requests vehicle returned for personal use",
+    "requested_return_at": {
+      "$date": "2026-10-31T15:00:00+07:00"
+    },
+    "requested_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "affected_bookings": [],
+    "termination_notice": {
+      "legal_effective_at": null,
+      "notice_method": "written_record",
+      "status": "under_review"
+    },
+    "final_settlement": {
+      "status": "pending",
+      "amount_due": 0
+    },
+    "owner_return_handover": null,
+    "status": "requested",
+    "completed_at": null,
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0f0000000000000000000009"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000a"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "management_agreement_id": {
+      "$oid": "05000000000000000000000a"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "request_type": "early",
+    "reason": "Owner requests vehicle returned for personal use",
+    "requested_return_at": {
+      "$date": "2026-10-31T15:00:00+07:00"
+    },
+    "requested_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "affected_bookings": [],
+    "termination_notice": {
+      "legal_effective_at": null,
+      "notice_method": "written_record",
+      "status": "under_review"
+    },
+    "final_settlement": {
+      "status": "pending",
+      "amount_due": 0
+    },
+    "owner_return_handover": null,
+    "status": "coordinating_bookings",
+    "completed_at": null,
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0f000000000000000000000a"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000b"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "management_agreement_id": {
+      "$oid": "05000000000000000000000b"
+    },
+    "assigned_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "request_type": "early",
+    "reason": "Owner requests vehicle returned for personal use",
+    "requested_return_at": {
+      "$date": "2026-10-31T15:00:00+07:00"
+    },
+    "requested_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    },
+    "affected_bookings": [],
+    "termination_notice": {
+      "legal_effective_at": null,
+      "notice_method": "written_record",
+      "status": "under_review"
+    },
+    "final_settlement": {
+      "status": "pending",
+      "amount_due": 0
+    },
+    "owner_return_handover": null,
+    "status": "coordinating_bookings",
+    "completed_at": null,
+    "created_at": {
+      "$date": "2026-10-26T09:00:00+07:00"
+    }
+  }
+]

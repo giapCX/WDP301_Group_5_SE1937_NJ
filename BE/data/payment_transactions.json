@@ -1,0 +1,640 @@
+[
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000001"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000001"
+    },
+    "initiator_user_id": {
+      "$oid": "020000000000000000000008"
+    },
+    "transaction_type": "rental_payment",
+    "direction": "in",
+    "amount": 1200000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-RENT-0001",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-rental-payment-0001",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b000000000000000000000a"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000001"
+    },
+    "initiator_user_id": {
+      "$oid": "020000000000000000000008"
+    },
+    "transaction_type": "deposit_collection",
+    "direction": "in",
+    "amount": 3100000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-DEP-0001",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-deposit-collection-0001",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000002"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000002"
+    },
+    "initiator_user_id": {
+      "$oid": "020000000000000000000009"
+    },
+    "transaction_type": "rental_payment",
+    "direction": "in",
+    "amount": 1300000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-RENT-0002",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-rental-payment-0002",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b000000000000000000000b"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000002"
+    },
+    "initiator_user_id": {
+      "$oid": "020000000000000000000009"
+    },
+    "transaction_type": "deposit_collection",
+    "direction": "in",
+    "amount": 3200000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-DEP-0002",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-deposit-collection-0002",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000003"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000003"
+    },
+    "initiator_user_id": {
+      "$oid": "02000000000000000000000a"
+    },
+    "transaction_type": "rental_payment",
+    "direction": "in",
+    "amount": 1400000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-RENT-0003",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-rental-payment-0003",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b000000000000000000000c"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000003"
+    },
+    "initiator_user_id": {
+      "$oid": "02000000000000000000000a"
+    },
+    "transaction_type": "deposit_collection",
+    "direction": "in",
+    "amount": 3300000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-DEP-0003",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-deposit-collection-0003",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000004"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000004"
+    },
+    "initiator_user_id": {
+      "$oid": "02000000000000000000000b"
+    },
+    "transaction_type": "rental_payment",
+    "direction": "in",
+    "amount": 1500000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-RENT-0004",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-rental-payment-0004",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b000000000000000000000d"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000004"
+    },
+    "initiator_user_id": {
+      "$oid": "02000000000000000000000b"
+    },
+    "transaction_type": "deposit_collection",
+    "direction": "in",
+    "amount": 3400000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-DEP-0004",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-deposit-collection-0004",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000005"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000005"
+    },
+    "initiator_user_id": {
+      "$oid": "02000000000000000000000c"
+    },
+    "transaction_type": "rental_payment",
+    "direction": "in",
+    "amount": 2400000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-RENT-0005",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-rental-payment-0005",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b000000000000000000000e"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000005"
+    },
+    "initiator_user_id": {
+      "$oid": "02000000000000000000000c"
+    },
+    "transaction_type": "deposit_collection",
+    "direction": "in",
+    "amount": 3100000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-DEP-0005",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-deposit-collection-0005",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000006"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000006"
+    },
+    "initiator_user_id": {
+      "$oid": "02000000000000000000000d"
+    },
+    "transaction_type": "rental_payment",
+    "direction": "in",
+    "amount": 2600000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-RENT-0006",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-rental-payment-0006",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b000000000000000000000f"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000006"
+    },
+    "initiator_user_id": {
+      "$oid": "02000000000000000000000d"
+    },
+    "transaction_type": "deposit_collection",
+    "direction": "in",
+    "amount": 3200000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-DEP-0006",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-deposit-collection-0006",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000007"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000007"
+    },
+    "initiator_user_id": {
+      "$oid": "02000000000000000000000e"
+    },
+    "transaction_type": "rental_payment",
+    "direction": "in",
+    "amount": 1400000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-RENT-0007",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-rental-payment-0007",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000010"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000007"
+    },
+    "initiator_user_id": {
+      "$oid": "02000000000000000000000e"
+    },
+    "transaction_type": "deposit_collection",
+    "direction": "in",
+    "amount": 3300000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-DEP-0007",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-deposit-collection-0007",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000008"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000008"
+    },
+    "initiator_user_id": {
+      "$oid": "020000000000000000000008"
+    },
+    "transaction_type": "rental_payment",
+    "direction": "in",
+    "amount": 2250000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-RENT-0008",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-rental-payment-0008",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000011"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000008"
+    },
+    "initiator_user_id": {
+      "$oid": "020000000000000000000008"
+    },
+    "transaction_type": "deposit_collection",
+    "direction": "in",
+    "amount": 3400000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-DEP-0008",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-deposit-collection-0008",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000009"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000009"
+    },
+    "initiator_user_id": {
+      "$oid": "020000000000000000000009"
+    },
+    "transaction_type": "rental_payment",
+    "direction": "in",
+    "amount": 1600000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-RENT-0009",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-rental-payment-0009",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000012"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000009"
+    },
+    "initiator_user_id": {
+      "$oid": "020000000000000000000009"
+    },
+    "transaction_type": "deposit_collection",
+    "direction": "in",
+    "amount": 3500000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-DEP-0009",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-deposit-collection-0009",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true,
+      "note": "No actual gateway charge"
+    },
+    "paid_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-19T09:05:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000013"
+    },
+    "booking_id": {
+      "$oid": "080000000000000000000001"
+    },
+    "initiator_user_id": {
+      "$oid": "020000000000000000000008"
+    },
+    "transaction_type": "deposit_refund",
+    "direction": "out",
+    "amount": 2900000,
+    "currency": "VND",
+    "payment_method": "gateway",
+    "provider": "DEMO_GATEWAY",
+    "provider_transaction_id": "DEMO-REF-0001",
+    "related_transaction_id": {
+      "$oid": "0b000000000000000000000a"
+    },
+    "idempotency_key": "demo-deposit-refund-0001",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "verified_callback": true
+    },
+    "paid_at": {
+      "$date": "2026-10-27T11:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-27T10:45:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0b0000000000000000000014"
+    },
+    "booking_id": null,
+    "initiator_user_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "transaction_type": "owner_payout",
+    "direction": "out",
+    "amount": 1020000,
+    "currency": "VND",
+    "payment_method": "bank_transfer",
+    "provider": "DEMO_BANK",
+    "provider_transaction_id": "DEMO-PAYOUT-0001",
+    "related_transaction_id": null,
+    "idempotency_key": "demo-owner-payout-0001",
+    "status": "succeeded",
+    "provider_response": {
+      "environment": "simulation",
+      "reconciled": true
+    },
+    "paid_at": {
+      "$date": "2026-10-27T16:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-27T15:30:00+07:00"
+    }
+  }
+]

@@ -1,0 +1,770 @@
+[
+  {
+    "_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "full_name": "Nguyễn Minh An",
+    "email": "owner01@example.com",
+    "phone": "+84-000-0001",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000001"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0001",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-01.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hà Nội",
+      "avatar_key": "demo/avatars/user-01.jpg"
+    },
+    "payout_profile": {
+      "bank_name": "DEMO BANK",
+      "account_token": "demo_owner_token_01",
+      "account_masked": "****1001"
+    },
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "full_name": "Trần Gia Bảo",
+    "email": "owner02@example.com",
+    "phone": "+84-000-0002",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000001"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0002",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-02.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hải Phòng",
+      "avatar_key": "demo/avatars/user-02.jpg"
+    },
+    "payout_profile": {
+      "bank_name": "DEMO BANK",
+      "account_token": "demo_owner_token_02",
+      "account_masked": "****1002"
+    },
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "full_name": "Lê Khánh Linh",
+    "email": "owner03@example.com",
+    "phone": "+84-000-0003",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000001"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0003",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-03.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hà Nội",
+      "avatar_key": "demo/avatars/user-03.jpg"
+    },
+    "payout_profile": {
+      "bank_name": "DEMO BANK",
+      "account_token": "demo_owner_token_03",
+      "account_masked": "****1003"
+    },
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "full_name": "Phạm Quốc Huy",
+    "email": "owner04@example.com",
+    "phone": "+84-000-0004",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000001"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0004",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-04.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hải Phòng",
+      "avatar_key": "demo/avatars/user-04.jpg"
+    },
+    "payout_profile": {
+      "bank_name": "DEMO BANK",
+      "account_token": "demo_owner_token_04",
+      "account_masked": "****1004"
+    },
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "full_name": "Vũ Thu Trang",
+    "email": "owner05@example.com",
+    "phone": "+84-000-0005",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000001"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0005",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-05.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hà Nội",
+      "avatar_key": "demo/avatars/user-05.jpg"
+    },
+    "payout_profile": {
+      "bank_name": "DEMO BANK",
+      "account_token": "demo_owner_token_05",
+      "account_masked": "****1005"
+    },
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000006"
+    },
+    "full_name": "Hoàng Đức Anh",
+    "email": "owner06@example.com",
+    "phone": "+84-000-0006",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000001"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0006",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-06.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hải Phòng",
+      "avatar_key": "demo/avatars/user-06.jpg"
+    },
+    "payout_profile": {
+      "bank_name": "DEMO BANK",
+      "account_token": "demo_owner_token_06",
+      "account_masked": "****1006"
+    },
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000007"
+    },
+    "full_name": "Đỗ Ngọc Mai",
+    "email": "owner07@example.com",
+    "phone": "+84-000-0007",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000001"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0007",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-07.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hà Nội",
+      "avatar_key": "demo/avatars/user-07.jpg"
+    },
+    "payout_profile": {
+      "bank_name": "DEMO BANK",
+      "account_token": "demo_owner_token_07",
+      "account_masked": "****1007"
+    },
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000008"
+    },
+    "full_name": "Nguyễn Thành Long",
+    "email": "renter08@example.com",
+    "phone": "+84-000-0008",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000002"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0008",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-08.bin"
+    },
+    "driver_license": {
+      "class": "B",
+      "license_masked": "*****00008",
+      "expires_at": {
+        "$date": "2029-09-30T00:00:00+07:00"
+      },
+      "verification_status": "verified",
+      "evidence_key": "private/demo/license/user-08.bin"
+    },
+    "contact_profile": {
+      "city": "Hải Phòng",
+      "avatar_key": "demo/avatars/user-08.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000009"
+    },
+    "full_name": "Phạm Anh Thư",
+    "email": "renter09@example.com",
+    "phone": "+84-000-0009",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000002"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0009",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-09.bin"
+    },
+    "driver_license": {
+      "class": "B",
+      "license_masked": "*****00009",
+      "expires_at": {
+        "$date": "2029-09-30T00:00:00+07:00"
+      },
+      "verification_status": "verified",
+      "evidence_key": "private/demo/license/user-09.bin"
+    },
+    "contact_profile": {
+      "city": "Hà Nội",
+      "avatar_key": "demo/avatars/user-09.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "02000000000000000000000a"
+    },
+    "full_name": "Trần Nhật Nam",
+    "email": "renter10@example.com",
+    "phone": "+84-000-0010",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000002"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0010",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-10.bin"
+    },
+    "driver_license": {
+      "class": "B",
+      "license_masked": "*****00010",
+      "expires_at": {
+        "$date": "2029-09-30T00:00:00+07:00"
+      },
+      "verification_status": "verified",
+      "evidence_key": "private/demo/license/user-10.bin"
+    },
+    "contact_profile": {
+      "city": "Hải Phòng",
+      "avatar_key": "demo/avatars/user-10.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "02000000000000000000000b"
+    },
+    "full_name": "Lê Mỹ Duyên",
+    "email": "renter11@example.com",
+    "phone": "+84-000-0011",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000002"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0011",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-11.bin"
+    },
+    "driver_license": {
+      "class": "B",
+      "license_masked": "*****00011",
+      "expires_at": {
+        "$date": "2029-09-30T00:00:00+07:00"
+      },
+      "verification_status": "verified",
+      "evidence_key": "private/demo/license/user-11.bin"
+    },
+    "contact_profile": {
+      "city": "Hà Nội",
+      "avatar_key": "demo/avatars/user-11.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "02000000000000000000000c"
+    },
+    "full_name": "Đặng Minh Khoa",
+    "email": "renter12@example.com",
+    "phone": "+84-000-0012",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000002"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0012",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-12.bin"
+    },
+    "driver_license": {
+      "class": "B",
+      "license_masked": "*****00012",
+      "expires_at": {
+        "$date": "2029-09-30T00:00:00+07:00"
+      },
+      "verification_status": "verified",
+      "evidence_key": "private/demo/license/user-12.bin"
+    },
+    "contact_profile": {
+      "city": "Hải Phòng",
+      "avatar_key": "demo/avatars/user-12.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "02000000000000000000000d"
+    },
+    "full_name": "Bùi Thu Hà",
+    "email": "renter13@example.com",
+    "phone": "+84-000-0013",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000002"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0013",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-13.bin"
+    },
+    "driver_license": {
+      "class": "B",
+      "license_masked": "*****00013",
+      "expires_at": {
+        "$date": "2029-09-30T00:00:00+07:00"
+      },
+      "verification_status": "verified",
+      "evidence_key": "private/demo/license/user-13.bin"
+    },
+    "contact_profile": {
+      "city": "Hà Nội",
+      "avatar_key": "demo/avatars/user-13.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "02000000000000000000000e"
+    },
+    "full_name": "Võ Quang Minh",
+    "email": "renter14@example.com",
+    "phone": "+84-000-0014",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000002"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0014",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-14.bin"
+    },
+    "driver_license": {
+      "class": "B",
+      "license_masked": "*****00014",
+      "expires_at": {
+        "$date": "2029-09-30T00:00:00+07:00"
+      },
+      "verification_status": "verified",
+      "evidence_key": "private/demo/license/user-14.bin"
+    },
+    "contact_profile": {
+      "city": "Hải Phòng",
+      "avatar_key": "demo/avatars/user-14.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "full_name": "Nguyễn Văn Phúc",
+    "email": "garage15@example.com",
+    "phone": "+84-000-0015",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000003"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0015",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-15.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hà Nội",
+      "avatar_key": "demo/avatars/user-15.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "full_name": "Lê Gia Minh",
+    "email": "garage16@example.com",
+    "phone": "+84-000-0016",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000003"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0016",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-16.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hải Phòng",
+      "avatar_key": "demo/avatars/user-16.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "full_name": "Phan Văn Khải",
+    "email": "operation17@example.com",
+    "phone": "+84-000-0017",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000004"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0017",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-17.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hà Nội",
+      "avatar_key": "demo/avatars/user-17.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "full_name": "Ngô Bảo Ngọc",
+    "email": "operation18@example.com",
+    "phone": "+84-000-0018",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000004"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0018",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-18.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hải Phòng",
+      "avatar_key": "demo/avatars/user-18.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "full_name": "Trịnh Minh Tuấn",
+    "email": "manager19@example.com",
+    "phone": "+84-000-0019",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000005"
+    },
+    "additional_role_ids": [
+      {
+        "$oid": "010000000000000000000009"
+      }
+    ],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0019",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-19.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hà Nội",
+      "avatar_key": "demo/avatars/user-19.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "020000000000000000000014"
+    },
+    "full_name": "Đỗ Mai Phương",
+    "email": "admin20@example.com",
+    "phone": "+84-000-0020",
+    "password_hash": null,
+    "primary_role_id": {
+      "$oid": "010000000000000000000006"
+    },
+    "additional_role_ids": [],
+    "account_status": "active",
+    "identity_kyc": {
+      "status": "verified",
+      "id_masked": "***0020",
+      "verified_at": {
+        "$date": "2026-09-08T10:00:00+07:00"
+      },
+      "evidence_key": "private/demo/kyc/user-20.bin"
+    },
+    "driver_license": null,
+    "contact_profile": {
+      "city": "Hải Phòng",
+      "avatar_key": "demo/avatars/user-20.jpg"
+    },
+    "payout_profile": null,
+    "created_at": {
+      "$date": "2026-09-01T09:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-10T11:00:00+07:00"
+    }
+  }
+]

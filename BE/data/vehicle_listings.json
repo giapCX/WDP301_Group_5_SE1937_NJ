@@ -1,0 +1,575 @@
+[
+  {
+    "_id": {
+      "$oid": "070000000000000000000001"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "title": "Toyota Vios - xe tự lái",
+    "description": "Xe Toyota Vios, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-01/cover.jpg",
+      "demo/listings/vehicle-01/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hà Nội",
+      "city": "Hà Nội",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 600000,
+    "security_deposit_amount": 3100000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [],
+    "status": "published",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "070000000000000000000002"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "title": "Hyundai Accent - xe tự lái",
+    "description": "Xe Hyundai Accent, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-02/cover.jpg",
+      "demo/listings/vehicle-02/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hải Phòng",
+      "city": "Hải Phòng",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 650000,
+    "security_deposit_amount": 3200000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [],
+    "status": "published",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "070000000000000000000003"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "title": "Kia Seltos - xe tự lái",
+    "description": "Xe Kia Seltos, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-03/cover.jpg",
+      "demo/listings/vehicle-03/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hà Nội",
+      "city": "Hà Nội",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 700000,
+    "security_deposit_amount": 3300000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [],
+    "status": "published",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "070000000000000000000004"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "title": "Mazda CX-5 - xe tự lái",
+    "description": "Xe Mazda CX-5, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-04/cover.jpg",
+      "demo/listings/vehicle-04/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hải Phòng",
+      "city": "Hải Phòng",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 750000,
+    "security_deposit_amount": 3400000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [],
+    "status": "published",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "070000000000000000000005"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000005"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "title": "VinFast VF 5 - xe tự lái",
+    "description": "Xe VinFast VF 5, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-05/cover.jpg",
+      "demo/listings/vehicle-05/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hà Nội",
+      "city": "Hà Nội",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 800000,
+    "security_deposit_amount": 3500000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [],
+    "status": "published",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "070000000000000000000006"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000006"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "title": "Honda City - xe tự lái",
+    "description": "Xe Honda City, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-06/cover.jpg",
+      "demo/listings/vehicle-06/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hải Phòng",
+      "city": "Hải Phòng",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 850000,
+    "security_deposit_amount": 3600000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [],
+    "status": "published",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "070000000000000000000007"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000007"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "title": "Mitsubishi Xpander - xe tự lái",
+    "description": "Xe Mitsubishi Xpander, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-07/cover.jpg",
+      "demo/listings/vehicle-07/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hà Nội",
+      "city": "Hà Nội",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 900000,
+    "security_deposit_amount": 3700000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [],
+    "status": "published",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "070000000000000000000008"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000008"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "title": "Toyota Innova - xe tự lái",
+    "description": "Xe Toyota Innova, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-08/cover.jpg",
+      "demo/listings/vehicle-08/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hải Phòng",
+      "city": "Hải Phòng",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 950000,
+    "security_deposit_amount": 3800000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [
+      {
+        "start_at": {
+          "$date": "2026-10-27T00:00:00+07:00"
+        },
+        "end_at": {
+          "$date": "2026-11-27T00:00:00+07:00"
+        },
+        "reason": "withdrawal_coordination"
+      }
+    ],
+    "status": "suspended",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "070000000000000000000009"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000009"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "title": "Ford Territory - xe tự lái",
+    "description": "Xe Ford Territory, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-09/cover.jpg",
+      "demo/listings/vehicle-09/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hà Nội",
+      "city": "Hà Nội",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 1000000,
+    "security_deposit_amount": 3900000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [
+      {
+        "start_at": {
+          "$date": "2026-10-27T00:00:00+07:00"
+        },
+        "end_at": {
+          "$date": "2026-11-27T00:00:00+07:00"
+        },
+        "reason": "withdrawal_coordination"
+      }
+    ],
+    "status": "suspended",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "07000000000000000000000a"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000a"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "title": "Kia Sonet - xe tự lái",
+    "description": "Xe Kia Sonet, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-10/cover.jpg",
+      "demo/listings/vehicle-10/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hải Phòng",
+      "city": "Hải Phòng",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 1050000,
+    "security_deposit_amount": 4000000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [
+      {
+        "start_at": {
+          "$date": "2026-10-27T00:00:00+07:00"
+        },
+        "end_at": {
+          "$date": "2026-11-27T00:00:00+07:00"
+        },
+        "reason": "withdrawal_coordination"
+      }
+    ],
+    "status": "suspended",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "07000000000000000000000b"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000b"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "title": "Suzuki XL7 - xe tự lái",
+    "description": "Xe Suzuki XL7, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-11/cover.jpg",
+      "demo/listings/vehicle-11/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hà Nội",
+      "city": "Hà Nội",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 1100000,
+    "security_deposit_amount": 4100000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [
+      {
+        "start_at": {
+          "$date": "2026-10-27T00:00:00+07:00"
+        },
+        "end_at": {
+          "$date": "2026-11-27T00:00:00+07:00"
+        },
+        "reason": "withdrawal_coordination"
+      }
+    ],
+    "status": "suspended",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "07000000000000000000000c"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000c"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000011"
+    },
+    "title": "Toyota Corolla Cross - xe tự lái",
+    "description": "Xe Toyota Corolla Cross, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-12/cover.jpg",
+      "demo/listings/vehicle-12/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hải Phòng",
+      "city": "Hải Phòng",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 1150000,
+    "security_deposit_amount": 4200000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [],
+    "status": "archived",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "07000000000000000000000d"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000d"
+    },
+    "created_by_operation_staff_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "title": "Honda HR-V - xe tự lái",
+    "description": "Xe Honda HR-V, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
+    "photos": [
+      "demo/listings/vehicle-13/cover.jpg",
+      "demo/listings/vehicle-13/interior.jpg"
+    ],
+    "pickup_location": {
+      "branch_name": "Demo Garage Hà Nội",
+      "city": "Hà Nội",
+      "address_label": "Địa điểm gara mẫu (không phải địa chỉ thực)"
+    },
+    "daily_price": 1200000,
+    "security_deposit_amount": 4300000,
+    "mileage_policy": {
+      "included_km_per_day": 200,
+      "extra_km_fee": 3000
+    },
+    "rental_policy_snapshot": {
+      "late_fee_per_hour": 100000,
+      "fuel_return_level": "same_as_pickup",
+      "cancellation_policy_version": 1
+    },
+    "availability_blocks": [],
+    "status": "archived",
+    "published_at": {
+      "$date": "2026-09-18T10:00:00+07:00"
+    },
+    "updated_at": {
+      "$date": "2026-10-27T09:00:00+07:00"
+    }
+  }
+]

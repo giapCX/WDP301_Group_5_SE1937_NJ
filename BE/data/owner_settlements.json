@@ -1,0 +1,414 @@
+[
+  {
+    "_id": {
+      "$oid": "0d0000000000000000000001"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000001"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [
+      {
+        "booking_id": {
+          "$oid": "080000000000000000000001"
+        },
+        "rental_revenue": 1200000,
+        "commission_pct": 15,
+        "platform_commission": 180000
+      }
+    ],
+    "gross_rental_revenue": 1200000,
+    "platform_commission": 180000,
+    "other_adjustments": 0,
+    "net_owner_payout": 1020000,
+    "payout_transaction_id": {
+      "$oid": "0b0000000000000000000014"
+    },
+    "payout_status": "paid",
+    "settled_at": {
+      "$date": "2026-10-27T16:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d0000000000000000000002"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000002"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [
+      {
+        "booking_id": {
+          "$oid": "080000000000000000000002"
+        },
+        "rental_revenue": 1300000,
+        "commission_pct": 15,
+        "platform_commission": 195000
+      }
+    ],
+    "gross_rental_revenue": 1300000,
+    "platform_commission": 195000,
+    "other_adjustments": 0,
+    "net_owner_payout": 1105000,
+    "payout_transaction_id": null,
+    "payout_status": "payable",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d0000000000000000000003"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000003"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [
+      {
+        "booking_id": {
+          "$oid": "080000000000000000000003"
+        },
+        "rental_revenue": 1400000,
+        "commission_pct": 18,
+        "platform_commission": 252000
+      }
+    ],
+    "gross_rental_revenue": 1400000,
+    "platform_commission": 252000,
+    "other_adjustments": 0,
+    "net_owner_payout": 1148000,
+    "payout_transaction_id": null,
+    "payout_status": "payable",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d0000000000000000000004"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000004"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [
+      {
+        "booking_id": {
+          "$oid": "080000000000000000000004"
+        },
+        "rental_revenue": 1500000,
+        "commission_pct": 15,
+        "platform_commission": 225000
+      }
+    ],
+    "gross_rental_revenue": 1500000,
+    "platform_commission": 225000,
+    "other_adjustments": 0,
+    "net_owner_payout": 1275000,
+    "payout_transaction_id": null,
+    "payout_status": "payable",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d0000000000000000000005"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000005"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000005"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [],
+    "gross_rental_revenue": 0,
+    "platform_commission": 0,
+    "other_adjustments": 0,
+    "net_owner_payout": 0,
+    "payout_transaction_id": null,
+    "payout_status": "draft",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d0000000000000000000006"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000006"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000006"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000006"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [],
+    "gross_rental_revenue": 0,
+    "platform_commission": 0,
+    "other_adjustments": 0,
+    "net_owner_payout": 0,
+    "payout_transaction_id": null,
+    "payout_status": "draft",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d0000000000000000000007"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000007"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000007"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000007"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [],
+    "gross_rental_revenue": 0,
+    "platform_commission": 0,
+    "other_adjustments": 0,
+    "net_owner_payout": 0,
+    "payout_transaction_id": null,
+    "payout_status": "draft",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d0000000000000000000008"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000008"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000008"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [],
+    "gross_rental_revenue": 0,
+    "platform_commission": 0,
+    "other_adjustments": 0,
+    "net_owner_payout": 0,
+    "payout_transaction_id": null,
+    "payout_status": "draft",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d0000000000000000000009"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000009"
+    },
+    "management_agreement_id": {
+      "$oid": "050000000000000000000009"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [],
+    "gross_rental_revenue": 0,
+    "platform_commission": 0,
+    "other_adjustments": 0,
+    "net_owner_payout": 0,
+    "payout_transaction_id": null,
+    "payout_status": "draft",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d000000000000000000000a"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000a"
+    },
+    "management_agreement_id": {
+      "$oid": "05000000000000000000000a"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [],
+    "gross_rental_revenue": 0,
+    "platform_commission": 0,
+    "other_adjustments": 0,
+    "net_owner_payout": 0,
+    "payout_transaction_id": null,
+    "payout_status": "draft",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d000000000000000000000b"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000b"
+    },
+    "management_agreement_id": {
+      "$oid": "05000000000000000000000b"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [],
+    "gross_rental_revenue": 0,
+    "platform_commission": 0,
+    "other_adjustments": 0,
+    "net_owner_payout": 0,
+    "payout_transaction_id": null,
+    "payout_status": "draft",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "0d000000000000000000000c"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000c"
+    },
+    "management_agreement_id": {
+      "$oid": "05000000000000000000000c"
+    },
+    "period_start": {
+      "$date": "2026-10-01T00:00:00+07:00"
+    },
+    "period_end": {
+      "$date": "2026-10-27T00:00:00+07:00"
+    },
+    "items": [],
+    "gross_rental_revenue": 0,
+    "platform_commission": 0,
+    "other_adjustments": 0,
+    "net_owner_payout": 0,
+    "payout_transaction_id": null,
+    "payout_status": "draft",
+    "settled_at": null,
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  }
+]

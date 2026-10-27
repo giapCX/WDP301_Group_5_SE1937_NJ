@@ -1,0 +1,704 @@
+[
+  {
+    "_id": {
+      "$oid": "040000000000000000000001"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 16000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-01/front.jpg",
+        "demo/inspections/vehicle-01/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000002"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 17000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-02/front.jpg",
+        "demo/inspections/vehicle-02/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000003"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000003"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 18000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-03/front.jpg",
+        "demo/inspections/vehicle-03/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000004"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000004"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 19000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-04/front.jpg",
+        "demo/inspections/vehicle-04/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000005"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000005"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 20000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-05/front.jpg",
+        "demo/inspections/vehicle-05/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000006"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000006"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 21000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-06/front.jpg",
+        "demo/inspections/vehicle-06/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000007"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000007"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 22000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-07/front.jpg",
+        "demo/inspections/vehicle-07/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000008"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000008"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 23000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-08/front.jpg",
+        "demo/inspections/vehicle-08/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000009"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000009"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 24000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-09/front.jpg",
+        "demo/inspections/vehicle-09/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "04000000000000000000000a"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000a"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 25000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-10/front.jpg",
+        "demo/inspections/vehicle-10/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "04000000000000000000000b"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000b"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 26000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-11/front.jpg",
+        "demo/inspections/vehicle-11/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "04000000000000000000000c"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000c"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 27000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-12/front.jpg",
+        "demo/inspections/vehicle-12/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "04000000000000000000000d"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000d"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 28000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-13/front.jpg",
+        "demo/inspections/vehicle-13/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "04000000000000000000000e"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000e"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 29000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-14/front.jpg",
+        "demo/inspections/vehicle-14/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "04000000000000000000000f"
+    },
+    "vehicle_id": {
+      "$oid": "03000000000000000000000f"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "good",
+      "interior": "clean",
+      "engine": "normal",
+      "tires": "good",
+      "odometer_km": 30000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-15/front.jpg",
+        "demo/inspections/vehicle-15/rear.jpg"
+      ]
+    },
+    "recommendation": "pass",
+    "approval_status": "approved",
+    "decision_reason": "Meets platform fleet acceptance criteria",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000010"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000010"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "needs_attention",
+      "interior": "clean",
+      "engine": "recheck_required",
+      "tires": "good",
+      "odometer_km": 31000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-16/front.jpg",
+        "demo/inspections/vehicle-16/rear.jpg"
+      ]
+    },
+    "recommendation": "requires_repair",
+    "approval_status": "revision_required",
+    "decision_reason": "Missing or unsuitable items in vehicle inspection",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000011"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000011"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "needs_attention",
+      "interior": "clean",
+      "engine": "recheck_required",
+      "tires": "good",
+      "odometer_km": 32000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-17/front.jpg",
+        "demo/inspections/vehicle-17/rear.jpg"
+      ]
+    },
+    "recommendation": "requires_repair",
+    "approval_status": "revision_required",
+    "decision_reason": "Missing or unsuitable items in vehicle inspection",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000012"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000012"
+    },
+    "garage_staff_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "inspection_type": "onboarding",
+    "inspected_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    },
+    "condition_report": {
+      "exterior": "needs_attention",
+      "interior": "clean",
+      "engine": "recheck_required",
+      "tires": "good",
+      "odometer_km": 33000,
+      "fuel_level_pct": 65,
+      "photo_keys": [
+        "demo/inspections/vehicle-18/front.jpg",
+        "demo/inspections/vehicle-18/rear.jpg"
+      ]
+    },
+    "recommendation": "fail",
+    "approval_status": "rejected",
+    "decision_reason": "Missing or unsuitable items in vehicle inspection",
+    "decided_at": {
+      "$date": "2026-09-10T14:00:00+07:00"
+    },
+    "created_at": {
+      "$date": "2026-09-09T10:00:00+07:00"
+    }
+  }
+]

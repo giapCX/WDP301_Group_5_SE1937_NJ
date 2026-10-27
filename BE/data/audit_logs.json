@@ -1,0 +1,390 @@
+[
+  {
+    "_id": {
+      "$oid": "120000000000000000000001"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "action": "vehicle.approve",
+    "entity_type": "vehicles",
+    "entity_id": {
+      "$oid": "030000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000002"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "action": "vehicle.approve",
+    "entity_type": "vehicles",
+    "entity_id": {
+      "$oid": "030000000000000000000002"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000003"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "action": "listing.publish",
+    "entity_type": "vehicle_listings",
+    "entity_id": {
+      "$oid": "070000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000004"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "action": "agreement.sign",
+    "entity_type": "management_agreements",
+    "entity_id": {
+      "$oid": "050000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000005"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "action": "vehicle.intake",
+    "entity_type": "vehicle_intakes",
+    "entity_id": {
+      "$oid": "060000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000006"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000008"
+    },
+    "action": "booking.create",
+    "entity_type": "bookings",
+    "entity_id": {
+      "$oid": "080000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000007"
+    },
+    "actor_user_id": null,
+    "action": "booking.confirm",
+    "entity_type": "bookings",
+    "entity_id": {
+      "$oid": "080000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000008"
+    },
+    "actor_user_id": null,
+    "action": "payment.confirm",
+    "entity_type": "payment_transactions",
+    "entity_id": {
+      "$oid": "0b0000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000009"
+    },
+    "actor_user_id": null,
+    "action": "deposit.collect",
+    "entity_type": "security_deposits",
+    "entity_id": {
+      "$oid": "0c0000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "12000000000000000000000a"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "action": "handover.pickup",
+    "entity_type": "rental_handovers",
+    "entity_id": {
+      "$oid": "0a0000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "12000000000000000000000b"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "action": "handover.return",
+    "entity_type": "rental_handovers",
+    "entity_id": {
+      "$oid": "0a0000000000000000000002"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "12000000000000000000000c"
+    },
+    "actor_user_id": {
+      "$oid": "02000000000000000000000f"
+    },
+    "action": "incident.create",
+    "entity_type": "incident_cases",
+    "entity_id": {
+      "$oid": "0e0000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "12000000000000000000000d"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "action": "compensation.approve",
+    "entity_type": "incident_cases",
+    "entity_id": {
+      "$oid": "0e0000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "12000000000000000000000e"
+    },
+    "actor_user_id": null,
+    "action": "deposit.refund",
+    "entity_type": "payment_transactions",
+    "entity_id": {
+      "$oid": "0b0000000000000000000013"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "12000000000000000000000f"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000005"
+    },
+    "action": "withdrawal.request",
+    "entity_type": "vehicle_withdrawal_requests",
+    "entity_id": {
+      "$oid": "0f0000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000010"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000012"
+    },
+    "action": "withdrawal.complete",
+    "entity_type": "vehicle_withdrawal_requests",
+    "entity_id": {
+      "$oid": "0f0000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000011"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "action": "policy.update",
+    "entity_type": "platform_policies",
+    "entity_id": {
+      "$oid": "100000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "120000000000000000000012"
+    },
+    "actor_user_id": {
+      "$oid": "020000000000000000000014"
+    },
+    "action": "account.view",
+    "entity_type": "users",
+    "entity_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "sanitized_changes": {
+      "event": "demo",
+      "summary": "Generated non-sensitive audit metadata",
+      "source": "synthetic_fixture"
+    },
+    "ip_address_masked": "192.0.2.xxx",
+    "created_at": {
+      "$date": "2026-10-27T10:00:00+07:00"
+    }
+  }
+]
