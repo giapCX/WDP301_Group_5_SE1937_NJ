@@ -69,7 +69,9 @@ Noi dung duyet booking, nhan/tra tai gara, hoan coc, phi hoa hong theo database 
 
 Anh trong `FE/public/images/home` lay tu ban thiet ke duoc cung cap, gan nhan minh hoa khi tin xe chua co anh truy cap duoc. Khong thay doi du lieu mau de gia lap anh that hay danh gia khach hang. Phan danh gia trong mockup duoc thay bang cau hoi thuong gap do chua co nguon danh gia da xac minh.
 
-Chua cung cap API ghi du lieu nghiep vu, dang nhap/RBAC, dang ky chu xe, dat xe, thanh toan, eKYC hay ky so; cac nut lien quan hien thong tin cho tinh nang sap mo, khong tao yeu cau gia. Cac tich hop that se duoc them sau khi chot nha cung cap va tai khoan sandbox.
+Giao dien dang nhap/dang ky cua nhanh `giapcx` duoc ghep tai `/#/login`, truy cap tu nut Dang nhap tren homepage; nut Ve trang chu quay lai homepage. Tailwind duoc build cuc bo va chi ap dung trong `.login-page`, khong nap CDN hay reset CSS toan trang.
+
+Chua cung cap API ghi du lieu nghiep vu, dang nhap/RBAC, dang ky chu xe, dat xe, thanh toan, eKYC hay ky so. Form dang nhap/dang ky hien thong bao chua kha dung khi submit, khong gui yeu cau gia hay ghi mat khau ra console. Cac tich hop that se duoc them sau khi chot nha cung cap va tai khoan sandbox.
 
 Du lieu mau duoc giu nguyen nhu nhom cung cap (bao gom mat khau null, giao dich DEMO, file anh/tai lieu minh hoa va mot so moc thoi gian chua hop ly). Khong dung du lieu mau de chung minh thanh toan hay xac minh danh tinh that.
 

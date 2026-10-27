@@ -18,6 +18,8 @@ const listing = {
 };
 
 beforeEach(() => {
+  window.history.replaceState(null, '', '/');
+  jest.spyOn(window, 'scrollTo').mockImplementation(() => {});
   global.fetch = jest.fn(async (url) => ({
     ok: true,
     json: async () =>
@@ -79,4 +81,18 @@ test('failed requests show retry and do not substitute fake vehicles', async () 
   expect(screen.queryByText('600.000 đ')).not.toBeInTheDocument();
   fireEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Thử lại' }));
   await waitFor(() => expect(global.fetch.mock.calls.length).toBeGreaterThan(3));
+});
+
+test('homepage and incoming login/register screens remain accessible after merging', async () => {
+  render(<App />);
+  await screen.findByText('600.000 đ');
+  fireEvent.click(screen.getByRole('button', { name: 'Đăng nhập', exact: true }));
+  expect(
+    await screen.findByRole('heading', { name: 'Chào mừng bạn trở lại!' }),
+  ).toBeInTheDocument();
+  expect(window.location.hash).toBe('#/login');
+  fireEvent.click(screen.getByRole('button', { name: 'Đăng ký', exact: true }));
+  expect(screen.getByRole('heading', { name: 'Đăng ký tài khoản XeDi' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('link', { name: /Về trang chủ/ }));
+  expect(await screen.findByText('600.000 đ')).toBeInTheDocument();
 });

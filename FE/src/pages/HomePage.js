@@ -129,13 +129,12 @@ export default function HomePage() {
     Promise.allSettled([
       getApi('/homepage', { signal: controller.signal }),
       getApi('/listings?limit=100', { signal: controller.signal }),
-    ])
-      .then(([meta, cars]) => {
-        if (controller.signal.aborted) return;
-        if (meta.status === 'fulfilled') setHomepage(meta.value.data);
-        else setMetaError(true);
-        if (cars.status === 'fulfilled') setCatalog(cars.value.data);
-      });
+    ]).then(([meta, cars]) => {
+      if (controller.signal.aborted) return;
+      if (meta.status === 'fulfilled') setHomepage(meta.value.data);
+      else setMetaError(true);
+      if (cars.status === 'fulfilled') setCatalog(cars.value.data);
+    });
     return () => controller.abort();
   }, [metaRetry]);
 
@@ -216,7 +215,11 @@ export default function HomePage() {
       <a className="skip-link" href="#noi-dung">
         Đến nội dung chính
       </a>
-      <SiteHeader onLogin={() => setDialog({ type: 'login' })} />
+      <SiteHeader
+        onLogin={() => {
+          window.location.hash = '/login';
+        }}
+      />
       <main id="noi-dung">
         <section className="hero" id="trang-chu">
           <div className="container">
