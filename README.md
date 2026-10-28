@@ -9,7 +9,7 @@ BE/
   scripts/             Tao collection, index va nhap du lieu
   src/config/          Cau hinh moi truong va ket noi MongoDB
   src/database/        Danh sach collection va index
-  src/routes/          API danh sach va chi tiet xe cho thue
+  src/routes/          API danh sach, chi tiet xe cho thue va xac thuc
   src/app.js           Express app
   src/server.js        Diem khoi dong backend
 ```
@@ -46,7 +46,7 @@ npm run dev:be
 npm run dev:fe
 ```
 
-## API ban dau
+## API
 
 | Method | URL | Chuc nang |
 | --- | --- | --- |
@@ -54,12 +54,15 @@ npm run dev:fe
 | GET | `/api/homepage` | So xe niem yet, dia diem va chinh sach cong khai dang hieu luc |
 | GET | `/api/listings` | Danh sach tin xe da published va xe da approved |
 | GET | `/api/listings/:id` | Chi tiet tin xe theo listing ObjectId |
+| POST | `/api/auth/login` | Dang nhap bang email/so dien thoai va mat khau (tra ve JWT & user info) |
+| GET | `/api/auth/me` | Lay thong tin user hien tai qua JWT Bearer token |
+| POST | `/api/auth/logout` | Dang xuat |
 
-Query ho tro: `page`, `limit`, `q` (tim trong tieu de), `city`, `startAt`, `endAt`, `minPrice`, `maxPrice`, `fuelType`, `transmission`, `vehicleType`, `seats`, `sort` (`newest`, `price_asc`, `price_desc`). `startAt` va `endAt` la cap thoi gian ISO; API loai xe trung booking dang cho xu ly/thanh toan, da xac nhan, dang thue hoac khoang lich bi khoa. Ket qua tim kiem khong giu cho; tao booking sau nay can kiem tra lai va chong tranh chap dong thoi.
+Query ho tro cho listings: `page`, `limit`, `q` (tim trong tieu de), `city`, `startAt`, `endAt`, `minPrice`, `maxPrice`, `fuelType`, `transmission`, `vehicleType`, `seats`, `sort` (`newest`, `price_asc`, `price_desc`). `startAt` va `endAt` la cap thoi gian ISO; API loai xe trung booking dang cho xu ly/thanh toan, da xac nhan, dang thue hoac khoang lich bi khoa. Ket qua tim kiem khong giu cho; tao booking sau nay can kiem tra lai va chong tranh chap dong thoi.
 
-Vi du: `/api/listings?fuelType=electric&sort=price_asc&page=1&limit=6`.
+Mat khau mac dinh cho cac tai khoan mau duoc seed tu dataset co `password_hash: null` la `123456`. Khi dang nhap thanh cong lan dau, he thong tu dong ma hoa bcrypt va luu vao MongoDB.
 
-FE co proxy `/api` den BE khi chay `npm start`; goi `fetch('/api/listings')` tu React. Khi deploy FE da build, can cau hinh reverse proxy `/api` toi BE.
+FE co proxy `/api` den BE khi chay `npm start`; goi `fetch('/api/listings')` hoac `fetch('/api/auth/login')` tu React. Khi deploy FE da build, can cau hinh reverse proxy `/api` toi BE.
 
 ## Pham vi hien tai
 
@@ -67,16 +70,8 @@ Homepage trong `FE/src/pages/HomePage.js` da duoc chuyen sang React theo mau `xe
 
 Noi dung duyet booking, nhan/tra tai gara, hoan coc, phi hoa hong theo database va UC. Thoi han hoan coc, dieu kien huy va phi mac dinh doc tu `platform_policies` dang hieu luc. Uoc tinh thu nhap la gia niem yet x so ngay x (1 - hoa hong mac dinh), chua tru thue/chi phi phat sinh; hop dong rieng co the co muc phi khac.
 
-Anh trong `FE/public/images/home` lay tu ban thiet ke duoc cung cap, gan nhan minh hoa khi tin xe chua co anh truy cap duoc. Khong thay doi du lieu mau de gia lap anh that hay danh gia khach hang. Phan danh gia trong mockup duoc thay bang cau hoi thuong gap do chua co nguon danh gia da xac minh.
-
-Giao dien dang nhap/dang ky cua nhanh `giapcx` duoc ghep tai `/#/login`, truy cap tu nut Dang nhap tren homepage; nut Ve trang chu quay lai homepage. Tailwind duoc build cuc bo va chi ap dung trong `.login-page`, khong nap CDN hay reset CSS toan trang.
-
-Chua cung cap API ghi du lieu nghiep vu, dang nhap/RBAC, dang ky chu xe, dat xe, thanh toan, eKYC hay ky so. Form dang nhap/dang ky hien thong bao chua kha dung khi submit, khong gui yeu cau gia hay ghi mat khau ra console. Cac tich hop that se duoc them sau khi chot nha cung cap va tai khoan sandbox.
-
-Du lieu mau duoc giu nguyen nhu nhom cung cap (bao gom mat khau null, giao dich DEMO, file anh/tai lieu minh hoa va mot so moc thoi gian chua hop ly). Khong dung du lieu mau de chung minh thanh toan hay xac minh danh tinh that.
-
-Database chua chot schema nen buoc nay chi tao collection va index, chua ap dat validation nghiep vu. Cac quan he tham chieu khong phai foreign key duoc MongoDB tu dong kiem tra.
+Giao dien dang nhap tai `/#/login` da duoc ket noi truc tiep toi API backend `/api/auth/login` voi du lieu that tu MongoDB. Khi dang nhap thanh cong, token duoc luu vao localStorage/sessionStorage va thong tin nguoi dung duoc hien thi tren Header.
 
 ## Kiem tra
 
-`npm test --prefix BE` chay integration test API voi MongoDB va du lieu da seed, chi doc du lieu. `npm run build` kiem tra FE build duoc.
+`npm test --prefix BE` chay integration test API voi MongoDB va du lieu da seed (bao gom test listings, homepage va authentication/login). `npm test --prefix FE -- --watchAll=false` chay UI test.
