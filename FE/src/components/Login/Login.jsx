@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Login.css';
+import { postApi } from '../../services/api';
 
 const Login = () => {
   const [authTab, setAuthTab] = useState('login'); // 'login' | 'register'
@@ -8,6 +9,8 @@ const Login = () => {
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [formStatus, setFormStatus] = useState('');
+  const [statusType, setStatusType] = useState('info'); // 'info' | 'success' | 'error'
+  const [isLoading, setIsLoading] = useState(false);
 
   // Form states
   const [loginData, setLoginData] = useState({
@@ -41,9 +44,43 @@ const Login = () => {
     }));
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setFormStatus('Đăng nhập hiện chưa khả dụng. Vui lòng thử lại sau.');
+    setFormStatus('');
+    setIsLoading(true);
+    setStatusType('info');
+
+    try {
+      const response = await postApi('/auth/login', {
+        account: loginData.account,
+        password: loginData.password,
+      });
+
+      const user = response.data?.user;
+      const token = response.data?.token;
+
+      if (loginData.rememberMe) {
+        localStorage.setItem('xedi_token', token);
+        localStorage.setItem('xedi_user', JSON.stringify(user));
+      } else {
+        sessionStorage.setItem('xedi_token', token);
+        sessionStorage.setItem('xedi_user', JSON.stringify(user));
+      }
+
+      setStatusType('success');
+      setFormStatus(
+        `Đăng nhập thành công! Chào mừng ${user.full_name || user.email} (${user.role?.display_name || user.role?.code || 'Thành viên'}). Đang chuyển hướng...`
+      );
+
+      setTimeout(() => {
+        window.location.hash = '#trang-chu';
+      }, 1000);
+    } catch (err) {
+      setStatusType('error');
+      setFormStatus(err.message || 'Email/Số điện thoại hoặc mật khẩu không chính xác.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRegisterSubmit = (e) => {
@@ -249,12 +286,24 @@ const Login = () => {
         {/* Main Form Container */}
         <div className="my-auto py-8 max-w-lg w-full mx-auto">
           {formStatus && (
-            <p
+            <div
               role="status"
-              className="mb-4 rounded-xl bg-surface-container-low p-4 text-body-sm text-primary"
+              className={`mb-4 rounded-xl p-4 text-body-sm flex items-start space-x-2 ${
+                statusType === 'success'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                  : statusType === 'error'
+                  ? 'bg-red-50 text-red-800 border border-red-200'
+                  : 'bg-surface-container-low text-primary'
+              }`}
             >
-              {formStatus}
-            </p>
+              <span
+                className="material-symbols-outlined text-lg leading-tight mt-0.5"
+                data-icon={statusType === 'success' ? 'check_circle' : 'info'}
+              >
+                {statusType === 'success' ? 'check_circle' : 'info'}
+              </span>
+              <span>{formStatus}</span>
+            </div>
           )}
           {/* ======================= 1. LOGIN FORM PANEL ======================= */}
           {authTab === 'login' && (
@@ -359,15 +408,58 @@ const Login = () => {
 
                 {/* Primary Action Button */}
                 <button
-                  className="w-full mt-2 py-3.5 px-4 bg-primary-container hover:bg-primary text-on-primary font-headline-sm text-body-lg rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] flex items-center justify-center space-x-2"
+                  disabled={isLoading}
+                  className={`w-full mt-2 py-3.5 px-4 bg-primary-container hover:bg-primary text-on-primary font-headline-sm text-body-lg rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] flex items-center justify-center space-x-2 ${
+                    isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
                   type="submit"
                 >
-                  <span>Đăng nhập</span>
+                  <span>{isLoading ? 'Đang xác thực...' : 'Đăng nhập'}</span>
                   <span className="material-symbols-outlined" data-icon="arrow_forward">
                     arrow_forward
                   </span>
                 </button>
               </form>
+
+              {/* Quick sample account fill for MongoDB users */}
+              <div className="mt-5 pt-4 border-t border-outline-variant/40">
+                <p className="text-body-xs font-medium text-secondary mb-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm" data-icon="database">database</span>
+                  <span>Tài khoản mẫu từ MongoDB (Mật khẩu: <code>123456</code>):</span>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginData({ account: 'owner01@example.com', password: '123456', rememberMe: true });
+                      setFormStatus('');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant transition-colors text-xs"
+                  >
+                    🚗 Chủ xe: owner01@example.com
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginData({ account: 'renter08@example.com', password: '123456', rememberMe: true });
+                      setFormStatus('');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant transition-colors text-xs"
+                  >
+                    👤 Khách thuê: renter08@example.com
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginData({ account: 'admin20@example.com', password: '123456', rememberMe: true });
+                      setFormStatus('');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant transition-colors text-xs"
+                  >
+                    🛡️ Admin: admin20@example.com
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

@@ -3,6 +3,7 @@ import cors from 'cors';
 import { env } from './config/env.js';
 import { createListingsRouter } from './routes/listings.js';
 import { createHomepageRouter } from './routes/homepage.js';
+import { createAuthRouter } from './routes/auth.js';
 
 export function createApp(database) {
   const app = express();
@@ -18,6 +19,8 @@ export function createApp(database) {
       response.status(503).json({ status: 'unavailable' });
     }
   });
+
+  app.use('/api/auth', createAuthRouter(database));
   app.use('/api/listings', createListingsRouter(database));
   app.use('/api/homepage', createHomepageRouter(database));
 

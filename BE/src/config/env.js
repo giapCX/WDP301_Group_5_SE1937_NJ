@@ -14,4 +14,7 @@ export const env = {
   mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017',
   databaseName: process.env.MONGODB_DB_NAME || 'xedi',
   frontendOrigin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
+  jwtSecret: process.env.JWT_SECRET || 'xedi-super-secret-jwt-key-2026-development',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  defaultUserPassword: process.env.DEFAULT_USER_PASSWORD || '123456',
 };
