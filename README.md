@@ -54,6 +54,12 @@ npm run dev:fe
 | GET | `/api/homepage` | So xe niem yet, dia diem va chinh sach cong khai dang hieu luc |
 | GET | `/api/listings` | Danh sach tin xe da published va xe da approved |
 | GET | `/api/listings/:id` | Chi tiet tin xe theo listing ObjectId |
+| GET | `/api/manager/dashboard?period=7d` | Dashboard van hanh cho tai khoan Manager/Admin (JWT), gom chi so, doanh thu da doi soat, yeu cau xe/su co va audit log |
+| GET/PATCH | `/api/manager/vehicles` va `/api/manager/vehicles/:id/review` | Danh sach xe; duyet, tu choi hoac yeu cau bo sung ho so |
+| GET/PATCH | `/api/manager/incidents` va `/api/manager/incidents/:id/*` | Xem su co; duyet/tu choi boi thuong hoac dong ho so |
+| GET/PUT | `/api/manager/policies` va `/api/manager/policies/:type` | Xem chinh sach dang ap dung; tao phien ban moi |
+| GET/PATCH | `/api/manager/staff` va `/api/manager/staff/:id` | Liet ke nhan su, doi vai tro va trang thai tai khoan |
+| GET | `/api/manager/reports/finance`, `/api/manager/reports/inspections` | Bao cao doi soat tai chinh va lich su kiem dinh, co loc ngay |
 | POST | `/api/auth/login` | Dang nhap bang email/so dien thoai va mat khau (tra ve JWT & user info) |
 | GET | `/api/auth/me` | Lay thong tin user hien tai qua JWT Bearer token |
 | POST | `/api/auth/logout` | Dang xuat |
@@ -71,6 +77,8 @@ Homepage trong `FE/src/pages/HomePage.js` da duoc chuyen sang React theo mau `xe
 Noi dung duyet booking, nhan/tra tai gara, hoan coc, phi hoa hong theo database va UC. Thoi han hoan coc, dieu kien huy va phi mac dinh doc tu `platform_policies` dang hieu luc. Uoc tinh thu nhap la gia niem yet x so ngay x (1 - hoa hong mac dinh), chua tru thue/chi phi phat sinh; hop dong rieng co the co muc phi khac.
 
 Giao dien dang nhap tai `/#/login` da duoc ket noi truc tiep toi API backend `/api/auth/login` voi du lieu that tu MongoDB. Khi dang nhap thanh cong, token duoc luu vao localStorage/sessionStorage va thong tin nguoi dung duoc hien thi tren Header.
+
+Dashboard quan ly tai `/#/manager` goi cac endpoint `/api/manager/*` va chi cho phep tai khoan co role hien tai `MANAGER` hoac `ADMIN`. API tinh xe tu listings published, ho so cho duyet va su co chua dong tu collections tuong ung; doanh thu lay phi nen tang trong `owner_settlements` da thanh toan, hoat dong lay tu `audit_logs`. Query dashboard `period` chap nhan `7d`, `30d` hoac `month`. Thao tac duyet, boi thuong, dong su co, sua chinh sach va quan ly nhan su deu ghi audit log.
 
 ## Kiem tra
 

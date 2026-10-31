@@ -4,6 +4,7 @@ import { env } from './config/env.js';
 import { createListingsRouter } from './routes/listings.js';
 import { createHomepageRouter } from './routes/homepage.js';
 import { createAuthRouter } from './routes/auth.js';
+import { createManagerRouter } from './routes/manager.js';
 
 export function createApp(database) {
   const app = express();
@@ -23,6 +24,7 @@ export function createApp(database) {
   app.use('/api/auth', createAuthRouter(database));
   app.use('/api/listings', createListingsRouter(database));
   app.use('/api/homepage', createHomepageRouter(database));
+  app.use('/api/manager', createManagerRouter(database));
 
   app.use((_request, response) => response.status(404).json({ error: { message: 'API route not found.' } }));
   app.use((error, _request, response, _next) => {

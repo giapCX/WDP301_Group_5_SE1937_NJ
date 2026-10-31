@@ -5,8 +5,14 @@ export async function getApi(path, { signal } = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
   const response = await fetch(`/api${path}`, { signal, headers });
-  if (!response.ok) throw new Error('Không thể tải dữ liệu. Vui lòng thử lại sau.');
-  return response.json();
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error?.message || 'Không thể tải dữ liệu. Vui lòng thử lại sau.');
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+  return data;
 }
 
 export async function postApi(path, body, { signal } = {}) {
@@ -37,3 +43,24 @@ export async function postApi(path, body, { signal } = {}) {
 
   return data;
 }
+
+async function updateApi(method, path, body, { signal } = {}) {
+  const token = localStorage.getItem('xedi_token') || sessionStorage.getItem('xedi_token');
+  const response = await fetch(`/api${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify(body),
+    signal,
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error?.message || 'Không thể cập nhật dữ liệu. Vui lòng thử lại.');
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+  return data;
+}
+
+export const patchApi = (path, body, options) => updateApi('PATCH', path, body, options);
+export const putApi = (path, body, options) => updateApi('PUT', path, body, options);

@@ -73,7 +73,7 @@ const Login = () => {
       );
 
       setTimeout(() => {
-        window.location.hash = '#trang-chu';
+        window.location.hash = user.roles?.some((role) => ['MANAGER', 'ADMIN'].includes(role)) ? '#/manager' : '#trang-chu';
       }, 1000);
     } catch (err) {
       setStatusType('error');
