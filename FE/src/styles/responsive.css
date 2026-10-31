@@ -1,0 +1,411 @@
+@media (max-width: 1150px) {
+  .header-inner,
+  .search-inner,
+  .listings-page,
+  .footer-inner,
+  .search-editor {
+    width: calc(100% - 48px);
+  }
+  .header-inner {
+    gap: 25px;
+    height: 68px;
+  }
+  .header-inner nav {
+    gap: 18px;
+    font-size: 12px;
+  }
+  .header-actions {
+    gap: 15px;
+  }
+  .rental-duration {
+    display: none;
+  }
+  .listings-layout {
+    grid-template-columns: 270px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .trust-pill {
+    font-size: 8px;
+  }
+  .page-heading h1 {
+    font-size: 22px;
+  }
+  .quick-filters button {
+    font-size: 9px;
+    padding: 6px 7px;
+  }
+  .sort-control {
+    font-size: 9px;
+  }
+  .sort-control select {
+    max-width: 130px;
+    font-size: 9px;
+  }
+  .vehicle-meta {
+    font-size: 8px;
+  }
+  .vehicle-body h2 {
+    font-size: 13px;
+  }
+  .vehicle-price > div > strong {
+    font-size: 16px;
+  }
+}
+@media (max-width: 900px) {
+  .header-inner nav {
+    gap: 14px;
+    font-size: 11px;
+  }
+  .header-actions {
+    gap: 12px;
+  }
+  .owner-button {
+    font-size: 10px;
+  }
+  .brand {
+    font-size: 20px;
+  }
+  .search-field strong {
+    font-size: 10px;
+  }
+  .search-box .primary-button {
+    padding: 10px;
+    font-size: 11px;
+  }
+  .search-field {
+    padding: 0 8px;
+    gap: 8px;
+  }
+  .map-button {
+    font-size: 11px;
+    padding: 10px;
+  }
+  .page-heading {
+    gap: 8px;
+  }
+  .page-heading h1 {
+    font-size: 19px;
+  }
+  .trust-pill {
+    max-width: 240px;
+    white-space: normal;
+    line-height: 1.5;
+  }
+  .listings-layout {
+    grid-template-columns: 235px minmax(0, 1fr);
+    gap: 15px;
+  }
+  .filter-panel {
+    padding: 0 11px;
+  }
+  .filter-heading h2 {
+    font-size: 13px;
+  }
+  .check-row {
+    font-size: 10px;
+  }
+  .amenity {
+    font-size: 9px;
+  }
+  .results-toolbar {
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .sort-control {
+    margin-left: auto;
+  }
+  .vehicle-grid {
+    gap: 11px;
+  }
+  .vehicle-body {
+    padding: 10px;
+  }
+  .vehicle-meta {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .vehicle-tags {
+    gap: 4px;
+  }
+  .vehicle-tags span {
+    font-size: 8px;
+  }
+  .vehicle-price {
+    padding: 10px;
+  }
+  .vehicle-price > div > strong {
+    font-size: 14px;
+  }
+  .vehicle-price small {
+    font-size: 8px;
+  }
+  .vehicle-price .primary-button {
+    font-size: 10px;
+    padding: 9px;
+  }
+  .vehicle-badge {
+    font-size: 8px;
+  }
+  .footer-top p {
+    max-width: 50%;
+    font-size: 10px;
+  }
+}
+@media (max-width: 700px) {
+  .header-inner,
+  .search-inner,
+  .listings-page,
+  .footer-inner,
+  .search-editor {
+    width: calc(100% - 32px);
+  }
+  .header-inner {
+    height: 64px;
+    gap: 20px;
+  }
+  .header-inner nav > :not(:first-child),
+  .owner-button,
+  .language-icon {
+    display: none;
+  }
+  .header-inner nav {
+    font-size: 12px;
+  }
+  .account-button {
+    padding: 8px 10px;
+  }
+  .search-inner {
+    flex-wrap: wrap;
+    padding: 12px 0;
+    gap: 8px;
+  }
+  .search-box {
+    flex-wrap: wrap;
+    flex-basis: 100%;
+    padding: 10px;
+    gap: 13px;
+  }
+  .search-field {
+    flex-basis: calc(100% - 105px);
+    padding: 0;
+  }
+  .search-field strong {
+    font-size: 11px;
+  }
+  .search-field .eyebrow {
+    font-size: 8px;
+  }
+  .date-field {
+    border: 0;
+    order: 3;
+    flex-basis: 100%;
+    border-top: 1px solid #dce2f5;
+    padding-top: 10px;
+  }
+  .search-box .primary-button {
+    margin-left: auto;
+  }
+  .rental-duration {
+    display: block;
+    margin-right: auto;
+    font-size: 9px;
+  }
+  .map-button {
+    border: 0;
+    padding: 5px;
+    font-size: 10px;
+    background: transparent;
+  }
+  .listings-page {
+    padding: 18px 0 35px;
+  }
+  .page-heading {
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+  .page-heading h1 {
+    font-size: 21px;
+    line-height: 1.5;
+  }
+  .trust-pill {
+    max-width: none;
+    font-size: 9px;
+  }
+  .listings-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .filters-column {
+    display: none;
+    width: 100%;
+  }
+  .filters-column.is-expanded {
+    display: block;
+  }
+  .insurance-note {
+    display: none;
+  }
+  .filter-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+    padding: 0 16px;
+  }
+  .filter-heading {
+    grid-column: 1 / -1;
+  }
+  .results-section {
+    width: 100%;
+  }
+  .mobile-filter {
+    display: inline-flex;
+    font-size: 10px;
+    padding: 7px 9px;
+  }
+  .quick-filters {
+    order: 3;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .quick-filters button {
+    font-size: 10px;
+    padding: 7px 9px;
+  }
+  .results-toolbar {
+    border-radius: 12px;
+  }
+  .sort-control {
+    font-size: 10px;
+  }
+  .sort-control select {
+    font-size: 10px;
+  }
+  .vehicle-photo {
+    aspect-ratio: 1.4;
+  }
+  .vehicle-body h2 {
+    font-size: 12px;
+  }
+  .vehicle-meta {
+    font-size: 8px;
+  }
+  .vehicle-price {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .vehicle-price > div > strong {
+    font-size: 15px;
+  }
+  .vehicle-price .primary-button {
+    flex: 1;
+  }
+  .vehicle-badges {
+    left: 6px;
+    top: 6px;
+    right: 30px;
+  }
+  .vehicle-badge {
+    font-size: 7px;
+  }
+  .vehicle-badges > span:nth-child(2) {
+    display: none;
+  }
+  .save-button {
+    top: 6px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+  }
+  .save-button .icon {
+    width: 16px;
+  }
+  .fuel-label {
+    left: 6px;
+    bottom: 6px;
+    font-size: 8px;
+  }
+  .demo-notice {
+    font-size: 7px;
+    padding: 7px 0;
+  }
+  .results-bottom p {
+    font-size: 9px;
+    line-height: 1.7;
+  }
+  .footer-top {
+    align-items: flex-start;
+  }
+  .footer-top p {
+    max-width: 65%;
+    font-size: 9px;
+  }
+  .footer-links {
+    grid-template-columns: 1fr 1fr;
+    font-size: 10px;
+  }
+  .footer-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    font-size: 8px;
+    line-height: 1.8;
+    gap: 12px;
+  }
+  .search-editor label,
+  .search-editor input,
+  .search-editor select {
+    width: 100%;
+  }
+}
+@media (max-width: 480px) {
+  .vehicle-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .vehicle-photo {
+    aspect-ratio: 1.65;
+  }
+  .vehicle-body {
+    padding: 13px;
+  }
+  .vehicle-body h2 {
+    font-size: 15px;
+  }
+  .vehicle-meta {
+    font-size: 10px;
+  }
+  .vehicle-tags span {
+    font-size: 9px;
+  }
+  .vehicle-price {
+    flex-wrap: nowrap;
+    padding: 13px;
+  }
+  .vehicle-price > div > strong {
+    font-size: 19px;
+  }
+  .vehicle-price .primary-button {
+    flex: none;
+    padding: 12px 18px;
+    font-size: 12px;
+  }
+  .vehicle-price small {
+    font-size: 10px;
+  }
+  .vehicle-badge {
+    font-size: 9px;
+  }
+  .vehicle-badges > span:nth-child(2) {
+    display: inline-flex;
+  }
+  .filter-panel {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vehicle-card,
+  .primary-button {
+    transition: none;
+  }
+}

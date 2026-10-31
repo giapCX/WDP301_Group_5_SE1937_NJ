@@ -54,7 +54,9 @@ npm run dev:fe
 | GET | `/api/listings` | Danh sach tin xe da published va xe da approved |
 | GET | `/api/listings/:id` | Chi tiet tin xe theo listing ObjectId |
 
-Query ho tro: `page`, `limit`, `q` (tim trong tieu de), `minPrice`, `maxPrice`, `fuelType`, `transmission`, `vehicleType`, `seats`, `sort` (`newest`, `price_asc`, `price_desc`).
+Query ho tro: `page`, `limit`, `q` (tieu de, mo ta, hang va mau xe), `city`, `minPrice`, `maxPrice`, `fuelType`, `transmission`, `vehicleType`, `seats`, `minYear`, `ids`, `startAt`, `endAt`, `sort` (`newest`, `price_asc`, `price_desc`). `vehicleType` nhan nhieu gia tri cach nhau bang dau phay, khong phan biet hoa thuong (vi du `sedan,suv`). `ids` la danh sach listing ObjectId cach nhau bang dau phay (toi da 100); chuoi rong tra ve danh sach rong.
+
+`startAt` va `endAt` phai duoc gui cung nhau theo ISO 8601 co mui gio; thoi gian tra phai sau thoi gian nhan. API loai xe co `availability_blocks` hoac booking (`pending`, `awaiting_payment`, `confirmed`, `ongoing`) giao voi khoang thue: `start_at < endAt` va `end_at > startAt`. Hai khoang chi cham bien khong bi coi la trung. Ket qua tim kiem khong giu cho xe; luong dat xe sau nay can kiem tra lai lich trong giao dich.
 
 Vi du: `/api/listings?fuelType=electric&sort=price_asc&page=1&limit=6`.
 
@@ -62,7 +64,7 @@ FE co proxy `/api` den BE khi chay `npm start`; goi `fetch('/api/listings')` tu 
 
 ## Pham vi hien tai
 
-Giu giao dien React hien co; chua chuyen cac mockup HTML trong ZIP thanh React. API hien tai phuc vu buoc dau cho man danh sach/chi tiet xe, chua loc lich trong theo ngay thue. Chua cung cap API ghi du lieu nghiep vu, dang nhap/RBAC, dat xe, thanh toan, eKYC hay ky so. Cac tich hop that se duoc them sau khi chot nha cung cap va tai khoan sandbox.
+Man danh sach React da ket noi `/api/listings`: tim kiem, loc, sap xep va phan trang do MongoDB xu ly. FE co debounce, huy request cu, trang thai tai/loi va nut thu lai. Cac bo loc chua co truong du lieu (tien nghi, giao xe tan noi, Superhost, giam gia, dat xe nhanh) duoc khoa kem chu thich; khong tao gia tri gia. Du lieu seed hien chi co dia diem Ha Noi/Hai Phong va duong dan anh minh hoa chua co file, nen FE hien anh thay the. Chua cung cap API ghi du lieu nghiep vu, dang nhap/RBAC, dat xe, thanh toan, eKYC hay ky so.
 
 Du lieu mau duoc giu nguyen nhu nhom cung cap (bao gom mat khau null, giao dich DEMO, file anh/tai lieu minh hoa va mot so moc thoi gian chua hop ly). Khong dung du lieu mau de chung minh thanh toan hay xac minh danh tinh that.
 
@@ -70,4 +72,4 @@ Database chua chot schema nen buoc nay chi tao collection va index, chua ap dat 
 
 ## Kiem tra
 
-`npm test --prefix BE` chay integration test API voi MongoDB va du lieu da seed, chi doc du lieu. `npm run build` kiem tra FE build duoc.
+`npm test --prefix BE` chay integration test API voi MongoDB. Test `api.test.js` chi doc du lieu da seed; `listings-search.test.js` tao database `xedi_search_test_<uuid>` rieng, ghi fixture va tu xoa database nay sau test, khong sua database ung dung. `npm run build` kiem tra FE build duoc. Chi tiet FE xem `FE/SCREEN.md`.
