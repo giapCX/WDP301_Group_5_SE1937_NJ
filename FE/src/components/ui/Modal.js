@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import Icon from './Icon';
-export default function Modal({ title, children, onClose }) {
+export default function Modal({ title, children, onClose, className = '' }) {
   const ref = useRef(null);
   useEffect(() => {
     const dialog = ref.current;
@@ -11,7 +11,7 @@ export default function Modal({ title, children, onClose }) {
   }, []);
   return (
     <dialog
-      className="modal"
+      className={`modal ${className}`}
       aria-labelledby="modal-title"
       ref={ref}
       onCancel={onClose}

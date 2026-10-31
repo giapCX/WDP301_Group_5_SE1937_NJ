@@ -1,4 +1,16 @@
 const paths = {
+  dashboard: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',
+  clipboard: 'M9 4H5v17h14V4h-4M9 2h6v5H9zM8 12h8m-8 4h5',
+  garage: 'M3 21V8l9-5 9 5v13M6 21V10h12v11M6 14h12M6 18h12',
+  clock: 'M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0m9-5v5l3 2',
+  history: 'M3 5v5h5M3 10a9 9 0 1 1 1 7m8-10v5l3 2',
+  alert: 'm12 3 10 18H2Zm0 6v5m0 3v.01',
+  search: 'M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0m12 5 6 6',
+  download: 'M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5',
+  upload: 'M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5',
+  plus: 'M12 4v16M4 12h16',
+  wrench: 'M14 5a5 5 0 0 0-6 6l-6 6a3 3 0 0 0 4 4l6-6a5 5 0 0 0 6-6l-4 3-3-3Z',
+  arrowLeft: 'm15 5-7 7 7 7M8 12h13',
   car: 'M5 7 7 3h10l2 4M4 8h16v10H4zM7 18v3m10-3v3M4 12h16M7 9v2m10-2v2',
   pin: 'M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0ZM10 10a2 2 0 1 0 4 0 2 2 0 1 0-4 0',
   calendar:
