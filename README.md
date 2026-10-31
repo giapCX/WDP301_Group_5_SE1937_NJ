@@ -73,3 +73,7 @@ Database chua chot schema nen buoc nay chi tao collection va index, chua ap dat 
 ## Kiem tra
 
 `npm test --prefix BE` chay integration test API voi MongoDB. Test `api.test.js` chi doc du lieu da seed; `listings-search.test.js` tao database `xedi_search_test_<uuid>` rieng, ghi fixture va tu xoa database nay sau test, khong sua database ung dung. `npm run build` kiem tra FE build duoc. Chi tiet FE xem `FE/SCREEN.md`.
+
+## API tiep nhan xe (Garage Staff)
+
+Da co API danh sach xe cho tiep nhan, kiem tra dieu kien, tao/sua nhap va xac nhan tiep nhan tai `/api/garage`. Can cau hinh xac thuc dev trong BE; mac dinh route bi khoa. Xac nhan dung MongoDB transaction, yeu cau replica set/Atlas. Huong dan endpoint, body, version va cach test: [BE/docs/garage-intakes.md](BE/docs/garage-intakes.md). FE `/garage` hien van la ban thu nghiem local, chua noi cac API nay.

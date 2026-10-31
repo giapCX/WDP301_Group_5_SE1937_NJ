@@ -14,4 +14,6 @@ export const env = {
   mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017',
   databaseName: process.env.MONGODB_DB_NAME || 'xedi',
   frontendOrigin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
+  garageApiToken: process.env.GARAGE_API_TOKEN || '',
+  garageStaffId: process.env.GARAGE_STAFF_ID || '',
 };

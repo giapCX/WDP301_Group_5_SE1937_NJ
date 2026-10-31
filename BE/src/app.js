@@ -2,8 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import { env } from './config/env.js';
 import { createListingsRouter } from './routes/listings.js';
+import { createGarageIntakesRouter } from './routes/garage-intakes.js';
 
-export function createApp(database) {
+export function createApp(database, options = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(cors({ origin: env.frontendOrigin }));
@@ -18,12 +19,40 @@ export function createApp(database) {
     }
   });
   app.use('/api/listings', createListingsRouter(database));
+  app.use(
+    '/api/garage',
+    createGarageIntakesRouter(
+      database,
+      options.garageAuth || {
+        token: env.garageApiToken,
+        userId: env.garageStaffId,
+        production: process.env.NODE_ENV === 'production',
+      },
+    ),
+  );
 
-  app.use((_request, response) => response.status(404).json({ error: { message: 'API route not found.' } }));
+  app.use((_request, response) =>
+    response.status(404).json({ error: { message: 'API route not found.' } }),
+  );
   app.use((error, _request, response, _next) => {
-    const status = error.status >= 400 && error.status < 500 ? error.status : 500;
-    if (status === 500) console.error(error);
-    response.status(status).json({ error: { message: status === 500 ? 'Internal server error.' : error.message } });
+    const status =
+      Number.isInteger(error.status) &&
+      error.status >= 400 &&
+      error.status <= 599
+        ? error.status
+        : 500;
+    if (status >= 500 && !error.expose) console.error(error);
+    response
+      .status(status)
+      .json({
+        error: {
+          message:
+            status >= 500 && !error.expose
+              ? 'Internal server error.'
+              : error.message,
+          ...(status < 500 && error.details ? { details: error.details } : {}),
+        },
+      });
   });
   return app;
 }
