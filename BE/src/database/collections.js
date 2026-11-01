@@ -1,5 +1,17 @@
-// Collection names follow the group's JSON dataset. Indexes enforce only
-// identifiers, one-document-per-booking rules, and one initial intake per management agreement.
+// Collection names follow the group's JSON dataset. Indexes protect identifiers
+// and prevent duplicate booking records, initial intakes and open onboarding inspections.
+export const openInspectionIndex = {
+  key: { vehicle_id: 1, inspection_type: 1 },
+  options: {
+    name: 'one_open_onboarding_inspection',
+    unique: true,
+    partialFilterExpression: {
+      inspection_type: 'onboarding',
+      approval_status: { $in: ['draft', 'pending'] },
+    },
+  },
+};
+
 export const collections = [
   { name: 'roles', unique: ['code'] },
   { name: 'users', unique: ['email'], indexes: [{ primary_role_id: 1 }] },
@@ -10,7 +22,11 @@ export const collections = [
   },
   {
     name: 'vehicle_inspections',
-    indexes: [{ vehicle_id: 1, inspected_at: -1 }],
+    indexes: [
+      { vehicle_id: 1, inspected_at: -1 },
+      { garage_staff_id: 1, approval_status: 1, created_at: -1 },
+    ],
+    indexDefinitions: [openInspectionIndex],
   },
   {
     name: 'management_agreements',
@@ -75,7 +91,12 @@ export async function initializeCollections(database) {
       (item) => item.name,
     ),
   );
-  for (const { name, unique = [], indexes = [] } of collections) {
+  for (const {
+    name,
+    unique = [],
+    indexes = [],
+    indexDefinitions = [],
+  } of collections) {
     if (!existing.has(name)) {
       await database.createCollection(name);
     }
@@ -86,6 +107,9 @@ export async function initializeCollections(database) {
     }
     for (const index of indexes) {
       await database.collection(name).createIndex(index);
+    }
+    for (const { key, options } of indexDefinitions) {
+      await database.collection(name).createIndex(key, options);
     }
   }
 }

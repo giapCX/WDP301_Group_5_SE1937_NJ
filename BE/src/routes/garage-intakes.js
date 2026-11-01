@@ -12,7 +12,10 @@ import { httpError, objectId } from '../utils/http-error.js';
 export function createGarageIntakesRouter(database, authConfig) {
   const router = Router();
   const service = createVehicleIntakeService(database);
-  router.use(requireGarageStaff(database, authConfig));
+  router.use(
+    ['/intakes', '/intake-vehicles', '/vehicles/:vehicleId/intake-eligibility'],
+    requireGarageStaff(database, authConfig),
+  );
   router.get('/intake-vehicles', async (request, response) => {
     const query = parseIntakeList(request.query);
     if (query.status !== 'all')
@@ -40,14 +43,12 @@ export function createGarageIntakesRouter(database, authConfig) {
     response.json(await service.list(parseIntakeList(request.query))),
   );
   router.post('/intakes', async (request, response) =>
-    response
-      .status(201)
-      .json({
-        data: await service.create(
-          parseIntakeDraft(request.body, true),
-          request.actor,
-        ),
-      }),
+    response.status(201).json({
+      data: await service.create(
+        parseIntakeDraft(request.body, true),
+        request.actor,
+      ),
+    }),
   );
   router.get('/intakes/:id', async (request, response) =>
     response.json({

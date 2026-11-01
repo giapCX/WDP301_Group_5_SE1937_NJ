@@ -4,7 +4,11 @@ import { httpError } from '../utils/http-error.js';
 
 // Temporary development authentication. The actor is configured on the server,
 // never taken from a request body or an untrusted user-ID header.
-export function requireGarageStaff(database, config) {
+export function requireGarageStaff(
+  database,
+  config,
+  permission = 'vehicle.intake',
+) {
   return async (request, _response, next) => {
     if (
       config.production ||
@@ -36,10 +40,10 @@ export function requireGarageStaff(database, config) {
     const role = await database
       .collection('roles')
       .findOne(
-        { _id: { $in: roleIds }, permissions: 'vehicle.intake' },
+        { _id: { $in: roleIds }, permissions: permission },
         { projection: { _id: 1 } },
       );
-    if (!role) throw httpError(403, 'Tài khoản không có quyền tiếp nhận xe.');
+    if (!role) throw httpError(403, `Tài khoản không có quyền ${permission}.`);
     request.actor = { _id: actor._id };
     next();
   };

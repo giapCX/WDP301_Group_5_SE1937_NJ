@@ -77,3 +77,7 @@ Database chua chot schema nen buoc nay chi tao collection va index, chua ap dat 
 ## API tiep nhan xe (Garage Staff)
 
 Da co API danh sach xe cho tiep nhan, kiem tra dieu kien, tao/sua nhap va xac nhan tiep nhan tai `/api/garage`. Can cau hinh xac thuc dev trong BE; mac dinh route bi khoa. Xac nhan dung MongoDB transaction, yeu cau replica set/Atlas. Huong dan endpoint, body, version va cach test: [BE/docs/garage-intakes.md](BE/docs/garage-intakes.md). FE `/garage` hien van la ban thu nghiem local, chua noi cac API nay.
+
+## API kiem dinh xe (Garage Staff)
+
+Da co `/api/garage/inspection-vehicles`, `/api/garage/inspections` va luong tao/sua nhap, gui de xuat kiem dinh onboarding. Can permission `vehicle.inspect`, doc lap voi `vehicle.intake`. Garage Staff chi gui sang `pending`, khong tu phe duyet xe. Partial unique index yeu cau MongoDB 6.0+; gui de xuat dung transaction nen can replica set/Atlas. Chi tiet request/response va mapping FE: [BE/docs/garage-inspections.md](BE/docs/garage-inspections.md).
