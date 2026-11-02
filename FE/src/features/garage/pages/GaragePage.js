@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import GarageLayout from '../components/garage/GarageLayout';
-import GarageOverview from '../components/garage/GarageOverview';
-import GarageTaskTable from '../components/garage/GarageTaskTable';
-import GarageReportDialog from '../components/garage/GarageReportDialog';
-import GarageIncidentDialog from '../components/garage/GarageIncidentDialog';
-import GarageStatus from '../components/garage/GarageStatus';
-import Modal from '../components/ui/Modal';
-import Icon from '../components/ui/Icon';
+import GarageLayout from '../components/GarageLayout';
+import GarageOverview from '../components/GarageOverview';
+import GarageTaskTable from '../components/GarageTaskTable';
+import GarageReportDialog from '../components/GarageReportDialog';
+import GarageIncidentDialog from '../components/GarageIncidentDialog';
+import GarageStatus from '../components/GarageStatus';
+import Modal from '../../../components/ui/Modal';
+import Icon from '../../../components/ui/Icon';
 import useGarageWorkspace from '../hooks/useGarageWorkspace';
 import {
   bangkokDate,

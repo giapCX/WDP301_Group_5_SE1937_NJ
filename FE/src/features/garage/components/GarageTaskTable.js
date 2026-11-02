@@ -1,11 +1,11 @@
-import Icon from '../ui/Icon';
+import Icon from '../../../components/ui/Icon';
 import GarageStatus from './GarageStatus';
 import {
   displayDate,
   displayTime,
   taskKinds,
   taskBlockers,
-} from '../../data/garage';
+} from '../data/garage';
 
 export default function GarageTaskTable({ tasks, onOpen, onClear }) {
   if (!tasks.length)

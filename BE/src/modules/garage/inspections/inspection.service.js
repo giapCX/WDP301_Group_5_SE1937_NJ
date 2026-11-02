@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
-import { openInspectionIndex } from '../database/collections.js';
-import { httpError } from '../utils/http-error.js';
+import { openInspectionIndex } from '../../../database/collections.js';
+import { httpError } from '../../../utils/http-error.js';
 
 const conditionFields = ['exterior', 'interior', 'engine', 'tires'];
 const vehicleFields = {
@@ -26,9 +26,9 @@ const pagination = (page, limit, total) => ({
 });
 const openStatus = { $in: ['draft', 'pending'] };
 
-export function createVehicleInspectionService(database) {
-  const inspections = database.collection('vehicle_inspections');
-  const vehicles = database.collection('vehicles');
+export function createVehicleInspectionService(repository) {
+  const inspections = repository.collection('vehicle_inspections');
+  const vehicles = repository.collection('vehicles');
   let indexReady;
   async function ensureIndex() {
     if (!indexReady)
@@ -70,7 +70,7 @@ export function createVehicleInspectionService(database) {
         projection: { 'condition_report.odometer_km': 1 },
       },
     );
-    const intake = await database
+    const intake = await repository
       .collection('vehicle_intakes')
       .findOne(
         {
@@ -83,7 +83,7 @@ export function createVehicleInspectionService(database) {
           projection: { odometer_km: 1 },
         },
       );
-    const owner = await database
+    const owner = await repository
       .collection('users')
       .findOne(
         { _id: vehicle.owner_id },
@@ -279,13 +279,13 @@ export function createVehicleInspectionService(database) {
   }
   async function submit(id, version, actor) {
     await ensureIndex();
-    const hello = await database.command({ hello: 1 });
+    const hello = await repository.command({ hello: 1 });
     if (!hello.setName && hello.msg !== 'isdbgrid')
       throw httpError(
         503,
         'Gửi đề xuất kiểm định cần MongoDB replica set hoặc Atlas để ghi transaction.',
       );
-    const session = database.client.startSession();
+    const session = repository.startSession();
     try {
       return await session.withTransaction(
         async () => {
@@ -379,7 +379,7 @@ export function createVehicleInspectionService(database) {
             { session, returnDocument: 'after' },
           );
           if (!submitted) throw httpError(409, 'Biên bản đã thay đổi.');
-          await database
+          await repository
             .collection('audit_logs')
             .insertOne(
               {

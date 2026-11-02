@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import Modal from '../ui/Modal';
-import Icon from '../ui/Icon';
+import Modal from '../../../components/ui/Modal';
+import Icon from '../../../components/ui/Icon';
 import GaragePhotoUpload from './GaragePhotoUpload';
 
 export default function GarageIncidentDialog({

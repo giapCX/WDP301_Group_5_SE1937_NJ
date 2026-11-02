@@ -1,4 +1,4 @@
-import { statusLabels } from '../../data/garage';
+import { statusLabels } from '../data/garage';
 export default function GarageStatus({ status, blocked = false, label }) {
   return (
     <span className={`gs-status gs-status--${blocked ? 'blocked' : status}`}>

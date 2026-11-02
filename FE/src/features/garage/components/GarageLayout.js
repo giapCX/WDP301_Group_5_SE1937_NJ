@@ -1,5 +1,5 @@
-import Icon from '../ui/Icon';
-import { bangkokDate, garageSections, sectionKinds } from '../../data/garage';
+import Icon from '../../../components/ui/Icon';
+import { bangkokDate, garageSections, sectionKinds } from '../data/garage';
 
 export default function GarageLayout({
   section,

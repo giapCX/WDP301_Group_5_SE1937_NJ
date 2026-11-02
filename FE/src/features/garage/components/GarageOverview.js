@@ -1,6 +1,6 @@
-import Icon from '../ui/Icon';
+import Icon from '../../../components/ui/Icon';
 import GarageTaskTable from './GarageTaskTable';
-import { bangkokDate, displayTime, taskKinds } from '../../data/garage';
+import { bangkokDate, displayTime, taskKinds } from '../data/garage';
 
 export default function GarageOverview({ workspace, onNavigate, onOpen }) {
   const today = bangkokDate();

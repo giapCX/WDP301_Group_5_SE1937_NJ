@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { httpError, objectId } from '../utils/http-error.js';
+import { httpError, objectId } from '../../../utils/http-error.js';
 
 function plain(value, name) {
   if (!value || typeof value !== 'object' || Array.isArray(value))

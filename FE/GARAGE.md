@@ -30,10 +30,10 @@ Dữ liệu tên/xe/lịch hẹn đều là mẫu. Lịch mẫu được tạo t
 
 ## Tổ chức file
 
-- `src/pages/GaragePage.js`: điều hướng, tìm kiếm/lọc, mở form và xuất CSV.
-- `src/components/garage/`: layout, dashboard, bảng công việc, form kiểm định/giao nhận, form sự cố và đính kèm ảnh.
-- `src/hooks/useGarageWorkspace.js`: đọc/lưu dữ liệu thử nghiệm, cập nhật trạng thái, tạo nhật ký và sự cố.
-- `src/data/garage.js`: fixture, nhãn trạng thái, quy tắc kiểm tra dữ liệu mẫu.
-- `src/styles/garage.css`: CSS riêng, được giới hạn trong không gian Garage Staff.
+- `src/features/garage/pages/GaragePage.js`: điều hướng, tìm kiếm/lọc, mở form và xuất CSV.
+- `src/features/garage/components/`: layout, dashboard, bảng công việc, form kiểm định/giao nhận, form sự cố và đính kèm ảnh.
+- `src/features/garage/hooks/useGarageWorkspace.js`: đọc/lưu dữ liệu thử nghiệm, cập nhật trạng thái, tạo nhật ký và sự cố.
+- `src/features/garage/data/garage.js`: fixture, nhãn trạng thái, quy tắc kiểm tra dữ liệu mẫu.
+- `src/features/garage/styles/garage.css`: CSS riêng, được giới hạn trong không gian Garage Staff.
 
 Kiểm tra: `npm run build --prefix FE`; trong thư mục FE chạy `node node_modules/react-scripts/bin/react-scripts.js test --watchAll=false --runInBand`.

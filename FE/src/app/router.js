@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import HomePage from '../features/home/pages/HomePage';
 import Login from '../features/auth/pages/LoginPage';
-import GaragePage from '../pages/GaragePage';
-import ManagerPage from '../pages/ManagerPage';
+import GaragePage from '../features/garage/pages/GaragePage';
+import ManagerPage from '../features/manager/pages/ManagerPage';
 
 export default function AppRouter() {
   const [isLogin, setIsLogin] = useState(() => window.location.hash.startsWith('#/login'));

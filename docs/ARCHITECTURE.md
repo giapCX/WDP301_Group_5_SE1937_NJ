@@ -165,3 +165,9 @@ Backend integration test cần MongoDB hoạt động và dữ liệu đã seed.
 - Cơ chế mật khẩu mặc định cho tài khoản seed và JWT secret dự phòng được giữ nguyên từ code cũ. Đây là các phần cần thay đổi khi triển khai xác thực production.
 - `HomePage` và `LoginPage` vẫn chứa nhiều JSX. Có thể tiếp tục tách các khối giao diện khi phát triển chức năng liên quan; logic HTTP và tải dữ liệu đã được đưa ra khỏi page.
 - Việc tìm xe trống không giữ chỗ. Luồng tạo booking sau này phải kiểm tra lại lịch và xử lý tranh chấp đồng thời.
+
+## 9. Feature gara và quản lý
+
+- Frontend Garage Staff đặt trong `FE/src/features/garage/`; feature Manager đặt trong `FE/src/features/manager/`. Các feature sở hữu page, component, hook, dữ liệu, styles và API client của mình; primitive dùng chung tiếp tục nằm trong `FE/src/components/` và HTTP transport nằm trong `FE/src/services/httpClient.js`.
+- Backend Garage Staff đặt trong `BE/src/modules/garage/{intakes,inspections}/`, với routes, controller, service, repository và validator theo luồng.
+- Backend Manager đặt trong `BE/src/modules/manager/`. Quy tắc mới tiếp tục tách endpoint binding, điều phối HTTP, nghiệp vụ và truy cập MongoDB theo các layer routes/controller/service/repository; không đưa thêm truy vấn trực tiếp vào route khi mở rộng API.

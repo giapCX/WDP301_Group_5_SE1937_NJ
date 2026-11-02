@@ -5,9 +5,9 @@ import { env } from './config/env.js';
 import { createListingsRouter } from './modules/listings/listing.routes.js';
 import { createHomepageRouter } from './modules/homepage/homepage.routes.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
-import { createGarageIntakesRouter } from './routes/garage-intakes.js';
-import { createGarageInspectionsRouter } from './routes/garage-inspections.js';
-import { createManagerRouter } from './routes/manager.js';
+import { createGarageIntakesRouter } from './modules/garage/intakes/intake.routes.js';
+import { createGarageInspectionsRouter } from './modules/garage/inspections/inspection.routes.js';
+import { createManagerRouter } from './modules/manager/manager.routes.js';
 
 export function createApp(database, options = {}) {
   const app = express();

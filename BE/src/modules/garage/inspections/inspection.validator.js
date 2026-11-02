@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
-import { httpError, objectId } from '../utils/http-error.js';
-import { parseIntakeDraft, parseVersion } from './vehicle-intakes.js';
+import { httpError, objectId } from '../../../utils/http-error.js';
+import { parseIntakeDraft, parseVersion } from '../intakes/intake.validator.js';
 
 export const inspectionRecommendations = ['pass', 'requires_repair', 'fail'];
 export const inspectionStatuses = [

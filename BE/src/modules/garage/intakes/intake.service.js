@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { httpError } from '../utils/http-error.js';
+import { httpError } from '../../../utils/http-error.js';
 
 const fields = ['exterior', 'interior', 'engine', 'tires'];
 const vehicleFields = {
@@ -27,8 +27,8 @@ const isCompleted = (record) =>
 const sameId = (a, b) =>
   a instanceof ObjectId && b instanceof ObjectId && a.equals(b);
 
-export function createVehicleIntakeService(database) {
-  const receipts = database.collection('vehicle_intakes');
+export function createVehicleIntakeService(repository) {
+  const receipts = repository.collection('vehicle_intakes');
   let indexReady;
   async function ensureIndex() {
     if (!indexReady)
@@ -45,11 +45,11 @@ export function createVehicleIntakeService(database) {
   }
   async function context(vehicleId, agreementId, session) {
     const options = session ? { session } : {};
-    const vehicle = await database
+    const vehicle = await repository
       .collection('vehicles')
       .findOne({ _id: vehicleId }, { ...options, projection: vehicleFields });
     if (!vehicle) throw httpError(404, 'Không tìm thấy xe.');
-    const agreement = await database
+    const agreement = await repository
       .collection('management_agreements')
       .findOne(
         { _id: agreementId },
@@ -62,7 +62,7 @@ export function createVehicleIntakeService(database) {
     )
       throw httpError(409, 'Hợp đồng không thuộc xe hoặc chủ xe này.');
     // Sequential reads also work inside transactions (no parallel session operations).
-    const inspection = await database
+    const inspection = await repository
       .collection('vehicle_inspections')
       .findOne(
         { vehicle_id: vehicleId, inspection_type: 'onboarding' },
@@ -92,7 +92,7 @@ export function createVehicleIntakeService(database) {
         projection: { odometer_km: 1 },
       },
     );
-    const owner = await database
+    const owner = await repository
       .collection('users')
       .findOne(
         { _id: vehicle.owner_id },
@@ -207,10 +207,10 @@ export function createVehicleIntakeService(database) {
         filter.$or = ['brand', 'model', 'license_plate'].map((field) => ({
           [field]: { $regex: escapeRegex(q), $options: 'i' },
         }));
-      const total = await database
+      const total = await repository
         .collection('vehicles')
         .countDocuments(filter);
-      const vehicles = await database
+      const vehicles = await repository
         .collection('vehicles')
         .find(filter, { projection: vehicleFields })
         .sort({ _id: -1 })
@@ -219,7 +219,7 @@ export function createVehicleIntakeService(database) {
         .toArray();
       const data = [];
       for (const vehicle of vehicles) {
-        const agreement = await database
+        const agreement = await repository
           .collection('management_agreements')
           .findOne(
             { vehicle_id: vehicle._id, owner_id: vehicle.owner_id },
@@ -346,13 +346,13 @@ export function createVehicleIntakeService(database) {
   }
   async function confirm(id, version, actor) {
     await ensureIndex();
-    const hello = await database.command({ hello: 1 });
+    const hello = await repository.command({ hello: 1 });
     if (!hello.setName && hello.msg !== 'isdbgrid')
       throw httpError(
         503,
         'Xác nhận tiếp nhận cần MongoDB replica set để cập nhật biên bản và xe trong cùng transaction.',
       );
-    const session = database.client.startSession();
+    const session = repository.startSession();
     try {
       return await session.withTransaction(
         async () => {
@@ -409,7 +409,7 @@ export function createVehicleIntakeService(database) {
             !condition.note?.trim()
           )
             throw httpError(400, 'Cần mô tả hiện trạng bất thường.');
-          const vehicle = await database
+          const vehicle = await repository
             .collection('vehicles')
             .updateOne(
               {
@@ -439,7 +439,7 @@ export function createVehicleIntakeService(database) {
             { session, returnDocument: 'after' },
           );
           if (!completed) throw httpError(409, 'Biên bản đã thay đổi.');
-          await database
+          await repository
             .collection('audit_logs')
             .insertOne(
               {
