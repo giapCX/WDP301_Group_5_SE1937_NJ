@@ -193,7 +193,7 @@ module.exports = {
       },
     },
   },
-  content: ['./src/components/Login/**/*.{js,jsx}'],
+  content: ['./src/features/auth/**/*.{js,jsx}'],
   important: '.login-page',
   corePlugins: {
     preflight: false,

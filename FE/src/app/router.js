@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import HomePage from './pages/HomePage';
-import Login from './components/Login';
+import HomePage from '../features/home/pages/HomePage';
+import Login from '../features/auth/pages/LoginPage';
 
-export default function App() {
+export default function AppRouter() {
   const [isLogin, setIsLogin] = useState(() => window.location.hash.startsWith('#/login'));
 
   useEffect(() => {

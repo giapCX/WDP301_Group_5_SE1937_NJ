@@ -9,7 +9,8 @@ BE/
   scripts/             Tao collection, index va nhap du lieu
   src/config/          Cau hinh moi truong va ket noi MongoDB
   src/database/        Danh sach collection va index
-  src/routes/          API danh sach, chi tiet xe cho thue va xac thuc
+  src/modules/         auth, listings, homepage: routes/controller/service/repository
+  src/middlewares/     Xac thuc va xu ly loi tap trung
   src/app.js           Express app
   src/server.js        Diem khoi dong backend
 ```
@@ -66,7 +67,7 @@ FE co proxy `/api` den BE khi chay `npm start`; goi `fetch('/api/listings')` hoa
 
 ## Pham vi hien tai
 
-Homepage trong `FE/src/pages/HomePage.js` da duoc chuyen sang React theo mau `xedi_trang_ch_thu_xe_t_l_i_p2p`. Header, footer, the xe va dialog duoc tach thanh component. Tim theo dia diem/thoi gian, loc xe, sap xep gia, xem thong tin xe va cong cu uoc tinh thu nhap su dung API/MongoDB. Nut luu xe luu danh sach tren trinh duyet hien tai.
+Homepage trong `FE/src/features/home/pages/HomePage.js` da duoc chuyen sang React theo mau `xedi_trang_ch_thu_xe_t_l_i_p2p`. Header, footer, the xe va dialog duoc tach thanh component. Tim theo dia diem/thoi gian, loc xe, sap xep gia, xem thong tin xe va cong cu uoc tinh thu nhap su dung API/MongoDB. Nut luu xe luu danh sach tren trinh duyet hien tai.
 
 Noi dung duyet booking, nhan/tra tai gara, hoan coc, phi hoa hong theo database va UC. Thoi han hoan coc, dieu kien huy va phi mac dinh doc tu `platform_policies` dang hieu luc. Uoc tinh thu nhap la gia niem yet x so ngay x (1 - hoa hong mac dinh), chua tru thue/chi phi phat sinh; hop dong rieng co the co muc phi khac.
 
@@ -75,3 +76,10 @@ Giao dien dang nhap tai `/#/login` da duoc ket noi truc tiep toi API backend `/a
 ## Kiem tra
 
 `npm test --prefix BE` chay integration test API voi MongoDB va du lieu da seed (bao gom test listings, homepage va authentication/login). `npm test --prefix FE -- --watchAll=false` chay UI test.
+
+## Tai lieu cho nhom
+
+- [Kien truc va huong dan phat trien](docs/ARCHITECTURE.md)
+- [Bao cao ra soat va refactor](docs/STRUCTURE_REVIEW.md)
+
+Frontend: `FE/src/app` va `FE/src/features/{auth,home,listings}`. Backend: `BE/src/modules/{auth,homepage,listings}`.

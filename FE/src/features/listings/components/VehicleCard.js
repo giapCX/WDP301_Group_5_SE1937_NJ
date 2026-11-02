@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Icon from './Icon';
+import Icon from '../../../components/Icon';
 
 export const money = (value) => new Intl.NumberFormat('vi-VN').format(value);
 export const fuelLabels = { gasoline: 'Xăng', diesel: 'Dầu', electric: 'Điện', hybrid: 'Hybrid' };

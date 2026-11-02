@@ -1,9 +1,10 @@
+import { notFound, errorHandler } from './middlewares/error.middleware.js';
 import express from 'express';
 import cors from 'cors';
 import { env } from './config/env.js';
-import { createListingsRouter } from './routes/listings.js';
-import { createHomepageRouter } from './routes/homepage.js';
-import { createAuthRouter } from './routes/auth.js';
+import { createListingsRouter } from './modules/listings/listing.routes.js';
+import { createHomepageRouter } from './modules/homepage/homepage.routes.js';
+import { createAuthRouter } from './modules/auth/auth.routes.js';
 
 export function createApp(database) {
   const app = express();
@@ -24,11 +25,7 @@ export function createApp(database) {
   app.use('/api/listings', createListingsRouter(database));
   app.use('/api/homepage', createHomepageRouter(database));
 
-  app.use((_request, response) => response.status(404).json({ error: { message: 'API route not found.' } }));
-  app.use((error, _request, response, _next) => {
-    const status = error.status >= 400 && error.status < 500 ? error.status : 500;
-    if (status === 500) console.error(error);
-    response.status(status).json({ error: { message: status === 500 ? 'Internal server error.' : error.message } });
-  });
+  app.use(notFound);
+  app.use(errorHandler);
   return app;
 }

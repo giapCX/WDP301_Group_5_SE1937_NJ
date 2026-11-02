@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
-import SiteHeader from '../components/SiteHeader';
-import SiteFooter from '../components/SiteFooter';
-import Icon from '../components/Icon';
-import Modal from '../components/Modal';
-import VehicleCard, { money, fuelLabels } from '../components/VehicleCard';
-import { getApi } from '../services/api';
+import IncomeCalculator from '../components/IncomeCalculator';
+import { useState } from 'react';
+import SiteHeader from '../../../components/SiteHeader';
+import SiteFooter from '../../../components/SiteFooter';
+import Icon from '../../../components/Icon';
+import Modal from '../../../components/Modal';
+import VehicleCard, { money, fuelLabels } from '../../listings/components/VehicleCard';
+import useHomeOverview from '../hooks/useHomeOverview';
+import useListings from '../../listings/hooks/useListings';
 import './HomePage.css';
 
 const categories = [
@@ -39,78 +41,7 @@ function SectionHeading({ eyebrow, title, description, left = false }) {
   );
 }
 
-function IncomeCalculator({ catalog, commission }) {
-  const [vehicleId, setVehicleId] = useState('');
-  const [days, setDays] = useState(16);
-  const listing = catalog.find((item) => item._id === vehicleId) || catalog[0];
-  const estimate =
-    listing && commission !== null
-      ? Math.round(listing.daily_price * days * (1 - commission / 100))
-      : null;
-  return (
-    <div className="income-calculator">
-      <div className="calculator-heading">
-        <span>CÔNG CỤ TÍNH THU NHẬP</span>
-        <span className="green-pill">Tham khảo</span>
-      </div>
-      <label htmlFor="income-vehicle">Dòng xe tham khảo</label>
-      <select
-        id="income-vehicle"
-        value={listing?._id || ''}
-        onChange={(event) => setVehicleId(event.target.value)}
-        disabled={!catalog.length}
-      >
-        {!catalog.length && <option value="">Chưa có dữ liệu xe</option>}
-        {catalog.map((item) => (
-          <option value={item._id} key={item._id}>
-            {item.vehicle.brand} {item.vehicle.model} — {money(item.daily_price)} đ/ngày
-          </option>
-        ))}
-      </select>
-      <label htmlFor="rental-days">
-        Số ngày cho thuê mỗi tháng: <strong>{days} ngày</strong>
-      </label>
-      <input
-        id="rental-days"
-        type="range"
-        min="1"
-        max="30"
-        value={days}
-        onChange={(event) => setDays(Number(event.target.value))}
-      />
-      <div className="range-labels">
-        <span>1 ngày</span>
-        <span>30 ngày</span>
-      </div>
-      <div className="income-result" aria-live="polite">
-        <span>Ước tính thu nhập mỗi tháng</span>
-        <strong>
-          {estimate === null ? '—' : money(estimate)} <small>đ</small>
-        </strong>
-        <span>
-          {commission === null
-            ? 'Chưa tải được mức phí nền tảng'
-            : `Sau phí nền tảng mặc định ${commission}%`}
-        </span>
-      </div>
-      <p className="calculator-note">
-        Chưa bao gồm thuế và chi phí phát sinh. Mức phí và doanh thu thực tế được đối soát theo hợp
-        đồng quản lý xe.
-      </p>
-    </div>
-  );
-}
-
 export default function HomePage() {
-  const [homepage, setHomepage] = useState(null);
-  const [catalog, setCatalog] = useState([]);
-  const [metaError, setMetaError] = useState(false);
-  const [metaRetry, setMetaRetry] = useState(0);
-  const [listings, setListings] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [retry, setRetry] = useState(0);
   const [category, setCategory] = useState(0);
   const [sort, setSort] = useState('newest');
   const [limit, setLimit] = useState(6);
@@ -119,48 +50,11 @@ export default function HomePage() {
   const [search, setSearch] = useState(null);
   const [searchError, setSearchError] = useState('');
   const [dialog, setDialog] = useState(null);
+  const { homepage, catalog, metaError, setMetaRetry } = useHomeOverview();
+  const { listings, total, loading, error, setRetry } = useListings({ filters: categories[category].query, sort, search, limit });
   const policies = homepage?.policies;
   const refundDays = policies?.depositRefundBusinessDays;
   const cancelHours = policies?.freeCancellationHours;
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setMetaError(false);
-    Promise.allSettled([
-      getApi('/homepage', { signal: controller.signal }),
-      getApi('/listings?limit=100', { signal: controller.signal }),
-    ]).then(([meta, cars]) => {
-      if (controller.signal.aborted) return;
-      if (meta.status === 'fulfilled') setHomepage(meta.value.data);
-      else setMetaError(true);
-      if (cars.status === 'fulfilled') setCatalog(cars.value.data);
-    });
-    return () => controller.abort();
-  }, [metaRetry]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError('');
-    const query = new URLSearchParams({ limit, sort, ...categories[category].query });
-    if (search) {
-      if (search.city) query.set('city', search.city);
-      query.set('startAt', search.startAt);
-      query.set('endAt', search.endAt);
-    }
-    getApi(`/listings?${query}`, { signal: controller.signal })
-      .then((result) => {
-        setListings(result.data);
-        setTotal(result.pagination.total);
-      })
-      .catch((reason) => {
-        if (reason.name !== 'AbortError') setError(reason.message);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [category, sort, search, limit, retry]);
 
   const submitSearch = (event) => {
     event.preventDefault();

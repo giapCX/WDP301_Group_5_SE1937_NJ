@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Icon from './Icon';
+import { clearSession, getCurrentUser } from '../features/auth/session';
 
 export function Brand({ light = false }) {
   return (
@@ -18,34 +19,20 @@ export function Brand({ light = false }) {
 
 export default function SiteHeader({ onLogin }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const raw = localStorage.getItem('xedi_user') || sessionStorage.getItem('xedi_user');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [currentUser, setCurrentUser] = useState(getCurrentUser);
 
   useEffect(() => {
-    const handleStorage = () => {
-      try {
-        const raw = localStorage.getItem('xedi_user') || sessionStorage.getItem('xedi_user');
-        setCurrentUser(raw ? JSON.parse(raw) : null);
-      } catch {
-        setCurrentUser(null);
-      }
+    const update = () => setCurrentUser(getCurrentUser());
+    window.addEventListener('storage', update);
+    window.addEventListener('xedi:session', update);
+    return () => {
+      window.removeEventListener('storage', update);
+      window.removeEventListener('xedi:session', update);
     };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('xedi_token');
-    localStorage.removeItem('xedi_user');
-    sessionStorage.removeItem('xedi_token');
-    sessionStorage.removeItem('xedi_user');
-    setCurrentUser(null);
+    clearSession();
     window.location.hash = '#trang-chu';
   };
 

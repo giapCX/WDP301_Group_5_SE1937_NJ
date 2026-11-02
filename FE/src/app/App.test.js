@@ -18,6 +18,8 @@ const listing = {
 };
 
 beforeEach(() => {
+  localStorage.clear();
+  sessionStorage.clear();
   window.history.replaceState(null, '', '/');
   jest.spyOn(window, 'scrollTo').mockImplementation(() => {});
   global.fetch = jest.fn(async (url) => ({
@@ -42,6 +44,35 @@ beforeEach(() => {
 afterEach(() => {
   jest.restoreAllMocks();
   delete global.fetch;
+});
+
+test('login submits credentials and replaces a remembered account with a session account', async () => {
+  localStorage.setItem('xedi_token', 'old-token');
+  localStorage.setItem('xedi_user', JSON.stringify({ full_name: 'Old account' }));
+  window.history.replaceState(null, '', '/#/login');
+  const user = { full_name: 'New account', email: 'renter@example.com' };
+  global.fetch.mockResolvedValue({
+    ok: true,
+    json: async () => ({ data: { token: 'new-token', user } }),
+  });
+
+  render(<App />);
+  fireEvent.change(screen.getByLabelText(/Số điện thoại hoặc Email/i), {
+    target: { value: 'renter@example.com' },
+  });
+  fireEvent.change(screen.getByLabelText('Mật khẩu', { exact: true }), {
+    target: { value: '123456' },
+  });
+  fireEvent.click(screen.getByRole('checkbox', { name: /Ghi nhớ/i }));
+  fireEvent.submit(screen.getByLabelText('Mật khẩu', { exact: true }).closest('form'));
+
+  await waitFor(() => expect(sessionStorage.getItem('xedi_token')).toBe('new-token'));
+  expect(localStorage.getItem('xedi_token')).toBeNull();
+  expect(global.fetch).toHaveBeenCalledWith('/api/auth/login', expect.objectContaining({
+    method: 'POST',
+    body: JSON.stringify({ account: 'renter@example.com', password: '123456' }),
+  }));
+  expect(screen.getByRole('status')).toHaveTextContent('New account');
 });
 
 test('loads database vehicles and shows the agreed refund policy', async () => {

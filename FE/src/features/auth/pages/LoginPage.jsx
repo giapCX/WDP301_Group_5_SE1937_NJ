@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import './Login.css';
-import { postApi } from '../../services/api';
+import './LoginPage.css';
+import useLogin from '../hooks/useLogin';
 
-const Login = () => {
+const LoginPage = () => {
   const [authTab, setAuthTab] = useState('login'); // 'login' | 'register'
   const [userRole, setUserRole] = useState('renter'); // 'renter' | 'host'
   const [showLoginPassword, setShowLoginPassword] = useState(false);
@@ -10,7 +10,6 @@ const Login = () => {
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [formStatus, setFormStatus] = useState('');
   const [statusType, setStatusType] = useState('info'); // 'info' | 'success' | 'error'
-  const [isLoading, setIsLoading] = useState(false);
 
   // Form states
   const [loginData, setLoginData] = useState({
@@ -44,44 +43,7 @@ const Login = () => {
     }));
   };
 
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    setFormStatus('');
-    setIsLoading(true);
-    setStatusType('info');
-
-    try {
-      const response = await postApi('/auth/login', {
-        account: loginData.account,
-        password: loginData.password,
-      });
-
-      const user = response.data?.user;
-      const token = response.data?.token;
-
-      if (loginData.rememberMe) {
-        localStorage.setItem('xedi_token', token);
-        localStorage.setItem('xedi_user', JSON.stringify(user));
-      } else {
-        sessionStorage.setItem('xedi_token', token);
-        sessionStorage.setItem('xedi_user', JSON.stringify(user));
-      }
-
-      setStatusType('success');
-      setFormStatus(
-        `Đăng nhập thành công! Chào mừng ${user.full_name || user.email} (${user.role?.display_name || user.role?.code || 'Thành viên'}). Đang chuyển hướng...`
-      );
-
-      setTimeout(() => {
-        window.location.hash = '#trang-chu';
-      }, 1000);
-    } catch (err) {
-      setStatusType('error');
-      setFormStatus(err.message || 'Email/Số điện thoại hoặc mật khẩu không chính xác.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { isLoading, handleLoginSubmit } = useLogin({ loginData, setFormStatus, setStatusType });
 
   const handleRegisterSubmit = (e) => {
     e.preventDefault();
@@ -850,4 +812,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginPage;
