@@ -5,8 +5,10 @@ import { env } from './config/env.js';
 import { createListingsRouter } from './modules/listings/listing.routes.js';
 import { createHomepageRouter } from './modules/homepage/homepage.routes.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
+import { createGarageIntakesRouter } from './routes/garage-intakes.js';
+import { createGarageInspectionsRouter } from './routes/garage-inspections.js';
 
-export function createApp(database) {
+export function createApp(database, options = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(cors({ origin: env.frontendOrigin }));
@@ -20,11 +22,16 @@ export function createApp(database) {
       response.status(503).json({ status: 'unavailable' });
     }
   });
-
   app.use('/api/auth', createAuthRouter(database));
   app.use('/api/listings', createListingsRouter(database));
   app.use('/api/homepage', createHomepageRouter(database));
-
+  const garageAuth = options.garageAuth || {
+    token: env.garageApiToken,
+    userId: env.garageStaffId,
+    production: process.env.NODE_ENV === 'production',
+  };
+  app.use('/api/garage', createGarageIntakesRouter(database, garageAuth));
+  app.use('/api/garage', createGarageInspectionsRouter(database, garageAuth));
   app.use(notFound);
   app.use(errorHandler);
   return app;
