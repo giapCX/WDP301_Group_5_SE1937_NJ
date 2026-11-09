@@ -30,7 +30,7 @@ export default function useLogin({ loginData, setFormStatus, setStatusType }) {
 
       redirectTimer.current = setTimeout(() => {
         const destination = getLoginDestination(user);
-        if (destination === '/garage') window.location.assign(destination);
+        if (destination === '/garage' || destination === '/owner') window.location.assign(destination);
         else window.location.hash = destination.slice(1);
       }, 1000);
     } catch (err) {

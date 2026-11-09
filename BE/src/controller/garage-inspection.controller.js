@@ -1,13 +1,10 @@
 import { Types } from 'mongoose';
-import { createVehicleInspectionService } from '../service/garage-inspection.service.js';
-import { createVehicleInspectionRepository } from '../repositories/garage-inspection.repository.js';
 import { parseInspectionDraft, parseInspectionList, parseInspectionSubmission } from '../validators/garage-inspection.validator.js';
 import { objectId } from '../utils/http-error.js';
 
 const { ObjectId } = Types;
 
-export function createVehicleInspectionController(database) {
-  const service = createVehicleInspectionService(createVehicleInspectionRepository(database));
+export function createVehicleInspectionController(service) {
   return {
     candidates: async (request, response) => response.json(
       await service.list(parseInspectionList(request.query, true), request.actor, true),

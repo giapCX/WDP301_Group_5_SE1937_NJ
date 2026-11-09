@@ -11,6 +11,7 @@ export function canAccessGarage(user) {
 
 export function getLoginDestination(user) {
   if (user?.roles?.some((role) => ['MANAGER', 'ADMIN'].includes(role))) return '/#/manager';
+  if (user?.roles?.some((role) => ['OWNER', 'CAR_OWNER'].includes(role))) return '/owner';
   return canAccessGarage(user) ? '/garage' : '/#trang-chu';
 }
 

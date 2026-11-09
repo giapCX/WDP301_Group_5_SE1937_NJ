@@ -1,6 +1,6 @@
-import { notFound, errorHandler } from './middleware/error.middleware.js';
 import express from 'express';
 import cors from 'cors';
+import { notFound, errorHandler } from './middleware/error.middleware.js';
 import { env } from './config/env.js';
 import { createListingsRouter } from './routes/listing.routes.js';
 import { createHomepageRouter } from './routes/homepage.routes.js';
@@ -8,11 +8,13 @@ import { createAuthRouter } from './routes/auth.routes.js';
 import { createGarageIntakesRouter } from './routes/garage-intake.routes.js';
 import { createGarageInspectionsRouter } from './routes/garage-inspection.routes.js';
 import { createManagerRouter } from './routes/manager.routes.js';
+import { createOwnerRouter } from './routes/owner.routes.js';
 
 export function createApp(database) {
   const app = express();
   app.disable('x-powered-by');
   app.use(cors({ origin: env.frontendOrigin }));
+  app.use('/api/owner/vehicles', express.json({ limit: '48mb' }));
   app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/health', async (_request, response) => {
@@ -29,6 +31,7 @@ export function createApp(database) {
   app.use('/api/garage', createGarageIntakesRouter(database));
   app.use('/api/garage', createGarageInspectionsRouter(database));
   app.use('/api/manager', createManagerRouter(database));
+  app.use('/api/owner', createOwnerRouter(database));
   app.use(notFound);
   app.use(errorHandler);
   return app;

@@ -1,15 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Icon from '../../../components/Icon';
 import { Brand } from '../../../components/SiteHeader';
-import {
-  getManagerDashboard,
-  getManagerResource,
-  reviewCompensation,
-  reviewIncident,
-  reviewVehicle,
-  updatePolicy,
-  updateStaff,
-} from '../api/managerApi';
+import useManagerDashboard from '../hooks/useManagerDashboard';
+import useManagerResource from '../hooks/useManagerResource';
+import useManagerActions from '../hooks/useManagerActions';
 import './ManagerPage.css';
 
 const sections = [
@@ -49,51 +43,31 @@ function Metric({ icon, label, value, detail, trend, tone }) {
 }
 
 function ManagementWorkspace({ active, onNotice }) {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [reload, setReload] = useState(0);
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError('');
-    const supportsDateRange = ['finance', 'inspections'].includes(active);
-    const request = ['vehicles', 'incidents', 'policies', 'staff', 'finance', 'inspections'].includes(active)
-      ? getManagerResource(active, { ...(supportsDateRange ? { from, to } : {}), signal: controller.signal })
-      : Promise.resolve({ data: [] });
-    Promise.all([request])
-      .then((results) => setData(results.map((result) => result.data)))
-      .catch((reason) => { if (reason.name !== 'AbortError') setError(reason.message); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [active, reload, from, to]);
-
-  const refresh = () => setReload((value) => value + 1);
+  const { data: primary, loading, error, from, to, setFrom, setTo, refresh } = useManagerResource(active);
+  const actions = useManagerActions();
+  const [actionError, setActionError] = useState('');
   const act = async (promise, successText) => {
-    try { await promise; onNotice(successText); refresh(); }
-    catch (reason) { setError(reason.message); }
+    try { await promise; setActionError(''); onNotice(successText); refresh(); }
+    catch (reason) { setActionError(reason.message); }
   };
-  const [primary] = data;
 
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải dữ liệu…</p></section>;
-  if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div></section>;
+  if (error || actionError) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{actionError || error}<button onClick={() => { setActionError(''); refresh(); }}>Thử lại</button></div></section>;
 
   if (active === 'vehicles') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Hồ sơ xe chờ duyệt" subtitle="Kiểm tra thông tin và cập nhật trạng thái xét duyệt." count={primary?.length || 0} />
-    <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>XE & BIỂN SỐ</th><th>CHỦ XE</th><th>HỒ SƠ</th><th>TRẠNG THÁI</th><th>THAO TÁC</th></tr></thead><tbody>{(primary || []).map((item) => <tr key={item.id}><td><strong>{item.brand} {item.model} ({item.year})</strong><span>{item.licensePlate} · {item.seats} chỗ · {item.transmission}</span></td><td>{item.owner?.full_name || '—'}<span>{item.owner?.email || ''}</span></td><td>{item.documents?.registration?.verified ? 'Đăng ký đã xác minh' : 'Chờ xác minh'}<span>{item.documents?.inspection_certificate?.verified ? 'Đăng kiểm đã xác minh' : 'Chờ đăng kiểm'}</span><span>Biên bản: {item.inspection ? `${item.inspection.recommendation} · ${item.inspection.status}` : 'Chưa có'}</span></td><td><span className="request-status amber"><i />{requestStatus(item.status)}</span></td><td><div className="workspace-actions"><button className="action-approve" disabled={!item.inspection || item.inspection.status !== 'approved' || item.inspection.recommendation !== 'pass'} title="Cần biên bản kiểm định đạt yêu cầu" onClick={() => { const note = window.prompt('Ghi chú xét duyệt (không bắt buộc):', ''); if (note !== null) act(reviewVehicle(item.id, { action: 'approve', note }), 'Đã duyệt hồ sơ xe.'); }}>Duyệt</button><button className="action-review" onClick={() => { const note = window.prompt('Nêu nội dung cần bổ sung:', ''); if (note) act(reviewVehicle(item.id, { action: 'revision', note }), 'Đã yêu cầu chủ xe bổ sung hồ sơ.'); }}>Yêu cầu bổ sung</button><button className="action-reject" onClick={() => { const note = window.prompt('Lý do từ chối hồ sơ:'); if (note) act(reviewVehicle(item.id, { action: 'reject', note }), 'Đã từ chối hồ sơ xe.'); }}>Từ chối</button></div></td></tr>)}</tbody></table>{!primary?.length && <p className="manager-empty">Không có hồ sơ xe chờ duyệt.</p>}</div>
+    <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>XE & BIỂN SỐ</th><th>CHỦ XE</th><th>HỒ SƠ</th><th>TRẠNG THÁI</th><th>THAO TÁC</th></tr></thead><tbody>{(primary || []).map((item) => <tr key={item.id}><td><strong>{item.brand} {item.model} ({item.year})</strong><span>{item.licensePlate} · {item.seats} chỗ · {item.transmission}</span></td><td>{item.owner?.full_name || '—'}<span>{item.owner?.email || ''}</span></td><td>{item.documents?.registration?.verified ? 'Đăng ký đã xác minh' : 'Chờ xác minh'}<span>{item.documents?.inspection_certificate?.verified ? 'Đăng kiểm đã xác minh' : 'Chờ đăng kiểm'}</span><span>Biên bản: {item.inspection ? `${item.inspection.recommendation} · ${item.inspection.status}` : 'Chưa có'}</span></td><td><span className="request-status amber"><i />{requestStatus(item.status)}</span></td><td><div className="workspace-actions"><button className="action-approve" disabled={!item.inspection || item.inspection.status !== 'approved' || item.inspection.recommendation !== 'pass'} title="Cần biên bản kiểm định đạt yêu cầu" onClick={() => { const note = window.prompt('Ghi chú xét duyệt (không bắt buộc):', ''); if (note !== null) act(actions.reviewVehicle(item.id, { action: 'approve', note }), 'Đã duyệt hồ sơ xe.'); }}>Duyệt</button><button className="action-review" onClick={() => { const note = window.prompt('Nêu nội dung cần bổ sung:', ''); if (note) act(actions.reviewVehicle(item.id, { action: 'revision', note }), 'Đã yêu cầu chủ xe bổ sung hồ sơ.'); }}>Yêu cầu bổ sung</button><button className="action-reject" onClick={() => { const note = window.prompt('Lý do từ chối hồ sơ:'); if (note) act(actions.reviewVehicle(item.id, { action: 'reject', note }), 'Đã từ chối hồ sơ xe.'); }}>Từ chối</button></div></td></tr>)}</tbody></table>{!primary?.length && <p className="manager-empty">Không có hồ sơ xe chờ duyệt.</p>}</div>
   </section>;
 
   if (active === 'incidents') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Khiếu nại & sự cố" subtitle="Xem hồ sơ đang mở và ra quyết định với yêu cầu bồi thường." count={primary?.length || 0} />
-    <div className="incident-list">{(primary || []).map((item) => <article className="incident-card" key={item.id}><div className="incident-card-heading"><div><strong>{item.caseNumber} · {item.caseType}</strong><p>{item.description}</p></div><span className="request-status rose"><i />{requestStatus(item.status)}</span></div>{item.compensationClaims?.length ? item.compensationClaims.map((claim, index) => <div className="claim-row" key={`${item.id}-${index}`}><span>Yêu cầu bồi thường · {formatMoney(claim.requested_amount || 0)} ₫</span>{claim.decision ? <span className="claim-decided">{claim.decision === 'approved' ? 'Đã duyệt' : claim.decision}</span> : <div className="workspace-actions"><button className="action-approve" onClick={() => { const suggested = claim.proposed_amount ?? claim.requested_amount ?? 0; const raw = window.prompt('Số tiền bồi thường được duyệt (VND):', String(suggested)); if (raw !== null && Number.isSafeInteger(Number(raw)) && Number(raw) >= 0) act(reviewCompensation(item.id, { decision: 'approve', amount: Number(raw), note: 'Đã xét duyệt bởi quản lý.' }), 'Đã duyệt khoản bồi thường.'); }}>Duyệt bồi thường</button><button className="action-reject" onClick={() => { const note = window.prompt('Lý do từ chối bồi thường:'); if (note) act(reviewCompensation(item.id, { decision: 'reject', note }), 'Đã từ chối khoản bồi thường.'); }}>Từ chối</button></div>}</div>) : <div className="claim-row"><span>Chưa có yêu cầu bồi thường đang chờ. Hồ sơ sự cố vẫn cần được theo dõi.</span><button className="action-approve" onClick={() => { const note = window.prompt('Ghi chú kết luận sự cố:'); if (note) act(reviewIncident(item.id, { action: 'resolve', note }), 'Đã đóng hồ sơ sự cố.'); }}>Đóng hồ sơ</button></div>}</article>)}{!primary?.length && <p className="manager-empty">Không có khiếu nại hoặc sự cố đang mở.</p>}</div>
+    <div className="incident-list">{(primary || []).map((item) => <article className="incident-card" key={item.id}><div className="incident-card-heading"><div><strong>{item.caseNumber} · {item.caseType}</strong><p>{item.description}</p></div><span className="request-status rose"><i />{requestStatus(item.status)}</span></div>{item.compensationClaims?.length ? item.compensationClaims.map((claim, index) => <div className="claim-row" key={`${item.id}-${index}`}><span>Yêu cầu bồi thường · {formatMoney(claim.requested_amount || 0)} ₫</span>{claim.decision ? <span className="claim-decided">{claim.decision === 'approved' ? 'Đã duyệt' : claim.decision}</span> : <div className="workspace-actions"><button className="action-approve" onClick={() => { const suggested = claim.proposed_amount ?? claim.requested_amount ?? 0; const raw = window.prompt('Số tiền bồi thường được duyệt (VND):', String(suggested)); if (raw !== null && Number.isSafeInteger(Number(raw)) && Number(raw) >= 0) act(actions.reviewCompensation(item.id, { decision: 'approve', amount: Number(raw), note: 'Đã xét duyệt bởi quản lý.' }), 'Đã duyệt khoản bồi thường.'); }}>Duyệt bồi thường</button><button className="action-reject" onClick={() => { const note = window.prompt('Lý do từ chối bồi thường:'); if (note) act(actions.reviewCompensation(item.id, { decision: 'reject', note }), 'Đã từ chối khoản bồi thường.'); }}>Từ chối</button></div>}</div>) : <div className="claim-row"><span>Chưa có yêu cầu bồi thường đang chờ. Hồ sơ sự cố vẫn cần được theo dõi.</span><button className="action-approve" onClick={() => { const note = window.prompt('Ghi chú kết luận sự cố:'); if (note) act(actions.reviewIncident(item.id, { action: 'resolve', note }), 'Đã đóng hồ sơ sự cố.'); }}>Đóng hồ sơ</button></div>}</article>)}{!primary?.length && <p className="manager-empty">Không có khiếu nại hoặc sự cố đang mở.</p>}</div>
   </section>;
 
   if (active === 'policies') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Chính sách nền tảng" subtitle="Cập nhật chính sách sẽ tạo phiên bản mới và lưu lịch sử thay đổi." count={primary?.length || 0} />
-    <div className="policy-grid">{(primary || []).map((item) => <article className="policy-card" key={item.id}><div><span className="policy-type">{item.type.replaceAll('_', ' ')}</span><span className="policy-version">Phiên bản {item.version}</span></div><pre>{JSON.stringify(item.config, null, 2)}</pre><button className="action-review" onClick={() => { const raw = window.prompt('Cập nhật cấu hình JSON:', JSON.stringify(item.config, null, 2)); if (!raw) return; try { const config = JSON.parse(raw); act(updatePolicy(item.type, { config }), 'Đã tạo phiên bản chính sách mới.'); } catch { setError('Cấu hình phải là JSON hợp lệ.'); } }}>Chỉnh sửa chính sách</button></article>)}</div>
+    <div className="policy-grid">{(primary || []).map((item) => <article className="policy-card" key={item.id}><div><span className="policy-type">{item.type.replaceAll('_', ' ')}</span><span className="policy-version">Phiên bản {item.version}</span></div><pre>{JSON.stringify(item.config, null, 2)}</pre><button className="action-review" onClick={() => { const raw = window.prompt('Cập nhật cấu hình JSON:', JSON.stringify(item.config, null, 2)); if (!raw) return; try { const config = JSON.parse(raw); act(actions.updatePolicy(item.type, { config }), 'Đã tạo phiên bản chính sách mới.'); } catch { setActionError('Cấu hình phải là JSON hợp lệ.'); } }}>Chỉnh sửa chính sách</button></article>)}</div>
   </section>;
 
   if (active === 'staff') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Quản lý nhân sự" subtitle="Thay đổi vai trò hoặc trạng thái tài khoản nhân viên." count={primary?.length || 0} />
-    <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>NHÂN SỰ</th><th>LIÊN HỆ</th><th>VAI TRÒ</th><th>TRẠNG THÁI</th></tr></thead><tbody>{(primary || []).map((item) => <tr key={item.id}><td><strong>{item.name}</strong><span>{item.email}</span></td><td>{item.phone || '—'}</td><td><select className="workspace-select" value={item.role} onChange={(event) => act(updateStaff(item.id, { role: event.target.value }), 'Đã cập nhật vai trò nhân sự.')}><option value="MANAGER">Quản lý</option><option value="OPERATION_STAFF">Nhân viên vận hành</option><option value="GARAGE_STAFF">Nhân viên gara</option></select></td><td><select className="workspace-select" value={item.status === 'active' ? 'active' : 'suspended'} onChange={(event) => act(updateStaff(item.id, { status: event.target.value }), 'Đã cập nhật trạng thái tài khoản.')}><option value="active">Đang hoạt động</option><option value="suspended">Tạm khóa</option></select></td></tr>)}</tbody></table>{!primary?.length && <p className="manager-empty">Chưa có hồ sơ nhân sự.</p>}</div>
+    <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>NHÂN SỰ</th><th>LIÊN HỆ</th><th>VAI TRÒ</th><th>TRẠNG THÁI</th></tr></thead><tbody>{(primary || []).map((item) => <tr key={item.id}><td><strong>{item.name}</strong><span>{item.email}</span></td><td>{item.phone || '—'}</td><td><select className="workspace-select" value={item.role} onChange={(event) => act(actions.updateStaff(item.id, { role: event.target.value }), 'Đã cập nhật vai trò nhân sự.')}><option value="MANAGER">Quản lý</option><option value="OPERATION_STAFF">Nhân viên vận hành</option><option value="GARAGE_STAFF">Nhân viên gara</option></select></td><td><select className="workspace-select" value={item.status === 'active' ? 'active' : 'suspended'} onChange={(event) => act(actions.updateStaff(item.id, { status: event.target.value }), 'Đã cập nhật trạng thái tài khoản.')}><option value="active">Đang hoạt động</option><option value="suspended">Tạm khóa</option></select></td></tr>)}</tbody></table>{!primary?.length && <p className="manager-empty">Chưa có hồ sơ nhân sự.</p>}</div>
   </section>;
 
   if (active === 'finance') {
@@ -129,8 +103,6 @@ function ReportRows({ rows, labels }) {
 
 export default function ManagerPage() {
   const [active, setActive] = useState('overview');
-  const [dashboard, setDashboard] = useState(null);
-  const [dashboardError, setDashboardError] = useState('');
   const [period, setPeriod] = useState('7 ngày qua');
   const [notice, setNotice] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -139,14 +111,8 @@ export default function ManagerPage() {
     catch { return {}; }
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const periodCode = period === '30 ngày qua' ? '30d' : period === 'Tháng này' ? 'month' : '7d';
-    getManagerDashboard(periodCode, { signal: controller.signal })
-      .then((result) => { setDashboard(result.data); setDashboardError(''); })
-      .catch((error) => { if (error.name !== 'AbortError') setDashboardError(error.status === 401 ? 'Vui lòng đăng nhập bằng tài khoản Quản lý để xem dashboard.' : error.status === 403 ? 'Tài khoản hiện tại chưa có quyền Quản lý.' : error.message); });
-    return () => controller.abort();
-  }, [period]);
+  const periodCode = period === '30 ngày qua' ? '30d' : period === 'Tháng này' ? 'month' : '7d';
+  const { dashboard, error: dashboardError } = useManagerDashboard(periodCode);
 
   const selectSection = (id) => {
     setActive(id);

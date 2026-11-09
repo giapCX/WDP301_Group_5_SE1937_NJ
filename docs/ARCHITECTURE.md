@@ -32,6 +32,13 @@ FE/src/
 │       ├── api/listingApi.js
 │       ├── components/VehicleCard.js
 │       └── hooks/useListings.js
+│   ├── garage/               # Garage page, components, hooks and styles
+│   ├── manager/              # Manager dashboard feature
+│   └── owner/
+│       ├── api/ownerApi.js
+│       ├── components/RegistrationDialog.js
+│       ├── hooks/            # Owner dashboard and registration flows
+│       └── pages/            # OwnerPage.js and owner.css
 ├── services/httpClient.js    # fetch, header, Bearer token và lỗi HTTP
 ├── index.js                  # Điểm khởi động của Create React App
 ├── index.css
@@ -45,7 +52,7 @@ BE/
 │   ├── config/               # env và kết nối database
 │   ├── database/             # Index, khởi tạo collection và seed
 │   ├── models/               # 18 schema/model Mongoose, đăng ký theo connection
-│   ├── routes/               # auth, listing, homepage, garage-intake, garage-inspection, manager
+│   ├── routes/               # auth, listing, homepage, garage-intake, garage-inspection, manager, owner
 │   ├── controller/           # Nhận request, gọi service, trả response
 │   ├── service/              # Nghiệp vụ và điều phối transaction
 │   ├── repositories/         # Truy cập model và base.repository.js dùng chung
@@ -190,3 +197,7 @@ Backend integration test tự tạo replica set tạm bằng `mongod`, database 
 - Frontend Garage Staff đặt trong `FE/src/features/garage/`; feature Manager đặt trong `FE/src/features/manager/`. Các feature sở hữu page, component, hook, dữ liệu, styles và API client của mình; primitive dùng chung tiếp tục nằm trong `FE/src/components/` và HTTP transport nằm trong `FE/src/services/httpClient.js`.
 - Backend Garage Staff dùng các file `garage-intake.*.js` và `garage-inspection.*.js`, đặt tương ứng trong `BE/src/{routes,controller,service,repositories,validators}/`. Model nằm tại `models/vehicle-intake.model.js` và `models/vehicle-inspection.model.js`.
 - Backend Manager dùng các file `manager.*.js` ở từng thư mục tầng. Controller chỉ điều phối HTTP; nghiệp vụ nằm trong service và truy cập dữ liệu đi qua repository/model.
+- Backend Owner dùng `owner.routes.js`, `owner.controller.js`, `owner.service.js` và `owner.repository.js` theo đúng các tầng; dữ liệu và GridFS được truy cập qua repository.
+- `POST /api/owner/vehicles` lưu giấy đăng ký, đăng kiểm, bảo hiểm và ảnh trong GridFS; xe được gửi sang kiểm định với trạng thái `submitted`. Xác nhận điều khoản lưu chữ ký điện tử, phiên bản hợp đồng, thời điểm ký và audit log.
+- Dashboard Owner chỉ đọc xe, đối soát và hợp đồng theo `owner_id` của phiên JWT. Schema Vehicle và ManagementAgreement khai báo đầy đủ các trường do luồng Owner ghi.
+- `BE/test/owner.test.js` kiểm tra role, cô lập dữ liệu theo Owner, upload hồ sơ, ký hợp đồng và trạng thái xe đã gửi kiểm định.
