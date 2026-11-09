@@ -4,7 +4,7 @@ import { collections, initializeCollections } from '../src/database/collections.
 try {
   const database = await connectDatabase();
   await initializeCollections(database);
-  console.log(`Database ${database.databaseName}: ${collections.length} collections and indexes are ready.`);
+  console.log(`Database ${database.name}: ${collections.length} collections and indexes are ready.`);
 } catch (error) {
   console.error(`Database setup failed: ${error.message}`);
   process.exitCode = 1;

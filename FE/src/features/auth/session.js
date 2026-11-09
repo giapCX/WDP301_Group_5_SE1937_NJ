@@ -1,3 +1,19 @@
+export function getSessionToken() {
+  return localStorage.getItem('xedi_token') || sessionStorage.getItem('xedi_token');
+}
+
+export function canAccessGarage(user) {
+  return user?.permissions?.some((permission) => [
+    'vehicle.inspect', 'vehicle.intake', 'handover.record',
+    'withdrawal.handover', 'garage.tasks.assign',
+  ].includes(permission)) || false;
+}
+
+export function getLoginDestination(user) {
+  if (user?.roles?.some((role) => ['MANAGER', 'ADMIN'].includes(role))) return '/#/manager';
+  return canAccessGarage(user) ? '/garage' : '/#trang-chu';
+}
+
 export function getCurrentUser() {
   try {
     const raw = localStorage.getItem('xedi_user') || sessionStorage.getItem('xedi_user');

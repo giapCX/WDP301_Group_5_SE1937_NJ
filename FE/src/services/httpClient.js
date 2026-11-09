@@ -1,5 +1,7 @@
+import { getSessionToken } from '../features/auth/session';
+
 export async function getApi(path, { signal } = {}) {
-  const token = localStorage.getItem('xedi_token') || sessionStorage.getItem('xedi_token');
+  const token = getSessionToken();
   const headers = { Accept: 'application/json' };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -16,7 +18,7 @@ export async function getApi(path, { signal } = {}) {
 }
 
 export async function postApi(path, body, { signal } = {}) {
-  const token = localStorage.getItem('xedi_token') || sessionStorage.getItem('xedi_token');
+  const token = getSessionToken();
   const headers = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -45,7 +47,7 @@ export async function postApi(path, body, { signal } = {}) {
 }
 
 async function updateApi(method, path, body, { signal } = {}) {
-  const token = localStorage.getItem('xedi_token') || sessionStorage.getItem('xedi_token');
+  const token = getSessionToken();
   const response = await fetch(`/api${path}`, {
     method,
     headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },

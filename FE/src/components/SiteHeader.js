@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Icon from './Icon';
-import { clearSession, getCurrentUser } from '../features/auth/session';
+import { canAccessGarage, clearSession, getCurrentUser } from '../features/auth/session';
 
 export function Brand({ light = false }) {
   return (
@@ -51,6 +51,7 @@ export default function SiteHeader({ onLogin }) {
           <a href="#chu-xe">Trở thành chủ xe</a>
           <a href="#huong-dan">Hướng dẫn</a>
           <a href="#ve-xedi">Về chúng tôi</a>
+          {canAccessGarage(currentUser) && <a href="/garage">Không gian gara</a>}
         </nav>
         <div className="header-actions">
           <span className="header-reassurance">

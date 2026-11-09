@@ -4,14 +4,14 @@ Base URL: `http://127.0.0.1:5000/api/garage`. API xử lý **kiểm định onbo
 
 ## Cấu hình và quyền
 
-Dùng cùng `GARAGE_API_TOKEN` và `GARAGE_STAFF_ID` trong `BE/.env` như [luồng tiếp nhận](garage-intakes.md). Tài khoản phải active, có permission **`vehicle.inspect`** ở role chính hoặc role bổ sung. Permission này độc lập với `vehicle.intake`; không bắt buộc có cả hai.
+Dùng JWT trả về từ `POST /api/auth/login`, như [luồng tiếp nhận](garage-intakes.md). Tài khoản phải active, có permission **`vehicle.inspect`** ở role chính hoặc role bổ sung. Permission này độc lập với `vehicle.intake`; không bắt buộc có cả hai. Quyền được đọc lại từ database ở mỗi request.
 
 ```http
-Authorization: Bearer <GARAGE_API_TOKEN>
+Authorization: Bearer <JWT-tu-login>
 Content-Type: application/json
 ```
 
-Cơ chế token này chỉ dành cho dev, gắn với tài khoản do BE cấu hình; mặc định route khóa khi chưa cấu hình và khi chạy production. Không gửi ID nhân viên để giả lập đăng nhập, không nhúng token vào source/build FE. Hướng dẫn sinh token xem tài liệu intake.
+Nhân viên lập biên bản được lấy từ tài khoản đã xác thực bằng JWT. Không gửi ID nhân viên để giả lập đăng nhập, không nhúng token vào source/build FE. Token dev `GARAGE_API_TOKEN` và cấu hình `GARAGE_STAFF_ID` không còn được sử dụng.
 
 **MongoDB 6.0+** để dùng partial unique index chống hai biên bản mở cho cùng xe. GET và lưu/sửa nháp dùng được với standalone; **gửi đề xuất cần replica set hoặc Atlas** để ghi transaction. Chạy `npm run db:setup` sau khi cập nhật source. API cũng tự đảm bảo index trước khi tạo/gửi biên bản; có dữ liệu mở trùng thì trả `503` để kiểm tra, không tự xóa bản ghi.
 

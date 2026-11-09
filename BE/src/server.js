@@ -6,7 +6,7 @@ try {
   const database = await connectDatabase();
   const server = createApp(database).listen(env.port, env.host, () => {
     console.log(`XeDi BE: http://${env.host}:${env.port}`);
-    console.log(`MongoDB database: ${database.databaseName}`);
+    console.log(`MongoDB database: ${database.name}`);
   });
   server.on('error', async error => {
     console.error(`Server failed: ${error.message}`);

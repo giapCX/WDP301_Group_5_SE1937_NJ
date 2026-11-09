@@ -1,6 +1,6 @@
 # XeDi
 
-Ung dung thue xe tu lai: React JavaScript, Node.js va MongoDB.
+Ung dung thue xe tu lai: React JavaScript, Node.js, Express va MongoDB qua Mongoose.
 
 ```text
 FE/                    Ung dung React hien tai
@@ -8,9 +8,15 @@ BE/
   data/                18 file JSON du lieu mau cua nhom
   scripts/             Tao collection, index va nhap du lieu
   src/config/          Cau hinh moi truong va ket noi MongoDB
-  src/database/        Danh sach collection va index
-  src/modules/         auth, listings, homepage: routes/controller/service/repository
-  src/middlewares/     Xac thuc va xu ly loi tap trung
+  src/database/        Index, khoi tao collection va seed
+  src/models/          18 schema/model Mongoose
+  src/routes/          Khai bao endpoint
+  src/controller/      Dieu phoi HTTP
+  src/service/         Nghiep vu
+  src/repositories/    Truy cap model va repository chung
+  src/validators/      Kiem tra du lieu dau vao
+  src/middleware/      Xac thuc va xu ly loi tap trung
+  src/utils/           Tien ich dung chung
   src/app.js           Express app
   src/server.js        Diem khoi dong backend
 ```
@@ -18,6 +24,8 @@ BE/
 ## Cai dat
 
 Can Node.js >= 20.19 va MongoDB Server dang chay. MongoDB Compass la cong cu xem du lieu; BE ket noi truc tiep voi MongoDB Server.
+
+Backend dung kien truc `Routes -> Controller -> Service -> Repository -> Mongoose Model`. Khi cap nhat tu ban Native Driver, chay `npm ci --prefix BE` va `npm run db:setup`; database hien co tiep tuc dung duoc, khong can seed lai. Chi tiet schema, connection va transaction xem [kien truc backend](docs/ARCHITECTURE.md#mongoose-và-dữ-liệu-hiện-có).
 
 Tai thu muc goc:
 
@@ -87,19 +95,18 @@ Dashboard quan ly tai `/#/manager` goi cac endpoint `/api/manager/*` va chi cho 
 
 ## Kiem tra
 
-`npm test --prefix BE` chay integration test API voi MongoDB va du lieu da seed (bao gom test listings, homepage va authentication/login). `npm test --prefix FE -- --watchAll=false` chay UI test.
+`npm test --prefix BE` chay test model, database, API, auth, listings, homepage, Garage va Manager. Integration test tu tao replica set va database tam, seed fixture va tu don; khong sua database ung dung. Can cai MongoDB Server (`mongod`) hoac cau hinh `MONGOD_BINARY` / `INTAKE_TEST_MONGODB_URI` cho moi truong test. `npm test --prefix FE -- --watchAll=false` chay UI test.
 
 ## Tai lieu cho nhom
 
 - [Kien truc va huong dan phat trien](docs/ARCHITECTURE.md)
 - [Bao cao ra soat va refactor](docs/STRUCTURE_REVIEW.md)
 
-Frontend: `FE/src/app` va `FE/src/features/{auth,home,listings}`. Backend: `BE/src/modules/{auth,homepage,listings}`.
-`npm test --prefix BE` chay integration test API voi MongoDB. Test `api.test.js` chi doc du lieu da seed; `listings-search.test.js` tao database `xedi_search_test_<uuid>` rieng, ghi fixture va tu xoa database nay sau test, khong sua database ung dung. `npm run build` kiem tra FE build duoc. Chi tiet FE xem `FE/SCREEN.md`.
+Frontend: `FE/src/app` va `FE/src/features/{auth,home,listings,garage,manager}`. Backend chia theo tang tai `BE/src/{routes,models,controller,service,repositories,validators,middleware,utils,config,database}`; ten file cho biet nghiep vu. `npm run build` kiem tra FE build duoc. Chi tiet FE xem `FE/SCREEN.md`.
 
 ## API tiep nhan xe (Garage Staff)
 
-Da co API danh sach xe cho tiep nhan, kiem tra dieu kien, tao/sua nhap va xac nhan tiep nhan tai `/api/garage`. Can cau hinh xac thuc dev trong BE; mac dinh route bi khoa. Xac nhan dung MongoDB transaction, yeu cau replica set/Atlas. Huong dan endpoint, body, version va cach test: [BE/docs/garage-intakes.md](BE/docs/garage-intakes.md). FE `/garage` hien van la ban thu nghiem local, chua noi cac API nay.
+Da co API danh sach xe cho tiep nhan, kiem tra dieu kien, tao/sua nhap va xac nhan tiep nhan tai `/api/garage`. Dung JWT tu API login va quyen hien tai trong database. Xac nhan dung MongoDB transaction, yeu cau replica set/Atlas. Huong dan endpoint, body, version va cach test: [BE/docs/garage-intakes.md](BE/docs/garage-intakes.md). FE `/garage` da noi xac thuc; du lieu cong viec van la ban thu nghiem local, chua noi cac API nghiep vu nay.
 
 ## API kiem dinh xe (Garage Staff)
 

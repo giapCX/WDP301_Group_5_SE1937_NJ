@@ -1,19 +1,24 @@
+import { useTestDatabase } from '../test-support/mongoose.js';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { env } from '../src/config/env.js';
 import { before, beforeEach, after, test } from 'node:test';
-import { ObjectId } from 'mongodb';
+import { Types } from 'mongoose';
 import { createApp } from '../src/app.js';
 import { startIntakeTestReplica } from '../test-support/intake-replica.js';
 
-const token = randomBytes(32).toString('hex');
+const { ObjectId } = Types;
+
 const staffId = new ObjectId();
 const secondStaffId = new ObjectId();
 const roleId = new ObjectId();
 const ownerId = new ObjectId();
 const vehicleId = new ObjectId();
 const agreementId = new ObjectId();
-const auth = { token, userId: staffId.toString(), production: false };
+const token = jwt.sign({ sub: String(staffId) }, env.jwtSecret);
 const fixtureNames = [
   'users',
   'roles',
@@ -24,8 +29,8 @@ const fixtureNames = [
   'audit_logs',
 ];
 let replica, db, server, baseUrl;
-async function listen(config = auth) {
-  const instance = createApp(db, { garageAuth: config }).listen(0, '127.0.0.1');
+async function listen() {
+  const instance = createApp(useTestDatabase(replica.client, db.databaseName)).listen(0, '127.0.0.1');
   await once(instance, 'listening');
   return {
     server: instance,
@@ -152,19 +157,10 @@ test('garage routes fail closed, reject invalid credentials and check active per
     (await request('/intakes', 'GET', undefined, { authorization: '' })).status,
     401,
   );
-  const locked = await listen({ token: '', userId: '' });
-  try {
-    assert.equal(
-      (await request('/intakes', 'GET', undefined, { url: locked.url })).status,
-      503,
-    );
-  } finally {
-    await new Promise((resolve) => locked.server.close(resolve));
-  }
   await db
     .collection('users')
     .updateOne({ _id: staffId }, { $set: { account_status: 'suspended' } });
-  assert.equal((await request('/intakes')).status, 403);
+  assert.equal((await request('/intakes')).status, 401);
   await db
     .collection('users')
     .updateOne({ _id: staffId }, { $set: { account_status: 'active' } });
@@ -172,6 +168,51 @@ test('garage routes fail closed, reject invalid credentials and check active per
     .collection('roles')
     .updateOne({ _id: roleId }, { $set: { permissions: [] } });
   assert.equal((await request('/intakes')).status, 403);
+});
+test('login JWT identifies the employee who creates a garage receipt', async () => {
+  await db.collection('users').updateOne({ _id: staffId }, { $set: {
+    email: 'garage-auth-test@example.com',
+    full_name: 'Garage auth test',
+    password_hash: await bcrypt.hash('garage-test-password', 4),
+  } });
+  const response = await fetch(new URL('/api/auth/login', baseUrl), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ account: 'garage-auth-test@example.com', password: 'garage-test-password' }),
+  });
+  assert.equal(response.status, 200);
+  const { data } = await response.json();
+  assert.equal(data.user._id, String(staffId));
+  assert.ok(data.user.permissions.includes('vehicle.intake'));
+  const result = await request('/intakes', 'POST', fullDraft(), {
+    authorization: `Bearer ${data.token}`,
+  });
+  assert.equal(result.status, 201, JSON.stringify(result.body));
+  assert.equal(result.body.data.created_by_garage_staff_id, String(staffId));
+});
+
+test('garage rejects invalid or expired JWTs and users removed after login', async () => {
+  for (const authorization of [
+    'Bearer old-static-garage-token',
+    `Bearer ${jwt.sign({ sub: String(staffId) }, 'different-secret')}`,
+    `Bearer ${jwt.sign({ sub: String(staffId), exp: 1 }, env.jwtSecret)}`,
+  ]) {
+    assert.equal((await request('/intakes', 'GET', undefined, { authorization })).status, 401);
+  }
+  await db.collection('users').deleteOne({ _id: staffId });
+  assert.equal((await request('/intakes')).status, 401);
+});
+
+test('garage uses current additional roles and ignores stale permission claims in JWT', async () => {
+  const authorization = `Bearer ${jwt.sign({
+    sub: String(staffId), permissions: ['vehicle.intake'], role: 'GARAGE_STAFF',
+  }, env.jwtSecret)}`;
+  await db.collection('users').updateOne({ _id: staffId }, { $set: {
+    primary_role_id: new ObjectId(), additional_role_ids: [roleId],
+  } });
+  assert.equal((await request('/intakes', 'GET', undefined, { authorization })).status, 200);
+  await db.collection('roles').updateOne({ _id: roleId }, { $set: { permissions: [] } });
+  assert.equal((await request('/intakes', 'GET', undefined, { authorization })).status, 403);
 });
 test('lists candidates with eligibility and omits private vehicle/user fields', async () => {
   const result = await request('/intake-vehicles?q=Toyota&limit=1');
@@ -376,33 +417,29 @@ test('rejects invalid meter/fuel/report/confirmation and unrelated agreements', 
 });
 test('another garage staff member cannot alter or confirm the creator receipt', async () => {
   const draft = await createDraft();
-  const other = await listen({ ...auth, userId: String(secondStaffId) });
-  try {
-    assert.equal(
-      (
-        await request(
-          `/intakes/${draft._id}`,
-          'PATCH',
-          { version: 0, fuelLevelPct: 30 },
-          { url: other.url },
-        )
-      ).status,
-      403,
-    );
-    assert.equal(
-      (
-        await request(
-          `/intakes/${draft._id}/confirm`,
-          'POST',
-          { version: 0, ownerConfirmed: true },
-          { url: other.url },
-        )
-      ).status,
-      403,
-    );
-  } finally {
-    await new Promise((resolve) => other.server.close(resolve));
-  }
+  const otherAuthorization = `Bearer ${jwt.sign({ sub: String(secondStaffId) }, env.jwtSecret)}`;
+  assert.equal(
+    (
+      await request(
+        `/intakes/${draft._id}`,
+        'PATCH',
+        { version: 0, fuelLevelPct: 30 },
+        { authorization: otherAuthorization },
+      )
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await request(
+        `/intakes/${draft._id}/confirm`,
+        'POST',
+        { version: 0, ownerConfirmed: true },
+        { authorization: otherAuthorization },
+      )
+    ).status,
+    403,
+  );
 });
 test('transaction rolls back vehicle and receipt if audit insertion fails', async (t) => {
   t.mock.method(console, 'error', () => {});

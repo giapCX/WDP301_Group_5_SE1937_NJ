@@ -1,15 +1,23 @@
-import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
 import { env } from './env.js';
+import { getModels } from '../models/index.js';
 
-const client = new MongoClient(env.mongoUri, { serverSelectionTimeoutMS: 5000 });
-
+let connection;
 export async function connectDatabase() {
-  await client.connect();
-  const database = client.db(env.databaseName);
-  await database.command({ ping: 1 });
-  return database;
+  if (!connection || connection.readyState === 0) {
+    connection = mongoose.createConnection(env.mongoUri, {
+      dbName: env.databaseName,
+      serverSelectionTimeoutMS: 5000,
+      autoIndex: false,
+      autoCreate: false,
+    });
+  }
+  await connection.asPromise();
+  getModels(connection);
+  await connection.db.command({ ping: 1 });
+  return connection;
 }
 
 export async function closeDatabase() {
-  await client.close();
+  if (connection) await connection.close();
 }

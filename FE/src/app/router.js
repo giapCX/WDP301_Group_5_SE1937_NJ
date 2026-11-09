@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import HomePage from '../features/home/pages/HomePage';
 import Login from '../features/auth/pages/LoginPage';
 import GaragePage from '../features/garage/pages/GaragePage';
+import GarageAccess from '../features/garage/components/GarageAccess';
 import ManagerPage from '../features/manager/pages/ManagerPage';
 
 export default function AppRouter() {
   const [isLogin, setIsLogin] = useState(() => window.location.hash.startsWith('#/login'));
-  const isGarage = window.location.pathname.startsWith('/garage');
+  const isGarage = /^\/garage(?:\/|$)/.test(window.location.pathname);
   const [isManager, setIsManager] = useState(() => window.location.hash.startsWith('#/manager'));
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function AppRouter() {
     window.scrollTo(0, 0);
   }, [isLogin, isManager, isGarage]);
 
-  if (isGarage) return <GaragePage />;
+  if (isGarage) return <GarageAccess>{(user) => <GaragePage user={user} />}</GarageAccess>;
   if (isManager) return <ManagerPage />;
 
   return isLogin ? (

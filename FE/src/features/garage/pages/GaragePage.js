@@ -67,7 +67,7 @@ function downloadCsv(tasks, section) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export default function GaragePage() {
+export default function GaragePage({ user }) {
   const { workspace, storageError, saveReport, addIncident, reset } =
     useGarageWorkspace();
   const [section, setSection] = useState(currentSection);
@@ -146,6 +146,7 @@ export default function GaragePage() {
   }
   return (
     <GarageLayout
+      user={user}
       section={section}
       onNavigate={navigate}
       tasks={workspace.tasks}

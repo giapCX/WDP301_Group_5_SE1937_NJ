@@ -1,7 +1,9 @@
 import Icon from '../../../components/ui/Icon';
+import { clearSession } from '../../auth/session';
 import { bangkokDate, garageSections, sectionKinds } from '../data/garage';
 
 export default function GarageLayout({
+  user,
   section,
   onNavigate,
   tasks,
@@ -9,6 +11,8 @@ export default function GarageLayout({
   children,
 }) {
   const active = garageSections.find((item) => item.id === section);
+  const name = user?.full_name || user?.email || 'Nhân viên gara';
+  const initials = name.split(/\s+/).filter(Boolean).slice(-2).map((part) => part[0]).join('').toUpperCase();
   const today = new Date(`${bangkokDate()}T12:00:00+07:00`).toLocaleDateString(
     'vi-VN',
     {
@@ -35,7 +39,7 @@ export default function GarageLayout({
           </span>
           <div>
             <strong>Gara Tân Bình</strong>
-            <small>Nhân viên gara · GS-010</small>
+            <small>Nhân viên gara</small>
           </div>
           <span className="gs-online-dot" />
         </div>
@@ -80,13 +84,14 @@ export default function GarageLayout({
             Khôi phục dữ liệu mẫu
           </button>
           <div className="gs-profile">
-            <span className="gs-avatar">MA</span>
+            <span className="gs-avatar">{initials}</span>
             <div>
-              <strong>Minh Anh</strong>
+              <strong>{name}</strong>
               <small>Nhân viên gara</small>
             </div>
             <span className="gs-online-dot" />
           </div>
+          <button className="gs-reset" onClick={clearSession}>Đăng xuất</button>
         </div>
       </aside>
       <div className="gs-main">
@@ -104,7 +109,7 @@ export default function GarageLayout({
               <i />
               Ca làm · 08:00 – 17:00
             </span>
-            <span className="gs-avatar gs-avatar-small">MA</span>
+            <span className="gs-avatar gs-avatar-small">{initials}</span>
           </div>
         </header>
         <div className="gs-preview-banner">

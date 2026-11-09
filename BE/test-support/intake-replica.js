@@ -4,7 +4,9 @@ import { mkdtemp, readdir, access, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve, sep } from 'node:path';
 import net from 'node:net';
-import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
+
+const { MongoClient } = mongoose.mongo;
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function binaryPath() {

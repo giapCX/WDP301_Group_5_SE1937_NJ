@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { login } from '../api/authApi';
-import { saveSession } from '../session';
+import { getLoginDestination, saveSession } from '../session';
 
 export default function useLogin({ loginData, setFormStatus, setStatusType }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -29,9 +29,9 @@ export default function useLogin({ loginData, setFormStatus, setStatusType }) {
       );
 
       redirectTimer.current = setTimeout(() => {
-        window.location.hash = user.roles?.some((role) => ['MANAGER', 'ADMIN'].includes(role))
-          ? '#/manager'
-          : '#trang-chu';
+        const destination = getLoginDestination(user);
+        if (destination === '/garage') window.location.assign(destination);
+        else window.location.hash = destination.slice(1);
       }, 1000);
     } catch (err) {
       setStatusType('error');
