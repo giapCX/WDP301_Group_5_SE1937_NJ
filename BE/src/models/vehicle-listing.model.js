@@ -33,4 +33,8 @@ export const vehicleListingSchema = createSchema({
   status: String,
   published_at: Date,
   updated_at: Date,
+  updated_by_operation_staff_id: { type: ObjectId, ref: 'User' },
+  handled_by: { type: ObjectId, ref: 'User' },
+  handled_at: Date,
+  operation_review_note: String,
 });

@@ -41,6 +41,7 @@ export function createManagerRouter(database, { fileRepository } = {}) {
   }
   router.get('/incidents', requireManager, controller.incidents);
   router.patch('/incidents/:id/compensation', requireManager, controller.reviewCompensation);
+  router.patch('/incidents/:id/violation', requireManager, controller.reviewTrafficViolation);
   router.patch('/incidents/:id/review', requireManager, controller.reviewIncident);
   router.get('/policies', requireManager, controller.policies);
   router.put('/policies/:type', requireManager, controller.updatePolicy);
