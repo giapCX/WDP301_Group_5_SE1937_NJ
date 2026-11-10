@@ -92,6 +92,14 @@ Severity nhận low/medium/high. Nếu gắn booking thì booking phải thuộc
 
 ### Ảnh
 
+#### Lưu ảnh dùng chung với Cloudinary
+
+Chạy `npm install` trong `BE`, sau đó điền `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` vào `BE/.env` và khởi động lại backend. Khi đủ cả ba biến, ảnh Garage được upload lên Cloudinary với loại `authenticated`. Nếu chỉ điền một phần, backend báo lỗi cấu hình; nếu để trống cả ba, backend dùng thư mục local như bên dưới. `.env.example` chỉ chứa giá trị mẫu, không điền secret thật vào file này.
+
+Các thành viên cần dùng cùng Cloudinary product environment và database để xem cùng ảnh và biên bản. API vẫn trả key `garage-photos/<userId>/<uuid>.<extension>`; backend kiểm tra JWT rồi tải ảnh bằng URL ký có hạn và trả bytes cho FE. Không cần thay đổi frontend hoặc tạo unsigned upload preset. Không tự chuyển ảnh local cũ lên Cloudinary: cần upload lại các ảnh đó qua ứng dụng. Các bài test truyền thư mục tạm vẫn dùng local, không upload ảnh test lên cloud.
+
+#### Lưu local
+
 Upload từng ảnh bằng `{ name, contentType, data }`, trong đó data là base64 thuần không có tiền tố data URL. Nhận JPG/PNG/WebP, tối đa 500 KB mỗi ảnh; kiểm tra chữ ký tệp, kích thước và định dạng. Các validator biên bản giới hạn tối đa 4 photoKeys. FE upload trước, đính kèm key vào báo cáo và tải ảnh qua fetch có JWT; object URL được thu hồi khi đóng ảnh.
 
 Mặc định tệp nằm trong `BE/storage/garage-photos/` và đã được gitignore. Có thể cấu hình `GARAGE_UPLOAD_DIRECTORY` tới thư mục lưu trữ của backend. Khóa và đường dẫn bị giới hạn chặt; không nhận traversal, SVG/HTML hoặc đường dẫn tùy ý. Ảnh không có public URL; nhân viên có quyền Garage được đọc ảnh trong phạm vi dữ liệu dùng chung. Phản hồi ảnh dùng `private, no-store`. Ảnh demo cũ chỉ có key mà chưa có tệp sẽ hiện thông báo chưa tải được ảnh.

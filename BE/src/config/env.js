@@ -18,4 +18,9 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   defaultUserPassword: process.env.DEFAULT_USER_PASSWORD || '123456',
   garageUploadDirectory: process.env.GARAGE_UPLOAD_DIRECTORY || fileURLToPath(new URL('../../storage/garage-photos/', import.meta.url)),
+  cloudinary: {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
+    api_key: process.env.CLOUDINARY_API_KEY || '',
+    api_secret: process.env.CLOUDINARY_API_SECRET || '',
+  },
 };
