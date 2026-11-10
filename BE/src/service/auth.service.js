@@ -6,6 +6,22 @@ import { httpError } from '../utils/http-error.js';
 
 const { ObjectId } = Types;
 const ALLOWED_DEFAULT_PASSWORDS = new Set([env.defaultUserPassword, '123456', '12345678', 'password', 'password123', 'xedi123']);
+function maskAccount(value) {
+  if (typeof value !== 'string') return null;
+  const account = value.trim();
+  if (account.includes('@')) {
+    const [name, domain] = account.split('@');
+    return `${name.slice(0, 1)}***@${domain}`;
+  }
+  return account.length > 2 ? `***${account.slice(-2)}` : '***';
+}
+function maskedIp(value) {
+  const ip = typeof value === 'string' ? value : '';
+  const mappedIpv4 = ip.match(/::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i)?.[1];
+  if (mappedIpv4) return mappedIpv4.split('.').slice(0, 2).concat(['*', '*']).join('.');
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) return ip.split('.').slice(0, 2).concat(['*', '*']).join('.');
+  return ip.split(':').slice(0, 4).join(':') || null;
+}
 async function populateUserRoles(repository, user) {
   let primaryRole = null;
   if (user.primary_role_id) {
@@ -52,8 +68,23 @@ function sanitizeUser(user, rolesInfo) {
   };
 }
 export function createAuthService(repository) {
+  async function recordLoginAudit({ actorId = null, action, account, roles, ip }) {
+    try {
+      await repository.createAudit({
+        actor_user_id: actorId,
+        action,
+        entity_type: actorId ? 'users' : 'authentication',
+        entity_id: actorId,
+        sanitized_changes: actorId ? { roles: roles || [] } : { account: maskAccount(account) },
+        ip_address_masked: maskedIp(ip),
+        created_at: new Date(),
+      });
+    } catch (error) {
+      console.warn('Unable to record login audit event:', error.message);
+    }
+  }
   return {
-    async login(body) {
+    async login(body, metadata = {}) {
       const rawAccount = body?.account ?? body?.email ?? body?.phone;
       const rawPassword = body?.password;
       if (!rawAccount || typeof rawAccount !== 'string' || !rawAccount.trim()) {
@@ -66,59 +97,65 @@ export function createAuthService(repository) {
       const password = rawPassword;
 
       // Find user in MongoDB users collection
-      const user = await repository.findByAccount(account);
-      if (!user) {
-        throw httpError(401, 'Email/Số điện thoại hoặc mật khẩu không chính xác.');
-      }
+      try {
+        const user = await repository.findByAccount(account);
+        if (!user) {
+          throw httpError(401, 'Email/Số điện thoại hoặc mật khẩu không chính xác.');
+        }
 
       // Check account status
-      if (user.account_status !== 'active') {
-        throw httpError(403, 'Tài khoản của bạn đang bị khóa hoặc chưa được kích hoạt. Vui lòng liên hệ hỗ trợ.');
-      }
+        if (user.account_status !== 'active') {
+          throw httpError(403, 'Tài khoản của bạn đang bị khóa hoặc chưa được kích hoạt. Vui lòng liên hệ hỗ trợ.');
+        }
 
       // Verify password
-      let isPasswordValid = false;
-      if (user.password_hash) {
-        isPasswordValid = await bcrypt.compare(password, user.password_hash);
-      } else {
+        let isPasswordValid = false;
+        if (user.password_hash) {
+          isPasswordValid = await bcrypt.compare(password, user.password_hash);
+        } else {
         // Seeded mock users have password_hash: null in MongoDB
-        if (ALLOWED_DEFAULT_PASSWORDS.has(password)) {
-          isPasswordValid = true;
+          if (ALLOWED_DEFAULT_PASSWORDS.has(password)) {
+            isPasswordValid = true;
           // Optionally update MongoDB with hashed password for security
-          try {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            await repository.updatePassword(user._id, hashedPassword);
-          } catch (err) {
-            console.warn('Failed to auto-hash password for user:', err.message);
+            try {
+              const hashedPassword = await bcrypt.hash(password, 10);
+              await repository.updatePassword(user._id, hashedPassword);
+            } catch (err) {
+              console.warn('Failed to auto-hash password for user:', err.message);
+            }
           }
         }
-      }
-      if (!isPasswordValid) {
-        throw httpError(401, 'Email/Số điện thoại hoặc mật khẩu không chính xác.');
-      }
+        if (!isPasswordValid) {
+          throw httpError(401, 'Email/Số điện thoại hoặc mật khẩu không chính xác.');
+        }
 
       // Load roles and permissions
-      const rolesInfo = await populateUserRoles(repository, user);
-      const safeUser = sanitizeUser(user, rolesInfo);
+        const rolesInfo = await populateUserRoles(repository, user);
+        const safeUser = sanitizeUser(user, rolesInfo);
 
       // Create JWT token
-      const token = jwt.sign({
+        const token = jwt.sign({
         sub: user._id.toString(),
         email: user.email,
         phone: user.phone,
         role: rolesInfo.primaryRole?.code || 'RENTER',
         roles: rolesInfo.roleCodes,
         permissions: rolesInfo.permissions
-      }, env.jwtSecret, {
-        expiresIn: env.jwtExpiresIn
-      });
-      return {
-        data: {
-          token,
-          user: safeUser
-        },
-        message: 'Đăng nhập thành công.'
-      };
+        }, env.jwtSecret, {
+          expiresIn: env.jwtExpiresIn
+        });
+        await recordLoginAudit({ actorId: user._id, action: 'auth.login_success', roles: safeUser.roles, ip: metadata.ip });
+        return {
+          data: {
+            token,
+            user: safeUser
+          },
+          message: 'Đăng nhập thành công.'
+        };
+      } catch (error) {
+        if ([401, 403].includes(error.status)) await recordLoginAudit({ action: 'auth.login_failed', account, ip: metadata.ip });
+        throw error;
+      }
     },
     async getCurrentUser(authHeaderValue) {
       const authHeader = authHeaderValue;

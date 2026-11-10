@@ -5,7 +5,7 @@ import AccountsWorkspace from '../components/AccountsWorkspace';
 import AdminToolsWorkspace from '../components/AdminToolsWorkspace';
 import ReportsWorkspace from '../components/ReportsWorkspace';
 import UserMenu from '../components/UserMenu';
-import { getManagerResource } from '../api/managerApi';
+import useManagerAdminOverview from '../hooks/useManagerAdminOverview';
 import { ChangeSummary, humanizeField } from '../components/dataDisplay';
 import './ManagerPage.css';
 import './AdminPage.css';
@@ -30,28 +30,10 @@ const actionLabels = {
 };
 
 function AdminOverview({ onSelect }) {
-  const [snapshot, setSnapshot] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [reload, setReload] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError('');
-    Promise.all([
-      getManagerResource('accounts', { signal: controller.signal }),
-      getManagerResource('roles', { signal: controller.signal }),
-      getManagerResource('auditLogs', { limit: 5, signal: controller.signal }),
-    ])
-      .then(([accounts, roles, logs]) => setSnapshot({ accounts: accounts.data || [], roles: roles.data || [], logs: logs.data || [] }))
-      .catch((reason) => { if (reason.name !== 'AbortError') setError(reason.message); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [reload]);
+  const { snapshot, loading, error, refresh } = useManagerAdminOverview();
 
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải tổng quan quản trị…</p></section>;
-  if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={() => setReload((value) => value + 1)}>Thử lại</button></div></section>;
+  if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div></section>;
 
   return <>
     <section className="admin-overview-metrics">

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { getManagerResource, reviewVehicle } from '../api/managerApi';
+import { useState } from 'react';
+import useManagerActions from '../hooks/useManagerActions';
+import useManagerCollection from '../hooks/useManagerCollection';
 import './VehicleApprovalsWorkspace.css';
 
 const statusText = { submitted: 'Mới gửi', pending_review: 'Chờ xét duyệt', revision_required: 'Chờ bổ sung' };
@@ -14,32 +15,25 @@ function DocumentCard({ title, document }) {
 }
 
 export default function VehicleApprovalsWorkspace({ onNotice }) {
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [reload, setReload] = useState(0);
+  const request = useManagerCollection('vehicles');
+  const { reviewVehicle } = useManagerActions();
+  const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError('');
-    getManagerResource('vehicles', { signal: controller.signal })
-      .then((result) => setVehicles(result.data || []))
-      .catch((reason) => { if (reason.name !== 'AbortError') setError(reason.message); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [reload]);
+  const vehicles = request.data;
+  const loading = request.loading;
+  const error = actionError || request.error;
+  const refresh = () => { setActionError(''); request.refresh(); };
 
   const act = async (vehicle, action, note) => {
     setBusyId(vehicle.id);
-    setError('');
+    setActionError('');
     try {
       await reviewVehicle(vehicle.id, { action, note });
       onNotice(action === 'approve' ? 'Đã duyệt hồ sơ xe.' : action === 'revision' ? 'Đã gửi yêu cầu bổ sung cho chủ xe.' : 'Đã từ chối hồ sơ xe.');
-      setReload((value) => value + 1);
+      refresh();
     } catch (reason) {
-      setError(reason.message || 'Không thể cập nhật hồ sơ xe.');
+      setActionError(reason.message || 'Không thể cập nhật hồ sơ xe.');
     } finally {
       setBusyId('');
     }
@@ -50,11 +44,11 @@ export default function VehicleApprovalsWorkspace({ onNotice }) {
     if (note === null) return;
     const trimmed = note.trim();
     if (trimmed.length < 5) {
-      setError('Nội dung yêu cầu bổ sung cần ít nhất 5 ký tự để chủ xe biết cần chỉnh sửa gì.');
+      setActionError('Nội dung yêu cầu bổ sung cần ít nhất 5 ký tự để chủ xe biết cần chỉnh sửa gì.');
       return;
     }
     if (trimmed.length > 1000) {
-      setError('Nội dung yêu cầu bổ sung không được vượt quá 1.000 ký tự.');
+      setActionError('Nội dung yêu cầu bổ sung không được vượt quá 1.000 ký tự.');
       return;
     }
     act(vehicle, 'revision', trimmed);
@@ -65,18 +59,18 @@ export default function VehicleApprovalsWorkspace({ onNotice }) {
     if (note === null) return;
     const trimmed = note.trim();
     if (trimmed.length < 5) {
-      setError('Lý do từ chối cần ít nhất 5 ký tự.');
+      setActionError('Lý do từ chối cần ít nhất 5 ký tự.');
       return;
     }
     act(vehicle, 'reject', trimmed);
   };
 
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải hồ sơ xe…</p></section>;
-  if (error && !vehicles.length) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={() => setReload((value) => value + 1)}>Thử lại</button></div></section>;
+  if (error && !vehicles.length) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div></section>;
 
   return <section className="manager-panel workspace-panel">
     <div className="workspace-header"><div><h2>Hồ sơ phương tiện chờ duyệt</h2><p>Mỗi hồ sơ được trình bày riêng để kiểm tra thông tin, giấy tờ và biên bản kiểm định.</p></div><span className="workspace-count">{vehicles.length} hồ sơ</span></div>
-    {error && <div className="manager-notice manager-error" role="alert">{error}<button onClick={() => setError('')} aria-label="Đóng">×</button></div>}
+    {error && <div className="manager-notice manager-error" role="alert">{error}<button onClick={() => setActionError('')} aria-label="Đóng">×</button></div>}
     <div className="vehicle-approval-list">{vehicles.map((vehicle) => {
       const canApprove = vehicle.inspection?.status === 'approved' && vehicle.inspection?.recommendation === 'pass';
       return <article className="vehicle-approval-card" key={vehicle.id}>

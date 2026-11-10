@@ -6,7 +6,7 @@ import OperationsWorkspace from '../components/OperationsWorkspace';
 import ReportsWorkspace from '../components/ReportsWorkspace';
 import UserMenu from '../components/UserMenu';
 import VehicleApprovalsWorkspace from '../components/VehicleApprovalsWorkspace';
-import { getManagerDashboard } from '../api/managerApi';
+import useManagerDashboard from '../hooks/useManagerDashboard';
 import './ManagerPage.css';
 
 const sections = [
@@ -50,8 +50,6 @@ function Metric({ icon, label, value, detail, trend, tone }) {
 
 export default function ManagerPage() {
   const [active, setActive] = useState('overview');
-  const [dashboard, setDashboard] = useState(null);
-  const [dashboardError, setDashboardError] = useState('');
   const [period, setPeriod] = useState('7 ngày qua');
   const [notice, setNotice] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -62,20 +60,13 @@ export default function ManagerPage() {
   const canManageOperations = user.roles?.includes('MANAGER') || user.role?.code === 'MANAGER';
   const visibleSections = sections;
   const hasRouteAccess = canManageOperations;
+  const periodCode = period === '30 ngày qua' ? '30d' : period === 'Tháng này' ? 'month' : '7d';
+  const { dashboard, error: dashboardError } = useManagerDashboard(periodCode);
 
   useEffect(() => {
     if (hasRouteAccess) return;
     window.location.hash = user.roles?.includes('ADMIN') || user.role?.code === 'ADMIN' ? '#/admin' : '#/login';
   }, [hasRouteAccess, user]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const periodCode = period === '30 ngày qua' ? '30d' : period === 'Tháng này' ? 'month' : '7d';
-    getManagerDashboard(periodCode, { signal: controller.signal })
-      .then((result) => { setDashboard(result.data); setDashboardError(''); })
-      .catch((error) => { if (error.name !== 'AbortError') setDashboardError(error.status === 401 ? 'Vui lòng đăng nhập bằng tài khoản Quản lý để xem dashboard.' : error.status === 403 ? 'Tài khoản hiện tại chưa có quyền Quản lý.' : error.message); });
-    return () => controller.abort();
-  }, [period]);
 
   const selectSection = (id) => {
     if (!visibleSections.some((item) => item.id === id)) return;

@@ -33,6 +33,7 @@ export function createAuthRepository(database) {
   const models = getModels(database);
   const users = createModelRepository(models.User);
   const roles = createModelRepository(models.Role);
+  const audits = createModelRepository(models.AuditLog);
   return {
     findByAccount: account => users.findOne(buildAccountQuery(account)),
     findById: id => users.findOne({
@@ -57,5 +58,6 @@ export function createAuthRepository(database) {
     findRoleWithPermission: (ids, permission) => roles.findOne({
       _id: { $in: ids }, permissions: permission,
     }, { projection: { _id: 1 } }),
+    createAudit: (audit) => audits.create(audit),
   };
 }

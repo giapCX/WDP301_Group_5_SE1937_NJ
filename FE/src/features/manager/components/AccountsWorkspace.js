@@ -1,43 +1,26 @@
-import { useEffect, useState } from 'react';
-import { createAccount, getManagerResource, updateAccount } from '../api/managerApi';
+import { useState } from 'react';
+import useManagerActions from '../hooks/useManagerActions';
+import useManagerCollection from '../hooks/useManagerCollection';
 import './AccountsWorkspace.css';
 
 const emptyForm = () => ({ name: '', email: '', phone: '', password: '', roles: [], status: 'active' });
 
 export default function AccountsWorkspace({ onNotice }) {
-  const [accounts, setAccounts] = useState([]);
-  const [roles, setRoles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  const accountsRequest = useManagerCollection('accounts');
+  const rolesRequest = useManagerCollection('roles');
+  const { createAccount, updateAccount } = useManagerActions();
   const [formError, setFormError] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [reload, setReload] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setLoadError('');
-    Promise.all([
-      getManagerResource('accounts', { signal: controller.signal }),
-      getManagerResource('roles', { signal: controller.signal }),
-    ])
-      .then(([accountResult, roleResult]) => {
-        setAccounts(accountResult.data || []);
-        setRoles(roleResult.data || []);
-      })
-      .catch((error) => {
-        if (error.name !== 'AbortError') setLoadError(error.message || 'Không thể tải dữ liệu tài khoản.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [reload]);
+  const [actionError, setActionError] = useState('');
+  const accounts = accountsRequest.data;
+  const roles = rolesRequest.data;
+  const loading = accountsRequest.loading || rolesRequest.loading;
+  const loadError = actionError || accountsRequest.error || rolesRequest.error;
 
   const assignableRoles = roles.filter((role) => role.code !== 'ADMIN');
-  const refresh = () => setReload((value) => value + 1);
+  const refresh = () => { setActionError(''); accountsRequest.refresh(); rolesRequest.refresh(); };
   const changeForm = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
   const submit = async (event) => {
@@ -83,7 +66,7 @@ export default function AccountsWorkspace({ onNotice }) {
     }
     updateAccount(account.id, { roles: selectedRoles })
       .then(() => { onNotice('Đã cập nhật vai trò tài khoản.'); refresh(); })
-      .catch((error) => setLoadError(error.message || 'Không thể cập nhật vai trò tài khoản.'));
+      .catch((error) => setActionError(error.message || 'Không thể cập nhật vai trò tài khoản.'));
   };
 
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải dữ liệu…</p></section>;
@@ -106,6 +89,6 @@ export default function AccountsWorkspace({ onNotice }) {
       </form>
     </div>}
 
-    <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>HỌ VÀ TÊN</th><th>EMAIL</th><th>ĐIỆN THOẠI</th><th>VAI TRÒ</th><th>TRẠNG THÁI</th><th>THAO TÁC</th></tr></thead><tbody>{accounts.map((account) => <tr key={account.id}><td><strong>{account.name}</strong></td><td>{account.email || '—'}</td><td>{account.phone || '—'}</td><td>{(account.roleNames || account.roles).join(', ')}</td><td><select className="workspace-select" value={account.status} onChange={(event) => updateAccount(account.id, { status: event.target.value }).then(() => { onNotice('Đã cập nhật trạng thái tài khoản.'); refresh(); }).catch((error) => setLoadError(error.message))}><option value="active">Đang hoạt động</option><option value="suspended">Tạm khóa</option></select></td><td><button className="action-review" onClick={() => saveAccountRoles(account)}>Sửa vai trò</button></td></tr>)}</tbody></table>{!accounts.length && <p className="manager-empty">Không có tài khoản.</p>}</div>
+    <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>HỌ VÀ TÊN</th><th>EMAIL</th><th>ĐIỆN THOẠI</th><th>VAI TRÒ</th><th>TRẠNG THÁI</th><th>THAO TÁC</th></tr></thead><tbody>{accounts.map((account) => <tr key={account.id}><td><strong>{account.name}</strong></td><td>{account.email || '—'}</td><td>{account.phone || '—'}</td><td>{(account.roleNames || account.roles).join(', ')}</td><td><select className="workspace-select" value={account.status} onChange={(event) => updateAccount(account.id, { status: event.target.value }).then(() => { onNotice('Đã cập nhật trạng thái tài khoản.'); refresh(); }).catch((error) => setActionError(error.message || 'Không thể cập nhật trạng thái tài khoản.'))}><option value="active">Đang hoạt động</option><option value="suspended">Tạm khóa</option></select></td><td><button className="action-review" onClick={() => saveAccountRoles(account)}>Sửa vai trò</button></td></tr>)}</tbody></table>{!accounts.length && <p className="manager-empty">Không có tài khoản.</p>}</div>
   </section>;
 }

@@ -3,20 +3,18 @@ import { createAuthMiddleware } from '../middleware/auth.middleware.js';
 import { createManagerRepository } from '../repositories/manager.repository.js';
 import { createManagerService } from '../service/manager.service.js';
 import { createManagerController } from '../controller/manager.controller.js';
+import { attachManagerRoles, requireManagerRoles } from '../middleware/manager-auth.middleware.js';
 
 export function createManagerRouter(database) {
   const router = Router();
   const repository = createManagerRepository(database);
   const service = createManagerService(repository);
   const controller = createManagerController(service);
-  router.use(createAuthMiddleware(database), async (request, _response, next) => {
-    request.currentRoles = await service.authorizeDashboard(request.user);
-    next();
-  });
+  router.use(createAuthMiddleware(database), attachManagerRoles(service));
   router.get('/dashboard', controller.dashboard);
-  const requireManager = service.requireRoles('MANAGER');
-  const requireManagerOrAdmin = service.requireRoles('MANAGER', 'ADMIN');
-  const requireAdmin = service.requireRoles('ADMIN');
+  const requireManager = requireManagerRoles('MANAGER');
+  const requireManagerOrAdmin = requireManagerRoles('MANAGER', 'ADMIN');
+  const requireAdmin = requireManagerRoles('ADMIN');
   router.get('/accounts', requireAdmin, controller.accounts);
   router.post('/accounts', requireAdmin, controller.createAccount);
   router.patch('/accounts/:id', requireAdmin, controller.updateAccount);

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { getManagerResource, getSystemReport, saveSystemReport } from '../api/managerApi';
+import { useState } from 'react';
+import useManagerActions from '../hooks/useManagerActions';
+import useManagerCollection from '../hooks/useManagerCollection';
 
 const money = (amount) => new Intl.NumberFormat('vi-VN').format(amount || 0);
 const date = (value, options = { day: '2-digit', month: '2-digit' }) => new Intl.DateTimeFormat('vi-VN', options).format(new Date(value));
@@ -48,33 +49,26 @@ function SavedReportDialog({ report, onClose }) {
 const dateInput = (value) => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
 
 export default function ReportsWorkspace({ active, onNotice }) {
-  const [data, setData] = useState(null);
   const [from, setFrom] = useState(() => { const start = new Date(); start.setDate(start.getDate() - 30); return dateInput(start); });
   const [to, setTo] = useState(() => dateInput(new Date()));
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [reload, setReload] = useState(0);
+  const request = useManagerCollection(active, active === 'savedReports' ? {} : { from, to });
+  const { getSystemReport, saveSystemReport } = useManagerActions();
+  const [actionError, setActionError] = useState('');
   const [selectedReport, setSelectedReport] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError('');
-    getManagerResource(active, { ...(active === 'savedReports' ? {} : { from, to }), signal: controller.signal })
-      .then((result) => setData(result.data))
-      .catch((reason) => { if (reason.name !== 'AbortError') setError(reason.message); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [active, from, to, reload]);
+  const data = request.data;
+  const { loading } = request;
+  const error = actionError || request.error;
+  const refresh = () => { setActionError(''); request.refresh(); };
 
   const save = async (type) => {
     try {
       await saveSystemReport({ type, from, to });
       onNotice(type === 'finance' ? 'Đã lưu báo cáo tài chính.' : 'Đã lưu báo cáo hoạt động.');
-      setReload((value) => value + 1);
+      refresh();
     } catch (reason) {
-      setError(reason.message || 'Không thể lưu báo cáo.');
+      setActionError(reason.message || 'Không thể lưu báo cáo.');
     }
   };
 
@@ -91,7 +85,7 @@ export default function ReportsWorkspace({ active, onNotice }) {
   };
 
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải báo cáo…</p></section>;
-  if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={() => setReload((value) => value + 1)}>Thử lại</button></div></section>;
+  if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div></section>;
 
   if (active === 'savedReports') return <section className="manager-panel workspace-panel">
     <WorkspaceHeader title="Báo cáo hệ thống đã lưu" subtitle="Bản chụp báo cáo đã tạo để tra cứu và đối chiếu." count={data?.length || 0} />

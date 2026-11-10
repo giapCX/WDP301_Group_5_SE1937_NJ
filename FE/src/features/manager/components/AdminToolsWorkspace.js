@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { createRole, getManagerResource, updateRole } from '../api/managerApi';
+import { useState } from 'react';
+import useManagerActions from '../hooks/useManagerActions';
+import useManagerCollection from '../hooks/useManagerCollection';
 import { ChangeSummary, PermissionPills, humanizeField } from './dataDisplay';
 
 function WorkspaceHeader({ title, subtitle, count }) {
@@ -21,36 +22,28 @@ const auditActionLabels = {
 const dateInput = (value) => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
 
 export default function AdminToolsWorkspace({ active, onNotice }) {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [reload, setReload] = useState(0);
   const [from, setFrom] = useState(() => { const start = new Date(); start.setDate(start.getDate() - 30); return dateInput(start); });
   const [to, setTo] = useState(() => dateInput(new Date()));
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError('');
-    getManagerResource(active, { ...(active === 'auditLogs' ? { from, to, limit: 100 } : {}), signal: controller.signal })
-      .then((result) => setData(result.data || []))
-      .catch((reason) => { if (reason.name !== 'AbortError') setError(reason.message); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [active, from, to, reload]);
+  const request = useManagerCollection(active, active === 'auditLogs' ? { from, to, limit: 100 } : {});
+  const { createRole, updateRole } = useManagerActions();
+  const [actionError, setActionError] = useState('');
+  const data = request.data;
+  const { loading } = request;
+  const error = actionError || request.error;
+  const refresh = () => { setActionError(''); request.refresh(); };
 
   const act = async (promise, message) => {
     try {
       await promise;
       onNotice(message);
-      setReload((value) => value + 1);
+      refresh();
     } catch (reason) {
-      setError(reason.message || 'Không thể cập nhật dữ liệu.');
+      setActionError(reason.message || 'Không thể cập nhật dữ liệu.');
     }
   };
 
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải dữ liệu…</p></section>;
-  if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={() => setReload((value) => value + 1)}>Thử lại</button></div></section>;
+  if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div></section>;
 
   if (active === 'roles') return <section className="manager-panel workspace-panel">
     <WorkspaceHeader title="Vai trò & quyền" subtitle="Tạo vai trò và cập nhật quyền truy cập của vai trò hiện có." count={data.length} />

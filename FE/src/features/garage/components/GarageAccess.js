@@ -1,48 +1,8 @@
-import { useEffect, useState } from 'react';
-import { canAccessGarage, clearSession, getSessionToken } from '../../auth/session';
-import { getApi } from '../../../services/httpClient';
+import { clearSession } from '../../auth/session';
+import useGarageAccess from '../hooks/useGarageAccess';
 
 export default function GarageAccess({ children }) {
-  const [session, setSession] = useState({ status: 'loading' });
-  const [revision, setRevision] = useState(0);
-
-  useEffect(() => {
-    const refresh = (event) => {
-      if (event.type === 'storage' && event.key && !['xedi_token', 'xedi_user'].includes(event.key)) return;
-      setSession({ status: 'loading' });
-      setRevision((value) => value + 1);
-    };
-    window.addEventListener('xedi:session', refresh);
-    window.addEventListener('storage', refresh);
-    return () => {
-      window.removeEventListener('xedi:session', refresh);
-      window.removeEventListener('storage', refresh);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!getSessionToken()) {
-      setSession({ status: 'login' });
-      return;
-    }
-    const controller = new AbortController();
-    getApi('/auth/me', { signal: controller.signal })
-      .then(({ data: user }) => {
-        if (!controller.signal.aborted) {
-          setSession({ status: canAccessGarage(user) ? 'ready' : 'forbidden', user });
-        }
-      })
-      .catch((error) => {
-        if (controller.signal.aborted) return;
-        if ([401, 403, 404].includes(error.status)) {
-          clearSession();
-          setSession({ status: 'login' });
-        } else {
-          setSession({ status: 'error', message: error.message });
-        }
-      });
-    return () => controller.abort();
-  }, [revision]);
+  const { session, retry } = useGarageAccess();
 
   if (session.status === 'ready') return children(session.user);
   return (
@@ -59,7 +19,7 @@ export default function GarageAccess({ children }) {
       </>}
       {session.status === 'error' && <>
         <p role="alert">{session.message}</p>
-        <button onClick={() => { setSession({ status: 'loading' }); setRevision((value) => value + 1); }}>
+        <button onClick={retry}>
           Thử lại
         </button>
       </>}

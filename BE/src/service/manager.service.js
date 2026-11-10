@@ -96,10 +96,6 @@ export function createManagerService(repository) {
       if (!codes.some(code => ['MANAGER', 'ADMIN'].includes(code))) throw httpError(403, 'Bạn không có quyền xem trang quản lý.');
       return codes;
     },
-    requireRoles: (...allowedRoles) => (request, response, next) => {
-      if (!allowedRoles.some(role => request.currentRoles?.includes(role))) return next(httpError(403, 'Bạn không có quyền thực hiện chức năng này.'));
-      next();
-    },
     accounts: async input => {
       const {
         q = "",

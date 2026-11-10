@@ -1,33 +1,22 @@
-import { useEffect, useState } from 'react';
-import { getManagerResource, reviewCompensation, reviewIncident, updatePolicy, updateStaff, createStaff } from '../api/managerApi';
+import { useState } from 'react';
+import useManagerActions from '../hooks/useManagerActions';
+import useManagerCollection from '../hooks/useManagerCollection';
 import { DataFields, humanizeField } from './dataDisplay';
 
 const formatMoney = (amount) => new Intl.NumberFormat('vi-VN').format(amount);
 const requestStatus = (status) => ({ submitted: 'Chờ duyệt', pending_review: 'Chờ duyệt', reported: 'Mới tiếp nhận', open: 'Mới tiếp nhận', investigating: 'Đang xem xét', awaiting_response: 'Chờ phản hồi' }[status] || status);
 
 export default function OperationsWorkspace({ active, onNotice }) {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [reload, setReload] = useState(0);
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError('');
-    const request = ['vehicles', 'incidents', 'policies', 'staff'].includes(active)
-      ? getManagerResource(active, { signal: controller.signal })
-      : Promise.resolve({ data: [] });
-    request
-      .then((result) => setData([result.data]))
-      .catch((reason) => { if (reason.name !== 'AbortError') setError(reason.message); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [active, reload]);
-
-  const refresh = () => setReload((value) => value + 1);
+  const request = useManagerCollection(active);
+  const { createStaff, reviewCompensation, reviewIncident, updatePolicy, updateStaff } = useManagerActions();
+  const [actionError, setActionError] = useState('');
+  const data = [request.data];
+  const { loading } = request;
+  const error = actionError || request.error;
+  const refresh = () => { setActionError(''); request.refresh(); };
   const act = async (promise, successText) => {
     try { await promise; onNotice(successText); refresh(); }
-    catch (reason) { setError(reason.message); }
+    catch (reason) { setActionError(reason.message || 'Không thể cập nhật dữ liệu.'); }
   };
   const [primary] = data;
 
@@ -39,7 +28,7 @@ export default function OperationsWorkspace({ active, onNotice }) {
   </section>;
 
   if (active === 'policies') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Chính sách nền tảng" subtitle="Cập nhật chính sách sẽ tạo phiên bản mới và lưu lịch sử thay đổi." count={primary?.length || 0} />
-    <div className="policy-grid">{(primary || []).map((item) => <article className="policy-card" key={item.id}><div><span className="policy-type">{humanizeField(item.type)}</span><span className="policy-version">Đang áp dụng · phiên bản {item.version}</span></div><DataFields data={item.config} /><button className="action-review" onClick={() => { const raw = window.prompt('Cấu hình chính sách dạng JSON:', JSON.stringify(item.config, null, 2)); if (!raw) return; try { const config = JSON.parse(raw); act(updatePolicy(item.type, { config }), 'Đã tạo phiên bản chính sách mới.'); } catch { setError('Cấu hình phải là JSON hợp lệ.'); } }}>Chỉnh sửa chính sách</button></article>)}</div>
+    <div className="policy-grid">{(primary || []).map((item) => <article className="policy-card" key={item.id}><div><span className="policy-type">{humanizeField(item.type)}</span><span className="policy-version">Đang áp dụng · phiên bản {item.version}</span></div><DataFields data={item.config} /><button className="action-review" onClick={() => { const raw = window.prompt('Cấu hình chính sách dạng JSON:', JSON.stringify(item.config, null, 2)); if (!raw) return; try { const config = JSON.parse(raw); act(updatePolicy(item.type, { config }), 'Đã tạo phiên bản chính sách mới.'); } catch { setActionError('Cấu hình phải là JSON hợp lệ.'); } }}>Chỉnh sửa chính sách</button></article>)}</div>
   </section>;
 
   if (active === 'staff') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Quản lý nhân sự" subtitle="Quản lý hồ sơ, phạm vi công việc, vai trò và trạng thái nhân viên vận hành/gara." count={primary?.length || 0} />

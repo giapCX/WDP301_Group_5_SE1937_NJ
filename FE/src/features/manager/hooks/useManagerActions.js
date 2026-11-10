@@ -1,5 +1,13 @@
-import { reviewCompensation, reviewIncident, reviewVehicle, updatePolicy, updateStaff } from '../api/managerApi';
+import {
+  createAccount, createRole, createStaff, getSystemReport, reviewCompensation,
+  reviewIncident, reviewVehicle, saveSystemReport, updateAccount, updateContract,
+  updatePolicy, updateRole, updateStaff,
+} from '../api/managerApi';
 
 export default function useManagerActions() {
-  return { reviewCompensation, reviewIncident, reviewVehicle, updatePolicy, updateStaff };
+  return {
+    createAccount, createRole, createStaff, getSystemReport, reviewCompensation,
+    reviewIncident, reviewVehicle, saveSystemReport, updateAccount, updateContract,
+    updatePolicy, updateRole, updateStaff,
+  };
 }
