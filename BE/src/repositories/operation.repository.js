@@ -1,4 +1,4 @@
-import { getModels, modelDefinitions } from '../../models/index.js';
+import { getModels, modelDefinitions } from '../models/index.js';
 
 function createCursor(Model, filter) {
   let query = Model.find(filter).lean();

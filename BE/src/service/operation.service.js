@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { httpError, objectId } from '../../utils/http-error.js';
+import { httpError, objectId } from '../utils/http-error.js';
 import {
   parseBookingDecision,
   parseCaseUpdate,
@@ -9,7 +9,7 @@ import {
   parseOverdueAction,
   parseVehicleScreen,
   parseViolationDecision,
-} from './operation.validator.js';
+} from '../validators/operation.validator.js';
 
 const OPEN_CASES = ['reported', 'open', 'investigating', 'in_progress', 'under_review', 'awaiting_response', 'pending_manager', 'pending_review'];
 const BOOKING_REVIEW_WINDOW_MS = 2 * 60 * 60 * 1000;

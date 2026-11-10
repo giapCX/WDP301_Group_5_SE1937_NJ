@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { httpError, objectId } from '../../utils/http-error.js';
+import { httpError, objectId } from '../utils/http-error.js';
 
 const { ObjectId } = Types;
 const caseStatuses = [

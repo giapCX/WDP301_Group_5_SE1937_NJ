@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Types } from 'mongoose';
-import { createOperationService } from '../src/modules/operation/operation.service.js';
+import { createOperationService } from '../src/service/operation.service.js';
 
 const { ObjectId } = Types;
 const actorId = new ObjectId();

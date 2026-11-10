@@ -16,7 +16,7 @@ import { createOwnerRouter } from './routes/owner.routes.js';
 import { createIdentityVerificationRouter } from './routes/identity-verification.routes.js';
 import { createCloudinaryOwnerFileRepository } from './repositories/cloudinary-owner-file.repository.js';
 import { createGridFsOwnerFileRepository } from './repositories/gridfs-owner-file.repository.js';
-import { createOperationRouter } from './modules/operation/operation.routes.js';
+import { createOperationRouter } from './routes/operation.routes.js';
 
 export function createApp(database, options = {}) {
   const app = express();

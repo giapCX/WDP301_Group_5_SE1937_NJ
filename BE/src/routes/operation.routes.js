@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { createAuthMiddleware } from '../../middleware/auth.middleware.js';
-import { createOperationController } from './operation.controller.js';
-import { createOperationRepository } from './operation.repository.js';
-import { createOperationService } from './operation.service.js';
+import { createAuthMiddleware } from '../middleware/auth.middleware.js';
+import { createOperationController } from '../controller/operation.controller.js';
+import { createOperationRepository } from '../repositories/operation.repository.js';
+import { createOperationService } from '../service/operation.service.js';
 
 export function createOperationRouter(database) {
   const router = Router();
