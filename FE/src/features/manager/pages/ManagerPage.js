@@ -6,12 +6,14 @@ import OperationsWorkspace from '../components/OperationsWorkspace';
 import ReportsWorkspace from '../components/ReportsWorkspace';
 import UserMenu from '../components/UserMenu';
 import VehicleApprovalsWorkspace from '../components/VehicleApprovalsWorkspace';
+import IdentityVerificationWorkspace from '../components/IdentityVerificationWorkspace';
 import useManagerDashboard from '../hooks/useManagerDashboard';
 import './ManagerPage.css';
 
 const sections = [
   { id: 'overview', label: 'Tổng quan', icon: 'gear' },
   { id: 'vehicles', label: 'Kiểm duyệt xe', icon: 'car' },
+  { id: 'identityVerifications', label: 'Xét duyệt eKYC', icon: 'shield' },
   { id: 'incidents', label: 'Khiếu nại & sự cố', icon: 'info' },
   { id: 'policies', label: 'Chính sách nền tảng', icon: 'document' },
   { id: 'finance', label: 'Tài chính', icon: 'wallet' },
@@ -116,6 +118,8 @@ export default function ManagerPage() {
         {canManageOperations && <section className="manager-panel requests-panel"><div className="manager-panel-heading"><div><h2>Yêu cầu cần xử lý</h2><p>Các công việc đang chờ đội ngũ quản lý xem xét</p></div><button className="all-requests" onClick={() => selectSection('vehicles')}>Xem tất cả <span>→</span></button></div><div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>YÊU CẦU</th><th>LOẠI</th><th>NGƯỜI GỬI</th><th>THỜI GIAN</th><th>TRẠNG THÁI</th><th /></tr></thead><tbody>{(dashboard?.requests || []).map((request) => <tr key={request.id}><td><strong>{request.title}</strong><span>{request.code}</span></td><td>{request.type}</td><td>{request.owner}</td><td>{formatDate(request.createdAt)}</td><td><span className={`request-status ${request.type.includes('sự cố') ? 'rose' : 'amber'}`}><i />{requestStatus(request.status)}</span></td><td><button className="row-action" aria-label={`Mở ${request.code}`} onClick={() => setNotice(`Mã yêu cầu ${request.code}. API xử lý chi tiết sẽ được bổ sung theo luồng nghiệp vụ.`)}>→</button></td></tr>)}</tbody></table>{dashboard && !dashboard.requests.length && <p className="manager-empty">Không có yêu cầu đang chờ xử lý.</p>}</div></section>}
         </> : active === 'vehicles'
             ? <VehicleApprovalsWorkspace onNotice={setNotice} />
+            : active === 'identityVerifications'
+              ? <IdentityVerificationWorkspace onNotice={setNotice} />
             : active === 'contracts'
               ? <ContractsWorkspace onNotice={setNotice} />
             : ['finance', 'inspections', 'operations', 'savedReports'].includes(active)

@@ -90,7 +90,7 @@ Trạng thái: `unverified → pending → verified / rejected`; giấy tờ h�
 
 ### F03 Đăng ký xe và sàng lọc hồ sơ
 
-Owner đã xác minh → tạo bản nháp xe → nhập thông số, biển số, ảnh, giá đề xuất và giấy tờ đăng ký/đăng kiểm/bảo hiểm → gửi hồ sơ → Operation đối chiếu chủ sở hữu, tính đầy đủ và thời hạn → yêu cầu bổ sung hoặc hẹn kiểm định và phân công Garage.
+Owner đã xác minh → tạo bản nháp xe → nhập thông số, biển số, ảnh, giá đề xuất và giấy tờ đăng ký/đăng kiểm/bảo hiểm → gửi hồ sơ → Operation đối chiếu chủ sở hữu, tính đầy đủ và thời hạn → yêu cầu bổ sung hoặc hẹn kiểm định và phân công Garage. Hồ sơ giấy tờ xe chỉ được duyệt sau khi đủ ba tệp private, kiểm định đạt và người duyệt ghi audit; yêu cầu bổ sung/từ chối luôn trả lý do cho Owner.
 
 Biển số trùng bị chặn; hồ sơ thiếu/không đọc được phải nộp lại. Xe bị từ chối có lý do và lịch sử, không bị xóa. Đổi thông tin định danh hoặc giấy tờ quan trọng sau duyệt phải qua duyệt lại; xe không đủ điều kiện bị ngừng nhận booking mới và Operation xử lý các booking đã tồn tại.
 

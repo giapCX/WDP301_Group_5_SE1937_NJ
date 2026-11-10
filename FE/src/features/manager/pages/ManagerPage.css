@@ -1198,3 +1198,4 @@
 .report-metric strong{font-size:17px}
 .report-filters label,.report-filters input,.report-filters button{font-size:10px}
 .manager-empty{font-size:11px}
+ .manager-inline-button { margin-top: 8px; border: 0; padding: 0; background: transparent; color: #155eef; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: underline; }

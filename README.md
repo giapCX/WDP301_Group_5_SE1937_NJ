@@ -306,6 +306,12 @@ Giao dien quan tri tach theo URL va role: `/#/admin` cho `ADMIN`, `/#/manager` c
 
 Cong chu xe tai `/#/owner` goi `/api/owner/dashboard` va `/api/owner/vehicles`. Dang ky xe yeu cau role `OWNER`, ba loai giay to xe, tu 2 den 5 anh xe va xac nhan thoa thuan. Tai lieu va anh duoc luu trong Cloudinary private; MongoDB chi luu key. Xe gui thanh cong vao trang thai `submitted` cho quy trinh gara/quan ly tiep tuc.
 
+### eKYC và xét duyệt giấy tờ
+
+Renter mở `/#/verification` để gửi CCCD/hộ chiếu và giấy phép lái xe. Cả hai tệp được lưu Cloudinary private, số giấy tờ chỉ lưu/hiển thị dạng che một phần và hồ sơ chuyển `pending`; chưa có API key của provider eKYC nên hệ thống không tự nhận là đã xác minh. Manager mở tab **Xét duyệt eKYC** tại `/#/manager`, mở tệp qua API JWT private rồi duyệt toàn bộ bộ hồ sơ là `verified`, `revision_required` hoặc `rejected`; hai trạng thái bất lợi bắt buộc có lý do. Quyền bàn giao đã kiểm tra cả `identity_kyc.status === verified`, bằng lái đã verified và còn hạn đến hết chuyến.
+
+Hồ sơ xe Owner vẫn được xét duyệt ở tab **Kiểm duyệt xe**: Manager mở đăng ký xe, đăng kiểm và bảo hiểm qua API JWT private; chỉ duyệt xe sau khi đủ ba tệp và có biên bản kiểm định đạt. Quyết định đồng thời ghi trạng thái giấy tờ, lịch sử hồ sơ và audit log.
+
 ## Kiem tra
 
 `npm test --prefix BE` chay test model, database, API, auth, listings, homepage, Garage, Manager va Owner. Integration test tu tao replica set va database tam, seed fixture va tu don; khong sua database ung dung. Can cai MongoDB Server (`mongod`) hoac cau hinh `MONGOD_BINARY` / `INTAKE_TEST_MONGODB_URI` cho moi truong test. `npm test --prefix FE -- --watchAll=false` chay UI test.

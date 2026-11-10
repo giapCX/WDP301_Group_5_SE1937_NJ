@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getBlobApi } from '../../../services/httpClient';
 import useManagerActions from '../hooks/useManagerActions';
 import useManagerCollection from '../hooks/useManagerCollection';
 import './VehicleApprovalsWorkspace.css';
@@ -6,11 +7,11 @@ import './VehicleApprovalsWorkspace.css';
 const statusText = { submitted: 'Mới gửi', pending_review: 'Chờ xét duyệt', revision_required: 'Chờ bổ sung' };
 const inspectionText = { approved: 'Đã kiểm định', pending: 'Chờ kiểm định', rejected: 'Không đạt' };
 
-function DocumentCard({ title, document }) {
+function DocumentCard({ title, document, onOpen }) {
   const verified = Boolean(document?.verified);
   return <div className={`vehicle-document-card ${verified ? 'is-verified' : 'is-pending'}`}>
     <span className="vehicle-document-icon" aria-hidden="true">{verified ? '✓' : '!'}</span>
-    <span><strong>{title}</strong><small>{verified ? 'Đã xác minh' : 'Chưa xác minh'}</small></span>
+    <span><strong>{title}</strong><small>{verified ? 'Đã xác minh' : 'Chưa xác minh'}</small>{document?.file_key && <button className="manager-inline-button" onClick={onOpen}>Mở tài liệu</button>}</span>
   </div>;
 }
 
@@ -24,6 +25,15 @@ export default function VehicleApprovalsWorkspace({ onNotice }) {
   const loading = request.loading;
   const error = actionError || request.error;
   const refresh = () => { setActionError(''); request.refresh(); };
+  const openDocument = async (vehicle, kind) => {
+    setActionError('');
+    try {
+      const blob = await getBlobApi(`/manager/vehicles/${vehicle.id}/documents/${kind}`);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (reason) { setActionError(reason.message || 'Không thể tải tài liệu private.'); }
+  };
 
   const act = async (vehicle, action, note) => {
     setBusyId(vehicle.id);
@@ -76,7 +86,7 @@ export default function VehicleApprovalsWorkspace({ onNotice }) {
       return <article className="vehicle-approval-card" key={vehicle.id}>
         <header className="vehicle-card-header"><div><span className="vehicle-card-kicker">HỒ SƠ XE · {vehicle.id.slice(-6).toUpperCase()}</span><h3>{vehicle.brand} {vehicle.model}</h3><p>{vehicle.licensePlate} <span>·</span> {vehicle.year || 'Chưa rõ năm sản xuất'} <span>·</span> {vehicle.seats || '—'} chỗ</p></div><span className="vehicle-review-status">{statusText[vehicle.status] || vehicle.status}</span></header>
         <div className="vehicle-owner-row"><div><small>CHỦ XE</small><strong>{vehicle.owner?.full_name || 'Chưa cập nhật tên'}</strong></div><div><small>EMAIL</small><strong>{vehicle.owner?.email || '—'}</strong></div><div><small>HỘP SỐ / NHIÊN LIỆU</small><strong>{vehicle.transmission || '—'} · {vehicle.fuelType || '—'}</strong></div></div>
-        <div className="vehicle-review-grid"><section><h4>Giấy tờ phương tiện</h4><div className="vehicle-document-list"><DocumentCard title="Đăng ký xe" document={vehicle.documents?.registration} /><DocumentCard title="Giấy đăng kiểm" document={vehicle.documents?.inspection_certificate} /></div></section><section><h4>Biên bản kiểm định</h4><div className={`vehicle-inspection-card ${canApprove ? 'is-approved' : ''}`}><strong>{vehicle.inspection ? inspectionText[vehicle.inspection.status] || vehicle.inspection.status : 'Chưa có biên bản'}</strong><span>Kết luận: {vehicle.inspection?.recommendation === 'pass' ? 'Đạt' : vehicle.inspection?.recommendation === 'fail' ? 'Không đạt' : vehicle.inspection?.recommendation || 'Chưa có'}</span>{vehicle.inspection?.inspectedAt && <small>{new Date(vehicle.inspection.inspectedAt).toLocaleDateString('vi-VN')}</small>}</div></section></div>
+        <div className="vehicle-review-grid"><section><h4>Giấy tờ phương tiện</h4><div className="vehicle-document-list"><DocumentCard title="Đăng ký xe" document={vehicle.documents?.registration} onOpen={() => openDocument(vehicle, 'registration')} /><DocumentCard title="Giấy đăng kiểm" document={vehicle.documents?.inspection_certificate} onOpen={() => openDocument(vehicle, 'inspection')} /><DocumentCard title="Bảo hiểm" document={vehicle.documents?.insurance} onOpen={() => openDocument(vehicle, 'insurance')} /></div></section><section><h4>Biên bản kiểm định</h4><div className={`vehicle-inspection-card ${canApprove ? 'is-approved' : ''}`}><strong>{vehicle.inspection ? inspectionText[vehicle.inspection.status] || vehicle.inspection.status : 'Chưa có biên bản'}</strong><span>Kết luận: {vehicle.inspection?.recommendation === 'pass' ? 'Đạt' : vehicle.inspection?.recommendation === 'fail' ? 'Không đạt' : vehicle.inspection?.recommendation || 'Chưa có'}</span>{vehicle.inspection?.inspectedAt && <small>{new Date(vehicle.inspection.inspectedAt).toLocaleDateString('vi-VN')}</small>}</div></section></div>
         {vehicle.reviewNote && <div className="vehicle-prior-note"><strong>Ghi chú xét duyệt gần nhất</strong><p>{vehicle.reviewNote}</p></div>}
         <footer className="vehicle-card-actions"><button className="action-approve" disabled={!canApprove || busyId === vehicle.id} title={!canApprove ? 'Cần biên bản kiểm định đạt yêu cầu trước khi duyệt' : ''} onClick={() => { const note = window.prompt('Ghi chú xét duyệt (không bắt buộc):', ''); if (note !== null) act(vehicle, 'approve', note.trim()); }}>{busyId === vehicle.id ? 'Đang lưu…' : 'Duyệt xe'}</button><button className="action-review" disabled={busyId === vehicle.id} onClick={() => requestAdditionalInfo(vehicle)}>Yêu cầu bổ sung</button><button className="action-reject" disabled={busyId === vehicle.id} onClick={() => rejectApplication(vehicle)}>Từ chối hồ sơ</button></footer>
       </article>;

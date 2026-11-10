@@ -16,5 +16,14 @@ export function createGridFsOwnerFileRepository(connection) {
       });
     },
     remove: (keys) => Promise.allSettled(keys.map((key) => bucket.delete(new mongoose.Types.ObjectId(String(key))))),
+    read(key) {
+      return new Promise((resolve, reject) => {
+        const stream = bucket.openDownloadStream(new mongoose.Types.ObjectId(String(key)));
+        const chunks = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.once('error', reject);
+        stream.once('end', () => resolve(Buffer.concat(chunks)));
+      });
+    },
   };
 }

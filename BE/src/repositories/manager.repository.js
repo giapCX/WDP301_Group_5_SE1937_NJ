@@ -1,7 +1,7 @@
 import { getModels, modelDefinitions } from '../models/index.js';
 import { createModelRepository } from './base.repository.js';
 
-export function createManagerRepository(connection) {
+export function createManagerRepository(connection, privateFiles) {
   const models = getModels(connection);
   const collections = Object.fromEntries(Object.entries(modelDefinitions).map(([name, definition]) => [definition.collection, createModelRepository(models[name])]));
   return {
@@ -18,5 +18,6 @@ export function createManagerRepository(connection) {
     roles: createModelRepository(models.Role),
     policies: createModelRepository(models.PlatformPolicy),
     inspections: createModelRepository(models.VehicleInspection),
+    readPrivateFile: (key) => privateFiles?.read(key),
   };
 }

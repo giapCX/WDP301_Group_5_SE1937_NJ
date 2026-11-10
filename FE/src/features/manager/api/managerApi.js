@@ -17,6 +17,7 @@ const resourcePaths = {
   roles: "/roles",
   auditLogs: "/audit-logs",
   savedReports: "/reports/system",
+  identityVerifications: "/identity-verifications?status=pending",
 };
 
 export function getManagerResource(
@@ -47,6 +48,8 @@ export const getManagerDashboard = (period, options) =>
   getApi(`/manager/dashboard?period=${encodeURIComponent(period)}`, options);
 export const reviewVehicle = (id, body) =>
   patchApi(`/manager/vehicles/${id}/review`, body);
+export const reviewIdentityVerification = (id, body) =>
+  patchApi(`/manager/identity-verifications/${id}/review`, body);
 export const reviewCompensation = (id, body) =>
   patchApi(`/manager/incidents/${id}/compensation`, body);
 export const reviewIncident = (id, body) =>

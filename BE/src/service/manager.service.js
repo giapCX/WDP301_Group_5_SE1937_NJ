@@ -728,6 +728,10 @@ export function createManagerService(repository) {
         throw httpError(400, ["revision", "reject"].includes(action) ? "Yêu cầu bổ sung hoặc từ chối cần có nội dung giải thích từ 5 đến 1.000 ký tự." : "Thông tin duyệt xe không hợp lệ.");
       }
       if (action === "approve") {
+        const vehicle = await repository.collection("vehicles").findOne({ _id: id }, { projection: { documents: 1 } });
+        if (!['registration', 'inspection_certificate', 'insurance'].every((kind) => vehicle?.documents?.[kind]?.file_key)) {
+          throw httpError(409, "Hồ sơ xe chưa đủ giấy đăng ký, đăng kiểm và bảo hiểm để xét duyệt.");
+        }
         const approvalPolicy = await repository.collection("platform_policies").findOne({
           policy_type: "vehicle_approval",
           status: "active"
@@ -741,6 +745,13 @@ export function createManagerService(repository) {
           if (!inspection) throw httpError(409, "Cần có biên bản kiểm định đạt yêu cầu trước khi duyệt xe.");
         }
       }
+      const now = new Date();
+      const documentUpdates = Object.fromEntries(['registration', 'inspection_certificate', 'insurance'].flatMap((kind) => [
+        [`documents.${kind}.verified`, action === 'approve'],
+        [`documents.${kind}.review_status`, statuses[action]],
+        [`documents.${kind}.review_note`, note.trim()],
+        [`documents.${kind}.reviewed_at`, now],
+      ]));
       const result = await repository.collection("vehicles").updateOne({
         _id: id,
         onboarding_status: {
@@ -749,15 +760,16 @@ export function createManagerService(repository) {
       }, {
         $set: {
           onboarding_status: statuses[action],
-          updated_at: new Date(),
+          updated_at: now,
           reviewed_by_manager_id: input.actorId,
-          review_note: note.trim()
+          review_note: note.trim(),
+          ...documentUpdates,
         },
         $push: {
           registration_history: {
             action: statuses[action],
             by_user_id: input.actorId,
-            at: new Date(),
+            at: now,
             note: note.trim()
           }
         }
@@ -773,6 +785,18 @@ export function createManagerService(repository) {
           status: statuses[action]
         }
       };
+    },
+    vehicleDocument: async input => {
+      const id = toId(input.id);
+      const kinds = { registration: 'registration', inspection: 'inspection_certificate', insurance: 'insurance' };
+      const kind = kinds[input.kind];
+      if (!id || !kind || !repository.readPrivateFile) throw httpError(400, 'Tài liệu xe không hợp lệ.');
+      const vehicle = await repository.collection('vehicles').findOne({ _id: id }, { projection: { documents: 1 } });
+      const key = vehicle?.documents?.[kind]?.file_key;
+      if (!key) throw httpError(404, 'Không tìm thấy tài liệu xe.');
+      const bytes = await repository.readPrivateFile(key);
+      const contentType = key.endsWith('.pdf') ? 'application/pdf' : key.endsWith('.png') ? 'image/png' : key.endsWith('.webp') ? 'image/webp' : 'image/jpeg';
+      return { bytes, contentType };
     },
     incidents: async input => {
       const status = input.query.status || "open";

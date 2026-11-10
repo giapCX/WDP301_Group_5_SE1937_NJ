@@ -14,6 +14,10 @@ export function createManagerController(service) {
     dashboard: async (request,response) => response.status(200).json(await service.dashboard(input(request))),
     vehicles: async (request,response) => response.status(200).json(await service.vehicles(input(request))),
     reviewVehicle: async (request,response) => response.status(200).json(await service.reviewVehicle(input(request))),
+    vehicleDocument: async (request, response) => {
+      const file = await service.vehicleDocument({ ...input(request), kind: request.params.kind });
+      response.set({ 'Content-Type': file.contentType, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store' }).send(file.bytes);
+    },
     incidents: async (request,response) => response.status(200).json(await service.incidents(input(request))),
     reviewCompensation: async (request,response) => response.status(200).json(await service.reviewCompensation(input(request))),
     reviewIncident: async (request,response) => response.status(200).json(await service.reviewIncident(input(request))),

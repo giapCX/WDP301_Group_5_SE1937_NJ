@@ -53,6 +53,7 @@ export default function SiteHeader({ onLogin }) {
           <a href="#ve-xedi">Về chúng tôi</a>
           {canAccessOwner(currentUser) && <a href="/owner">Không gian chủ xe</a>}
           {canAccessGarage(currentUser) && <a href="/garage">Không gian gara</a>}
+          {currentUser && <a href="#/verification">Xác minh eKYC</a>}
         </nav>
         <div className="header-actions">
           <span className="header-reassurance">
