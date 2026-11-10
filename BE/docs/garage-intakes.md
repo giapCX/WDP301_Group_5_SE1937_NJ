@@ -1,27 +1,28 @@
 # API tiếp nhận xe — Garage Staff
 
-API nằm dưới `/api/garage`. Đây là luồng tiếp nhận xe từ chủ xe theo **hợp đồng quản lý**, khác với luồng nhận xe khách thuê trả. FE `/garage` đã nối API thật, gồm phụ kiện, lưu nháp và xác nhận; xem [luồng Garage Staff](garage-staff.md).
+API nằm dưới `/api/garage`. Đây là luồng tiếp nhận xe từ chủ xe theo **hợp đồng quản lý**, khác với luồng nhận xe khách thuê trả. FE `/garage` hiện vẫn dùng dữ liệu mẫu; thay đổi này cung cấp API để nối FE ở bước tiếp theo.
 
 ## Điều kiện sử dụng
 
 - Node.js và MongoDB như cấu hình BE hiện tại. Chạy `npm run db:setup` để tạo collection/index.
 - GET và lưu/sửa nháp dùng được với MongoDB standalone. **Xác nhận cần replica set hoặc Atlas** để thực hiện transaction. Standalone trả `503` và không xác nhận tiếp nhận.
-- Đăng nhập qua `POST /api/auth/login` bằng tài khoản đang active. API gara dùng JWT do API đăng nhập cấp; kiểm tra quyền hiện tại trong database ở mỗi request.
+- Dự án chưa có đăng nhập. Cơ chế dev hiện tại dùng token bí mật được cấu hình ở BE, gắn với đúng một tài khoản nhân viên. Route mặc định khóa (`503`) nếu chưa cấu hình. Cơ chế dev bị khóa khi `NODE_ENV=production`; cần thay bằng xác thực đăng nhập thực trước khi triển khai production.
 
 Trong `BE/.env`:
 
 ```dotenv
-JWT_SECRET=<bi-mat-ky-JWT-cua-backend>
+GARAGE_API_TOKEN=<chuoi-ngau-nhien-it-nhat-32-ky-tu>
+GARAGE_STAFF_ID=<users._id-cua-nhan-vien>
 # Ví dụ local replica set đã khởi tạo:
 MONGODB_URI=mongodb://127.0.0.1:27017/?replicaSet=rs0
 ```
 
-Gọi `POST /api/auth/login` với `{ "account": "<email-hoac-so-dien-thoai>", "password": "<mat-khau>" }` và lấy `data.token`. Không commit token hoặc đưa vào source/biến build FE. Tài khoản phải `account_status: active`, role chính hoặc role bổ sung có permission `vehicle.intake`. BE tự lấy actor từ tài khoản đã xác thực; không tin `staffId` hoặc `X-User-Id` do client gửi. `GARAGE_API_TOKEN` và `GARAGE_STAFF_ID` không còn được sử dụng.
+Sinh token bằng `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Không commit token hoặc đưa vào source/biến build FE. Dùng Postman hay client API để kiểm tra. Tài khoản phải `account_status: active`, role chính hoặc role bổ sung có permission `vehicle.intake`. BE tự lấy actor từ cấu hình này; không tin `staffId` hoặc `X-User-Id` do client gửi.
 
 Mọi request cần header:
 
 ```http
-Authorization: Bearer <JWT-tu-login>
+Authorization: Bearer <GARAGE_API_TOKEN>
 Content-Type: application/json
 ```
 
@@ -102,7 +103,7 @@ Kết quả xác nhận: `{ data: <biên bản>, replayed: false }`. Gửi lại
 
 5. Gọi GET chi tiết/danh sách để hiển thị biên bản đã lưu.
 
-Biên bản nhận **khóa file**, không nhận URL, binary hoặc base64. Tối đa 4 ảnh, mỗi key tối đa 250 ký tự. FE upload qua `POST /api/garage/photos` trước khi gửi key. Chưa cung cấp xuất PDF.
+Ảnh hiện nhận **khóa file**, không nhận URL, binary hoặc base64. Tối đa 4 ảnh, mỗi key tối đa 250 ký tự. API upload ảnh và tạo PDF chưa nằm trong luồng này; FE cần chuyển ảnh qua dịch vụ lưu file trước khi gửi key.
 
 ## Kiểm thử
 

@@ -5,6 +5,7 @@ import GarageTaskTable from '../components/GarageTaskTable';
 import GarageReportDialog from '../components/GarageReportDialog';
 import GarageIncidentDialog from '../components/GarageIncidentDialog';
 import GarageStatus from '../components/GarageStatus';
+import Modal from '../../../components/ui/Modal';
 import Icon from '../../../components/ui/Icon';
 import useGarageWorkspace from '../hooks/useGarageWorkspace';
 import {
@@ -47,7 +48,7 @@ function downloadCsv(tasks, section) {
       task.vehicle,
       task.plate,
       taskKinds[task.kind],
-      task.scheduled === false ? 'Chưa có lịch hẹn' : `${displayTime(task.schedule)} ${displayDate(task.schedule)}`,
+      `${displayTime(task.schedule)} ${displayDate(task.schedule)}`,
       statusLabels[task.status],
     ]),
   ];
@@ -66,8 +67,8 @@ function downloadCsv(tasks, section) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export default function GaragePage({ user }) {
-  const { workspace, loading, error, reload, saveReport, addIncident } =
+export default function GaragePage() {
+  const { workspace, storageError, saveReport, addIncident, reset } =
     useGarageWorkspace();
   const [section, setSection] = useState(currentSection);
   const [query, setQuery] = useState('');
@@ -115,10 +116,10 @@ export default function GaragePage({ user }) {
       (task) =>
         (!sectionKinds[section] || task.kind === sectionKinds[section]) &&
         (status === 'all' || task.status === status) &&
-        (date === 'all' || (task.scheduled !== false &&
+        (date === 'all' ||
           (date === 'today'
             ? task.schedule.startsWith(today)
-            : task.schedule.slice(0, 10) > today))) &&
+            : task.schedule.slice(0, 10) > today)) &&
         normalize(
           `${task.vehicle} ${task.plate} ${task.id} ${task.contact}`,
         ).includes(normalize(query)),
@@ -132,8 +133,8 @@ export default function GaragePage({ user }) {
   const logs = workspace.history.filter((item) =>
     normalize(`${item.title} ${item.detail}`).includes(normalize(query)),
   );
-  async function reportSaved(id, report, draft) {
-    await saveReport(id, report, draft);
+  function reportSaved(id, report, draft) {
+    saveReport(id, report, draft);
     setDialog(null);
     setToast(
       draft
@@ -143,24 +144,21 @@ export default function GaragePage({ user }) {
           : 'Đã hoàn tất và lưu biên bản giao nhận.',
     );
   }
-  if (loading || error) return (
-    <GarageLayout user={user} section={section} onNavigate={navigate} tasks={workspace.tasks} permissions={workspace.permissions} onRefresh={reload}>
-      {loading ? <p role="status">Đang tải dữ liệu gara...</p> : <div role="alert"><p>{error}</p><button className="gs-button gs-button-primary" onClick={reload}>Thử lại</button></div>}
-    </GarageLayout>
-  );
   return (
     <GarageLayout
-      user={user}
       section={section}
       onNavigate={navigate}
       tasks={workspace.tasks}
-      onRefresh={reload}
-      permissions={workspace.permissions}
+      onReset={() => setDialog({ type: 'reset' })}
     >
+      {storageError && (
+        <p role="alert" className="gs-storage-error">
+          {storageError}
+        </p>
+      )}
       {section === 'overview' ? (
         <GarageOverview
           workspace={workspace}
-          user={user}
           onNavigate={navigate}
           onOpen={(task) => setDialog({ type: 'report', task })}
         />
@@ -173,7 +171,7 @@ export default function GaragePage({ user }) {
               <p>{active.description}</p>
             </div>
             <div className="gs-heading-actions">
-              {section === 'incidents' ? (workspace.permissions.includes('case.report') && (
+              {section === 'incidents' ? (
                 <button
                   className="gs-button gs-button-primary"
                   onClick={() => setDialog({ type: 'incident' })}
@@ -181,7 +179,7 @@ export default function GaragePage({ user }) {
                   <Icon name="plus" size={17} />
                   Tạo báo cáo sự cố
                 </button>
-              )) : (
+              ) : (
                 section !== 'history' && (
                   <button
                     className="gs-button gs-button-secondary"
@@ -309,7 +307,7 @@ export default function GaragePage({ user }) {
                     <p>
                       Tạo báo cáo khi phát hiện hư hỏng hoặc bất thường trên xe.
                     </p>
-                    {!query && workspace.permissions.includes('case.report') && (
+                    {!query && (
                       <button
                         className="gs-button gs-button-secondary"
                         onClick={() => setDialog({ type: 'incident' })}
@@ -324,7 +322,7 @@ export default function GaragePage({ user }) {
               <>
                 <div className="gs-list-summary">
                   {filteredTasks.length} công việc{' '}
-                  <span>· Danh sách chung theo quyền; chỉ người lập được sửa nháp</span>
+                  <span>· Chỉ hiển thị công việc được phân công cho bạn</span>
                 </div>
                 <GarageTaskTable
                   tasks={filteredTasks}
@@ -359,15 +357,44 @@ export default function GaragePage({ user }) {
       {dialog?.type === 'incident' && (
         <GarageIncidentDialog
           tasks={workspace.tasks}
-          vehicles={workspace.vehicles}
           incident={dialog.incident}
           onClose={() => setDialog(null)}
-          onSave={async (incident, requestId) => {
-            await addIncident(incident, requestId);
+          onSave={(incident) => {
+            addIncident(incident);
             setDialog(null);
             setToast('Đã gửi báo cáo sự cố cho bộ phận vận hành.');
           }}
         />
+      )}
+      {dialog?.type === 'reset' && (
+        <Modal
+          title="Khôi phục dữ liệu mẫu?"
+          className="gs-dialog gs-reset-dialog"
+          onClose={() => setDialog(null)}
+        >
+          <p className="gs-dialog-intro">
+            Các bản nháp, biên bản và ảnh bạn đã thêm trong bản thử nghiệm
+            Garage Staff sẽ được thay bằng dữ liệu mẫu ban đầu.
+          </p>
+          <div className="gs-dialog-actions">
+            <button
+              className="gs-button gs-button-secondary"
+              onClick={() => setDialog(null)}
+            >
+              Giữ lại dữ liệu
+            </button>
+            <button
+              className="gs-button gs-button-primary"
+              onClick={() => {
+                reset();
+                setDialog(null);
+                setToast('Đã khôi phục dữ liệu mẫu.');
+              }}
+            >
+              Khôi phục
+            </button>
+          </div>
+        </Modal>
       )}
       {toast && (
         <div role="status" className="gs-toast">

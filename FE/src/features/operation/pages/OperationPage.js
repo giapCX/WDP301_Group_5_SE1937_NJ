@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-import { getCurrentUser } from '../../auth/session';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { getCurrentUser, clearSession } from '../../auth/session';
 import Icon from '../../../components/Icon';
-import { getOperationDashboard, getOperationDetail, getOperationResource } from '../api/operationApi';
+import {
+  getOperationDashboard,
+  getOperationDetail,
+  getOperationResource,
+} from '../api/operationApi';
 import OperationDashboard from '../components/OperationDashboard';
 import OperationDetailDialog from '../components/OperationDetailDialog';
+import OperationActionDialog from '../components/OperationActionDialog';
 import OperationQueue from '../components/OperationQueue';
 import { useOperationActions } from '../hooks/useOperationActions';
 import {
@@ -15,21 +20,16 @@ import './OperationPage.css';
 
 function currentUserCanOperate() {
   const user = getCurrentUser();
-  const roles = user?.roles || [user?.role?.code].filter(Boolean);
+  const roles = [
+    ...(Array.isArray(user?.roles) ? user.roles : []),
+    user?.role?.code,
+  ].filter(Boolean);
   return roles.some((role) => ['OPERATION_STAFF', 'ADMIN'].includes(role));
 }
 
 function readSectionFromHash() {
   const section = window.location.hash.replace(/^#\/?operation\/?/, '');
   return operationSections.some(({ id }) => id === section) ? section : 'overview';
-}
-
-function clearSessionAndLogout() {
-  ['xedi_token', 'xedi_user'].forEach((key) => {
-    localStorage.removeItem(key);
-    sessionStorage.removeItem(key);
-  });
-  window.location.hash = '#/login';
 }
 
 export default function OperationPage() {
@@ -50,16 +50,16 @@ export default function OperationPage() {
   const currentUser = getCurrentUser();
 
   useEffect(() => {
-    const syncSectionFromHash = () => setSection(readSectionFromHash());
-    window.addEventListener('hashchange', syncSectionFromHash);
-    return () => window.removeEventListener('hashchange', syncSectionFromHash);
+    const syncSection = () => setSection(readSectionFromHash());
+    window.addEventListener('hashchange', syncSection);
+    return () => window.removeEventListener('hashchange', syncSection);
   }, []);
 
   useEffect(() => {
     document.title = 'Operation Management — XeDi';
   }, []);
 
-  // Load the dashboard summary or the active Operation Staff work queue.
+  // Load only the dashboard or the currently selected staff queue.
   const load = useCallback(async (signal) => {
     setLoading(true);
     setError('');
@@ -70,24 +70,18 @@ export default function OperationPage() {
         setItems([]);
         setPagination(null);
       } else {
-        const result = await getOperationResource(
-          section,
-          {
-            page,
-            limit: 10,
-            status: status === 'all' ? '' : status,
-            q: search,
-            sort,
-          },
-          { signal },
-        );
+        const result = await getOperationResource(section, {
+          page,
+          limit: 10,
+          status: status === 'all' ? '' : status,
+          q: search,
+          sort,
+        }, { signal });
         setItems(result.data || []);
         setPagination(result.pagination || null);
       }
     } catch (reason) {
-      if (reason.name !== 'AbortError') {
-        setError(reason.message || 'Không thể tải dữ liệu.');
-      }
+      if (reason.name !== 'AbortError') setError(reason.message || 'Không thể tải dữ liệu.');
     } finally {
       if (!signal.aborted) setLoading(false);
     }
@@ -110,14 +104,12 @@ export default function OperationPage() {
   };
 
   const refresh = () => load(new AbortController().signal);
-
-  // Keep API mutation feedback and queue refresh behavior consistent across workflows.
-  const perform = async (operation, message) => {
+  const perform = async (operation, successMessage) => {
     setBusy(true);
     setError('');
     try {
       await operation();
-      setNotice(message);
+      setNotice(successMessage);
       setSelected(null);
       await refresh();
     } catch (reason) {
@@ -129,21 +121,18 @@ export default function OperationPage() {
 
   const openDetail = async (item) => {
     setSelected(item);
-    if (!['vehicles', 'bookings', 'listings', 'incidents', 'violations', 'disputes', 'complaints'].includes(section)) {
-      return;
-    }
+    if (section === 'overdue') return;
     try {
       const result = await getOperationDetail(section, item.id);
       setSelected(result.data);
     } catch (reason) {
-      setError(reason.message);
+      setError(reason.message || 'Không thể tải chi tiết hồ sơ.');
     }
   };
 
   const actions = useOperationActions({ section, currentUser, perform, setError });
-  const rows = createOperationRows(items, section);
+  const rows = useMemo(() => createOperationRows(items, section), [items, section]);
 
-  // Enforce the Operation Staff/Admin UI boundary independently of API authorization.
   if (!currentUserCanOperate()) {
     return (
       <main className="operation-denied">
@@ -157,110 +146,76 @@ export default function OperationPage() {
   return (
     <div className="operation-app">
       <aside className="operation-sidebar">
-        <a href="#trang-chu" className="operation-brand">
+        <div className="operation-brand">
           <span className="operation-brand-mark">X</span>
           <span><strong>XeDi</strong><small>OPERATION CENTER</small></span>
-        </a>
+        </div>
         <div className="operation-user">
           <span className="operation-avatar">{(currentUser?.full_name || 'OS').slice(0, 1)}</span>
-          <span>
-            <strong>{currentUser?.full_name || 'Operation Staff'}</strong>
-            <small>Nhân viên vận hành</small>
-          </span>
+          <span><strong>{currentUser?.full_name || 'Operation Staff'}</strong><small>Nhân viên vận hành</small></span>
         </div>
-        {/* Links map directly to the operational queues and dashboard. */}
         <nav aria-label="Điều hướng vận hành">
           {operationSections.map((item) => (
-            <button
-              key={item.id}
-              className={section === item.id ? 'active' : ''}
-              onClick={() => navigate(item.id)}
-            >
+            <button key={item.id} className={section === item.id ? 'active' : ''} onClick={() => navigate(item.id)}>
               <Icon name={item.icon} size={18} />
               {item.label}
-              {item.id === 'bookings' && dashboard?.metrics?.pendingBookings > 0 && (
-                <b>{dashboard.metrics.pendingBookings}</b>
-              )}
+              {item.id === 'bookings' && dashboard?.metrics?.pendingBookings > 0 && <b>{dashboard.metrics.pendingBookings}</b>}
             </button>
           ))}
         </nav>
-        <a href="#trang-chu" className="operation-back">← Về trang XeDi</a>
       </aside>
 
       <main className="operation-main">
         <header className="operation-topbar">
-          <div>
-            <p>TRUNG TÂM VẬN HÀNH</p>
-            <h1>{operationSectionTitles[section]}</h1>
-          </div>
+          <div><p>TRUNG TÂM VẬN HÀNH</p><h1>{operationSectionTitles[section]}</h1></div>
           <div className="operation-top-actions">
             <span>{currentUser?.email || ''}</span>
-            <button onClick={clearSessionAndLogout}>Đăng xuất</button>
+            <button onClick={() => { clearSession(); window.location.hash = '#/login'; }}>Đăng xuất</button>
           </div>
         </header>
 
-        {notice && (
-          <div className="operation-notice" role="status">
-            {notice}
-            <button aria-label="Đóng thông báo" onClick={() => setNotice('')}>×</button>
-          </div>
-        )}
-        {error && (
-          <div className="operation-error" role="alert">
-            {error}
-            <button onClick={refresh}>Thử lại</button>
-          </div>
-        )}
+        {notice && <div className="operation-notice" role="status">{notice}<button aria-label="Đóng thông báo" onClick={() => setNotice('')}>×</button></div>}
+        {error && <div className="operation-error" role="alert">{error}<button onClick={refresh}>Thử lại</button></div>}
 
-        {/* Overview exposes workload only; decisions are made in their dedicated queues. */}
-        {section === 'overview' ? (
-          <OperationDashboard
-            dashboard={dashboard}
-            loading={loading}
-            onNavigate={navigate}
-          />
-        ) : (
-          <OperationQueue
+        {section === 'overview'
+          ? <OperationDashboard dashboard={dashboard} loading={loading} onNavigate={navigate} />
+          : <OperationQueue
             section={section}
+            title={operationSectionTitles[section]}
             items={items}
             rows={rows}
             pagination={pagination}
+            loading={loading}
             status={status}
             query={query}
             sort={sort}
             page={page}
-            loading={loading}
-            actions={actions}
-            onStatusChange={(event) => {
-              setStatus(event.target.value);
-              setPage(1);
-            }}
+            onStatusChange={(value) => { setStatus(value); setPage(1); }}
             onQueryChange={setQuery}
-            onSearch={(event) => {
-              event.preventDefault();
-              setPage(1);
-              setSearch(query.trim());
-            }}
-            onSortChange={(event) => {
-              setSort(event.target.value);
-              setPage(1);
-            }}
+            onSearch={(event) => { event.preventDefault(); setPage(1); setSearch(query.trim()); }}
+            onSortChange={(value) => { setSort(value); setPage(1); }}
             onPageChange={setPage}
+            onAction={actions.handleAction}
+            onCreateCase={actions.createCase}
             onOpenDetail={openDetail}
-          />
-        )}
-
-        {selected && (
-          <OperationDetailDialog
-            item={selected}
-            section={section}
-            busy={busy}
-            onClose={() => setSelected(null)}
-            perform={perform}
-          />
-        )}
-        {busy && <div className="operation-saving" role="status">Đang lưu thay đổi…</div>}
+          />}
       </main>
+
+      {selected && <OperationDetailDialog
+        item={selected}
+        section={section}
+        busy={busy}
+        onClose={() => setSelected(null)}
+        onUpdate={(action) => actions.updateCaseDetail(selected, action)}
+        onPropose={(proposal) => actions.proposeCompensation(selected, proposal)}
+      />}
+      <OperationActionDialog
+        dialog={actions.dialog}
+        busy={busy}
+        onClose={actions.closeDialog}
+        onSubmit={actions.submitDialog}
+      />
+      {busy && <div className="operation-saving" role="status">Đang lưu thay đổi…</div>}
     </div>
   );
 }

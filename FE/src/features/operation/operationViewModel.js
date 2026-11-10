@@ -1,20 +1,7 @@
 import { formatOperationDate, formatOperationMoney } from './operationConfig';
 
-// Keep API-to-table formatting out of the page component so each workflow stays easy to scan.
 export function createOperationRows(items, section) {
   return items.map((item) => {
-    if (section === 'vehicles') {
-      return {
-        id: item.id,
-        primary: `${item.brand || ''} ${item.model || ''}`.trim() || 'Hồ sơ xe',
-        secondary: item.owner?.full_name,
-        tertiary: item.licensePlate,
-        status: item.onboardingStatus,
-        date: formatOperationDate(item.updatedAt),
-        amount: item.inspection ? 'Đã phân công' : 'Chưa lên lịch',
-      };
-    }
-
     if (section === 'bookings') {
       return {
         id: item.id,

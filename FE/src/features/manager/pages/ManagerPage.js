@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '../../../components/Icon';
 import { Brand } from '../../../components/SiteHeader';
-import ContractsWorkspace from '../components/ContractsWorkspace';
-import OperationsWorkspace from '../components/OperationsWorkspace';
-import ReportsWorkspace from '../components/ReportsWorkspace';
-import UserMenu from '../components/UserMenu';
-import VehicleApprovalsWorkspace from '../components/VehicleApprovalsWorkspace';
-import { getManagerDashboard } from '../api/managerApi';
+import {
+  getManagerDashboard,
+  getManagerResource,
+  reviewCompensation,
+  reviewIncident,
+  reviewVehicle,
+  updatePolicy,
+  updateStaff,
+} from '../api/managerApi';
 import './ManagerPage.css';
 
 const sections = [
@@ -17,9 +20,6 @@ const sections = [
   { id: 'finance', label: 'Tài chính', icon: 'wallet' },
   { id: 'inspections', label: 'Báo cáo kiểm định', icon: 'check' },
   { id: 'staff', label: 'Nhân sự', icon: 'people' },
-  { id: 'operations', label: 'Báo cáo hoạt động', icon: 'check' },
-  { id: 'contracts', label: 'Quản lý hợp đồng', icon: 'document' },
-  { id: 'savedReports', label: 'Báo cáo đã lưu', icon: 'document' },
 ];
 
 const formatMoney = (amount) => new Intl.NumberFormat('vi-VN').format(amount);
@@ -30,7 +30,7 @@ const actionText = (action, entityType) => ({
   'incident.review': 'đã xem xét sự cố',
   'policy.update': 'đã cập nhật chính sách',
 }[action] || `đã cập nhật ${entityType}`);
-const requestStatus = (status) => ({ submitted: 'Chờ duyệt', pending_review: 'Chờ duyệt', reported: 'Mới tiếp nhận', open: 'Mới tiếp nhận', investigating: 'Đang xem xét', awaiting_response: 'Chờ phản hồi' }[status] || status);
+const requestStatus = (status) => ({ submitted: 'Chờ duyệt', pending_review: 'Chờ duyệt', reported: 'Mới tiếp nhận', open: 'Mới tiếp nhận', investigating: 'Đang xem xét', in_progress: 'Đang xác minh', awaiting_response: 'Chờ phản hồi', pending_manager: 'Chờ Manager quyết định' }[status] || status);
 function revenuePath(series) {
   if (!series?.length) return '';
   const max = Math.max(1, ...series.map((item) => item.amount));
@@ -48,6 +48,146 @@ function Metric({ icon, label, value, detail, trend, tone }) {
   </article>;
 }
 
+function ManagementWorkspace({ active, onNotice }) {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [reload, setReload] = useState(0);
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setError('');
+    const supportsDateRange = ['finance', 'inspections'].includes(active);
+    const request = ['vehicles', 'incidents', 'policies', 'staff', 'finance', 'inspections'].includes(active)
+      ? getManagerResource(active, { ...(supportsDateRange ? { from, to } : {}), signal: controller.signal })
+      : Promise.resolve({ data: [] });
+    Promise.all([request])
+      .then((results) => setData(results.map((result) => result.data)))
+      .catch((reason) => { if (reason.name !== 'AbortError') setError(reason.message); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [active, reload, from, to]);
+
+  const refresh = () => setReload((value) => value + 1);
+  const act = async (promise, successText) => {
+    try { await promise; onNotice(successText); refresh(); }
+    catch (reason) { setError(reason.message); }
+  };
+  const [primary] = data;
+
+  if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải dữ liệu…</p></section>;
+  if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div></section>;
+
+  if (active === 'vehicles') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Hồ sơ xe chờ duyệt" subtitle="Kiểm tra thông tin và cập nhật trạng thái xét duyệt." count={primary?.length || 0} />
+    <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>XE & BIỂN SỐ</th><th>CHỦ XE</th><th>HỒ SƠ</th><th>TRẠNG THÁI</th><th>THAO TÁC</th></tr></thead><tbody>{(primary || []).map((item) => <tr key={item.id}><td><strong>{item.brand} {item.model} ({item.year})</strong><span>{item.licensePlate} · {item.seats} chỗ · {item.transmission}</span></td><td>{item.owner?.full_name || '—'}<span>{item.owner?.email || ''}</span></td><td>{item.documents?.registration?.verified ? 'Đăng ký đã xác minh' : 'Chờ xác minh'}<span>{item.documents?.inspection_certificate?.verified ? 'Đăng kiểm đã xác minh' : 'Chờ đăng kiểm'}</span><span>Biên bản: {item.inspection ? `${item.inspection.recommendation} · ${item.inspection.status}` : 'Chưa có'}</span></td><td><span className="request-status amber"><i />{requestStatus(item.status)}</span></td><td><div className="workspace-actions"><button className="action-approve" disabled={!item.inspection || item.inspection.status !== 'approved' || item.inspection.recommendation !== 'pass'} title="Cần biên bản kiểm định đạt yêu cầu" onClick={() => { const note = window.prompt('Ghi chú xét duyệt (không bắt buộc):', ''); if (note !== null) act(reviewVehicle(item.id, { action: 'approve', note }), 'Đã duyệt hồ sơ xe.'); }}>Duyệt</button><button className="action-review" onClick={() => { const note = window.prompt('Nêu nội dung cần bổ sung:', ''); if (note) act(reviewVehicle(item.id, { action: 'revision', note }), 'Đã yêu cầu chủ xe bổ sung hồ sơ.'); }}>Yêu cầu bổ sung</button><button className="action-reject" onClick={() => { const note = window.prompt('Lý do từ chối hồ sơ:'); if (note) act(reviewVehicle(item.id, { action: 'reject', note }), 'Đã từ chối hồ sơ xe.'); }}>Từ chối</button></div></td></tr>)}</tbody></table>{!primary?.length && <p className="manager-empty">Không có hồ sơ xe chờ duyệt.</p>}</div>
+  </section>;
+
+  if (active === 'incidents') {
+    return (
+      <section className="manager-panel workspace-panel">
+        <WorkspaceHeader
+          title="Khiếu nại & sự cố"
+          subtitle="Operation thu thập chứng cứ và đề xuất; Manager quyết định bồi thường hoặc tranh chấp."
+          count={primary?.length || 0}
+        />
+        <div className="incident-list">
+          {(primary || []).map((item) => (
+            <article className="incident-card" key={item.id}>
+              <div className="incident-card-heading">
+                <div><strong>{item.caseNumber} · {item.caseType}</strong><p>{item.description}</p></div>
+                <span className="request-status rose"><i />{requestStatus(item.status)}</span>
+              </div>
+              {item.compensationClaims?.length
+                ? item.compensationClaims.map((claim, index) => (
+                  <div className="claim-row" key={`${item.id}-${index}`}>
+                    <div>
+                      <span>
+                        {item.caseType === 'traffic_violation' ? 'Đề xuất xử lý vi phạm' : 'Đề xuất bồi thường'}
+                        {' · '}{formatMoney(claim.proposed_amount ?? claim.requested_amount ?? 0)} ₫
+                      </span>
+                      {claim.operation_proposal?.responsibility && <span>Trách nhiệm Operation đề xuất: {claim.operation_proposal.responsibility}</span>}
+                      {claim.operation_proposal?.recommendation && <span>Hướng xử lý Operation đề xuất: {claim.operation_proposal.recommendation}</span>}
+                      {claim.operation_proposal?.note && <span>Căn cứ: {claim.operation_proposal.note}</span>}
+                    </div>
+                    {claim.decision
+                      ? <span className="claim-decided">{claim.decision === 'approved' ? 'Đã duyệt' : 'Đã từ chối'}</span>
+                      : <div className="workspace-actions">
+                        <button className="action-approve" onClick={() => {
+                          const suggested = claim.proposed_amount ?? claim.requested_amount ?? 0;
+                          const prompt = item.caseType === 'traffic_violation'
+                            ? 'Mức phạt được Manager duyệt (VND):'
+                            : 'Số tiền bồi thường được Manager duyệt (VND):';
+                          const raw = window.prompt(prompt, String(suggested));
+                          if (raw !== null && Number.isSafeInteger(Number(raw)) && Number(raw) >= 0) {
+                            act(
+                              reviewCompensation(item.id, { decision: 'approve', amount: Number(raw), note: 'Đã xét duyệt bởi Manager.' }),
+                              'Đã duyệt đề xuất.',
+                            );
+                          }
+                        }}>Duyệt đề xuất</button>
+                        <button className="action-reject" onClick={() => {
+                          const note = window.prompt('Lý do từ chối đề xuất:');
+                          if (note) act(reviewCompensation(item.id, { decision: 'reject', note }), 'Đã từ chối đề xuất.');
+                        }}>Từ chối</button>
+                      </div>}
+                  </div>
+                ))
+                : <div className="claim-row">
+                  <span>Chưa có đề xuất tài chính đang chờ. Hồ sơ vẫn cần được theo dõi.</span>
+                  <button className="action-approve" onClick={() => {
+                    const note = window.prompt('Ghi chú kết luận sự cố:');
+                    if (note) act(reviewIncident(item.id, { action: 'resolve', note }), 'Đã đóng hồ sơ sự cố.');
+                  }}>Đóng hồ sơ</button>
+                </div>}
+            </article>
+          ))}
+          {!primary?.length && <p className="manager-empty">Không có khiếu nại hoặc sự cố đang mở.</p>}
+        </div>
+      </section>
+    );
+  }
+
+  if (active === 'policies') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Chính sách nền tảng" subtitle="Cập nhật chính sách sẽ tạo phiên bản mới và lưu lịch sử thay đổi." count={primary?.length || 0} />
+    <div className="policy-grid">{(primary || []).map((item) => <article className="policy-card" key={item.id}><div><span className="policy-type">{item.type.replaceAll('_', ' ')}</span><span className="policy-version">Phiên bản {item.version}</span></div><pre>{JSON.stringify(item.config, null, 2)}</pre><button className="action-review" onClick={() => { const raw = window.prompt('Cập nhật cấu hình JSON:', JSON.stringify(item.config, null, 2)); if (!raw) return; try { const config = JSON.parse(raw); act(updatePolicy(item.type, { config }), 'Đã tạo phiên bản chính sách mới.'); } catch { setError('Cấu hình phải là JSON hợp lệ.'); } }}>Chỉnh sửa chính sách</button></article>)}</div>
+  </section>;
+
+  if (active === 'staff') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Quản lý nhân sự" subtitle="Thay đổi vai trò hoặc trạng thái tài khoản nhân viên." count={primary?.length || 0} />
+    <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>NHÂN SỰ</th><th>LIÊN HỆ</th><th>VAI TRÒ</th><th>TRẠNG THÁI</th></tr></thead><tbody>{(primary || []).map((item) => <tr key={item.id}><td><strong>{item.name}</strong><span>{item.email}</span></td><td>{item.phone || '—'}</td><td><select className="workspace-select" value={item.role} onChange={(event) => act(updateStaff(item.id, { role: event.target.value }), 'Đã cập nhật vai trò nhân sự.')}><option value="MANAGER">Quản lý</option><option value="OPERATION_STAFF">Nhân viên vận hành</option><option value="GARAGE_STAFF">Nhân viên gara</option></select></td><td><select className="workspace-select" value={item.status === 'active' ? 'active' : 'suspended'} onChange={(event) => act(updateStaff(item.id, { status: event.target.value }), 'Đã cập nhật trạng thái tài khoản.')}><option value="active">Đang hoạt động</option><option value="suspended">Tạm khóa</option></select></td></tr>)}</tbody></table>{!primary?.length && <p className="manager-empty">Chưa có hồ sơ nhân sự.</p>}</div>
+  </section>;
+
+  if (active === 'finance') {
+    const report = primary || { totals: {}, settlements: [] };
+    return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Báo cáo tài chính" subtitle="Đối soát các khoản thanh toán chủ xe đã hoàn tất." /><DateFilter from={from} to={to} setFrom={setFrom} setTo={setTo} />
+      <div className="report-metrics"><ReportMetric label="Doanh thu thuê xe" value={report.totals.grossRentalRevenue} /><ReportMetric label="Phí nền tảng" value={report.totals.platformCommission} /><ReportMetric label="Đã trả chủ xe" value={report.totals.ownerPayout} /></div>
+      <ReportRows rows={report.settlements || []} labels={['date', 'grossRentalRevenue', 'platformCommission', 'ownerPayout']} />
+    </section>;
+  }
+
+  if (active === 'inspections') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Báo cáo kiểm định xe" subtitle="Lịch sử kiểm định và biên bản xe ghi nhận tại gara." count={primary?.length || 0} /><DateFilter from={from} to={to} setFrom={setFrom} setTo={setTo} />
+    <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>THỜI GIAN</th><th>PHƯƠNG TIỆN</th><th>BIỂN SỐ</th><th>KẾT QUẢ</th><th>GHI CHÚ</th></tr></thead><tbody>{(primary || []).map((item) => <tr key={item.id}><td>{item.inspectedAt ? new Date(item.inspectedAt).toLocaleString('vi-VN') : '—'}</td><td>{item.vehicle ? `${item.vehicle.brand} ${item.vehicle.model}` : '—'}</td><td>{item.vehicle?.license_plate || '—'}</td><td>{item.result}</td><td>{item.notes || '—'}</td></tr>)}</tbody></table>{!primary?.length && <p className="manager-empty">Chưa có báo cáo kiểm định.</p>}</div>
+  </section>;
+
+  return null;
+}
+
+function WorkspaceHeader({ title, subtitle, count }) {
+  return <div className="workspace-header"><div><h2>{title}</h2><p>{subtitle}</p></div>{count !== undefined && <span className="workspace-count">{count} hồ sơ</span>}</div>;
+}
+
+function DateFilter({ from, to, setFrom, setTo }) {
+  return <div className="report-filters"><label>Từ ngày<input type="date" value={from} max={to || undefined} onChange={(event) => setFrom(event.target.value)} /></label><label>Đến ngày<input type="date" value={to} min={from || undefined} onChange={(event) => setTo(event.target.value)} /></label><button onClick={() => { setFrom(''); setTo(''); }}>Xóa lọc</button></div>;
+}
+
+function ReportMetric({ label, value = 0 }) {
+  return <div className="report-metric"><span>{label}</span><strong>{formatMoney(value)} ₫</strong></div>;
+}
+
+function ReportRows({ rows, labels }) {
+  return <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>NGÀY ĐỐI SOÁT</th><th>DOANH THU THUÊ</th><th>PHÍ NỀN TẢNG</th><th>THANH TOÁN CHỦ XE</th></tr></thead><tbody>{rows.map((row, index) => <tr key={`${row.date}-${index}`}>{labels.map((label) => <td key={label}>{label === 'date' ? formatDate(row[label]) : `${formatMoney(row[label])} ₫`}</td>)}</tr>)}</tbody></table>{!rows.length && <p className="manager-empty">Chưa có dữ liệu đối soát trong kỳ.</p>}</div>;
+}
+
 export default function ManagerPage() {
   const [active, setActive] = useState('overview');
   const [dashboard, setDashboard] = useState(null);
@@ -59,14 +199,6 @@ export default function ManagerPage() {
     try { return JSON.parse(localStorage.getItem('xedi_user') || sessionStorage.getItem('xedi_user') || '{}'); }
     catch { return {}; }
   }, []);
-  const canManageOperations = user.roles?.includes('MANAGER') || user.role?.code === 'MANAGER';
-  const visibleSections = sections;
-  const hasRouteAccess = canManageOperations;
-
-  useEffect(() => {
-    if (hasRouteAccess) return;
-    window.location.hash = user.roles?.includes('ADMIN') || user.role?.code === 'ADMIN' ? '#/admin' : '#/login';
-  }, [hasRouteAccess, user]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -78,30 +210,27 @@ export default function ManagerPage() {
   }, [period]);
 
   const selectSection = (id) => {
-    if (!visibleSections.some((item) => item.id === id)) return;
     setActive(id);
     setMenuOpen(false);
-    if (id !== 'overview') setNotice(`Đang xem mục ${visibleSections.find((item) => item.id === id)?.label}.`);
+    if (id !== 'overview') setNotice(`Đang xem mục ${sections.find((item) => item.id === id)?.label}.`);
     else setNotice('');
   };
-
-  if (!hasRouteAccess) return <div className="manager-app"><main className="manager-content"><section className="manager-panel"><p className="manager-empty">Đang chuyển đến khu vực phù hợp với tài khoản…</p></section></main></div>;
 
   return <div className="manager-app">
     <aside className={`manager-sidebar ${menuOpen ? 'is-open' : ''}`}>
       <div className="manager-brand"><Brand /><span className="manager-brand-tag">VẬN HÀNH</span></div>
       <div className="manager-workspace"><span className="workspace-mark">X</span><span><strong>XeDi Việt Nam</strong><small>Trung tâm vận hành</small></span><Icon name="down" size={15} /></div>
       <span className="manager-nav-label">KHÔNG GIAN QUẢN LÝ</span>
-      <nav className="manager-nav" aria-label="Quản lý vận hành">
-        {visibleSections.map((item) => <button key={item.id} className={active === item.id ? 'selected' : ''} onClick={() => selectSection(item.id)}><Icon name={item.icon} size={18} />{item.label}{item.id === 'vehicles' && dashboard?.metrics.pendingVehicles > 0 && <span className="nav-count">{dashboard.metrics.pendingVehicles}</span>}</button>)}
+      <nav className="manager-nav" aria-label="Quản lý">
+        {sections.map((item) => <button key={item.id} className={active === item.id ? 'selected' : ''} onClick={() => selectSection(item.id)}><Icon name={item.icon} size={18} />{item.label}{item.id === 'vehicles' && dashboard?.metrics.pendingVehicles > 0 && <span className="nav-count">{dashboard.metrics.pendingVehicles}</span>}</button>)}
       </nav>
       <div className="sidebar-spacer" />
       <div className="manager-help"><span className="help-mark">?</span><strong>Cần hỗ trợ?</strong><p>Liên hệ đội ngũ kỹ thuật nếu bạn gặp sự cố.</p><button onClick={() => setNotice('Đội ngũ hỗ trợ sẽ liên hệ với bạn trong giờ làm việc.')}>Liên hệ hỗ trợ <span>→</span></button></div>
-      <div className="manager-sidebar-user"><span className="user-avatar">{(user.full_name || 'QL').slice(0, 1).toUpperCase()}</span><span><strong>{user.full_name || 'Quản lý XeDi'}</strong><small>Quản lý vận hành</small></span><button aria-label="Tùy chọn tài khoản" onClick={() => setNotice('Tài khoản đang hoạt động.')}>···</button></div>
+      <div className="manager-sidebar-user"><span className="user-avatar">{(user.full_name || 'QL').slice(0, 1).toUpperCase()}</span><span><strong>{user.full_name || 'Quản lý XeDi'}</strong><small>Quản lý vận hành</small></span><button aria-label="Tùy chọn tài khoản" onClick={() => setNotice('Tài khoản quản lý đang hoạt động.')}>···</button></div>
     </aside>
     {menuOpen && <button className="manager-scrim" aria-label="Đóng menu" onClick={() => setMenuOpen(false)} />}
     <div className="manager-main">
-      <header className="manager-topbar"><button className="manager-menu-toggle" aria-label="Mở menu" onClick={() => setMenuOpen(true)}><Icon name="menu" /></button><div className="manager-breadcrumb">Quản lý vận hành <span>/</span> <strong>{sections.find((item) => item.id === active)?.label}</strong></div><div className="manager-top-actions"><span className="manager-live"><i /> Hệ thống hoạt động</span><button className="manager-icon-button" aria-label="Thông báo" onClick={() => setNotice('Bạn đã đọc các thông báo mới nhất.')}><span className="notification-dot" />♧</button><UserMenu user={user} roleLabel="Quản lý vận hành" /></div></header>
+      <header className="manager-topbar"><button className="manager-menu-toggle" aria-label="Mở menu" onClick={() => setMenuOpen(true)}><Icon name="menu" /></button><div className="manager-breadcrumb">Không gian quản lý <span>/</span> <strong>{sections.find((item) => item.id === active)?.label}</strong></div><div className="manager-top-actions"><span className="manager-live"><i /> Hệ thống hoạt động</span><button className="manager-icon-button" aria-label="Thông báo" onClick={() => setNotice('Bạn đã đọc các thông báo mới nhất.')}><span className="notification-dot" />♧</button><button className="manager-top-user" title={user.full_name || 'Quản lý'}>{(user.full_name || 'QL').slice(0, 1).toUpperCase()}</button></div></header>
       <main className="manager-content">
         <section className="manager-page-heading"><div><span className="manager-eyebrow"><span /> {new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date()).toLocaleUpperCase('vi-VN')}</span><h1>{active === 'overview' ? 'Tổng quan vận hành' : sections.find((item) => item.id === active)?.label}</h1><p>Theo dõi hoạt động và xử lý công việc trên toàn hệ thống XeDi.</p></div><div className="manager-heading-actions"><button className="manager-export" onClick={() => { const rows = [['Chi so', 'Gia tri'], ['Xe dang hoat dong', dashboard?.metrics.activeVehicles ?? 0], ['Ho so cho duyet', dashboard?.metrics.pendingVehicles ?? 0], ['Su co dang mo', dashboard?.metrics.openIncidents ?? 0], ['Phi nen tang thang (VND)', dashboard?.metrics.monthlyPlatformRevenue ?? 0], ...((dashboard?.revenue.series || []).map((item) => [item.date, item.amount]))]; const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\r\n'); const url = URL.createObjectURL(new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' })); const link = document.createElement('a'); link.href = url; link.download = 'xedi-manager-report.csv'; link.click(); URL.revokeObjectURL(url); setNotice('Đã xuất báo cáo CSV.'); }}>↓ <span>Xuất báo cáo</span></button><button className="manager-primary" onClick={() => window.location.reload()}>↻ <span>Làm mới</span></button></div></section>
         {notice && <div className="manager-notice" role="status"><Icon name="info" size={17} />{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo">×</button></div>}
@@ -122,14 +251,8 @@ export default function ManagerPage() {
           </section>
           <section className="manager-panel activity-panel"><div className="manager-panel-heading"><div><h2>Hoạt động gần đây</h2><p>Cập nhật mới nhất từ các bộ phận</p></div><button className="panel-more" aria-label="Xem thêm hoạt động" onClick={() => setNotice('Đang hiển thị những hoạt động mới nhất.')}>···</button></div><div className="activity-list">{(dashboard?.activities || []).map((item) => <article className="activity-item" key={item.id}><span className="activity-icon blue"><Icon name="info" size={15} /></span><div><p>{item.actor} {actionText(item.action, item.entityType)}</p><span>{item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : 'Vừa cập nhật'}</span></div></article>)}{dashboard && !dashboard.activities.length && <p className="manager-empty">Chưa có hoạt động được ghi nhận.</p>}</div><button className="activity-link" onClick={() => setNotice('Đang hiển thị các bản ghi audit mới nhất.')}>Xem tất cả hoạt động <span>→</span></button></section>
         </div>
-        {canManageOperations && <section className="manager-panel requests-panel"><div className="manager-panel-heading"><div><h2>Yêu cầu cần xử lý</h2><p>Các công việc đang chờ đội ngũ quản lý xem xét</p></div><button className="all-requests" onClick={() => selectSection('vehicles')}>Xem tất cả <span>→</span></button></div><div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>YÊU CẦU</th><th>LOẠI</th><th>NGƯỜI GỬI</th><th>THỜI GIAN</th><th>TRẠNG THÁI</th><th /></tr></thead><tbody>{(dashboard?.requests || []).map((request) => <tr key={request.id}><td><strong>{request.title}</strong><span>{request.code}</span></td><td>{request.type}</td><td>{request.owner}</td><td>{formatDate(request.createdAt)}</td><td><span className={`request-status ${request.type.includes('sự cố') ? 'rose' : 'amber'}`}><i />{requestStatus(request.status)}</span></td><td><button className="row-action" aria-label={`Mở ${request.code}`} onClick={() => setNotice(`Mã yêu cầu ${request.code}. API xử lý chi tiết sẽ được bổ sung theo luồng nghiệp vụ.`)}>→</button></td></tr>)}</tbody></table>{dashboard && !dashboard.requests.length && <p className="manager-empty">Không có yêu cầu đang chờ xử lý.</p>}</div></section>}
-        </> : active === 'vehicles'
-            ? <VehicleApprovalsWorkspace onNotice={setNotice} />
-            : active === 'contracts'
-              ? <ContractsWorkspace onNotice={setNotice} />
-            : ['finance', 'inspections', 'operations', 'savedReports'].includes(active)
-              ? <ReportsWorkspace key={active} active={active} onNotice={setNotice} />
-              : <OperationsWorkspace key={active} active={active} onNotice={setNotice} />}
+        <section className="manager-panel requests-panel"><div className="manager-panel-heading"><div><h2>Yêu cầu cần xử lý</h2><p>Các công việc đang chờ đội ngũ quản lý xem xét</p></div><button className="all-requests" onClick={() => selectSection('vehicles')}>Xem tất cả <span>→</span></button></div><div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>YÊU CẦU</th><th>LOẠI</th><th>NGƯỜI GỬI</th><th>THỜI GIAN</th><th>TRẠNG THÁI</th><th /></tr></thead><tbody>{(dashboard?.requests || []).map((request) => <tr key={request.id}><td><strong>{request.title}</strong><span>{request.code}</span></td><td>{request.type}</td><td>{request.owner}</td><td>{formatDate(request.createdAt)}</td><td><span className={`request-status ${request.type.includes('sự cố') ? 'rose' : 'amber'}`}><i />{requestStatus(request.status)}</span></td><td><button className="row-action" aria-label={`Mở ${request.code}`} onClick={() => setNotice(`Mã yêu cầu ${request.code}. API xử lý chi tiết sẽ được bổ sung theo luồng nghiệp vụ.`)}>→</button></td></tr>)}</tbody></table>{dashboard && !dashboard.requests.length && <p className="manager-empty">Không có yêu cầu đang chờ xử lý.</p>}</div></section>
+        </> : <ManagementWorkspace active={active} onNotice={setNotice} />}
         <footer className="manager-footer"><span>© 2026 XeDi · Trung tâm vận hành</span><span><i /> Cập nhật lần cuối: vừa xong</span></footer>
       </main>
     </div>

@@ -1,13 +1,10 @@
 import { useState } from 'react';
 import Icon from '../../../components/ui/Icon';
-import { uploadGaragePhoto } from '../api/garageApi';
-import GaragePhotoPreview from './GaragePhotoPreview';
 
 export default function GaragePhotoUpload({
   photos,
   onChange,
   readOnly = false,
-  onBusyChange,
 }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,28 +27,26 @@ export default function GaragePhotoUpload({
       return;
     }
     setLoading(true);
-    onBusyChange?.(true);
     setError('');
     try {
       const added = await Promise.all(
-        files.map(async (file) => {
-            const data = await new Promise((resolve, reject) => {
+        files.map(
+          (file) =>
+            new Promise((resolve, reject) => {
               const reader = new FileReader();
               reader.onload = () =>
-                resolve(reader.result.split(',')[1]);
+                resolve({ name: file.name, data: reader.result });
               reader.onerror = () =>
                 reject(new Error('Không đọc được ảnh. Vui lòng thử lại.'));
               reader.readAsDataURL(file);
-            });
-            return uploadGaragePhoto({ name: file.name, contentType: file.type, data });
-        }),
+            }),
+        ),
       );
       onChange([...photos, ...added]);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
-      onBusyChange?.(false);
     }
   }
   return (
@@ -84,12 +79,11 @@ export default function GaragePhotoUpload({
       <div className="gs-photo-grid">
         {photos.map((photo, index) => (
           <div key={`${photo.name}-${index}`}>
-            <GaragePhotoPreview photo={photo} />
+            <img src={photo.data} alt={photo.name} />
             <span>{photo.name}</span>
             {!readOnly && (
               <button
                 type="button"
-                disabled={loading}
                 aria-label={`Xóa ảnh ${photo.name}`}
                 onClick={() => onChange(photos.filter((_, i) => i !== index))}
               >

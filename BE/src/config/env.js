@@ -11,16 +11,12 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 export const env = {
   port,
   host: process.env.HOST || '127.0.0.1',
-  mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27018/?replicaSet=rs0',
+  mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017',
   databaseName: process.env.MONGODB_DB_NAME || 'xedi',
   frontendOrigin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
   jwtSecret: process.env.JWT_SECRET || 'xedi-super-secret-jwt-key-2026-development',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   defaultUserPassword: process.env.DEFAULT_USER_PASSWORD || '123456',
-  garageUploadDirectory: process.env.GARAGE_UPLOAD_DIRECTORY || fileURLToPath(new URL('../../storage/garage-photos/', import.meta.url)),
-  cloudinary: {
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
-    api_key: process.env.CLOUDINARY_API_KEY || '',
-    api_secret: process.env.CLOUDINARY_API_SECRET || '',
-  },
+  garageApiToken: process.env.GARAGE_API_TOKEN || '',
+  garageStaffId: process.env.GARAGE_STAFF_ID || '',
 };

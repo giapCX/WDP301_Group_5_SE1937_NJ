@@ -1,26 +1,3 @@
-export function getSessionToken() {
-  return localStorage.getItem('xedi_token') || sessionStorage.getItem('xedi_token');
-}
-
-export function canAccessGarage(user) {
-  return user?.permissions?.some((permission) => [
-    'vehicle.inspect', 'vehicle.intake', 'handover.record',
-    'withdrawal.handover', 'garage.tasks.assign',
-  ].includes(permission)) || false;
-}
-
-export function canAccessOwner(user) {
-  return user?.roles?.some((role) => ['OWNER', 'CAR_OWNER'].includes(role)) || false;
-}
-
-export function getLoginDestination(user) {
-  if (user?.roles?.includes('ADMIN')) return '/#/admin';
-  if (user?.roles?.includes('MANAGER')) return '/#/manager';
-  if (user?.roles?.includes('OPERATION_STAFF')) return '/#/operation';
-  if (canAccessOwner(user)) return '/owner';
-  return canAccessGarage(user) ? '/garage' : '/#trang-chu';
-}
-
 export function getCurrentUser() {
   try {
     const raw = localStorage.getItem('xedi_user') || sessionStorage.getItem('xedi_user');

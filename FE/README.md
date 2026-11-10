@@ -13,6 +13,8 @@ npm run build
 
 Ứng dụng chạy tại `http://localhost:3000`. Proxy `/api` tới backend `http://127.0.0.1:5000`; cần chạy backend và MongoDB để sử dụng dữ liệu thực.
 
+Lệnh `npm start` bind frontend vào `127.0.0.1` và chỉ cho phép host `localhost` hoặc `127.0.0.1`. Cấu hình này tránh lỗi `allowedHosts[0] should be a non-empty string` khi CRA không tìm được IP mạng LAN hợp lệ, đồng thời không cần thay đổi adapter VPN.
+
 ## Tìm code
 
 - `src/app/`: gốc ứng dụng, router và test luồng giao diện.

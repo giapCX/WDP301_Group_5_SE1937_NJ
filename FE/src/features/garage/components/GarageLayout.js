@@ -1,19 +1,14 @@
 import Icon from '../../../components/ui/Icon';
-import { clearSession } from '../../auth/session';
-import { bangkokDate, garageSections, sectionKinds, isFinished } from '../data/garage';
+import { bangkokDate, garageSections, sectionKinds } from '../data/garage';
 
 export default function GarageLayout({
-  user,
   section,
   onNavigate,
   tasks,
-  onRefresh,
-  permissions = [],
+  onReset,
   children,
 }) {
   const active = garageSections.find((item) => item.id === section);
-  const name = user?.full_name || user?.email || 'Nhân viên gara';
-  const initials = name.split(/\s+/).filter(Boolean).slice(-2).map((part) => part[0]).join('').toUpperCase();
   const today = new Date(`${bangkokDate()}T12:00:00+07:00`).toLocaleDateString(
     'vi-VN',
     {
@@ -39,21 +34,18 @@ export default function GarageLayout({
             <Icon name="garage" size={22} />
           </span>
           <div>
-            <strong>Vận hành gara</strong>
-            <small>Nhân viên gara</small>
+            <strong>Gara Tân Bình</strong>
+            <small>Nhân viên gara · GS-010</small>
           </div>
           <span className="gs-online-dot" />
         </div>
         <p className="gs-nav-label">VẬN HÀNH GARA</p>
         <nav aria-label="Garage Staff">
-          {garageSections.filter((item) => {
-            const required = { inspections: 'vehicle.inspect', intakes: 'vehicle.intake', handovers: 'handover.record', returns: 'handover.record', incidents: 'case.report' };
-            return !required[item.id] || permissions.includes(required[item.id]);
-          }).map((item) => {
+          {garageSections.map((item) => {
             const count = tasks.filter(
               (task) =>
                 task.kind === sectionKinds[item.id] &&
-                !isFinished(task),
+                !['completed', 'submitted'].includes(task.status),
             ).length;
             return (
               <a
@@ -83,19 +75,18 @@ export default function GarageLayout({
             <Icon name="arrowLeft" size={16} />
             Về trang thuê xe
           </a>
-          <button className="gs-reset" onClick={onRefresh}>
+          <button className="gs-reset" onClick={onReset}>
             <Icon name="history" size={15} />
-            Tải lại danh sách
+            Khôi phục dữ liệu mẫu
           </button>
           <div className="gs-profile">
-            <span className="gs-avatar">{initials}</span>
+            <span className="gs-avatar">MA</span>
             <div>
-              <strong>{name}</strong>
+              <strong>Minh Anh</strong>
               <small>Nhân viên gara</small>
             </div>
             <span className="gs-online-dot" />
           </div>
-          <button className="gs-reset" onClick={clearSession}>Đăng xuất</button>
         </div>
       </aside>
       <div className="gs-main">
@@ -111,12 +102,21 @@ export default function GarageLayout({
             </span>
             <span className="gs-shift">
               <i />
-              Phiên làm việc
+              Ca làm · 08:00 – 17:00
             </span>
-            <span className="gs-avatar gs-avatar-small">{initials}</span>
+            <span className="gs-avatar gs-avatar-small">MA</span>
           </div>
         </header>
-        <div className="gs-preview-banner"><span>Danh sách chung theo quyền vận hành. Bản nháp chỉ người lập được sửa.</span><button className="gs-preview-reset" onClick={onRefresh}>Tải lại</button></div>
+        <div className="gs-preview-banner">
+          <span className="gs-preview-tag">BẢN THỬ NGHIỆM</span>
+          <span>
+            Dữ liệu mẫu · Các thao tác được lưu trên trình duyệt để bạn trải
+            nghiệm.
+          </span>
+          <button className="gs-preview-reset" onClick={onReset}>
+            Đặt lại mẫu
+          </button>
+        </div>
         <main className="gs-content">{children}</main>
         <footer className="gs-footer">
           <span>© 2026 XeDi · Không gian vận hành gara</span>

@@ -1,17 +1,17 @@
 # API kiểm định đầu vào — Garage Staff
 
-Base URL: `http://127.0.0.1:5000/api/garage`. API xử lý **kiểm định onboarding trước khi tiếp nhận xe từ chủ xe**. FE `/garage` đã nối các API này qua workspace; xem [luồng Garage Staff](garage-staff.md). Kiểm định định kỳ và duyệt kết quả của Manager để bước sau.
+Base URL: `http://127.0.0.1:5000/api/garage`. API xử lý **kiểm định onboarding trước khi tiếp nhận xe từ chủ xe**. Chưa có kiểm định định kỳ, duyệt kết quả của Manager hoặc tích hợp FE `/garage`.
 
 ## Cấu hình và quyền
 
-Dùng JWT trả về từ `POST /api/auth/login`, như [luồng tiếp nhận](garage-intakes.md). Tài khoản phải active, có permission **`vehicle.inspect`** ở role chính hoặc role bổ sung. Permission này độc lập với `vehicle.intake`; không bắt buộc có cả hai. Quyền được đọc lại từ database ở mỗi request.
+Dùng cùng `GARAGE_API_TOKEN` và `GARAGE_STAFF_ID` trong `BE/.env` như [luồng tiếp nhận](garage-intakes.md). Tài khoản phải active, có permission **`vehicle.inspect`** ở role chính hoặc role bổ sung. Permission này độc lập với `vehicle.intake`; không bắt buộc có cả hai.
 
 ```http
-Authorization: Bearer <JWT-tu-login>
+Authorization: Bearer <GARAGE_API_TOKEN>
 Content-Type: application/json
 ```
 
-Nhân viên lập biên bản được lấy từ tài khoản đã xác thực bằng JWT. Không gửi ID nhân viên để giả lập đăng nhập, không nhúng token vào source/build FE. Token dev `GARAGE_API_TOKEN` và cấu hình `GARAGE_STAFF_ID` không còn được sử dụng.
+Cơ chế token này chỉ dành cho dev, gắn với tài khoản do BE cấu hình; mặc định route khóa khi chưa cấu hình và khi chạy production. Không gửi ID nhân viên để giả lập đăng nhập, không nhúng token vào source/build FE. Hướng dẫn sinh token xem tài liệu intake.
 
 **MongoDB 6.0+** để dùng partial unique index chống hai biên bản mở cho cùng xe. GET và lưu/sửa nháp dùng được với standalone; **gửi đề xuất cần replica set hoặc Atlas** để ghi transaction. Chạy `npm run db:setup` sau khi cập nhật source. API cũng tự đảm bảo index trước khi tạo/gửi biên bản; có dữ liệu mở trùng thì trả `503` để kiểm tra, không tự xóa bản ghi.
 
@@ -75,7 +75,7 @@ Nếu có `openInspection`, mở biên bản đó. `eligible` ở danh sách xe 
 
 Tạo nháp chỉ bắt buộc `vehicleId`. Các trường báo cáo được phép thiếu và bổ sung sau. BE tự đặt `inspection_type: onboarding`, `approval_status: draft`, `garage_staff_id` từ tài khoản hiện tại, `version: 0`. Nháp chưa có `inspected_at`, không được coi là kết quả đã kiểm tra.
 
-`condition` nhận `good`, `attention`, `damaged` cho bốn hạng mục. Ghi chú tối đa 1500 ký tự. `photoKeys` tối đa 4 khóa, mỗi khóa 250 ký tự; không nhận URL/base64 hoặc đường dẫn traversal. Upload qua `POST /api/garage/photos` trước để có key; ảnh không bắt buộc.
+`condition` nhận `good`, `attention`, `damaged` cho bốn hạng mục. Ghi chú tối đa 1500 ký tự. `photoKeys` tối đa 4 khóa, mỗi khóa 250 ký tự; không nhận URL/base64 hoặc đường dẫn traversal. Chưa có API upload ảnh: client cần dịch vụ lưu ảnh để có key, ảnh không bắt buộc.
 
 `recommendation` theo schema BE:
 

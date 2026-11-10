@@ -1,11 +1,9 @@
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { after, before, test } from 'node:test';
-import { Types } from 'mongoose';
+import { ObjectId } from 'mongodb';
 import { createApp } from '../src/app.js';
-import { connectTestDatabase as connectDatabase, closeTestDatabase as closeDatabase } from '../test-support/seeded-database.js';
-
-const { ObjectId } = Types;
+import { connectDatabase, closeDatabase } from '../src/config/database.js';
 
 let database;
 let server;
@@ -29,11 +27,11 @@ after(async () => {
 test('health checks the actual MongoDB connection', async () => {
   const response = await fetch(`${baseUrl}/api/health`);
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { status: 'ok', database: database.name });
+  assert.deepEqual(await response.json(), { status: 'ok', database: database.databaseName });
 });
 
 test('seed stores BSON types and public listings omit private vehicle fields', async () => {
-  const stored = await database.db.collection('vehicles').findOne();
+  const stored = await database.collection('vehicles').findOne();
   assert.ok(stored, 'Run npm run db:seed before these integration tests.');
   assert.ok(stored._id instanceof ObjectId);
   assert.ok(stored.created_at instanceof Date);
@@ -55,7 +53,7 @@ test('seed stores BSON types and public listings omit private vehicle fields', a
 });
 
 test('unpublished listings and internal collections are not publicly exposed', async () => {
-  const hidden = await database.db
+  const hidden = await database
     .collection('vehicle_listings')
     .findOne({ status: { $ne: 'published' } });
   assert.ok(hidden, 'The group seed contains suspended and archived listings.');
@@ -102,7 +100,7 @@ test('homepage exposes effective policy values and actual listing counts', async
 });
 
 test('rental search excludes overlapping bookings and availability blocks', async () => {
-  const booking = await database.db.collection('bookings').findOne({ status: 'ongoing' });
+  const booking = await database.collection('bookings').findOne({ status: 'ongoing' });
   assert.ok(booking);
   const query = new URLSearchParams({
     startAt: booking.start_at.toISOString(),
@@ -114,14 +112,15 @@ test('rental search excludes overlapping bookings and availability blocks', asyn
   const { data } = await response.json();
   assert.ok(data.every((item) => item.vehicle_id !== booking.vehicle_id.toHexString()));
   for (const listing of data) {
-    const conflicts = await database.db.collection('bookings').countDocuments({
+    const conflicts = await database.collection('bookings').countDocuments({
       vehicle_id: new ObjectId(listing.vehicle_id),
       status: { $in: ['pending', 'awaiting_payment', 'confirmed', 'ongoing'] },
       start_at: { $lt: booking.end_at },
       end_at: { $gt: booking.start_at },
     });
     assert.equal(conflicts, 0);
-    const stored = await database.db.collection('vehicle_listings')
+    const stored = await database
+      .collection('vehicle_listings')
       .findOne({ _id: new ObjectId(listing._id) });
     assert.ok(
       stored.availability_blocks.every(

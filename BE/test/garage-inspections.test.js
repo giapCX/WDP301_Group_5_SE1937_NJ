@@ -1,25 +1,21 @@
-import { useTestDatabase } from '../test-support/mongoose.js';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
-import { randomUUID } from 'node:crypto';
-import jwt from 'jsonwebtoken';
-import { env } from '../src/config/env.js';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { before, beforeEach, after, test } from 'node:test';
-import { Types } from 'mongoose';
+import { ObjectId } from 'mongodb';
 import { createApp } from '../src/app.js';
 import { startIntakeTestReplica } from '../test-support/intake-replica.js';
 
-const { ObjectId } = Types;
-
+const token = randomBytes(32).toString('hex');
 const actorId = new ObjectId(),
   otherActorId = new ObjectId(),
   ownerId = new ObjectId(),
   roleId = new ObjectId(),
   vehicleId = new ObjectId();
-const token = jwt.sign({ sub: String(actorId) }, env.jwtSecret);
+const auth = { token, userId: String(actorId), production: false };
 let replica, db, server, baseUrl;
-async function listen() {
-  const server = createApp(useTestDatabase(replica.client, db.databaseName)).listen(0, '127.0.0.1');
+async function listen(config = auth) {
+  const server = createApp(db, { garageAuth: config }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   return {
     server,
@@ -155,6 +151,16 @@ test('inspection permissions are independent of intake and credentials fail clos
       .status,
     401,
   );
+  const locked = await listen({ ...auth, production: true });
+  try {
+    assert.equal(
+      (await request('/inspections', 'GET', undefined, { url: locked.url }))
+        .status,
+      503,
+    );
+  } finally {
+    await new Promise((resolve) => locked.server.close(resolve));
+  }
   await db
     .collection('roles')
     .updateOne({ _id: roleId }, { $set: { permissions: ['vehicle.intake'] } });
@@ -163,7 +169,7 @@ test('inspection permissions are independent of intake and credentials fail clos
   await db
     .collection('users')
     .updateOne({ _id: actorId }, { $set: { account_status: 'suspended' } });
-  assert.equal((await request('/inspection-vehicles')).status, 401);
+  assert.equal((await request('/inspection-vehicles')).status, 403);
 });
 test('candidate/eligibility endpoints expose only the required vehicle and owner fields', async () => {
   const result = await request('/inspection-vehicles?q=Toyota&limit=1');
@@ -348,38 +354,41 @@ test('rechecks vehicle eligibility when submitting a previously saved draft', as
 });
 test('rejects edits/submission by another staff member and supports mine filtering', async () => {
   const draft = await create();
-  const otherAuthorization = `Bearer ${jwt.sign({ sub: String(otherActorId) }, env.jwtSecret)}`;
-  assert.equal(
-    (
-      await request(
-        `/inspections/${draft._id}`,
-        'PATCH',
-        { version: 0, fuelLevelPct: 20 },
-        { authorization: otherAuthorization },
-      )
-    ).status,
-    403,
-  );
-  assert.equal(
-    (
-      await request(
-        `/inspections/${draft._id}/submit`,
-        'POST',
-        { version: 0 },
-        { authorization: otherAuthorization },
-      )
-    ).status,
-    403,
-  );
-  assert.equal(
-    (
-      await request('/inspections?mine=true', 'GET', undefined, {
-        authorization: otherAuthorization,
-      })
-    ).body.pagination.total,
-    0,
-  );
-
+  const other = await listen({ ...auth, userId: String(otherActorId) });
+  try {
+    assert.equal(
+      (
+        await request(
+          `/inspections/${draft._id}`,
+          'PATCH',
+          { version: 0, fuelLevelPct: 20 },
+          { url: other.url },
+        )
+      ).status,
+      403,
+    );
+    assert.equal(
+      (
+        await request(
+          `/inspections/${draft._id}/submit`,
+          'POST',
+          { version: 0 },
+          { url: other.url },
+        )
+      ).status,
+      403,
+    );
+    assert.equal(
+      (
+        await request('/inspections?mine=true', 'GET', undefined, {
+          url: other.url,
+        })
+      ).body.pagination.total,
+      0,
+    );
+  } finally {
+    await new Promise((resolve) => other.server.close(resolve));
+  }
   assert.equal(
     (await request('/inspections?status=draft&mine=true&q=Vios')).body
       .pagination.total,

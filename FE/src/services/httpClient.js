@@ -1,7 +1,5 @@
-import { getSessionToken } from '../features/auth/session';
-
 export async function getApi(path, { signal } = {}) {
-  const token = getSessionToken();
+  const token = localStorage.getItem('xedi_token') || sessionStorage.getItem('xedi_token');
   const headers = { Accept: 'application/json' };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -18,7 +16,7 @@ export async function getApi(path, { signal } = {}) {
 }
 
 export async function postApi(path, body, { signal } = {}) {
-  const token = getSessionToken();
+  const token = localStorage.getItem('xedi_token') || sessionStorage.getItem('xedi_token');
   const headers = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -47,7 +45,7 @@ export async function postApi(path, body, { signal } = {}) {
 }
 
 async function updateApi(method, path, body, { signal } = {}) {
-  const token = getSessionToken();
+  const token = localStorage.getItem('xedi_token') || sessionStorage.getItem('xedi_token');
   const response = await fetch(`/api${path}`, {
     method,
     headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
@@ -66,15 +64,3 @@ async function updateApi(method, path, body, { signal } = {}) {
 
 export const patchApi = (path, body, options) => updateApi('PATCH', path, body, options);
 export const putApi = (path, body, options) => updateApi('PUT', path, body, options);
-
-export async function getBlobApi(path, { signal } = {}) {
-  const token = getSessionToken();
-  const response = await fetch(`/api${path}`, { signal, headers: token ? { Authorization: `Bearer ${token}` } : {} });
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    const error = new Error(body.error?.message || 'Không tải được tệp.');
-    error.status = response.status;
-    throw error;
-  }
-  return response.blob();
-}

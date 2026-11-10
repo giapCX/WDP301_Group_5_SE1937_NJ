@@ -1,18 +1,17 @@
 import Icon from '../../../components/ui/Icon';
 import GarageTaskTable from './GarageTaskTable';
-import { bangkokDate, displayTime, taskKinds, isFinished } from '../data/garage';
+import { bangkokDate, displayTime, taskKinds } from '../data/garage';
 
-export default function GarageOverview({ workspace, user, onNavigate, onOpen }) {
+export default function GarageOverview({ workspace, onNavigate, onOpen }) {
   const today = bangkokDate();
   const todayTasks = workspace.tasks.filter((task) =>
-    task.scheduled !== false && task.schedule.startsWith(today),
+    task.schedule.startsWith(today),
   );
   const done = todayTasks.filter((task) =>
-    isFinished(task),
+    ['completed', 'submitted'].includes(task.status),
   ).length;
-  const todayPending = todayTasks.filter((task) => !isFinished(task));
-  const pending = workspace.tasks
-    .filter((task) => !isFinished(task))
+  const pending = todayTasks
+    .filter((task) => !['completed', 'submitted'].includes(task.status))
     .sort((a, b) => a.schedule.localeCompare(b.schedule));
   const stats = [
     {
@@ -28,7 +27,7 @@ export default function GarageOverview({ workspace, user, onNavigate, onOpen }) 
       value: workspace.tasks.filter(
         (t) =>
           t.kind === 'inspection' &&
-          !isFinished(t),
+          !['completed', 'submitted'].includes(t.status),
       ).length,
       note: 'Kiểm tra & gửi đề xuất',
       icon: 'wrench',
@@ -62,13 +61,13 @@ export default function GarageOverview({ workspace, user, onNavigate, onOpen }) 
         <div>
           <span className="gs-overline">MỘT NGÀY LÀM VIỆC HIỆU QUẢ</span>
           <h1>
-            Chào {user?.full_name || 'bạn'}, bắt đầu ca mới! <span className="gs-wave">✦</span>
+            Chào Minh Anh, bắt đầu ca mới! <span className="gs-wave">✦</span>
           </h1>
           <p>Gara đã sẵn sàng. Cùng chuẩn bị những chuyến đi an tâm.</p>
         </div>
         <span className="gs-location-pill">
           <Icon name="pin" size={16} />
-          Vận hành gara
+          Gara Tân Bình, TP. Hồ Chí Minh
         </span>
       </div>
       <div className="gs-stats">
@@ -97,7 +96,7 @@ export default function GarageOverview({ workspace, user, onNavigate, onOpen }) 
                 Công việc cần xử lý{' '}
                 <span className="gs-count">{pending.length}</span>
               </h2>
-              <p>Công việc chưa xử lý trong danh sách hiện tại</p>
+              <p>Ưu tiên theo lịch hẹn hôm nay</p>
             </div>
             <button
               className="gs-text-link"
@@ -128,9 +127,9 @@ export default function GarageOverview({ workspace, user, onNavigate, onOpen }) 
               />
             </div>
             <small>
-              {todayPending.length
-                ? `Còn ${todayPending.length} lịch hẹn hôm nay cần xử lý.`
-                : 'Không còn lịch hẹn cần xử lý hôm nay.'}
+              {pending.length
+                ? `Còn ${pending.length} công việc cần bạn xử lý.`
+                : 'Bạn đã xử lý xong công việc hôm nay.'}
             </small>
           </section>
           <section className="gs-panel gs-next-panel">
@@ -145,7 +144,7 @@ export default function GarageOverview({ workspace, user, onNavigate, onOpen }) 
                 onClick={() => onOpen(task)}
               >
                 <span className="gs-next-time">
-                  {task.scheduled === false ? '—' : displayTime(task.schedule)}
+                  {displayTime(task.schedule)}
                 </span>
                 <div>
                   <strong>{task.vehicle}</strong>

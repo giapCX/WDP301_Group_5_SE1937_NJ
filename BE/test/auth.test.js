@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { after, before, test } from 'node:test';
 import { createApp } from '../src/app.js';
-import { connectTestDatabase as connectDatabase, closeTestDatabase as closeDatabase } from '../test-support/seeded-database.js';
+import { connectDatabase, closeDatabase } from '../src/config/database.js';
 
 let database;
 let server;
@@ -146,7 +146,7 @@ test('login rejects suspended or inactive accounts', async () => {
     created_at: new Date(),
     updated_at: new Date(),
   };
-  const insertResult = await database.db.collection('users').insertOne(tempUser);
+  const insertResult = await database.collection('users').insertOne(tempUser);
 
   try {
     const res = await fetch(`${baseUrl}/api/auth/login`, {
@@ -156,6 +156,6 @@ test('login rejects suspended or inactive accounts', async () => {
     });
     assert.equal(res.status, 403);
   } finally {
-    await database.db.collection('users').deleteOne({ _id: insertResult.insertedId });
+    await database.collection('users').deleteOne({ _id: insertResult.insertedId });
   }
 });

@@ -1,12 +1,7 @@
-import { Types } from 'mongoose';
+import { ObjectId } from 'mongodb';
 import { httpError, objectId } from '../../utils/http-error.js';
 
-const { ObjectId } = Types;
-const caseStatuses = [
-  'open', 'reported', 'in_progress', 'under_review', 'investigating',
-  'awaiting_response', 'pending_manager', 'need_more_information',
-  'resolved', 'escalated', 'closed',
-];
+const caseStatuses = ['open', 'in_progress', 'under_review', 'investigating', 'awaiting_response', 'resolved', 'escalated', 'closed'];
 const sortFields = {
   newest: { created_at: -1, _id: -1 },
   oldest: { created_at: 1, _id: 1 },
@@ -54,7 +49,6 @@ export function parseOperationListQuery(query, { statuses = [], defaultStatus = 
   return { page: positive('page', 1, 100000), limit: positive('limit', 12, 100), q: queryText(query, 'q'), status, sort, sortBy: sortFields[sort] };
 }
 
-// Booking review: rejection must include a reason; approval starts the payment hold.
 export function parseBookingDecision(body) {
   bodyObject(body, ['action', 'reason']);
   if (!['approve', 'reject'].includes(body.action)) throw httpError(400, 'action phải là approve hoặc reject.');
@@ -63,7 +57,6 @@ export function parseBookingDecision(body) {
   return { action: body.action, reason };
 }
 
-// Listing maintenance and publication decisions.
 export function parseListingUpdate(body) {
   bodyObject(body, ['title', 'description', 'dailyPrice', 'securityDepositAmount', 'pickupLocation']);
   if (!Object.keys(body).length) throw httpError(400, 'Cần ít nhất một trường để cập nhật tin xe.');
@@ -92,24 +85,8 @@ export function parseListingReview(body) {
   return { action: body.action, reason };
 }
 
-// Vehicle onboarding: Operation may request revisions or schedule inspection, never approve a vehicle.
-export function parseVehicleScreen(body) {
-  bodyObject(body, ['action', 'note', 'garageStaffId', 'scheduledFor']);
-  if (!['request_revision', 'schedule_inspection'].includes(body.action))
-    throw httpError(400, 'action phải là request_revision hoặc schedule_inspection.');
-  const note = text(body.note, 'note', { required: true, max: 1000 });
-  if (body.action === 'request_revision') return { action: body.action, note };
-  const garageStaffId = new ObjectId(objectId(body.garageStaffId, 'garageStaffId'));
-  if (typeof body.scheduledFor !== 'string' || Number.isNaN(Date.parse(body.scheduledFor)))
-    throw httpError(400, 'scheduledFor phải là thời gian ISO 8601 hợp lệ.');
-  const scheduledFor = new Date(body.scheduledFor);
-  if (scheduledFor <= new Date()) throw httpError(400, 'Lịch kiểm định phải ở tương lai.');
-  return { action: body.action, note, garageStaffId, scheduledFor };
-}
-
-// Incident workflows share note, assignment, status, and evidence validation.
 export function parseCaseUpdate(body) {
-  bodyObject(body, ['status', 'assignedStaffId', 'note', 'evidence']);
+  bodyObject(body, ['status', 'assignedStaffId', 'note', 'evidence', 'compensationProposal']);
   if (!Object.keys(body).length) throw httpError(400, 'Cần ít nhất một trường để cập nhật hồ sơ.');
   const update = {};
   if (body.status !== undefined) {
@@ -126,10 +103,33 @@ export function parseCaseUpdate(body) {
       return { kind: text(item.kind, 'evidence.kind', { required: true, max: 40 }), file_key: text(item.fileKey, 'evidence.fileKey', { required: true, max: 500 }) };
     });
   }
+  if (body.compensationProposal !== undefined) {
+    bodyObject(body.compensationProposal, ['amount', 'responsibility', 'note']);
+    const responsibility = body.compensationProposal.responsibility;
+    if (!['undetermined', 'renter', 'owner', 'garage', 'shared'].includes(responsibility))
+      throw httpError(400, 'compensationProposal.responsibility không hợp lệ.');
+    update.compensation_proposal = {
+      amount: amount(body.compensationProposal.amount, 'compensationProposal.amount'),
+      responsibility,
+      note: text(body.compensationProposal.note, 'compensationProposal.note', { required: true, max: 2000 }),
+    };
+  }
   return update;
 }
 
-// Traffic violations are recommendations for Manager review, not financial decisions by Operation.
+export function parseIncidentCreate(body) {
+  bodyObject(body, ['caseType', 'description', 'bookingId', 'vehicleId']);
+  const caseType = body.caseType;
+  if (!['damage', 'accident', 'safety', 'other', 'overdue', 'traffic_violation'].includes(caseType))
+    throw httpError(400, 'caseType không hợp lệ.');
+  return {
+    case_type: caseType,
+    description: text(body.description, 'description', { required: true, max: 3000 }),
+    ...(body.bookingId ? { booking_id: new ObjectId(objectId(body.bookingId, 'bookingId')) } : {}),
+    ...(body.vehicleId ? { vehicle_id: new ObjectId(objectId(body.vehicleId, 'vehicleId')) } : {}),
+  };
+}
+
 export function parseViolationDecision(body) {
   bodyObject(body, ['decision', 'penaltyFee', 'note']);
   if (!['confirm', 'reject'].includes(body.decision)) throw httpError(400, 'decision phải là confirm hoặc reject.');
@@ -139,9 +139,8 @@ export function parseViolationDecision(body) {
   return { decision: body.decision, ...(body.penaltyFee !== undefined ? { penalty_fee: amount(body.penaltyFee, 'penaltyFee') } : {}), note };
 }
 
-// Overdue queue actions: remind, mark contact handled, or escalate to Manager.
 export function parseOverdueAction(body) {
   bodyObject(body, ['action', 'note']);
-  if (!['remind', 'handled', 'escalate'].includes(body.action)) throw httpError(400, 'action phải là remind, handled hoặc escalate.');
+  if (!['remind', 'handled'].includes(body.action)) throw httpError(400, 'action phải là remind hoặc handled.');
   return { action: body.action, ...(body.note !== undefined ? { note: text(body.note, 'note', { max: 1000 }) } : {}) };
 }

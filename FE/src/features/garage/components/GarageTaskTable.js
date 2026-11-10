@@ -5,7 +5,6 @@ import {
   displayTime,
   taskKinds,
   taskBlockers,
-  isFinished,
 } from '../data/garage';
 
 export default function GarageTaskTable({ tasks, onOpen, onClear }) {
@@ -62,17 +61,17 @@ export default function GarageTaskTable({ tasks, onOpen, onClear }) {
               </td>
               <td>
                 <strong className="gs-table-time">
-                  {task.scheduled === false ? '—' : displayTime(task.schedule)}
+                  {displayTime(task.schedule)}
                 </strong>
                 <small className="gs-contact">
-                  {task.scheduled === false ? 'Chưa có lịch hẹn' : displayDate(task.schedule)} · {task.location}
+                  {displayDate(task.schedule)} · {task.location}
                 </small>
               </td>
               <td>
                 <GarageStatus
                   status={task.status}
                   blocked={
-                    taskBlockers(task).length > 0 && !isFinished(task) && !task.readOnly
+                    taskBlockers(task).length > 0 && task.status !== 'completed'
                   }
                 />
               </td>
@@ -82,7 +81,7 @@ export default function GarageTaskTable({ tasks, onOpen, onClear }) {
                   onClick={() => onOpen(task)}
                   aria-label={`Xem ${task.id}`}
                 >
-                  {isFinished(task) || task.readOnly
+                  {['completed', 'submitted'].includes(task.status)
                     ? 'Xem biên bản'
                     : task.status === 'draft'
                       ? 'Tiếp tục'

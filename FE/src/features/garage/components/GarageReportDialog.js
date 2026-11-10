@@ -25,13 +25,10 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
     note: '',
     confirmed: false,
     photos: [],
-    accessories: [],
     ...task.report,
   }));
   const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const readOnly = task.readOnly || ['completed', 'submitted', 'approved', 'rejected', 'revision_required'].includes(task.status);
+  const readOnly = ['completed', 'submitted'].includes(task.status);
   const blockers = taskBlockers(task);
   const set = (key, value) =>
     setReport((previous) => ({ ...previous, [key]: value }));
@@ -49,16 +46,6 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
       : task.kind === 'handover'
         ? 'Khách thuê đã xác nhận nhận xe và tình trạng bàn giao'
         : 'Đã ghi nhận xác nhận trả xe của khách thuê';
-  async function save(draft) {
-    if (busy || uploading) return;
-    setError('');
-    setBusy(true);
-    try { await onSave(task.id, report, draft); }
-    catch (failure) {
-      const blockers = failure.data?.error?.details?.blockers?.map((item) => item.message).join(' ');
-      setError([failure.message, blockers, failure.status === 409 ? 'Hãy đóng biên bản, tải lại danh sách và mở lại để kiểm tra dữ liệu mới nhất.' : ''].filter(Boolean).join(' '));
-    } finally { setBusy(false); }
-  }
   function submit(event) {
     event.preventDefault();
     const message = validateGarageReport(task, report);
@@ -66,13 +53,13 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
       setError(message);
       return;
     }
-    save(false);
+    onSave(task.id, report, false);
   }
   return (
     <Modal
       title={`${taskKinds[task.kind]} · ${task.id}`}
       className="gs-dialog"
-      onClose={busy || uploading ? () => {} : onClose}
+      onClose={onClose}
     >
       <div className="gs-report-vehicle">
         <span className={`gs-car-tile gs-car-tile--${task.kind}`}>
@@ -101,7 +88,7 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
         <div>
           <small>LỊCH HẸN</small>
           <strong>
-            {task.scheduled === false ? 'Chưa có lịch hẹn' : `${displayTime(task.schedule)} · ${displayDate(task.schedule)}`}
+            {displayTime(task.schedule)} · {displayDate(task.schedule)}
           </strong>
         </div>
         <div>
@@ -138,12 +125,12 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
       {readOnly && !task.report ? (
         <div className="gs-empty">
           <Icon name="check" size={30} />
-          <h3>Biên bản chưa có báo cáo chi tiết</h3>
-          <p>Biên bản này được mở ở chế độ chỉ xem.</p>
+          <h3>Công việc mẫu đã hoàn thành</h3>
+          <p>Chọn một công việc chờ thực hiện để thử lập biên bản.</p>
         </div>
       ) : (
         <form onSubmit={submit} className="gs-report-form">
-          <fieldset disabled={readOnly || busy || uploading}>
+          <fieldset disabled={readOnly}>
             <legend className="gs-form-section-title">
               01{' '}
               <span>
@@ -181,7 +168,7 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
               </label>
             </div>
           </fieldset>
-          <fieldset disabled={readOnly || busy || uploading}>
+          <fieldset disabled={readOnly}>
             <legend className="gs-form-section-title">
               02 <span>Tình trạng xe</span>
             </legend>
@@ -234,17 +221,9 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
           <GaragePhotoUpload
             photos={report.photos}
             onChange={(photos) => set('photos', photos)}
-            readOnly={readOnly || busy}
-            onBusyChange={setUploading}
+            readOnly={readOnly}
           />
-          {task.kind === 'intake' && <fieldset disabled={readOnly || busy || uploading}>
-            <legend className="gs-form-section-title">Phụ kiện tiếp nhận</legend>
-            {[['vehicle_key', 'Chìa khóa xe'], ['registration_copy', 'Bản sao đăng ký xe'], ['emergency_kit', 'Bộ dụng cụ khẩn cấp']].map(([key, label]) => <label className="gs-confirm-row" key={key}>
-              <input type="checkbox" checked={report.accessories.includes(key)} onChange={(event) => set('accessories', event.target.checked ? [...report.accessories, key] : report.accessories.filter((value) => value !== key))} />
-              {label}
-            </label>)}
-          </fieldset>}
-          <fieldset disabled={readOnly || busy || uploading}>
+          <fieldset disabled={readOnly}>
             <legend className="gs-form-section-title">
               03{' '}
               <span>
@@ -312,18 +291,17 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
               <button
                 type="button"
                 className="gs-button gs-button-secondary"
-                onClick={() => save(true)}
-                disabled={busy || uploading}
+                onClick={() => onSave(task.id, report, true)}
               >
                 Lưu bản nháp
               </button>
               <button
                 type="submit"
                 className="gs-button gs-button-primary"
-                disabled={blockers.length > 0 || busy || uploading}
+                disabled={blockers.length > 0}
               >
                 <Icon name="check" size={16} />
-                {busy ? 'Đang lưu...' : submitLabel}
+                {submitLabel}
               </button>
             </div>
           )}

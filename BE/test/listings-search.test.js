@@ -1,16 +1,16 @@
-import { useTestDatabase } from '../test-support/mongoose.js';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { randomUUID } from 'node:crypto';
 import { before, after, test } from 'node:test';
-import mongoose from 'mongoose';
+import { MongoClient, ObjectId } from 'mongodb';
 import { createApp } from '../src/app.js';
-import { startIntakeTestReplica } from '../test-support/intake-replica.js';
-
-const { ObjectId } = mongoose.Types;
+import { env } from '../src/config/env.js';
 
 // Disposable, uniquely named database; never writes to the application database.
-let replica, client, db;
+const client = new MongoClient(env.mongoUri, {
+  serverSelectionTimeoutMS: 5000,
+});
+const db = client.db(`xedi_search_test_${randomUUID().replaceAll('-', '')}`);
 const vehicleIds = Array.from({ length: 5 }, () => new ObjectId());
 const listingIds = Array.from({ length: 5 }, () => new ObjectId());
 const from = new Date('2026-11-10T10:00:00Z');
@@ -18,9 +18,7 @@ const until = new Date('2026-11-12T10:00:00Z');
 let server;
 let baseUrl;
 before(async () => {
-  replica = await startIntakeTestReplica();
-  client = replica.client;
-  db = client.db(`xedi_search_test_${randomUUID().replaceAll('-', '')}`);
+  await client.connect();
   await db.collection('vehicles').insertMany(
     vehicleIds.map((_id, index) => ({
       _id,
@@ -69,16 +67,16 @@ before(async () => {
       end_at: from,
     },
   ]);
-  server = createApp(useTestDatabase(client, db.databaseName)).listen(0, '127.0.0.1');
+  server = createApp(db).listen(0, '127.0.0.1');
   await once(server, 'listening');
   baseUrl = `http://127.0.0.1:${server.address().port}/api/listings`;
 });
 after(async () => {
   if (server) await new Promise((resolve) => server.close(resolve));
   try {
-    if (db) await db.dropDatabase();
+    await db.dropDatabase();
   } finally {
-    if (replica) await replica.close();
+    await client.close();
   }
 });
 async function search(params = {}) {

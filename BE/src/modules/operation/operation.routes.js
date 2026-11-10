@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { createAuthMiddleware } from '../../middleware/auth.middleware.js';
+import { createAuthMiddleware } from '../../middlewares/auth.middleware.js';
 import { createOperationController } from './operation.controller.js';
 import { createOperationRepository } from './operation.repository.js';
-import { createOperationService } from './operation.service.js';
+import { createOperationService } from '../../services/operation/operation.service.js';
 
 export function createOperationRouter(database) {
   const router = Router();
@@ -11,25 +11,19 @@ export function createOperationRouter(database) {
   const controller = createOperationController(service);
 
   router.use(createAuthMiddleware(database), service.authorizeOperationStaff);
-  // Workload and booking review.
+
   router.get('/dashboard', controller.dashboard);
+
+  // Booking review and listing publication queues.
   router.get('/bookings', controller.bookings);
   router.get('/bookings/:id', controller.booking);
   router.patch('/bookings/:id/decision', controller.decideBooking);
-
-  // Listing maintenance and publication.
   router.get('/listings', controller.listings);
   router.get('/listings/:id', controller.listing);
   router.patch('/listings/:id', controller.updateListing);
   router.patch('/listings/:id/review', controller.reviewListing);
 
-  // Vehicle onboarding screening and Garage inspection assignment.
-  router.get('/vehicles', controller.vehicles);
-  router.get('/vehicles/:id', controller.vehicle);
-  router.patch('/vehicles/:id/screen', controller.screenVehicle);
-  router.get('/garage-staff', controller.garageStaff);
-
-  // Incident, violation, complaint, and dispute investigation.
+  // Case investigation and Manager escalation queues.
   router.get('/incidents', controller.incidents);
   router.post('/incidents', controller.createIncident);
   router.get('/incidents/:id', controller.incident);
@@ -43,9 +37,9 @@ export function createOperationRouter(database) {
   router.get('/complaints', controller.complaints);
   router.get('/complaints/:id', controller.complaint);
   router.patch('/complaints/:id', controller.updateComplaint);
-  router.get('/staff', controller.staff);
 
-  // Overdue rental follow-up and escalation.
+  // Shared assignment and overdue follow-up actions.
+  router.get('/staff', controller.staff);
   router.get('/overdue', controller.overdue);
   router.post('/overdue/:id/actions', controller.overdueAction);
   return router;

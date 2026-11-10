@@ -1,71 +1,31 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Types } from 'mongoose';
+import { ObjectId } from 'mongodb';
 import { createOperationService } from '../src/modules/operation/operation.service.js';
 
-const { ObjectId } = Types;
 const actorId = new ObjectId();
 const request = { tokenPayload: { sub: actorId.toString() } };
 
-function bookingRepository(booking) {
+test('booking decision changes only a pending booking and writes an audit record', async () => {
   const updates = [];
   const audits = [];
-  return {
-    updates,
-    audits,
-    findById: async (_collection, id) => id.equals(booking._id) ? booking : null,
-    updateMany: async (...args) => { updates.push(args); return { modifiedCount: 0 }; },
+  const repository = {
     updateOne: async (...args) => { updates.push(args); return { modifiedCount: 1 }; },
     insertOne: async (...args) => { audits.push(args); },
   };
-}
-
-test('booking approval enters awaiting_payment with a separate 15-minute deadline', async () => {
-  const booking = {
-    _id: new ObjectId(),
-    status: 'pending',
-    start_at: new Date(Date.now() + 3 * 60 * 60 * 1000),
-  };
-  const repository = bookingRepository(booking);
   const service = createOperationService(repository);
-  const result = await service.decideBooking(request, booking._id.toString(), { action: 'approve' });
-  assert.equal(result.data.status, 'awaiting_payment');
-  assert.equal(result.data.decision, 'approved');
-  assert.ok(result.data.paymentDeadline instanceof Date);
-  assert.ok(result.data.paymentDeadline.getTime() - Date.now() <= 15 * 60 * 1000);
-  assert.deepEqual(repository.updates[2][1], { _id: booking._id, status: 'pending' });
-  assert.equal(repository.updates[2][2].$set.status, 'awaiting_payment');
-  assert.equal(repository.audits[0][1].action, 'booking.approve');
-});
-
-test('booking approval refuses pickup less than two hours away', async () => {
-  const booking = {
-    _id: new ObjectId(),
-    status: 'pending',
-    start_at: new Date(Date.now() + 60 * 60 * 1000),
-  };
-  const service = createOperationService(bookingRepository(booking));
-  await assert.rejects(service.decideBooking(request, booking._id.toString(), { action: 'approve' }), { status: 409 });
-});
-
-test('expired booking cleanup expires review and payment holds', async () => {
-  const updates = [];
-  const repository = {
-    updateMany: async (...args) => { updates.push(args); return { modifiedCount: 1 }; },
-    findMany: async () => [],
-    count: async () => 0,
-  };
-  await createOperationService(repository).listBookings({});
-  assert.equal(updates.length, 2);
-  assert.equal(updates[0][1].status, 'pending');
-  assert.equal(updates[1][1].status, 'awaiting_payment');
+  const id = new ObjectId();
+  const result = await service.decideBooking(request, id.toString(), { action: 'approve' });
+  assert.equal(result.data.status, 'confirmed');
+  assert.deepEqual(updates[0][1], { _id: id, status: 'pending' });
+  assert.equal(audits[0][1].action, 'booking.approve');
 });
 
 test('booking rejection requires a reason and stale decisions return conflict', async () => {
-  const booking = { _id: new ObjectId(), status: 'rejected' };
-  const service = createOperationService(bookingRepository(booking));
-  await assert.rejects(service.decideBooking(request, booking._id.toString(), { action: 'reject' }), { status: 400 });
-  await assert.rejects(service.decideBooking(request, booking._id.toString(), { action: 'approve' }), { status: 409 });
+  const service = createOperationService({ updateOne: async () => ({ modifiedCount: 0 }), insertOne: async () => {} });
+  const id = new ObjectId().toString();
+  await assert.rejects(service.decideBooking(request, id, { action: 'reject' }), { status: 400 });
+  await assert.rejects(service.decideBooking(request, id, { action: 'approve' }), { status: 409 });
 });
 
 test('case workflow rejects invalid status transitions', async () => {
@@ -75,13 +35,7 @@ test('case workflow rejects invalid status transitions', async () => {
     updateOne: async () => ({ modifiedCount: 1 }),
     insertOne: async () => {},
   });
-  await assert.rejects(service.updateCase(request, caseId.toString(), { status: 'closed' }, 'dispute'), { status: 409 });
-  const resolvedService = createOperationService({
-    findById: async () => ({ _id: caseId, case_type: 'dispute', status: 'under_review' }),
-    updateOne: async () => ({ modifiedCount: 1 }),
-    insertOne: async () => {},
-  });
-  await assert.rejects(resolvedService.updateCase(request, caseId.toString(), { status: 'resolved' }, 'dispute'), { status: 403 });
+  await assert.rejects(service.updateCase(request, caseId.toString(), { status: 'closed' }, 'dispute'), { status: 403 });
 });
 
 test('dispute can enter review from its initial state', async () => {
@@ -97,31 +51,77 @@ test('dispute can enter review from its initial state', async () => {
   assert.equal(updates[0][2].$set.status, 'under_review');
 });
 
-test('Operation submits traffic violation recommendations for Manager decision', async () => {
+test('Operation submits a compensation proposal for Manager review without deciding the claim', async () => {
   const caseId = new ObjectId();
   const updates = [];
   const service = createOperationService({
-    findById: async () => ({ _id: caseId, case_type: 'traffic_violation', status: 'investigating' }),
+    findById: async () => ({
+      _id: caseId,
+      case_type: 'damage',
+      status: 'in_progress',
+      compensation_claims: [],
+    }),
     updateOne: async (...args) => { updates.push(args); return { modifiedCount: 1 }; },
     insertOne: async () => {},
   });
-  const result = await service.reviewViolation(request, caseId.toString(), { decision: 'confirm', penaltyFee: 50000 });
+
+  const result = await service.updateCase(request, caseId.toString(), {
+    compensationProposal: {
+      amount: 250000,
+      responsibility: 'shared',
+      note: 'Ảnh bàn giao và ảnh trả xe cho thấy hư hỏng mới phát sinh.',
+    },
+  });
+
   assert.equal(result.data.status, 'pending_manager');
-  assert.equal(updates[0][2].$set['traffic_violation_details.operation_recommendation'], 'confirm');
-  assert.equal(updates[0][2].$set['traffic_violation_details.operation_recommended_penalty_fee'], 50000);
+  assert.equal(updates[0][2].$set.status, 'pending_manager');
+  assert.equal(updates[0][2].$set['investigation.review_status'], 'pending_manager');
+  assert.equal(updates[0][2].$push.compensation_claims.decision, 'pending');
+  assert.equal(updates[0][2].$push.compensation_claims.proposed_amount, 250000);
 });
 
-test('Operation cannot change a case after it has been submitted to Manager', async () => {
+test('Operation cannot resolve a dispute or close a case awaiting Manager decision', async () => {
   const caseId = new ObjectId();
   const service = createOperationService({
-    findById: async () => ({ _id: caseId, case_type: 'dispute', status: 'pending_manager' }),
-    updateOne: async () => ({ modifiedCount: 1 }),
+    findById: async () => ({
+      _id: caseId,
+      case_type: 'dispute',
+      status: 'pending_manager',
+      compensation_claims: [{ decision: 'pending' }],
+    }),
+    updateOne: async () => assert.fail('A case awaiting Manager review must not be changed'),
     insertOne: async () => {},
   });
+
   await assert.rejects(
-    service.updateCase(request, caseId.toString(), { status: 'awaiting_response' }, 'dispute'),
-    { status: 403 },
+    service.updateCase(request, caseId.toString(), { status: 'closed' }, 'dispute'),
+    { status: 409 },
   );
+});
+
+test('Operation violation review submits a proposal and leaves the decision pending Manager', async () => {
+  const caseId = new ObjectId();
+  const updates = [];
+  const service = createOperationService({
+    findById: async () => ({
+      _id: caseId,
+      case_type: 'traffic_violation',
+      status: 'investigating',
+      traffic_violation_details: { fine_amount_claimed: 400000 },
+    }),
+    updateOne: async (...args) => { updates.push(args); return { modifiedCount: 1 }; },
+    insertOne: async () => {},
+  });
+
+  const result = await service.proposeViolationReview(request, caseId.toString(), {
+    decision: 'reject',
+    note: 'Ảnh biển số không khớp với xe trong booking.',
+  });
+
+  assert.equal(result.data.status, 'pending_manager');
+  assert.equal(updates[0][2].$set['traffic_violation_details.official_confirmation'], undefined);
+  assert.equal(updates[0][2].$push.compensation_claims.proposed_amount, 0);
+  assert.equal(updates[0][2].$push.compensation_claims.requested_amount, 400000);
 });
 
 test('role guard permits operation staff and rejects other authenticated roles', async () => {
