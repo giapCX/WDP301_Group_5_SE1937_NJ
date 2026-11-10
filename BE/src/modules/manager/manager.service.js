@@ -30,5 +30,11 @@ export function createManagerService(repository) {
         next(error);
       }
     },
+    requireRoles: (...allowedRoles) => (request, _response, next) => {
+      if (!allowedRoles.some((role) => request.currentRoles?.includes(role))) {
+        return next(Object.assign(new Error('Bạn không có quyền thực hiện chức năng này.'), { status: 403 }));
+      }
+      next();
+    },
   };
 }

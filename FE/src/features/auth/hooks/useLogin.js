@@ -29,9 +29,12 @@ export default function useLogin({ loginData, setFormStatus, setStatusType }) {
       );
 
       redirectTimer.current = setTimeout(() => {
-        window.location.hash = user.roles?.some((role) => ['MANAGER', 'ADMIN'].includes(role))
-          ? '#/manager'
-          : '#trang-chu';
+        const roles = user.roles || [];
+        window.location.hash = roles.includes('ADMIN')
+          ? '#/admin'
+          : roles.includes('MANAGER')
+            ? '#/manager'
+            : '#trang-chu';
       }, 1000);
     } catch (err) {
       setStatusType('error');

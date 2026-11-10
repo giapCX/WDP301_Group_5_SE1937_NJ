@@ -1,0 +1,9 @@
+.manager-account-control { position: relative; }
+.manager-account-control > .manager-top-user { display: flex; align-items: center; padding: 3px; }
+.manager-account-control > .manager-top-user > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #e1eaff; color: #315bb0; font-size: 12px; font-weight: 700; }
+.manager-account-menu { position: absolute; top: calc(100% + 11px); right: 0; z-index: 70; width: 220px; padding: 7px; border: 1px solid #e7ebf2; border-radius: 10px; background: #fff; box-shadow: 0 14px 36px rgba(27, 39, 59, .16); }
+.manager-account-summary { display: grid; gap: 4px; padding: 10px; border-bottom: 1px solid #eff1f5; }
+.manager-account-summary strong { overflow: hidden; color: #25324a; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.manager-account-summary span { overflow: hidden; color: #818ca0; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.manager-account-menu > button { display: flex; align-items: center; gap: 9px; width: 100%; margin-top: 5px; padding: 10px; border-radius: 7px; color: #a63d3d; text-align: left; font-size: 12px; font-weight: 650; }
+.manager-account-menu > button:hover { background: #fff2f1; }

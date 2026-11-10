@@ -83,6 +83,10 @@ export const collections = [
     name: 'audit_logs',
     indexes: [{ entity_type: 1, entity_id: 1, created_at: -1 }],
   },
+  {
+    name: 'system_reports',
+    indexes: [{ report_type: 1, generated_at: -1 }, { generated_by: 1, generated_at: -1 }],
+  },
 ];
 
 export async function initializeCollections(database) {
