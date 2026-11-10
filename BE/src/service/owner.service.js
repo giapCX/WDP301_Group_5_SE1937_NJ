@@ -213,7 +213,7 @@ export function createOwnerService(repository) {
         for (const input of body.evidence || []) {
           const file = validateFile(input, 'Minh chứng sự cố');
           const key = await repository.uploadPrivateFile(ownerId, file, 'incident_evidence');
-          uploads.push(new ObjectId(key));
+          uploads.push(key);
           evidence.push({ kind: file.contentType.startsWith('image/') ? 'photo' : 'document', file_key: key, uploaded_by_user_id: ownerId });
         }
         const trafficViolationDetails = caseType === 'traffic_violation' ? {
@@ -254,13 +254,13 @@ export function createOwnerService(repository) {
         throw httpError(400, 'Tải lên từ 2 đến 5 ảnh ngoại thất hoặc nội thất xe.');
       const photos = body.photos.map((photo, index) => validateFile(photo, `Ảnh xe số ${index + 1}`, ['image/jpeg', 'image/png', 'image/webp']));
 
-      const fileIds = [];
+      const fileKeys = [];
       let vehicleId;
       let agreementId;
       try {
         const store = async (input, purpose) => {
           const id = await repository.uploadPrivateFile(ownerId, input, purpose);
-          fileIds.push(new ObjectId(id));
+          fileKeys.push(id);
           return id;
         };
         const registrationKey = await store(registration, 'vehicle_registration');
@@ -323,7 +323,7 @@ export function createOwnerService(repository) {
         if (agreementId) cleanup.push(repository.deleteAgreement(agreementId));
         if (vehicleId) cleanup.push(repository.deleteVehicle(vehicleId));
         await Promise.allSettled(cleanup);
-        await repository.deletePrivateFiles(fileIds);
+        await repository.deletePrivateFiles(fileKeys);
         throw failure;
       }
     },

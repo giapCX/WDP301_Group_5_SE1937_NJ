@@ -35,6 +35,6 @@ Sau refactor: **15/15 backend**, **8/8 frontend** thành công và production bu
 ## Tích hợp cập nhật — 09/11/2026
 
 - Đã nhập commit `hieupn` vào nhánh `tungnq`: backend dùng Mongoose, model/schema, repository theo tầng, JWT xác thực Garage; nhận các tài liệu Markdown cập nhật từ nhánh này.
-- Giữ và tích hợp tiếp Owner: feature FE có API/hooks/dialog; BE có routes/controller/service/repository dùng Mongoose. Đăng ký xe lưu giấy tờ riêng trong GridFS, ký thỏa thuận có phiên bản, người ký, thời điểm ký và audit log.
+- Giữ và tích hợp tiếp Owner: feature FE có API/hooks/dialog; BE có routes/controller/service/repository dùng Mongoose. Đăng ký xe lưu giấy tờ và ảnh trong Cloudinary private qua repository riêng, MongoDB chỉ giữ key; ký thỏa thuận có phiên bản, người ký, thời điểm ký và audit log.
 - Garage routes lắp ghép repository/service/controller trực tiếp và tiếp tục dùng middleware JWT, không dùng lại biến môi trường token Garage cũ.
 - Manager page lấy dữ liệu và gọi thao tác qua feature hooks. Backend Manager dùng các layer Mongoose mới được nhập từ `hieupn`.

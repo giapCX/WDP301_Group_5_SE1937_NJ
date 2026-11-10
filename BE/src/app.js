@@ -16,6 +16,8 @@ import { createOwnerRouter } from './routes/owner.routes.js';
 
 export function createApp(database, options = {}) {
   const app = express();
+  const useLocalFileStorage = options.useLocalFileStorage
+    ?? (process.env.NODE_TEST_CONTEXT !== undefined || process.execArgv.includes('--test'));
   app.disable('x-powered-by');
   app.use(cors({ origin: env.frontendOrigin }));
   app.use('/api/owner/vehicles', express.json({ limit: '48mb' }));
@@ -37,10 +39,10 @@ export function createApp(database, options = {}) {
   app.use('/api/garage', createGarageInspectionsRouter(database));
   app.use('/api/garage', createGarageHandoverRouter(database));
   app.use('/api/garage', createGarageIncidentRouter(database));
-  app.use('/api/garage', createGaragePhotoRouter(database, options.garageUploadDirectory));
+  app.use('/api/garage', createGaragePhotoRouter(database, options.garageUploadDirectory, { useLocalFileStorage }));
   app.use('/api/garage', createGarageWorkspaceRouter(database));
   app.use('/api/manager', createManagerRouter(database));
-  app.use('/api/owner', createOwnerRouter(database));
+  app.use('/api/owner', createOwnerRouter(database, { useLocalFileStorage, fileRepository: options.ownerFileRepository }));
   app.use(notFound);
   app.use(errorHandler);
   return app;

@@ -105,7 +105,7 @@ Atlas lưu database trên cloud để các thành viên chạy backend trên má
 
 - **Atlas:** nơi chạy và lưu database chung.
 - **Compass:** ứng dụng để kết nối, xem và quản lý database đó.
-- **Cloudinary:** kho ảnh Garage riêng; Atlas lưu key ảnh và dữ liệu biên bản. Pull code không tải database hoặc ảnh về máy.
+- **Cloudinary:** kho tệp riêng tư dùng chung cho mọi actor: ảnh Garage, ảnh/giấy tờ đăng ký xe Owner và minh chứng sự cố. Atlas lưu key tệp và dữ liệu nghiệp vụ. Pull code không tải database hoặc tệp về máy.
 
 ### 1. Nhận thông tin kết nối từ người quản lý nhóm
 
@@ -169,7 +169,7 @@ Script đọc `BE/data/*.json`, thêm các ID chưa có và giữ nguyên bản 
 
 Trong Compass, chọn **Add new connection**, dán URI Atlas đã điền thông tin thật, rồi **Connect** và mở database `xedi`. Kết nối Compass tới `localhost:27017` vẫn chỉ xem database local. Mọi thao tác chỉnh sửa/xóa trên Atlas hoặc Compass kết nối Atlas đều ảnh hưởng database chung của cả nhóm.
 
-Để xem cùng ảnh Garage, điền thêm ba biến `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` của cùng Cloudinary product environment vào `BE/.env`, rồi khởi động lại backend. Nhận secret qua kênh riêng. Nếu bỏ trống cả ba, backend lưu ảnh trên ổ đĩa local và các máy khác không có những file đó. Ảnh local cũ cần upload lại; ảnh trên Cloudinary được xem qua giao diện Garage có JWT, mở trực tiếp URL `/api/garage/photos/...` không kèm token sẽ báo thiếu xác thực. Xem [hướng dẫn ảnh Garage](BE/docs/garage-staff.md#ảnh).
+Để dùng chung các tệp riêng tư, điền thêm ba biến `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` của cùng Cloudinary product environment vào `BE/.env`, rồi khởi động lại backend. Nhận secret qua kênh riêng. Nếu bỏ trống cả ba, backend chỉ dùng repository cục bộ cho môi trường phát triển/test và các máy khác không thấy các file đó. Tệp cũ cần upload lại; ảnh Garage trên Cloudinary được xem qua giao diện có JWT, mở trực tiếp URL `/api/garage/photos/...` không kèm token sẽ báo thiếu xác thực. Xem [hướng dẫn ảnh Garage](BE/docs/garage-staff.md#ảnh).
 
 ### Các lỗi thường gặp
 
@@ -184,9 +184,9 @@ Trong Compass, chọn **Add new connection**, dán URI Atlas đã điền thông
 
 Tài liệu chính thức: [kết nối Atlas](https://www.mongodb.com/docs/atlas/connect-to-database-deployment/), [xử lý lỗi kết nối](https://www.mongodb.com/docs/atlas/troubleshoot-connection/), [yêu cầu transaction](https://www.mongodb.com/docs/manual/core/transactions-production-consideration/).
 
-## Dùng Cloudinary để chia sẻ ảnh Garage
+## Dùng Cloudinary cho tệp riêng tư của mọi actor
 
-Atlas lưu dữ liệu biên bản và key ảnh; **Cloudinary lưu file ảnh**. Muốn các thành viên xem cùng biên bản và ảnh, mỗi backend phải kết nối cùng database Atlas và cùng Cloudinary product environment. Các biến môi trường được đặt trên từng máy, không tự đi theo khi pull code.
+Atlas lưu dữ liệu nghiệp vụ và key tệp; **Cloudinary lưu tệp riêng tư**. Kho này gồm ảnh Garage, ảnh/giấy tờ đăng ký xe Owner và minh chứng sự cố Owner. Muốn các thành viên xem cùng dữ liệu và tệp, mỗi backend phải kết nối cùng database Atlas và cùng Cloudinary product environment. Các biến môi trường được đặt trên từng máy, không tự đi theo khi pull code.
 
 ### 1. Chuẩn bị tài khoản và thông tin kết nối
 
@@ -222,8 +222,8 @@ Thay toàn bộ phần `<...>` bằng giá trị thật và bỏ dấu `< >`. M�
 npm run dev
 ```
 
-- Đủ cả ba biến: backend lưu/đọc ảnh Garage qua Cloudinary.
-- Trống cả ba biến: backend dùng `BE/storage/garage-photos` hoặc `GARAGE_UPLOAD_DIRECTORY`; ảnh chỉ nằm trên máy chạy backend đó.
+- Đủ cả ba biến: backend lưu tệp riêng tư của Garage và Owner qua Cloudinary.
+- Trống cả ba biến: môi trường local/test dùng kho cục bộ; không dùng cấu hình này cho triển khai chia sẻ dữ liệu.
 - Chỉ có một hoặc hai biến: backend từ chối khởi động và báo cấu hình chưa đủ.
 
 Backend upload bằng SDK với loại **`authenticated`**, không cần tạo unsigned upload preset. Key trả về vẫn có dạng `garage-photos/<userId>/<uuid>.jpg` (hoặc `.png`, `.webp`). Khi xem ảnh, frontend gửi JWT tới backend, backend tạo URL ký có hạn để tải ảnh từ Cloudinary rồi trả nội dung ảnh về frontend. URL `/api/garage/photos/...` là địa chỉ API của ứng dụng, không phải URL public của Cloudinary.
@@ -304,7 +304,7 @@ Giao dien dang nhap tai `/#/login` da duoc ket noi truc tiep toi API backend `/a
 
 Giao dien quan tri tach theo URL va role: `/#/admin` cho `ADMIN`, `/#/manager` cho `MANAGER`. Dang nhap tu dong chuyen tai khoan den dung khu vuc; neu mo sai URL, giao dien chuyen ve khu vuc ma role duoc phep. Backend van kiem tra role theo tung endpoint: chi `MANAGER` duoc duyet xe, xu ly su co/boi thuong, sua chinh sach, quan ly nhan vien van hanh/gara, quan ly hop dong va xem bao cao van hanh; `ADMIN` duoc quan ly tai khoan, role/permission va audit logs; hai role duoc xem bao cao tai chinh. Amendment hop dong da ky duoc ghi nhu de nghi cho chu the ky, khong ghi de snapshot dieu khoan cua booking cu. Bao cao tai chinh va hoat dong co the luu thanh snapshot trong `system_reports`. Thao tac quan tri ghi audit log.
 
-Cong chu xe tai `/#/owner` goi `/api/owner/dashboard` va `/api/owner/vehicles`. Dang ky xe yeu cau role `OWNER`, ba loai giay to xe, tu 2 den 5 anh xe va xac nhan thoa thuan. Tai lieu duoc luu trong MongoDB GridFS; xe gui thanh cong vao trang thai `submitted` cho quy trinh gara/quan ly tiep tuc.
+Cong chu xe tai `/#/owner` goi `/api/owner/dashboard` va `/api/owner/vehicles`. Dang ky xe yeu cau role `OWNER`, ba loai giay to xe, tu 2 den 5 anh xe va xac nhan thoa thuan. Tai lieu va anh duoc luu trong Cloudinary private; MongoDB chi luu key. Xe gui thanh cong vao trang thai `submitted` cho quy trinh gara/quan ly tiep tuc.
 
 ## Kiem tra
 

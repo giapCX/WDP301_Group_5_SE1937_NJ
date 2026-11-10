@@ -1,15 +1,12 @@
-import mongoose from 'mongoose';
 import { getModels } from '../models/index.js';
 import { createModelRepository } from './base.repository.js';
 
-export function createOwnerRepository(connection) {
+export function createOwnerRepository(connection, fileRepository) {
   const models = getModels(connection);
   const vehicles = createModelRepository(models.Vehicle);
   const settlements = createModelRepository(models.OwnerSettlement);
   const agreements = createModelRepository(models.ManagementAgreement);
   const audits = createModelRepository(models.AuditLog);
-  const bucket = new mongoose.mongo.GridFSBucket(connection.db, { bucketName: 'owner_documents' });
-
   return {
     findRoles: (ids) => models.Role.find({ _id: { $in: ids } }).select({ code: 1 }).lean(),
     findVehicles: (ownerId) => vehicles.find({ owner_id: ownerId }, {
@@ -33,19 +30,8 @@ export function createOwnerRepository(connection) {
     createPaymentTransaction: (transaction) => models.PaymentTransaction.create(transaction),
     createWithdrawalRequest: (request) => models.VehicleWithdrawalRequest.create(request),
     createIncident: (incident) => models.IncidentCase.create(incident),
-    uploadPrivateFile(ownerId, input, purpose) {
-      return new Promise((resolve, reject) => {
-        const id = new mongoose.Types.ObjectId();
-        const upload = bucket.openUploadStreamWithId(id, input.name.slice(0, 120), {
-          contentType: input.contentType,
-          metadata: { owner_id: ownerId, purpose },
-        });
-        upload.once('error', reject);
-        upload.once('finish', () => resolve(id.toString()));
-        upload.end(input.bytes);
-      });
-    },
-    deletePrivateFiles: (ids) => Promise.allSettled(ids.map((id) => bucket.delete(id))),
+    uploadPrivateFile: (ownerId, input, purpose) => fileRepository.save(ownerId, input, purpose),
+    deletePrivateFiles: (keys) => fileRepository.remove(keys),
     createVehicle: (vehicle) => vehicles.create(vehicle),
     deleteVehicle: (id) => models.Vehicle.deleteOne({ _id: id }),
     createAgreement: (agreement) => agreements.create(agreement),
