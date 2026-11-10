@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { env } from '../config/env.js';
 import { requireGarageStaff } from '../middleware/garage-auth.middleware.js';
+import { requireGaragePhotoViewer } from '../middleware/garage-photo-auth.middleware.js';
 import { createGaragePhotoRepository } from '../repositories/garage-photo.repository.js';
 import { createCloudinaryGaragePhotoRepository } from '../repositories/cloudinary-garage-photo.repository.js';
 import { createGaragePhotoService } from '../service/garage-photo.service.js';
@@ -16,8 +17,7 @@ export function createGaragePhotoRouter(connection, directory) {
     ? createCloudinaryGaragePhotoRepository(env.cloudinary)
     : createGaragePhotoRepository(directory ?? env.garageUploadDirectory);
   const controller = createGaragePhotoController(createGaragePhotoService(repository));
-  router.use('/photos', requireGarageStaff(connection, ['vehicle.inspect', 'vehicle.intake', 'handover.record', 'case.report']));
-  router.post('/photos', controller.upload);
-  router.get('/photos/:owner/:name', controller.get);
+  router.post('/photos', requireGarageStaff(connection, ['vehicle.inspect', 'vehicle.intake', 'handover.record', 'case.report']), controller.upload);
+  router.get('/photos/:owner/:name', requireGaragePhotoViewer(connection), controller.get);
   return router;
 }

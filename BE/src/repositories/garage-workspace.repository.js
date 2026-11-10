@@ -9,7 +9,7 @@ export function createGarageWorkspaceRepository(connection) {
       const handover = permissions.includes('handover.record');
       const report = permissions.includes('case.report');
       const [vehicles, inspections, intakes, agreements, bookings, handovers, incidents, history] = await Promise.all([
-        m.Vehicle.find({}, { brand: 1, model: 1, owner_id: 1, license_plate: 1, onboarding_status: 1, physical_status: 1, created_at: 1 }).lean(),
+        m.Vehicle.find({}, { brand: 1, model: 1, owner_id: 1, license_plate: 1, onboarding_status: 1, physical_status: 1, review_note: 1, created_at: 1 }).lean(),
         inspect ? m.VehicleInspection.find({ inspection_type: 'onboarding' }).lean() : [],
         intake ? m.VehicleIntake.find().lean() : [],
         intake ? m.ManagementAgreement.find({}, { vehicle_id: 1, owner_id: 1, agreement_number: 1, created_at: 1 }).sort({ created_at: -1, _id: -1 }).lean() : [],

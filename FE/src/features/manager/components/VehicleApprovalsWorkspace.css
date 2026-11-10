@@ -36,6 +36,12 @@
   .vehicle-owner-row { grid-template-columns: 1fr 1fr; }
   .vehicle-review-grid { grid-template-columns: 1fr; }
 }
+.inspection-review-details { margin: 14px 0; padding: 14px; border: 1px solid #e4eaf5; border-radius: 9px; background: #f8faff; }
+.inspection-review-details dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 0 0 12px; }
+.inspection-review-details dt { color: #64748b; font-size: 11px; }
+.inspection-review-details dd { margin: 4px 0 0; color: #17243a; font-size: 12px; font-weight: 600; }
+.inspection-review-details p { font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.inspection-review-details small { color: #64748b; font-size: 11px; }
 
 @media (max-width: 480px) {
   .vehicle-approval-card { padding: 12px; }

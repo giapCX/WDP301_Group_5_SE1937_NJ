@@ -15,9 +15,10 @@ export function createGarageWorkspaceService(repository, inspectionService, inta
         const vehicle = vehicles.get(String(vehicleId)) || {};
         const report = record?.condition_report || record?.condition_snapshot || record?.vehicle_condition;
         const rawStatus = record?.approval_status || record?.status;
-        const status = !record ? 'pending' : kind === 'inspection' ? (rawStatus === 'pending' ? 'submitted' : rawStatus) : rawStatus === 'draft' ? 'draft' : 'completed';
+        const rejectedApplication = kind === 'inspection' && !record && vehicle.onboarding_status === 'rejected';
+        const status = rejectedApplication ? 'rejected' : !record ? 'pending' : kind === 'inspection' ? (rawStatus === 'pending' ? 'submitted' : rawStatus) : rawStatus === 'draft' ? 'draft' : 'completed';
         const staffId = record?.garage_staff_id || record?.created_by_garage_staff_id || record?.received_by_garage_staff_id;
-        const editable = !record || (rawStatus === 'draft' && same(staffId, actor._id));
+        const editable = !rejectedApplication && (!record || (rawStatus === 'draft' && same(staffId, actor._id)));
         const schedule = booking ? (kind === 'return' ? booking.end_at : booking.start_at) : record?.created_at || vehicle.created_at;
         tasks.push({
           id: `${kind}:${record?._id || booking?._id || vehicleId}`,
@@ -25,6 +26,9 @@ export function createGarageWorkspaceService(repository, inspectionService, inta
           agreementId: record?.management_agreement_id || agreement?._id,
           vehicle: [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || 'Xe chưa có thông tin', plate: vehicle.license_plate || '—',
           contact: users.get(String(booking?.renter_id || vehicle.owner_id)) || 'Chưa cập nhật', status,
+          decisionReason: record?.decision_reason || '',
+          vehicleReviewNote: vehicle.review_note || '',
+          vehicleReviewStatus: vehicle.onboarding_status,
           odometer: context.baselineOdometerKm || record?.odometer_km || 0,
           fuel: context.baselineFuelPct ?? record?.fuel_level_pct ?? report?.fuel_level_pct ?? 0,
           schedule: iso(schedule), scheduled: Boolean(booking),
@@ -48,6 +52,9 @@ export function createGarageWorkspaceService(repository, inspectionService, inta
         }
         for (const vehicle of data.vehicles.filter((item) => ['submitted', 'revision_required'].includes(item.onboarding_status) && ['with_owner', 'returned_to_owner'].includes(item.physical_status))) {
           if (!data.inspections.some((item) => same(item.vehicle_id, vehicle._id) && ['draft', 'pending'].includes(item.approval_status))) task('inspection', vehicle._id, null, await inspectionService.eligibility(vehicle._id));
+        }
+        for (const vehicle of data.vehicles.filter((item) => item.onboarding_status === 'rejected')) {
+          if (!data.inspections.some((item) => same(item.vehicle_id, vehicle._id))) task('inspection', vehicle._id, null);
         }
       }
       if (permissions.includes('vehicle.intake')) {

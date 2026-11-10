@@ -54,7 +54,8 @@ test('manager read endpoints use Mongoose and keep role protection and public re
 test('vehicle review keeps review fields, nested history and the manager audit actor', async () => {
   const vehicle = await models.Vehicle.findOne({ onboarding_status: 'submitted' }).lean();
   assert.ok(vehicle);
-  const result = await request(`/manager/vehicles/${vehicle._id}/review`, 'PATCH', { action: 'revision', note: 'Check documents' });
+  const inspection = await models.VehicleInspection.findOne({ vehicle_id: vehicle._id, inspection_type: 'onboarding' }).sort({ created_at: -1, _id: -1 }).lean();
+  const result = await request(`/manager/vehicles/${vehicle._id}/review`, 'PATCH', { action: 'revision', note: 'Check documents', inspectionId: inspection?._id.toString(), inspectionVersion: inspection ? inspection.version ?? 0 : null });
   assert.equal(result.status, 200, JSON.stringify(result));
   const updated = await models.Vehicle.findById(vehicle._id).lean();
   assert.equal(updated.onboarding_status, 'revision_required');
@@ -68,14 +69,15 @@ test('incident compensation and resolution retain nested fields through strict s
   const vehicle = await models.Vehicle.findOne().lean();
   const incident = await models.IncidentCase.create({
     case_number: 'MONGOOSE-CLAIM', vehicle_id: vehicle._id, description: 'Test damage', status: 'reported',
-    compensation_claims: [{ requested_amount: 100, decision: 'pending' }],
+    compensation_claims: [{ requested_amount: 100, decision: 'pending', evidence_basis: 'Evidence checked by Operation', renter_response: 'disputed' }],
+    investigation: { review_status: 'proposed' },
   });
-  assert.equal((await request(`/manager/incidents/${incident._id}/compensation`, 'PATCH', { decision: 'approve', amount: 80, note: 'Evidence checked' })).status, 409);
+  assert.equal((await request(`/manager/incidents/${incident._id}/compensation`, 'PATCH', { decision: 'approve', amount: 80, claimIndex: 0, note: 'Evidence checked' })).status, 409);
   const originalBooking = await models.Booking.findOne().lean();
   const booking = await models.Booking.create({ ...originalBooking, _id: new Types.ObjectId(), booking_code: 'MONGOOSE-CLAIM-BOOKING', vehicle_id: vehicle._id });
   await models.SecurityDeposit.create({ booking_id: booking._id, collected_amount: 100, refundable_amount: 100, deducted_amount: 0, status: 'collected' });
   await models.IncidentCase.updateOne({ _id: incident._id }, { $set: { booking_id: booking._id } });
-  const result = await request(`/manager/incidents/${incident._id}/compensation`, 'PATCH', { decision: 'approve', amount: 80, note: 'Evidence checked' });
+  const result = await request(`/manager/incidents/${incident._id}/compensation`, 'PATCH', { decision: 'approve', amount: 80, claimIndex: 0, note: 'Evidence checked' });
   assert.equal(result.status, 200, JSON.stringify(result));
   const updated = await models.IncidentCase.findById(incident._id).lean();
   assert.equal(updated.status, 'resolved');

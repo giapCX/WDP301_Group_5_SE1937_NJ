@@ -1,10 +1,9 @@
+import IncidentReviewCard from './IncidentReviewCard';
 import { useState } from 'react';
 import useManagerActions from '../hooks/useManagerActions';
 import useManagerCollection from '../hooks/useManagerCollection';
 import { DataFields, humanizeField } from './dataDisplay';
 
-const formatMoney = (amount) => new Intl.NumberFormat('vi-VN').format(amount);
-const requestStatus = (status) => ({ submitted: 'Chờ duyệt', pending_review: 'Chờ duyệt', reported: 'Mới tiếp nhận', open: 'Mới tiếp nhận', investigating: 'Đang xem xét', awaiting_response: 'Chờ phản hồi' }[status] || status);
 
 export default function OperationsWorkspace({ active, onNotice }) {
   const request = useManagerCollection(active);
@@ -23,8 +22,8 @@ export default function OperationsWorkspace({ active, onNotice }) {
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải dữ liệu…</p></section>;
   if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div></section>;
 
-  if (active === 'incidents') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Khiếu nại & sự cố" subtitle="Xem hồ sơ đang mở và ra quyết định với yêu cầu bồi thường." count={primary?.length || 0} />
-    <div className="incident-list">{(primary || []).map((item) => <article className="incident-card" key={item.id}><div className="incident-card-heading"><div><strong>{item.caseNumber} · {item.caseType}</strong><p>{item.description}</p></div><span className="request-status rose"><i />{requestStatus(item.status)}</span></div>{item.compensationClaims?.length ? item.compensationClaims.map((claim, index) => <div className="claim-row" key={`${item.id}-${index}`}><span>Yêu cầu bồi thường · {formatMoney(claim.requested_amount || 0)} ₫</span>{claim.decision ? <span className="claim-decided">{claim.decision === 'approved' ? 'Đã duyệt' : claim.decision}</span> : <div className="workspace-actions"><button className="action-approve" onClick={() => { const suggested = claim.proposed_amount ?? claim.requested_amount ?? 0; const raw = window.prompt('Số tiền bồi thường được duyệt (VND):', String(suggested)); if (raw !== null && Number.isSafeInteger(Number(raw)) && Number(raw) >= 0) act(reviewCompensation(item.id, { decision: 'approve', amount: Number(raw), note: 'Đã xét duyệt bởi quản lý.' }), 'Đã duyệt khoản bồi thường.'); }}>Duyệt bồi thường</button><button className="action-reject" onClick={() => { const note = window.prompt('Lý do từ chối bồi thường:'); if (note) act(reviewCompensation(item.id, { decision: 'reject', note }), 'Đã từ chối khoản bồi thường.'); }}>Từ chối</button></div>}</div>) : <div className="claim-row"><span>Chưa có yêu cầu bồi thường đang chờ. Hồ sơ sự cố vẫn cần được theo dõi.</span><button className="action-approve" onClick={() => { const note = window.prompt('Ghi chú kết luận sự cố:'); if (note) act(reviewIncident(item.id, { action: 'resolve', note }), 'Đã đóng hồ sơ sự cố.'); }}>Đóng hồ sơ</button></div>}</article>)}{!primary?.length && <p className="manager-empty">Không có khiếu nại hoặc sự cố đang mở.</p>}</div>
+  if (active === 'incidents') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Khiếu nại & sự cố" subtitle="Garage ghi nhận; Operation xác minh; Manager quyết định." count={primary?.length || 0} />
+    <div className="incident-list">{(primary || []).map(item => <IncidentReviewCard key={item.id} item={item} act={act} reviewCompensation={reviewCompensation} reviewIncident={reviewIncident} />)}{!primary?.length && <p className="manager-empty">Không có sự cố đang mở.</p>}</div>
   </section>;
 
   if (active === 'policies') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Chính sách nền tảng" subtitle="Cập nhật chính sách sẽ tạo phiên bản mới và lưu lịch sử thay đổi." count={primary?.length || 0} />

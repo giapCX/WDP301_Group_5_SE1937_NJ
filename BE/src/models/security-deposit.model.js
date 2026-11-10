@@ -17,9 +17,11 @@ export const securityDepositSchema = createSchema({
     transaction_id: { type: ObjectId, ref: 'PaymentTransaction' },
     at: Date,
     incident_case_id: { type: ObjectId, ref: 'IncidentCase' },
+    claim_index: Number,
   })),
   deduction_decisions: arrayOf(embedded({
     incident_case_id: { type: ObjectId, ref: 'IncidentCase' },
+    claim_index: Number,
     amount: Number,
     status: String,
     approved_by_user_id: ObjectId,

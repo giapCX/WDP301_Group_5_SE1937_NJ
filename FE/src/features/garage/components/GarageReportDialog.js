@@ -3,6 +3,7 @@ import Modal from '../../../components/ui/Modal';
 import Icon from '../../../components/ui/Icon';
 import GaragePhotoUpload from './GaragePhotoUpload';
 import GarageStatus from './GarageStatus';
+import GarageManagerDecision from './GarageManagerDecision';
 import {
   conditionFields,
   conditionLabels,
@@ -68,12 +69,18 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
     }
     save(false);
   }
+  if (readOnly && !task.recordId && task.vehicleReviewStatus === 'rejected') return <Modal title={`Hồ sơ xe · ${task.plate}`} className="gs-dialog" onClose={onClose}>
+    <h3>{task.vehicle}</h3>
+    <GarageManagerDecision task={task} />
+    <p>Hồ sơ đã bị từ chối trước khi có biên bản kiểm định.</p>
+  </Modal>;
   return (
     <Modal
       title={`${taskKinds[task.kind]} · ${task.id}`}
       className="gs-dialog"
       onClose={busy || uploading ? () => {} : onClose}
     >
+      <GarageManagerDecision task={task} />
       <div className="gs-report-vehicle">
         <span className={`gs-car-tile gs-car-tile--${task.kind}`}>
           <Icon name="car" size={30} />

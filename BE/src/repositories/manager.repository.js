@@ -5,6 +5,8 @@ export function createManagerRepository(connection) {
   const models = getModels(connection);
   const collections = Object.fromEntries(Object.entries(modelDefinitions).map(([name, definition]) => [definition.collection, createModelRepository(models[name])]));
   return {
+    command: (command) => connection.db.command(command),
+    startSession: () => connection.startSession(),
     collection(name) {
       if (!collections[name]) throw new Error(`Unknown manager collection: ${name}`);
       return collections[name];

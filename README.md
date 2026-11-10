@@ -313,6 +313,7 @@ Cong chu xe tai `/#/owner` goi `/api/owner/dashboard` va `/api/owner/vehicles`. 
 ## Tai lieu cho nhom
 
 - [Kien truc va huong dan phat trien](docs/ARCHITECTURE.md)
+- [Luồng phối hợp Manager, Garage và xác minh sự cố](BE/docs/manager-garage-workflow.md)
 - [Bao cao ra soat va refactor](docs/STRUCTURE_REVIEW.md)
 
 Frontend: `FE/src/app` va `FE/src/features/{auth,home,listings,garage,manager}`. Backend chia theo tang tai `BE/src/{routes,models,controller,service,repositories,validators,middleware,utils,config,database}`; ten file cho biet nghiep vu. `npm run build` kiem tra FE build duoc. Chi tiet FE xem `FE/SCREEN.md`.
@@ -327,6 +328,6 @@ Da co `/api/garage/inspection-vehicles`, `/api/garage/inspections` va luong tao/
 
 ## Garage Staff: ban giao, nhan tra, su co va anh
 
-FE `/garage` dung `/api/garage/workspace` de hien cong viec, tong quan va lich su that; khong luu nghiep vu trong localStorage. Da co API nhap/xac nhan ban giao va nhan tra, doi chieu hien trang pickup, tu tao su co khi co hu hong moi, gui bao cao su co rieng va upload/doc anh qua JWT. Xe co hu hong moi duoc giu o maintenance; khong tu duyet boi thuong/hoan coc. Luong Manager de buoc sau.
+FE `/garage` dung `/api/garage/workspace` de hien cong viec, tong quan va lich su that; khong luu nghiep vu trong localStorage. Da co API nhap/xac nhan ban giao va nhan tra, doi chieu hien trang pickup, tu tao su co khi co hu hong moi, gui bao cao su co rieng va upload/doc anh qua JWT. Xe co hu hong moi duoc giu o maintenance; khong tu duyet boi thuong/hoan coc. Luong Garage - Operation - Manager xem [tai lieu phoi hop](BE/docs/manager-garage-workflow.md).
 
 Chay `npm run db:setup` de bo sung index, sau do `npm run dev`. Can MongoDB replica set/Atlas de gui/xac nhan va tao su co. Anh mac dinh luu tai `BE/storage/garage-photos` (gitignore); co the dat `GARAGE_UPLOAD_DIRECTORY`. Chi tiet API, request/version, quyen va cach kiem thu: [BE/docs/garage-staff.md](BE/docs/garage-staff.md).

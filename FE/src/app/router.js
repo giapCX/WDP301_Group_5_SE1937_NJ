@@ -6,6 +6,7 @@ import GarageAccess from '../features/garage/components/GarageAccess';
 import ManagerPage from '../features/manager/pages/ManagerPage';
 import OwnerPage from '../features/owner/pages/OwnerPage';
 import AdminPage from '../features/manager/pages/AdminPage';
+import OperationIncidentsPage from '../features/operations/pages/OperationIncidentsPage';
 
 export default function AppRouter() {
   const [isLogin, setIsLogin] = useState(() => window.location.hash.startsWith('#/login'));
@@ -13,6 +14,7 @@ export default function AppRouter() {
   const [isOwner, setIsOwner] = useState(() => window.location.pathname.startsWith('/owner') || window.location.hash.startsWith('#/owner'));
   const [isManager, setIsManager] = useState(() => window.location.hash.startsWith('#/manager'));
   const [isAdmin, setIsAdmin] = useState(() => window.location.hash.startsWith('#/admin'));
+  const [isOperations, setIsOperations] = useState(() => window.location.hash.startsWith('#/operations'));
 
   useEffect(() => {
     const onHashChange = () => {
@@ -21,13 +23,14 @@ export default function AppRouter() {
       setIsGarage(window.location.hash.startsWith('#/garage'));
       setIsOwner(window.location.hash.startsWith('#/owner'));
       setIsAdmin(window.location.hash.startsWith('#/admin'));
+      setIsOperations(window.location.hash.startsWith('#/operations'));
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   useEffect(() => {
-    document.title = isGarage
+    document.title = isOperations ? 'Xác minh sự cố — XeDi' : isGarage
       ? 'Garage Staff — XeDi'
       : isOwner
       ? 'Cổng chủ xe — XeDi'
@@ -39,12 +42,13 @@ export default function AppRouter() {
           ? 'Quản lý vận hành — XeDi'
         : 'XeDi — Thuê xe tự lái, vi vu mọi nẻo đường';
     window.scrollTo(0, 0);
-  }, [isLogin, isManager, isAdmin, isGarage, isOwner]);
+  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations]);
 
   if (isGarage) return <GarageAccess>{(user) => <GaragePage user={user} />}</GarageAccess>;
   if (isOwner) return <OwnerPage />;
   if (isAdmin) return <AdminPage />;
   if (isManager) return <ManagerPage />;
+  if (isOperations) return <OperationIncidentsPage />;
 
   return isLogin ? (
     <div className="login-page">

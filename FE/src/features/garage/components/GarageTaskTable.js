@@ -1,5 +1,6 @@
 import Icon from '../../../components/ui/Icon';
 import GarageStatus from './GarageStatus';
+import GarageManagerDecision from './GarageManagerDecision';
 import {
   displayDate,
   displayTime,
@@ -51,6 +52,7 @@ export default function GarageTaskTable({ tasks, onOpen, onClear }) {
                     <small>
                       {task.plate} <span>·</span> {task.id}
                     </small>
+                    <GarageManagerDecision task={task} />
                   </div>
                 </div>
               </td>
@@ -82,7 +84,7 @@ export default function GarageTaskTable({ tasks, onOpen, onClear }) {
                   onClick={() => onOpen(task)}
                   aria-label={`Xem ${task.id}`}
                 >
-                  {isFinished(task) || task.readOnly
+                  {task.readOnly && !task.recordId ? 'Xem hồ sơ' : isFinished(task) || task.readOnly
                     ? 'Xem biên bản'
                     : task.status === 'draft'
                       ? 'Tiếp tục'

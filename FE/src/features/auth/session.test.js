@@ -10,6 +10,7 @@ test('login routes garage permissions to garage and keeps manager and public des
   expect(getLoginDestination({ roles: ['RENTER'], permissions: ['vehicle.intake'] })).toBe('/garage');
   expect(getLoginDestination({ roles: ['MANAGER'], permissions: ['vehicle.inspect'] })).toBe('/#/manager');
   expect(getLoginDestination({ roles: ['ADMIN'] })).toBe('/#/admin');
+  expect(getLoginDestination({ roles: ['OPERATION_STAFF'] })).toBe('/#/operations');
   expect(getLoginDestination({ roles: ['CAR_OWNER'] })).toBe('/owner');
   expect(getLoginDestination({ roles: ['RENTER'], permissions: ['booking.create'] })).toBe('/#trang-chu');
   expect(canAccessGarage({ roles: ['GARAGE_STAFF'], permissions: [] })).toBe(false);

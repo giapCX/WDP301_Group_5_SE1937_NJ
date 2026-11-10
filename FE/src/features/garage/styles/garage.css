@@ -1193,6 +1193,10 @@
   padding: 21px 0;
   border-bottom: 1px solid #eef1f7;
 }
+.gs-manager-decision { margin: 8px 0; padding: 9px 11px; border-left: 3px solid #d97706; border-radius: 4px; background: #fff8eb; color: #7c4216; font-size: 12px; line-height: 1.6; }
+.gs-manager-decision p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.gs-manager-decision p + p { margin-top: 6px; }
+.gs-table .gs-manager-decision { max-width: 400px; }
 .gs-photo-section h3 {
   margin: 0 0 13px;
   font-size: 12px;

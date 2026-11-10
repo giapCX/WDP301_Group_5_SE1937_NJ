@@ -1,3 +1,4 @@
+import { createManagerGarageService } from './manager-garage.service.js';
 import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
 const {
@@ -71,6 +72,7 @@ function formatRequest(item, kind) {
   };
 }
 export function createManagerService(repository) {
+  const garage = createManagerGarageService(repository);
   async function writeAudit(actorId, action, entityType, entityId, changes = {}) {
     await repository.collection('audit_logs').create({
       actor_user_id: actorId,
@@ -525,7 +527,7 @@ export function createManagerService(repository) {
         status: "published"
       }), vehicles.countDocuments({
         onboarding_status: {
-          $in: ["submitted", "pending_review"]
+          $in: ["submitted", "pending_review", "revision_required"]
         }
       }), incidents.countDocuments({
         status: {
@@ -554,7 +556,7 @@ export function createManagerService(repository) {
         _id: 1
       }).exec(), vehicles.find({
         onboarding_status: {
-          $in: ["submitted", "pending_review"]
+          $in: ["submitted", "pending_review", "revision_required"]
         }
       }).sort({
         created_at: -1
@@ -662,7 +664,7 @@ export function createManagerService(repository) {
       const status = input.query.status || "pending";
       const match = status === "all" ? {} : {
         onboarding_status: status === "pending" ? {
-          $in: ["submitted", "pending_review"]
+          $in: ["submitted", "pending_review", "revision_required"]
         } : status
       };
       const items = await repository.collection("vehicles").find(match).sort({
@@ -680,11 +682,12 @@ export function createManagerService(repository) {
       const ownerMap = new Map(ownerRows.map(owner => [owner._id.toString(), owner]));
       const itemIds = items.map(item => item._id);
       const inspections = itemIds.length ? await repository.collection("vehicle_inspections").find({
+        inspection_type: 'onboarding',
         vehicle_id: {
           $in: itemIds
         }
       }).sort({
-        inspected_at: -1
+        created_at: -1, _id: -1
       }).exec() : [];
       const inspectionMap = new Map();
       for (const inspection of inspections) if (!inspectionMap.has(inspection.vehicle_id.toString())) inspectionMap.set(inspection.vehicle_id.toString(), inspection);
@@ -703,6 +706,11 @@ export function createManagerService(repository) {
           reviewNote: item.review_note || "",
           documents: item.documents || {},
           inspection: inspectionMap.get(item._id.toString()) ? {
+            id: inspectionMap.get(item._id.toString())._id,
+            version: inspectionMap.get(item._id.toString()).version ?? 0,
+            staffId: inspectionMap.get(item._id.toString()).garage_staff_id,
+            conditionReport: inspectionMap.get(item._id.toString()).condition_report || {},
+            decisionReason: inspectionMap.get(item._id.toString()).decision_reason || '',
             status: inspectionMap.get(item._id.toString()).approval_status,
             recommendation: inspectionMap.get(item._id.toString()).recommendation,
             inspectedAt: inspectionMap.get(item._id.toString()).inspected_at
@@ -713,67 +721,7 @@ export function createManagerService(repository) {
         }))
       };
     },
-    reviewVehicle: async input => {
-      const id = toId(input.id);
-      const {
-        action,
-        note = ""
-      } = input.body || {};
-      const statuses = {
-        approve: "approved",
-        reject: "rejected",
-        revision: "revision_required"
-      };
-      if (!id || !statuses[action] || typeof note !== "string" || note.trim().length > 1000 || ["revision", "reject"].includes(action) && note.trim().length < 5) {
-        throw httpError(400, ["revision", "reject"].includes(action) ? "Yêu cầu bổ sung hoặc từ chối cần có nội dung giải thích từ 5 đến 1.000 ký tự." : "Thông tin duyệt xe không hợp lệ.");
-      }
-      if (action === "approve") {
-        const approvalPolicy = await repository.collection("platform_policies").findOne({
-          policy_type: "vehicle_approval",
-          status: "active"
-        });
-        if (approvalPolicy?.config?.inspection_report_required) {
-          const inspection = await repository.collection("vehicle_inspections").findOne({
-            vehicle_id: id,
-            approval_status: "approved",
-            recommendation: "pass"
-          });
-          if (!inspection) throw httpError(409, "Cần có biên bản kiểm định đạt yêu cầu trước khi duyệt xe.");
-        }
-      }
-      const result = await repository.collection("vehicles").updateOne({
-        _id: id,
-        onboarding_status: {
-          $in: ["submitted", "pending_review"]
-        }
-      }, {
-        $set: {
-          onboarding_status: statuses[action],
-          updated_at: new Date(),
-          reviewed_by_manager_id: input.actorId,
-          review_note: note.trim()
-        },
-        $push: {
-          registration_history: {
-            action: statuses[action],
-            by_user_id: input.actorId,
-            at: new Date(),
-            note: note.trim()
-          }
-        }
-      });
-      if (!result.modifiedCount) throw httpError(409, "Hồ sơ xe không còn ở trạng thái chờ duyệt.");
-      await writeAudit(input.actorId, `vehicle.${action}`, "vehicles", id, {
-        status: statuses[action],
-        note: note.trim()
-      });
-      return {
-        data: {
-          id: id.toString(),
-          status: statuses[action]
-        }
-      };
-    },
+    reviewVehicle: input => garage.reviewVehicle(input),
     incidents: async input => {
       const status = input.query.status || "open";
       const match = status === "all" ? {} : {
@@ -802,201 +750,8 @@ export function createManagerService(repository) {
         }))
       };
     },
-    reviewCompensation: async input => {
-      const id = toId(input.id);
-      const {
-        decision,
-        amount,
-        note = ""
-      } = input.body || {};
-      if (!id || !["approve", "reject"].includes(decision) || typeof note !== "string" || note.length > 1000 || decision === "approve" && (!Number.isSafeInteger(amount) || amount < 0)) {
-        throw httpError(400, "Thông tin xử lý bồi thường không hợp lệ.");
-      }
-      const cases = repository.collection("incident_cases");
-      const incident = await cases.findOne({
-        _id: id,
-        status: {
-          $in: OPEN_INCIDENT_STATUSES
-        }
-      });
-      if (!incident) throw httpError(404, "Không tìm thấy sự cố đang mở.");
-      const claims = incident.compensation_claims || [];
-      const claimIndex = claims.findIndex(claim => !claim.decision || claim.decision === "pending");
-      if (claimIndex < 0) throw httpError(409, "Sự cố này không có yêu cầu bồi thường đang chờ.");
-      if (decision === "approve" && Number.isFinite(Number(claims[claimIndex].requested_amount)) && amount > claims[claimIndex].requested_amount) {
-        throw httpError(400, "Số tiền duyệt không được vượt quá số tiền yêu cầu.");
-      }
-      const now = new Date();
-      const nextClaim = {
-        ...claims[claimIndex],
-        decision: decision === "approve" ? "approved" : "rejected",
-        approved_amount: decision === "approve" ? amount : 0,
-        decision_at: now,
-        reviewed_by_manager_id: input.actorId,
-        manager_note: note.trim()
-      };
-      claims[claimIndex] = nextClaim;
-      const allDecided = claims.every(claim => claim.decision && claim.decision !== "pending");
-      let deposit = null;
-      if (decision === "approve" && amount > 0) {
-        if (!incident.booking_id) throw httpError(409, "Không thể trừ tiền bồi thường khi sự cố chưa liên kết booking.");
-        const deposits = repository.collection("security_deposits");
-        deposit = await deposits.findOne({
-          booking_id: incident.booking_id
-        });
-        if (!deposit || !Number.isFinite(deposit.refundable_amount) || deposit.refundable_amount < amount) {
-          throw httpError(409, "Tiền cọc có thể hoàn không đủ để khấu trừ khoản bồi thường.");
-        }
-        const deduction = {
-          incident_case_id: id,
-          amount,
-          status: "approved_after_manager_review",
-          approved_by_user_id: input.actorId,
-          renter_response: claims[claimIndex].renter_response || "manager_arbitration",
-          contract_basis: "manager_compensation_decision"
-        };
-        const deducted = await deposits.updateOne({
-          _id: deposit._id,
-          refundable_amount: {
-            $gte: amount
-          },
-          deduction_decisions: {
-            $not: {
-              $elemMatch: {
-                incident_case_id: id
-              }
-            }
-          },
-          status: {
-            $in: ["collected", "held", "pending_refund", "refunded"]
-          }
-        }, {
-          $inc: {
-            deducted_amount: amount,
-            refundable_amount: -amount
-          },
-          $push: {
-            movements: {
-              type: "deducted",
-              amount,
-              incident_case_id: id,
-              at: now
-            },
-            deduction_decisions: deduction
-          },
-          $set: {
-            updated_at: now
-          }
-        });
-        if (!deducted.modifiedCount) throw httpError(409, "Tiền cọc đã thay đổi hoặc khoản bồi thường đã được ghi nhận.");
-      }
-      const claimPath = `compensation_claims.${claimIndex}`;
-      const update = {
-        [claimPath]: nextClaim,
-        reviewed_by_manager_id: input.actorId,
-        updated_at: now,
-        ...(allDecided ? {
-          status: "resolved",
-          resolution: {
-            outcome: decision === "approve" ? "compensation_approved" : "compensation_rejected",
-            amount: decision === "approve" ? amount : 0,
-            note: note.trim(),
-            resolved_at: now
-          }
-        } : {})
-      };
-      const saved = await cases.updateOne({
-        _id: id,
-        status: {
-          $in: OPEN_INCIDENT_STATUSES
-        },
-        [`compensation_claims.${claimIndex}.decision`]: {
-          $in: [null, "pending"]
-        }
-      }, {
-        $set: update
-      });
-      if (!saved.modifiedCount) {
-        if (deposit && decision === "approve" && amount > 0) await repository.collection("security_deposits").updateOne({
-          _id: deposit._id
-        }, {
-          $inc: {
-            deducted_amount: -amount,
-            refundable_amount: amount
-          },
-          $pull: {
-            movements: {
-              incident_case_id: id,
-              type: "deducted"
-            },
-            deduction_decisions: {
-              incident_case_id: id
-            }
-          },
-          $set: {
-            updated_at: new Date()
-          }
-        });
-        throw httpError(409, "Yêu cầu bồi thường đã được xử lý bởi một quản lý khác.");
-      }
-      await writeAudit(input.actorId, `compensation.${decision}`, "incident_cases", id, {
-        amount: decision === "approve" ? amount : 0,
-        note: note.trim()
-      });
-      return {
-        data: {
-          id: id.toString(),
-          decision: nextClaim.decision,
-          status: allDecided ? "resolved" : incident.status
-        }
-      };
-    },
-    reviewIncident: async input => {
-      const id = toId(input.id);
-      const {
-        action,
-        note = ""
-      } = input.body || {};
-      if (!id || action !== "resolve" || typeof note !== "string" || !note.trim() || note.length > 1000) {
-        throw httpError(400, "Vui lòng nhập ghi chú kết luận sự cố.");
-      }
-      const result = await repository.collection("incident_cases").updateOne({
-        _id: id,
-        status: {
-          $in: OPEN_INCIDENT_STATUSES
-        },
-        compensation_claims: {
-          $not: {
-            $elemMatch: {
-              decision: {
-                $in: ["pending", null]
-              }
-            }
-          }
-        }
-      }, {
-        $set: {
-          status: "resolved",
-          reviewed_by_manager_id: input.actorId,
-          updated_at: new Date(),
-          resolution: {
-            outcome: "manager_resolved",
-            note: note.trim(),
-            resolved_at: new Date()
-          }
-        }
-      });
-      if (!result.modifiedCount) throw httpError(409, "Sự cố đã đóng hoặc còn yêu cầu bồi thường chờ quyết định.");
-      await writeAudit(input.actorId, "incident.resolve", "incident_cases", id, {
-        note: note.trim()
-      });
-      return {
-        data: {
-          id: id.toString(),
-          status: "resolved"
-        }
-      };
-    },
+    reviewCompensation: input => garage.reviewCompensation(input),
+    reviewIncident: input => garage.reviewIncident(input),
     policies: async input => {
       const data = await repository.collection("platform_policies").find({
         status: "active"
