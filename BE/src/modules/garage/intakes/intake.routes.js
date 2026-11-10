@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireGarageStaff } from '../../../middleware/garage-auth.js';
+import { requireGarageStaff } from '../../../middlewares/auth.middleware.js';
 import { createVehicleIntakeController } from './intake.controller.js';
 
 export function createGarageIntakesRouter(database, authConfig) {

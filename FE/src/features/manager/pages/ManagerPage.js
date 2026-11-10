@@ -30,7 +30,7 @@ const actionText = (action, entityType) => ({
   'incident.review': 'đã xem xét sự cố',
   'policy.update': 'đã cập nhật chính sách',
 }[action] || `đã cập nhật ${entityType}`);
-const requestStatus = (status) => ({ submitted: 'Chờ duyệt', pending_review: 'Chờ duyệt', reported: 'Mới tiếp nhận', open: 'Mới tiếp nhận', investigating: 'Đang xem xét', awaiting_response: 'Chờ phản hồi' }[status] || status);
+const requestStatus = (status) => ({ submitted: 'Chờ duyệt', pending_review: 'Chờ duyệt', reported: 'Mới tiếp nhận', open: 'Mới tiếp nhận', investigating: 'Đang xem xét', in_progress: 'Đang xác minh', awaiting_response: 'Chờ phản hồi', pending_manager: 'Chờ Manager quyết định' }[status] || status);
 function revenuePath(series) {
   if (!series?.length) return '';
   const max = Math.max(1, ...series.map((item) => item.amount));
@@ -84,9 +84,70 @@ function ManagementWorkspace({ active, onNotice }) {
     <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>XE & BIỂN SỐ</th><th>CHỦ XE</th><th>HỒ SƠ</th><th>TRẠNG THÁI</th><th>THAO TÁC</th></tr></thead><tbody>{(primary || []).map((item) => <tr key={item.id}><td><strong>{item.brand} {item.model} ({item.year})</strong><span>{item.licensePlate} · {item.seats} chỗ · {item.transmission}</span></td><td>{item.owner?.full_name || '—'}<span>{item.owner?.email || ''}</span></td><td>{item.documents?.registration?.verified ? 'Đăng ký đã xác minh' : 'Chờ xác minh'}<span>{item.documents?.inspection_certificate?.verified ? 'Đăng kiểm đã xác minh' : 'Chờ đăng kiểm'}</span><span>Biên bản: {item.inspection ? `${item.inspection.recommendation} · ${item.inspection.status}` : 'Chưa có'}</span></td><td><span className="request-status amber"><i />{requestStatus(item.status)}</span></td><td><div className="workspace-actions"><button className="action-approve" disabled={!item.inspection || item.inspection.status !== 'approved' || item.inspection.recommendation !== 'pass'} title="Cần biên bản kiểm định đạt yêu cầu" onClick={() => { const note = window.prompt('Ghi chú xét duyệt (không bắt buộc):', ''); if (note !== null) act(reviewVehicle(item.id, { action: 'approve', note }), 'Đã duyệt hồ sơ xe.'); }}>Duyệt</button><button className="action-review" onClick={() => { const note = window.prompt('Nêu nội dung cần bổ sung:', ''); if (note) act(reviewVehicle(item.id, { action: 'revision', note }), 'Đã yêu cầu chủ xe bổ sung hồ sơ.'); }}>Yêu cầu bổ sung</button><button className="action-reject" onClick={() => { const note = window.prompt('Lý do từ chối hồ sơ:'); if (note) act(reviewVehicle(item.id, { action: 'reject', note }), 'Đã từ chối hồ sơ xe.'); }}>Từ chối</button></div></td></tr>)}</tbody></table>{!primary?.length && <p className="manager-empty">Không có hồ sơ xe chờ duyệt.</p>}</div>
   </section>;
 
-  if (active === 'incidents') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Khiếu nại & sự cố" subtitle="Xem hồ sơ đang mở và ra quyết định với yêu cầu bồi thường." count={primary?.length || 0} />
-    <div className="incident-list">{(primary || []).map((item) => <article className="incident-card" key={item.id}><div className="incident-card-heading"><div><strong>{item.caseNumber} · {item.caseType}</strong><p>{item.description}</p></div><span className="request-status rose"><i />{requestStatus(item.status)}</span></div>{item.compensationClaims?.length ? item.compensationClaims.map((claim, index) => <div className="claim-row" key={`${item.id}-${index}`}><span>Yêu cầu bồi thường · {formatMoney(claim.requested_amount || 0)} ₫</span>{claim.decision ? <span className="claim-decided">{claim.decision === 'approved' ? 'Đã duyệt' : claim.decision}</span> : <div className="workspace-actions"><button className="action-approve" onClick={() => { const suggested = claim.proposed_amount ?? claim.requested_amount ?? 0; const raw = window.prompt('Số tiền bồi thường được duyệt (VND):', String(suggested)); if (raw !== null && Number.isSafeInteger(Number(raw)) && Number(raw) >= 0) act(reviewCompensation(item.id, { decision: 'approve', amount: Number(raw), note: 'Đã xét duyệt bởi quản lý.' }), 'Đã duyệt khoản bồi thường.'); }}>Duyệt bồi thường</button><button className="action-reject" onClick={() => { const note = window.prompt('Lý do từ chối bồi thường:'); if (note) act(reviewCompensation(item.id, { decision: 'reject', note }), 'Đã từ chối khoản bồi thường.'); }}>Từ chối</button></div>}</div>) : <div className="claim-row"><span>Chưa có yêu cầu bồi thường đang chờ. Hồ sơ sự cố vẫn cần được theo dõi.</span><button className="action-approve" onClick={() => { const note = window.prompt('Ghi chú kết luận sự cố:'); if (note) act(reviewIncident(item.id, { action: 'resolve', note }), 'Đã đóng hồ sơ sự cố.'); }}>Đóng hồ sơ</button></div>}</article>)}{!primary?.length && <p className="manager-empty">Không có khiếu nại hoặc sự cố đang mở.</p>}</div>
-  </section>;
+  if (active === 'incidents') {
+    return (
+      <section className="manager-panel workspace-panel">
+        <WorkspaceHeader
+          title="Khiếu nại & sự cố"
+          subtitle="Operation thu thập chứng cứ và đề xuất; Manager quyết định bồi thường hoặc tranh chấp."
+          count={primary?.length || 0}
+        />
+        <div className="incident-list">
+          {(primary || []).map((item) => (
+            <article className="incident-card" key={item.id}>
+              <div className="incident-card-heading">
+                <div><strong>{item.caseNumber} · {item.caseType}</strong><p>{item.description}</p></div>
+                <span className="request-status rose"><i />{requestStatus(item.status)}</span>
+              </div>
+              {item.compensationClaims?.length
+                ? item.compensationClaims.map((claim, index) => (
+                  <div className="claim-row" key={`${item.id}-${index}`}>
+                    <div>
+                      <span>
+                        {item.caseType === 'traffic_violation' ? 'Đề xuất xử lý vi phạm' : 'Đề xuất bồi thường'}
+                        {' · '}{formatMoney(claim.proposed_amount ?? claim.requested_amount ?? 0)} ₫
+                      </span>
+                      {claim.operation_proposal?.responsibility && <span>Trách nhiệm Operation đề xuất: {claim.operation_proposal.responsibility}</span>}
+                      {claim.operation_proposal?.recommendation && <span>Hướng xử lý Operation đề xuất: {claim.operation_proposal.recommendation}</span>}
+                      {claim.operation_proposal?.note && <span>Căn cứ: {claim.operation_proposal.note}</span>}
+                    </div>
+                    {claim.decision
+                      ? <span className="claim-decided">{claim.decision === 'approved' ? 'Đã duyệt' : 'Đã từ chối'}</span>
+                      : <div className="workspace-actions">
+                        <button className="action-approve" onClick={() => {
+                          const suggested = claim.proposed_amount ?? claim.requested_amount ?? 0;
+                          const prompt = item.caseType === 'traffic_violation'
+                            ? 'Mức phạt được Manager duyệt (VND):'
+                            : 'Số tiền bồi thường được Manager duyệt (VND):';
+                          const raw = window.prompt(prompt, String(suggested));
+                          if (raw !== null && Number.isSafeInteger(Number(raw)) && Number(raw) >= 0) {
+                            act(
+                              reviewCompensation(item.id, { decision: 'approve', amount: Number(raw), note: 'Đã xét duyệt bởi Manager.' }),
+                              'Đã duyệt đề xuất.',
+                            );
+                          }
+                        }}>Duyệt đề xuất</button>
+                        <button className="action-reject" onClick={() => {
+                          const note = window.prompt('Lý do từ chối đề xuất:');
+                          if (note) act(reviewCompensation(item.id, { decision: 'reject', note }), 'Đã từ chối đề xuất.');
+                        }}>Từ chối</button>
+                      </div>}
+                  </div>
+                ))
+                : <div className="claim-row">
+                  <span>Chưa có đề xuất tài chính đang chờ. Hồ sơ vẫn cần được theo dõi.</span>
+                  <button className="action-approve" onClick={() => {
+                    const note = window.prompt('Ghi chú kết luận sự cố:');
+                    if (note) act(reviewIncident(item.id, { action: 'resolve', note }), 'Đã đóng hồ sơ sự cố.');
+                  }}>Đóng hồ sơ</button>
+                </div>}
+            </article>
+          ))}
+          {!primary?.length && <p className="manager-empty">Không có khiếu nại hoặc sự cố đang mở.</p>}
+        </div>
+      </section>
+    );
+  }
 
   if (active === 'policies') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Chính sách nền tảng" subtitle="Cập nhật chính sách sẽ tạo phiên bản mới và lưu lịch sử thay đổi." count={primary?.length || 0} />
     <div className="policy-grid">{(primary || []).map((item) => <article className="policy-card" key={item.id}><div><span className="policy-type">{item.type.replaceAll('_', ' ')}</span><span className="policy-version">Phiên bản {item.version}</span></div><pre>{JSON.stringify(item.config, null, 2)}</pre><button className="action-review" onClick={() => { const raw = window.prompt('Cập nhật cấu hình JSON:', JSON.stringify(item.config, null, 2)); if (!raw) return; try { const config = JSON.parse(raw); act(updatePolicy(item.type, { config }), 'Đã tạo phiên bản chính sách mới.'); } catch { setError('Cấu hình phải là JSON hợp lệ.'); } }}>Chỉnh sửa chính sách</button></article>)}</div>

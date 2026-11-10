@@ -6,11 +6,17 @@ export function notFound(_request, response) {
   });
 }
 export function errorHandler(error, _request, response, _next) {
-  const status = error.status >= 400 && error.status < 500 ? error.status : 500;
-  if (status === 500) console.error(error);
+  const requestedStatus = Number(error.status);
+  const status = Number.isInteger(requestedStatus) && requestedStatus >= 400 && requestedStatus <= 599
+    ? requestedStatus
+    : 500;
+  if (status >= 500) console.error(error);
   response.status(status).json({
     error: {
-      message: status === 500 ? 'Internal server error.' : error.message
+      message: status >= 500 && error.expose !== true ? 'Internal server error.' : error.message,
+      ...(error.expose === true && error.details !== undefined
+        ? { details: error.details }
+        : {}),
     }
   });
 }

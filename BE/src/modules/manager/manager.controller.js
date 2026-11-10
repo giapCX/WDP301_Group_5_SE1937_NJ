@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 
 const STAFF_ROLES = ['MANAGER', 'OPERATION_STAFF', 'GARAGE_STAFF', 'ADMIN'];
-const OPEN_INCIDENT_STATUSES = ['reported', 'open', 'investigating', 'pending_review', 'awaiting_response'];
+const OPEN_INCIDENT_STATUSES = ['reported', 'open', 'investigating', 'in_progress', 'pending_review', 'awaiting_response', 'pending_manager'];
 const dayStart = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const toId = (value) => ObjectId.isValid(value) ? new ObjectId(value) : null;
 function formatRequest(item, kind) {
@@ -206,10 +206,29 @@ export function createManagerController({ repository, service }) {
       approved_amount: decision === 'approve' ? amount : 0, decision_at: now, reviewed_by_manager_id: service.managerId(request), manager_note: note.trim() };
     claims[claimIndex] = nextClaim;
     const allDecided = claims.every((claim) => claim.decision && claim.decision !== 'pending');
-    await cases.updateOne({ _id: id }, { $set: {
+    const updates = {
       compensation_claims: claims, reviewed_by_manager_id: service.managerId(request), updated_at: now,
       ...(allDecided ? { status: 'resolved', resolution: { outcome: decision === 'approve' ? 'compensation_approved' : 'compensation_rejected', amount: decision === 'approve' ? amount : 0, note: note.trim(), resolved_at: now } } : {}),
-    } });
+    };
+    if (incident.case_type === 'traffic_violation') {
+      updates['traffic_violation_details.official_confirmation'] = decision === 'approve' ? 'confirmed' : 'rejected';
+      updates['traffic_violation_details.reviewed_by_operation_staff_id'] = service.managerId(request);
+      updates['traffic_violation_details.reviewed_at'] = now;
+      if (decision === 'approve') updates['traffic_violation_details.penalty_fee'] = amount;
+    }
+    const result = await cases.updateOne(
+      {
+        _id: id,
+        status: incident.status,
+        compensation_claims: { $elemMatch: { decision: { $in: ['pending', null] } } },
+      },
+      { $set: updates },
+    );
+    if (!result.modifiedCount) {
+      return response.status(409).json({
+        error: { message: 'Yêu cầu bồi thường vừa được cập nhật. Vui lòng tải lại.' },
+      });
+    }
     await service.writeAudit(request, `compensation.${decision}`, 'incident_cases', id, { amount: decision === 'approve' ? amount : 0, note: note.trim() });
     return response.json({ data: { id: id.toString(), decision: nextClaim.decision, status: allDecided ? 'resolved' : incident.status } });
   },

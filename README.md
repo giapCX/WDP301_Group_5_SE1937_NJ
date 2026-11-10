@@ -77,7 +77,7 @@ FE co proxy `/api` den BE khi chay `npm start`; goi `fetch('/api/listings')` hoa
 ## Pham vi hien tai
 
 Homepage trong `FE/src/features/home/pages/HomePage.js` da duoc chuyen sang React theo mau `xedi_trang_ch_thu_xe_t_l_i_p2p`. Header, footer, the xe va dialog duoc tach thanh component. Tim theo dia diem/thoi gian, loc xe, sap xep gia, xem thong tin xe va cong cu uoc tinh thu nhap su dung API/MongoDB. Nut luu xe luu danh sach tren trinh duyet hien tai.
-Man danh sach React da ket noi `/api/listings`: tim kiem, loc, sap xep va phan trang do MongoDB xu ly. FE co debounce, huy request cu, trang thai tai/loi va nut thu lai. Cac bo loc chua co truong du lieu (tien nghi, giao xe tan noi, Superhost, giam gia, dat xe nhanh) duoc khoa kem chu thich; khong tao gia tri gia. Du lieu seed hien chi co dia diem Ha Noi/Hai Phong va duong dan anh minh hoa chua co file, nen FE hien anh thay the. Chua cung cap API ghi du lieu nghiep vu, dang nhap/RBAC, dat xe, thanh toan, eKYC hay ky so.
+Man danh sach React da ket noi `/api/listings`: tim kiem, loc, sap xep va phan trang do MongoDB xu ly. FE co debounce, huy request cu, trang thai tai/loi va nut thu lai. Cac bo loc chua co truong du lieu (tien nghi, giao xe tan noi, Superhost, giam gia, dat xe nhanh) duoc khoa kem chu thich; khong tao gia tri gia. Du lieu seed hien chi co dia diem Ha Noi/Hai Phong va duong dan anh minh hoa chua co file, nen FE hien anh thay the. Marketplace chua co API dat xe, thanh toan, eKYC hay ky so; luong dang nhap/RBAC duoc dung cho Manager, Garage Staff va Operation Staff.
 
 Noi dung duyet booking, nhan/tra tai gara, hoan coc, phi hoa hong theo database va UC. Thoi han hoan coc, dieu kien huy va phi mac dinh doc tu `platform_policies` dang hieu luc. Uoc tinh thu nhap la gia niem yet x so ngay x (1 - hoa hong mac dinh), chua tru thue/chi phi phat sinh; hop dong rieng co the co muc phi khac.
 
@@ -94,7 +94,7 @@ Dashboard quan ly tai `/#/manager` goi cac endpoint `/api/manager/*` va chi cho 
 - [Kien truc va huong dan phat trien](docs/ARCHITECTURE.md)
 - [Bao cao ra soat va refactor](docs/STRUCTURE_REVIEW.md)
 
-Frontend: `FE/src/app` va `FE/src/features/{auth,home,listings}`. Backend: `BE/src/modules/{auth,homepage,listings}`.
+Frontend: `FE/src/app` va `FE/src/features/{auth,home,listings,garage,manager,operation}`. Backend: `BE/src/modules/{auth,homepage,listings,garage,manager,operation}`.
 `npm test --prefix BE` chay integration test API voi MongoDB. Test `api.test.js` chi doc du lieu da seed; `listings-search.test.js` tao database `xedi_search_test_<uuid>` rieng, ghi fixture va tu xoa database nay sau test, khong sua database ung dung. `npm run build` kiem tra FE build duoc. Chi tiet FE xem `FE/SCREEN.md`.
 
 ## API tiep nhan xe (Garage Staff)
@@ -104,3 +104,7 @@ Da co API danh sach xe cho tiep nhan, kiem tra dieu kien, tao/sua nhap va xac nh
 ## API kiem dinh xe (Garage Staff)
 
 Da co `/api/garage/inspection-vehicles`, `/api/garage/inspections` va luong tao/sua nhap, gui de xuat kiem dinh onboarding. Can permission `vehicle.inspect`, doc lap voi `vehicle.intake`. Garage Staff chi gui sang `pending`, khong tu phe duyet xe. Partial unique index yeu cau MongoDB 6.0+; gui de xuat dung transaction nen can replica set/Atlas. Chi tiet request/response va mapping FE: [BE/docs/garage-inspections.md](BE/docs/garage-inspections.md).
+
+## Operation Management
+
+Operation Staff workspace is available at `/#/operation` and its API is mounted at `/api/operation`. Routes require `OPERATION_STAFF` or `ADMIN`; endpoints, workflows, response formats, sample accounts, and verification commands are documented in [BE/docs/operation-management.md](BE/docs/operation-management.md).

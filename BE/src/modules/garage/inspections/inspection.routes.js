@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireGarageStaff } from '../../../middleware/garage-auth.js';
+import { requireGarageStaff } from '../../../middlewares/auth.middleware.js';
 import { createVehicleInspectionController } from './inspection.controller.js';
 
 export function createGarageInspectionsRouter(database, authConfig) {

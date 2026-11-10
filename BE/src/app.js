@@ -8,6 +8,7 @@ import { createAuthRouter } from './modules/auth/auth.routes.js';
 import { createGarageIntakesRouter } from './modules/garage/intakes/intake.routes.js';
 import { createGarageInspectionsRouter } from './modules/garage/inspections/inspection.routes.js';
 import { createManagerRouter } from './modules/manager/manager.routes.js';
+import { createOperationRouter } from './modules/operation/operation.routes.js';
 
 export function createApp(database, options = {}) {
   const app = express();
@@ -34,6 +35,7 @@ export function createApp(database, options = {}) {
   app.use('/api/garage', createGarageIntakesRouter(database, garageAuth));
   app.use('/api/garage', createGarageInspectionsRouter(database, garageAuth));
   app.use('/api/manager', createManagerRouter(database));
+  app.use('/api/operation', createOperationRouter(database));
   app.use(notFound);
   app.use(errorHandler);
   return app;
