@@ -1,8 +1,13 @@
+import { postRenter } from '../../renter/api';
+import { Otp } from '../../renter/Controls';
+import '../../renter/renter.css';
 import React, { useState } from 'react';
 import './LoginPage.css';
 import useLogin from '../hooks/useLogin';
 
 const LoginPage = () => {
+  const [registrationOtp,setRegistrationOtp]=useState({});
+  const [registerBusy,setRegisterBusy]=useState(false);
   const [authTab, setAuthTab] = useState('login'); // 'login' | 'register'
   const [userRole, setUserRole] = useState('renter'); // 'renter' | 'host'
   const [showLoginPassword, setShowLoginPassword] = useState(false);
@@ -45,9 +50,15 @@ const LoginPage = () => {
 
   const { isLoading, handleLoginSubmit } = useLogin({ loginData, setFormStatus, setStatusType });
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    setFormStatus('Đăng ký hiện chưa khả dụng. Vui lòng thử lại sau.');
+    if(registerBusy)return;
+    if(userRole!=='renter'){setStatusType('error');setFormStatus('Đăng ký chủ xe chưa thuộc phạm vi chức năng renter.');return;}
+    setRegisterBusy(true);setFormStatus('');
+    try {
+      await postRenter('/register',{full_name:registerData.fullName,email:registerData.email,phone:registerData.phone,password:registerData.password,confirm_password:registerData.confirmPassword,agree_terms:registerData.agreeTerms,...registrationOtp});
+      setStatusType('success');setFormStatus('Đăng ký thành công. Bạn có thể đăng nhập bằng tài khoản vừa tạo.');setAuthTab('login');
+    }catch(error){setStatusType('error');setFormStatus(error.message);}finally{setRegisterBusy(false);}
   };
 
   return (
@@ -532,6 +543,8 @@ const LoginPage = () => {
               </div>
 
               <form className="space-y-3.5" onSubmit={handleRegisterSubmit}>
+                {userRole==='renter' && <Otp registration target={{email:registerData.email,phone:registerData.phone}} onChange={setRegistrationOtp} />}
+                {registerBusy && <p role="status">Đang tạo tài khoản...</p>}
                 {/* Full Name */}
                 <div>
                   <label
@@ -742,7 +755,7 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-6 flex justify-center">
               {/* Google Social Login */}
               <button
                 className="flex items-center justify-center space-x-2.5 px-4 py-2.5 border border-outline-variant/70 hover:border-outline hover:bg-surface-container-low/50 rounded-xl transition-all duration-150 active:scale-95 bg-surface-container-lowest text-on-surface"
@@ -771,18 +784,7 @@ const LoginPage = () => {
                 </span>
               </button>
 
-              {/* Facebook Social Login */}
-              <button
-                className="flex items-center justify-center space-x-2.5 px-4 py-2.5 border border-outline-variant/70 hover:border-outline hover:bg-surface-container-low/50 rounded-xl transition-all duration-150 active:scale-95 bg-surface-container-lowest text-on-surface"
-                type="button"
-              >
-                <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
-                </svg>
-                <span className="text-body-md font-headline-sm font-medium text-on-surface">
-                  Facebook
-                </span>
-              </button>
+
             </div>
           </div>
         </div>

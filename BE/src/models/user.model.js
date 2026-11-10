@@ -19,16 +19,21 @@ export const userSchema = createSchema({
     id_masked: String,
     verified_at: Date,
     evidence_key: String,
+    document_type: String,
+    evidence_keys: arrayOf(String),
+    verification_environment: String,
   }),
   driver_license: embedded({
     class: String,
     license_masked: String,
     expires_at: Date,
     verification_status: String,
+    evidence_keys: arrayOf(String),
     evidence_key: String,
   }),
   contact_profile: embedded({
     city: String,
+    address: String,
     avatar_key: String,
   }),
   payout_profile: embedded({
