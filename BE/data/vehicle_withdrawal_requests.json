@@ -18,15 +18,15 @@
     "request_type": "early",
     "reason": "Owner requests vehicle returned for personal use",
     "requested_return_at": {
-      "$date": "2026-10-16T15:00:00+07:00"
+      "$date": "2026-10-16T08:00:00Z"
     },
     "requested_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     },
     "affected_bookings": [],
     "termination_notice": {
       "legal_effective_at": {
-        "$date": "2026-10-15T10:00:00+07:00"
+        "$date": "2026-10-15T03:00:00Z"
       },
       "notice_method": "written_record",
       "status": "effective"
@@ -40,23 +40,21 @@
         "$oid": "020000000000000000000010"
       },
       "returned_at": {
-        "$date": "2026-10-16T10:00:00+07:00"
+        "$date": "2026-10-16T03:00:00Z"
       },
       "odometer_km": 27050,
       "fuel_level_pct": 60,
-      "photo_keys": [
-        "demo/returns/vehicle-12/receipt.jpg"
-      ],
+      "photo_keys": [],
       "owner_confirmed_at": {
-        "$date": "2026-10-16T10:20:00+07:00"
+        "$date": "2026-10-16T03:20:00Z"
       }
     },
     "status": "withdrawn",
     "completed_at": {
-      "$date": "2026-10-16T10:20:00+07:00"
+      "$date": "2026-10-16T03:20:00Z"
     },
     "created_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     }
   },
   {
@@ -78,15 +76,15 @@
     "request_type": "normal",
     "reason": "Owner requests vehicle returned for personal use",
     "requested_return_at": {
-      "$date": "2026-10-16T15:00:00+07:00"
+      "$date": "2026-10-16T08:00:00Z"
     },
     "requested_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     },
     "affected_bookings": [],
     "termination_notice": {
       "legal_effective_at": {
-        "$date": "2026-10-15T10:00:00+07:00"
+        "$date": "2026-10-15T03:00:00Z"
       },
       "notice_method": "written_record",
       "status": "effective"
@@ -100,23 +98,21 @@
         "$oid": "02000000000000000000000f"
       },
       "returned_at": {
-        "$date": "2026-10-16T10:00:00+07:00"
+        "$date": "2026-10-16T03:00:00Z"
       },
       "odometer_km": 28050,
       "fuel_level_pct": 60,
-      "photo_keys": [
-        "demo/returns/vehicle-13/receipt.jpg"
-      ],
+      "photo_keys": [],
       "owner_confirmed_at": {
-        "$date": "2026-10-16T10:20:00+07:00"
+        "$date": "2026-10-16T03:20:00Z"
       }
     },
     "status": "withdrawn",
     "completed_at": {
-      "$date": "2026-10-16T10:20:00+07:00"
+      "$date": "2026-10-16T03:20:00Z"
     },
     "created_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     }
   },
   {
@@ -138,10 +134,10 @@
     "request_type": "early",
     "reason": "Owner requests vehicle returned for personal use",
     "requested_return_at": {
-      "$date": "2026-10-31T15:00:00+07:00"
+      "$date": "2026-10-31T08:00:00Z"
     },
     "requested_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     },
     "affected_bookings": [],
     "termination_notice": {
@@ -156,10 +152,10 @@
     "owner_return_handover": null,
     "status": "closed",
     "completed_at": {
-      "$date": "2026-10-16T10:20:00+07:00"
+      "$date": "2026-10-16T03:20:00Z"
     },
     "created_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     }
   },
   {
@@ -181,10 +177,10 @@
     "request_type": "early",
     "reason": "Owner requests vehicle returned for personal use",
     "requested_return_at": {
-      "$date": "2026-10-31T15:00:00+07:00"
+      "$date": "2026-10-31T08:00:00Z"
     },
     "requested_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     },
     "affected_bookings": [
       {
@@ -206,10 +202,10 @@
     "owner_return_handover": null,
     "status": "closed",
     "completed_at": {
-      "$date": "2026-10-16T10:20:00+07:00"
+      "$date": "2026-10-16T03:20:00Z"
     },
     "created_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     }
   },
   {
@@ -231,10 +227,10 @@
     "request_type": "early",
     "reason": "Owner requests vehicle returned for personal use",
     "requested_return_at": {
-      "$date": "2026-10-31T15:00:00+07:00"
+      "$date": "2026-10-31T08:00:00Z"
     },
     "requested_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     },
     "affected_bookings": [],
     "termination_notice": {
@@ -249,10 +245,10 @@
     "owner_return_handover": null,
     "status": "closed",
     "completed_at": {
-      "$date": "2026-10-16T10:20:00+07:00"
+      "$date": "2026-10-16T03:20:00Z"
     },
     "created_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     }
   },
   {
@@ -274,10 +270,10 @@
     "request_type": "early",
     "reason": "Owner requests vehicle returned for personal use",
     "requested_return_at": {
-      "$date": "2026-10-31T15:00:00+07:00"
+      "$date": "2026-10-31T08:00:00Z"
     },
     "requested_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     },
     "affected_bookings": [],
     "termination_notice": {
@@ -292,10 +288,10 @@
     "owner_return_handover": null,
     "status": "closed",
     "completed_at": {
-      "$date": "2026-10-16T10:20:00+07:00"
+      "$date": "2026-10-16T03:20:00Z"
     },
     "created_at": {
-      "$date": "2026-10-10T09:00:00+07:00"
+      "$date": "2026-10-10T02:00:00Z"
     }
   },
   {
@@ -317,10 +313,10 @@
     "request_type": "early",
     "reason": "Owner requests vehicle returned for personal use",
     "requested_return_at": {
-      "$date": "2026-10-31T15:00:00+07:00"
+      "$date": "2026-10-31T08:00:00Z"
     },
     "requested_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     },
     "affected_bookings": [],
     "termination_notice": {
@@ -336,7 +332,7 @@
     "status": "requested",
     "completed_at": null,
     "created_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -358,10 +354,10 @@
     "request_type": "early",
     "reason": "Owner requests vehicle returned for personal use",
     "requested_return_at": {
-      "$date": "2026-10-31T15:00:00+07:00"
+      "$date": "2026-10-31T08:00:00Z"
     },
     "requested_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     },
     "affected_bookings": [],
     "termination_notice": {
@@ -377,7 +373,7 @@
     "status": "requested",
     "completed_at": null,
     "created_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -399,10 +395,10 @@
     "request_type": "early",
     "reason": "Owner requests vehicle returned for personal use",
     "requested_return_at": {
-      "$date": "2026-10-31T15:00:00+07:00"
+      "$date": "2026-10-31T08:00:00Z"
     },
     "requested_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     },
     "affected_bookings": [],
     "termination_notice": {
@@ -418,7 +414,7 @@
     "status": "coordinating_bookings",
     "completed_at": null,
     "created_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -440,10 +436,10 @@
     "request_type": "early",
     "reason": "Owner requests vehicle returned for personal use",
     "requested_return_at": {
-      "$date": "2026-10-31T15:00:00+07:00"
+      "$date": "2026-10-31T08:00:00Z"
     },
     "requested_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     },
     "affected_bookings": [],
     "termination_notice": {
@@ -459,7 +455,7 @@
     "status": "coordinating_bookings",
     "completed_at": null,
     "created_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   }
 ]

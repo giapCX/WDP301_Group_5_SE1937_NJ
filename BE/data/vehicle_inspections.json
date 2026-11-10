@@ -14,28 +14,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 16000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-01/front.jpg",
-        "demo/inspections/vehicle-01/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -53,28 +50,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 17000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-02/front.jpg",
-        "demo/inspections/vehicle-02/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -92,28 +86,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 18000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-03/front.jpg",
-        "demo/inspections/vehicle-03/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -131,28 +122,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 19000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-04/front.jpg",
-        "demo/inspections/vehicle-04/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -170,28 +158,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 20000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-05/front.jpg",
-        "demo/inspections/vehicle-05/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -209,28 +194,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 21000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-06/front.jpg",
-        "demo/inspections/vehicle-06/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -248,28 +230,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 22000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-07/front.jpg",
-        "demo/inspections/vehicle-07/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -287,28 +266,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 23000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-08/front.jpg",
-        "demo/inspections/vehicle-08/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -326,28 +302,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 24000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-09/front.jpg",
-        "demo/inspections/vehicle-09/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -365,28 +338,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 25000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-10/front.jpg",
-        "demo/inspections/vehicle-10/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -404,28 +374,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 26000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-11/front.jpg",
-        "demo/inspections/vehicle-11/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -443,28 +410,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 27000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-12/front.jpg",
-        "demo/inspections/vehicle-12/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -482,28 +446,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 28000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-13/front.jpg",
-        "demo/inspections/vehicle-13/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -521,28 +482,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 29000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-14/front.jpg",
-        "demo/inspections/vehicle-14/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -560,28 +518,25 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
       "exterior": "good",
-      "interior": "clean",
-      "engine": "normal",
+      "interior": "good",
+      "engine": "good",
       "tires": "good",
       "odometer_km": 30000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-15/front.jpg",
-        "demo/inspections/vehicle-15/rear.jpg"
-      ]
+      "photo_keys": []
     },
     "recommendation": "pass",
     "approval_status": "approved",
     "decision_reason": "Meets platform fleet acceptance criteria",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -599,28 +554,26 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
-      "exterior": "needs_attention",
-      "interior": "clean",
-      "engine": "recheck_required",
+      "exterior": "attention",
+      "interior": "good",
+      "engine": "attention",
       "tires": "good",
       "odometer_km": 31000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-16/front.jpg",
-        "demo/inspections/vehicle-16/rear.jpg"
-      ]
+      "photo_keys": [],
+      "note": "Ngoại thất cần xử lý trầy xước; hệ thống truyền động cần kiểm tra lại trước khi phê duyệt."
     },
     "recommendation": "requires_repair",
     "approval_status": "revision_required",
-    "decision_reason": "Missing or unsuitable items in vehicle inspection",
+    "decision_reason": "Ngoại thất cần xử lý trầy xước; hệ thống truyền động cần kiểm tra lại trước khi phê duyệt.",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -638,28 +591,26 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
-      "exterior": "needs_attention",
-      "interior": "clean",
-      "engine": "recheck_required",
+      "exterior": "attention",
+      "interior": "good",
+      "engine": "attention",
       "tires": "good",
       "odometer_km": 32000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-17/front.jpg",
-        "demo/inspections/vehicle-17/rear.jpg"
-      ]
+      "photo_keys": [],
+      "note": "Cần khắc phục ngoại thất và kiểm tra lại động cơ; nộp biên bản kiểm định mới sau sửa chữa."
     },
     "recommendation": "requires_repair",
     "approval_status": "revision_required",
-    "decision_reason": "Missing or unsuitable items in vehicle inspection",
+    "decision_reason": "Cần khắc phục ngoại thất và kiểm tra lại động cơ; nộp biên bản kiểm định mới sau sửa chữa.",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     }
   },
   {
@@ -677,28 +628,188 @@
     },
     "inspection_type": "onboarding",
     "inspected_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
     },
     "condition_report": {
-      "exterior": "needs_attention",
-      "interior": "clean",
-      "engine": "recheck_required",
+      "exterior": "attention",
+      "interior": "good",
+      "engine": "attention",
       "tires": "good",
       "odometer_km": 33000,
       "fuel_level_pct": 65,
-      "photo_keys": [
-        "demo/inspections/vehicle-18/front.jpg",
-        "demo/inspections/vehicle-18/rear.jpg"
-      ]
+      "photo_keys": [],
+      "note": "Xe chưa đạt yêu cầu an toàn ở hạng mục động cơ và ngoại thất; từ chối hồ sơ hiện tại."
     },
     "recommendation": "fail",
     "approval_status": "rejected",
-    "decision_reason": "Missing or unsuitable items in vehicle inspection",
+    "decision_reason": "Xe chưa đạt yêu cầu an toàn ở hạng mục động cơ và ngoại thất; từ chối hồ sơ hiện tại.",
     "decided_at": {
-      "$date": "2026-09-10T14:00:00+07:00"
+      "$date": "2026-09-10T07:00:00Z"
     },
     "created_at": {
-      "$date": "2026-09-09T10:00:00+07:00"
+      "$date": "2026-09-09T03:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000021"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000021"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "inspection_type": "onboarding",
+    "approval_status": "draft",
+    "recommendation": "pass",
+    "condition_report": {
+      "exterior": "good",
+      "interior": "good",
+      "engine": "good",
+      "tires": "good",
+      "odometer_km": 12000,
+      "fuel_level_pct": 70,
+      "photo_keys": [],
+      "note": "Đang kiểm tra nội thất và đối chiếu số khung; chưa gửi Manager."
+    },
+    "inspected_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    },
+    "created_at": {
+      "$date": "2026-11-10T01:00:00Z"
+    },
+    "updated_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    },
+    "version": 0
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000022"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000022"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "inspection_type": "onboarding",
+    "approval_status": "pending",
+    "recommendation": "pass",
+    "condition_report": {
+      "exterior": "good",
+      "interior": "good",
+      "engine": "good",
+      "tires": "good",
+      "odometer_km": 14000,
+      "fuel_level_pct": 70,
+      "photo_keys": [],
+      "note": "Động cơ, phanh, lốp và nội thất hoạt động bình thường. Chờ Manager duyệt biên bản."
+    },
+    "inspected_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    },
+    "created_at": {
+      "$date": "2026-11-10T01:00:00Z"
+    },
+    "updated_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    },
+    "version": 1,
+    "submitted_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    },
+    "submitted_from_version": 0
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000023"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000023"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "inspection_type": "onboarding",
+    "approval_status": "revision_required",
+    "recommendation": "requires_repair",
+    "condition_report": {
+      "exterior": "good",
+      "interior": "good",
+      "engine": "good",
+      "tires": "attention",
+      "odometer_km": 16000,
+      "fuel_level_pct": 70,
+      "photo_keys": [],
+      "note": "Lốp trước bên phải mòn không đều. Yêu cầu thay lốp, kiểm tra góc đặt bánh và kiểm định lại."
+    },
+    "inspected_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    },
+    "created_at": {
+      "$date": "2026-11-10T01:00:00Z"
+    },
+    "updated_at": {
+      "$date": "2026-11-10T03:00:00Z"
+    },
+    "version": 2,
+    "submitted_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    },
+    "submitted_from_version": 0,
+    "decision_reason": "Lốp trước bên phải mòn không đều. Yêu cầu thay lốp, kiểm tra góc đặt bánh và kiểm định lại.",
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "decided_at": {
+      "$date": "2026-11-10T03:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "040000000000000000000024"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000024"
+    },
+    "garage_staff_id": {
+      "$oid": "020000000000000000000010"
+    },
+    "inspection_type": "onboarding",
+    "approval_status": "approved",
+    "recommendation": "pass",
+    "condition_report": {
+      "exterior": "good",
+      "interior": "good",
+      "engine": "good",
+      "tires": "good",
+      "odometer_km": 18000,
+      "fuel_level_pct": 70,
+      "photo_keys": [],
+      "note": "Đã đối chiếu hồ sơ và biên bản kiểm định, xe đạt yêu cầu. Chờ chủ xe bàn giao tại gara."
+    },
+    "inspected_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    },
+    "created_at": {
+      "$date": "2026-11-10T01:00:00Z"
+    },
+    "updated_at": {
+      "$date": "2026-11-10T03:00:00Z"
+    },
+    "version": 2,
+    "submitted_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    },
+    "submitted_from_version": 0,
+    "decision_reason": "Đã đối chiếu hồ sơ và biên bản kiểm định, xe đạt yêu cầu. Chờ chủ xe bàn giao tại gara.",
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "decided_at": {
+      "$date": "2026-11-10T03:00:00Z"
     }
   }
 ]

@@ -25,7 +25,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-01/inspection.pdf",
         "verified": true
@@ -38,15 +38,15 @@
           "$oid": "020000000000000000000001"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -75,7 +75,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-02/inspection.pdf",
         "verified": true
@@ -88,15 +88,15 @@
           "$oid": "020000000000000000000002"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -125,7 +125,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-03/inspection.pdf",
         "verified": true
@@ -138,15 +138,15 @@
           "$oid": "020000000000000000000003"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -175,7 +175,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-04/inspection.pdf",
         "verified": true
@@ -188,15 +188,15 @@
           "$oid": "020000000000000000000004"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -225,7 +225,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-05/inspection.pdf",
         "verified": true
@@ -238,15 +238,15 @@
           "$oid": "020000000000000000000005"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -275,7 +275,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-06/inspection.pdf",
         "verified": true
@@ -288,15 +288,15 @@
           "$oid": "020000000000000000000006"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -325,7 +325,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-07/inspection.pdf",
         "verified": true
@@ -338,15 +338,15 @@
           "$oid": "020000000000000000000007"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -375,7 +375,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-08/inspection.pdf",
         "verified": true
@@ -388,15 +388,15 @@
           "$oid": "020000000000000000000001"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -425,7 +425,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-09/inspection.pdf",
         "verified": true
@@ -438,15 +438,15 @@
           "$oid": "020000000000000000000002"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -475,7 +475,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-10/inspection.pdf",
         "verified": true
@@ -488,15 +488,15 @@
           "$oid": "020000000000000000000003"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -525,7 +525,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-11/inspection.pdf",
         "verified": true
@@ -538,15 +538,15 @@
           "$oid": "020000000000000000000004"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -575,7 +575,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-12/inspection.pdf",
         "verified": true
@@ -588,15 +588,15 @@
           "$oid": "020000000000000000000005"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -625,7 +625,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-13/inspection.pdf",
         "verified": true
@@ -638,15 +638,15 @@
           "$oid": "020000000000000000000006"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -675,7 +675,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-14/inspection.pdf",
         "verified": true
@@ -688,15 +688,15 @@
           "$oid": "020000000000000000000007"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -725,7 +725,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-15/inspection.pdf",
         "verified": true
@@ -738,15 +738,15 @@
           "$oid": "020000000000000000000001"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -775,7 +775,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-16/inspection.pdf",
         "verified": false
@@ -788,16 +788,17 @@
           "$oid": "020000000000000000000002"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
-    }
+      "$date": "2026-10-26T02:00:00Z"
+    },
+    "review_note": "Ngoại thất cần xử lý trầy xước; hệ thống truyền động cần kiểm tra lại trước khi phê duyệt."
   },
   {
     "_id": {
@@ -825,7 +826,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-17/inspection.pdf",
         "verified": false
@@ -838,16 +839,17 @@
           "$oid": "020000000000000000000003"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
-    }
+      "$date": "2026-10-26T02:00:00Z"
+    },
+    "review_note": "Cần khắc phục ngoại thất và kiểm tra lại động cơ; nộp biên bản kiểm định mới sau sửa chữa."
   },
   {
     "_id": {
@@ -875,7 +877,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-18/inspection.pdf",
         "verified": false
@@ -888,16 +890,17 @@
           "$oid": "020000000000000000000004"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
-    }
+      "$date": "2026-10-26T02:00:00Z"
+    },
+    "review_note": "Xe chưa đạt yêu cầu an toàn ở hạng mục động cơ và ngoại thất; từ chối hồ sơ hiện tại."
   },
   {
     "_id": {
@@ -925,7 +928,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-19/inspection.pdf",
         "verified": false
@@ -938,15 +941,15 @@
           "$oid": "020000000000000000000005"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
     }
   },
   {
@@ -975,7 +978,7 @@
       },
       "inspection_certificate": {
         "valid_until": {
-          "$date": "2027-06-30T00:00:00+07:00"
+          "$date": "2027-06-29T17:00:00Z"
         },
         "file_key": "private/demo/vehicle-20/inspection.pdf",
         "verified": false
@@ -988,15 +991,195 @@
           "$oid": "020000000000000000000006"
         },
         "at": {
-          "$date": "2026-09-06T08:30:00+07:00"
+          "$date": "2026-09-06T01:30:00Z"
         }
       }
     ],
     "created_at": {
-      "$date": "2026-09-06T08:30:00+07:00"
+      "$date": "2026-09-06T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-26T09:00:00+07:00"
+      "$date": "2026-10-26T02:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000021"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000001"
+    },
+    "license_plate": "30K-91001",
+    "brand": "Toyota",
+    "model": "Veloz Cross",
+    "manufacture_year": 2024,
+    "seats": 7,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "MPV",
+    "daily_price": 900000,
+    "photos": [],
+    "description": "Xe mẫu cho luồng Garage và Manager; chưa có ảnh hay giấy tờ tải lên.",
+    "onboarding_status": "submitted",
+    "physical_status": "with_owner",
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000001"
+        },
+        "at": {
+          "$date": "2026-11-10T01:00:00Z"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-11-10T01:00:00Z"
+    },
+    "updated_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000022"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000002"
+    },
+    "license_plate": "30K-91002",
+    "brand": "Hyundai",
+    "model": "Stargazer",
+    "manufacture_year": 2024,
+    "seats": 7,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "MPV",
+    "daily_price": 900000,
+    "photos": [],
+    "description": "Xe mẫu cho luồng Garage và Manager; chưa có ảnh hay giấy tờ tải lên.",
+    "onboarding_status": "pending_review",
+    "physical_status": "with_owner",
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000002"
+        },
+        "at": {
+          "$date": "2026-11-10T01:00:00Z"
+        }
+      }
+    ],
+    "created_at": {
+      "$date": "2026-11-10T01:00:00Z"
+    },
+    "updated_at": {
+      "$date": "2026-11-10T02:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000023"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000003"
+    },
+    "license_plate": "30K-91003",
+    "brand": "Kia",
+    "model": "Carens",
+    "manufacture_year": 2024,
+    "seats": 7,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "MPV",
+    "daily_price": 900000,
+    "photos": [],
+    "description": "Xe mẫu cho luồng Garage và Manager; chưa có ảnh hay giấy tờ tải lên.",
+    "onboarding_status": "revision_required",
+    "physical_status": "with_owner",
+    "review_note": "Lốp trước bên phải mòn không đều. Yêu cầu thay lốp, kiểm tra góc đặt bánh và kiểm định lại.",
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000003"
+        },
+        "at": {
+          "$date": "2026-11-10T01:00:00Z"
+        }
+      },
+      {
+        "action": "revision_required",
+        "by_user_id": {
+          "$oid": "020000000000000000000013"
+        },
+        "at": {
+          "$date": "2026-11-10T03:00:00Z"
+        },
+        "note": "Lốp trước bên phải mòn không đều. Yêu cầu thay lốp, kiểm tra góc đặt bánh và kiểm định lại."
+      }
+    ],
+    "created_at": {
+      "$date": "2026-11-10T01:00:00Z"
+    },
+    "updated_at": {
+      "$date": "2026-11-10T03:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "030000000000000000000024"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "license_plate": "30K-91004",
+    "brand": "Honda",
+    "model": "BR-V",
+    "manufacture_year": 2024,
+    "seats": 7,
+    "fuel_type": "gasoline",
+    "transmission": "automatic",
+    "vehicle_type": "MPV",
+    "daily_price": 900000,
+    "photos": [],
+    "description": "Xe mẫu cho luồng Garage và Manager; chưa có ảnh hay giấy tờ tải lên.",
+    "onboarding_status": "approved",
+    "physical_status": "with_owner",
+    "review_note": "Đã đối chiếu hồ sơ và biên bản kiểm định, xe đạt yêu cầu. Chờ chủ xe bàn giao tại gara.",
+    "reviewed_by_manager_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "registration_history": [
+      {
+        "action": "submitted",
+        "by_user_id": {
+          "$oid": "020000000000000000000004"
+        },
+        "at": {
+          "$date": "2026-11-10T01:00:00Z"
+        }
+      },
+      {
+        "action": "approved",
+        "by_user_id": {
+          "$oid": "020000000000000000000013"
+        },
+        "at": {
+          "$date": "2026-11-10T03:00:00Z"
+        },
+        "note": "Đã đối chiếu hồ sơ và biên bản kiểm định, xe đạt yêu cầu. Chờ chủ xe bàn giao tại gara."
+      }
+    ],
+    "created_at": {
+      "$date": "2026-11-10T01:00:00Z"
+    },
+    "updated_at": {
+      "$date": "2026-11-10T03:00:00Z"
     }
   }
 ]

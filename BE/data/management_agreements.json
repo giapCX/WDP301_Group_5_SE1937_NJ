@@ -14,10 +14,10 @@
     },
     "agreement_number": "MGMT-2026-0001",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 15,
     "authorization_scope": {
@@ -31,20 +31,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0001.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -62,10 +62,10 @@
     },
     "agreement_number": "MGMT-2026-0002",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 15,
     "authorization_scope": {
@@ -79,20 +79,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0002.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -110,10 +110,10 @@
     },
     "agreement_number": "MGMT-2026-0003",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 18,
     "authorization_scope": {
@@ -127,20 +127,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0003.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -158,10 +158,10 @@
     },
     "agreement_number": "MGMT-2026-0004",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 15,
     "authorization_scope": {
@@ -175,20 +175,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0004.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -206,10 +206,10 @@
     },
     "agreement_number": "MGMT-2026-0005",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 15,
     "authorization_scope": {
@@ -223,20 +223,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0005.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -254,10 +254,10 @@
     },
     "agreement_number": "MGMT-2026-0006",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 18,
     "authorization_scope": {
@@ -271,20 +271,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0006.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -302,10 +302,10 @@
     },
     "agreement_number": "MGMT-2026-0007",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 15,
     "authorization_scope": {
@@ -319,20 +319,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0007.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -350,10 +350,10 @@
     },
     "agreement_number": "MGMT-2026-0008",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 15,
     "authorization_scope": {
@@ -367,20 +367,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0008.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -398,10 +398,10 @@
     },
     "agreement_number": "MGMT-2026-0009",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 18,
     "authorization_scope": {
@@ -415,20 +415,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0009.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -446,10 +446,10 @@
     },
     "agreement_number": "MGMT-2026-0010",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 15,
     "authorization_scope": {
@@ -463,20 +463,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0010.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -494,10 +494,10 @@
     },
     "agreement_number": "MGMT-2026-0011",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 15,
     "authorization_scope": {
@@ -511,20 +511,20 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0011.pdf",
     "status": "active",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -542,10 +542,10 @@
     },
     "agreement_number": "MGMT-2026-0012",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 18,
     "authorization_scope": {
@@ -559,26 +559,26 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0012.pdf",
     "status": "terminated",
     "termination_info": {
       "legal_effective_at": {
-        "$date": "2026-10-15T10:00:00+07:00"
+        "$date": "2026-10-15T03:00:00Z"
       },
       "reason": "owner_withdrawal",
       "notice_method": "in_app_and_signed_document"
     },
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -596,10 +596,10 @@
     },
     "agreement_number": "MGMT-2026-0013",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2026-10-15T00:00:00+07:00"
+      "$date": "2026-10-14T17:00:00Z"
     },
     "commission_rate_pct": 15,
     "authorization_scope": {
@@ -613,26 +613,26 @@
     "signature_info": {
       "method": "offline_paper",
       "owner_signed_at": {
-        "$date": "2026-09-13T10:00:00+07:00"
+        "$date": "2026-09-13T03:00:00Z"
       },
       "platform_signed_at": {
-        "$date": "2026-09-13T10:30:00+07:00"
+        "$date": "2026-09-13T03:30:00Z"
       }
     },
     "signed_document_key": "private/demo/agreements/MGMT-2026-0013.pdf",
     "status": "terminated",
     "termination_info": {
       "legal_effective_at": {
-        "$date": "2026-10-15T10:00:00+07:00"
+        "$date": "2026-10-15T03:00:00Z"
       },
       "reason": "owner_withdrawal",
       "notice_method": "in_app_and_signed_document"
     },
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -648,10 +648,10 @@
     "platform_signer_id": null,
     "agreement_number": "MGMT-2026-0014",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 15,
     "authorization_scope": {
@@ -667,10 +667,10 @@
     "status": "pending_signatures",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
     }
   },
   {
@@ -686,10 +686,10 @@
     "platform_signer_id": null,
     "agreement_number": "MGMT-2026-0015",
     "start_date": {
-      "$date": "2026-09-15T00:00:00+07:00"
+      "$date": "2026-09-14T17:00:00Z"
     },
     "end_date": {
-      "$date": "2027-09-14T00:00:00+07:00"
+      "$date": "2027-09-13T17:00:00Z"
     },
     "commission_rate_pct": 18,
     "authorization_scope": {
@@ -705,10 +705,56 @@
     "status": "pending_signatures",
     "termination_info": null,
     "created_at": {
-      "$date": "2026-09-11T08:30:00+07:00"
+      "$date": "2026-09-11T01:30:00Z"
     },
     "updated_at": {
-      "$date": "2026-10-16T10:00:00+07:00"
+      "$date": "2026-10-16T03:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "050000000000000000000024"
+    },
+    "vehicle_id": {
+      "$oid": "030000000000000000000024"
+    },
+    "owner_id": {
+      "$oid": "020000000000000000000004"
+    },
+    "platform_signer_id": {
+      "$oid": "020000000000000000000013"
+    },
+    "agreement_number": "MGMT-GM-2026-0004",
+    "status": "active",
+    "commission_rate_pct": 10,
+    "start_date": {
+      "$date": "2026-11-10T03:00:00Z"
+    },
+    "end_date": {
+      "$date": "2027-11-11T03:00:00Z"
+    },
+    "authorization_scope": {
+      "vehicle_custody": true,
+      "rental_contract_signing": true,
+      "listing_management": true,
+      "booking_management": true,
+      "owner_confirmation_per_booking": false,
+      "commission_basis": "rental_fee_excluding_security_deposit"
+    },
+    "signature_info": {
+      "method": "offline_paper",
+      "owner_signed_at": {
+        "$date": "2026-11-10T03:00:00Z"
+      },
+      "platform_signed_at": {
+        "$date": "2026-11-10T03:00:00Z"
+      }
+    },
+    "created_at": {
+      "$date": "2026-11-10T03:00:00Z"
+    },
+    "updated_at": {
+      "$date": "2026-11-10T03:00:00Z"
     }
   }
 ]
