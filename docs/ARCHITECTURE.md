@@ -32,6 +32,13 @@ FE/src/
 │       ├── api/listingApi.js
 │       ├── components/VehicleCard.js
 │       └── hooks/useListings.js
+│   ├── garage/               # Garage page, components, hooks and styles
+│   ├── manager/              # Manager dashboard feature
+│   └── owner/
+│       ├── api/ownerApi.js
+│       ├── components/RegistrationDialog.js
+│       ├── hooks/            # Owner dashboard and registration flows
+│       └── pages/            # OwnerPage.js and owner.css
 ├── services/httpClient.js    # fetch, header, Bearer token và lỗi HTTP
 ├── index.js                  # Điểm khởi động của Create React App
 ├── index.css
@@ -45,7 +52,7 @@ BE/
 │   ├── config/               # env và kết nối database
 │   ├── database/             # Index, khởi tạo collection và seed
 │   ├── models/               # 18 schema/model Mongoose, đăng ký theo connection
-│   ├── routes/               # auth, listing, homepage, garage-intake, garage-inspection, manager
+│   ├── routes/               # auth, listing, homepage, garage-intake, garage-inspection, manager, owner
 │   ├── controller/           # Nhận request, gọi service, trả response
 │   ├── service/              # Nghiệp vụ và điều phối transaction
 │   ├── repositories/         # Truy cập model và base.repository.js dùng chung
@@ -194,3 +201,7 @@ Backend integration test tự tạo replica set tạm bằng `mongod`, database 
 - Xác nhận bàn giao/nhận trả cập nhật biên bản, booking, xe, sự cố phát sinh và audit trong cùng transaction. Mỗi booking/type chỉ có một handover; version và replay ngăn xác nhận lặp. Trả xe có hư hỏng mới đưa xe về maintenance; Garage không quyết định bồi thường hoặc hoàn cọc.
 - Hướng dẫn endpoint, lưu ảnh, thử lại và yêu cầu replica set: [Garage Staff](../BE/docs/garage-staff.md). Luồng duyệt của Manager được giữ cho giai đoạn sau.
 - Backend Manager dùng các file `manager.*.js` ở từng thư mục tầng. Controller chỉ điều phối HTTP; nghiệp vụ nằm trong service và truy cập dữ liệu đi qua repository/model.
+- Backend Owner dùng `owner.routes.js`, `owner.controller.js`, `owner.service.js` và `owner.repository.js` theo đúng các tầng; dữ liệu và GridFS được truy cập qua repository.
+- `POST /api/owner/vehicles` lưu giấy đăng ký, đăng kiểm, bảo hiểm và ảnh trong GridFS; xe được gửi sang kiểm định với trạng thái `submitted`. Xác nhận điều khoản lưu chữ ký điện tử, phiên bản hợp đồng, thời điểm ký và audit log.
+- Dashboard Owner chỉ đọc xe, đối soát và hợp đồng theo `owner_id` của phiên JWT. Schema Vehicle và ManagementAgreement khai báo đầy đủ các trường do luồng Owner ghi.
+- `BE/test/owner.test.js` kiểm tra role, cô lập dữ liệu theo Owner, upload hồ sơ, ký hợp đồng và trạng thái xe đã gửi kiểm định.

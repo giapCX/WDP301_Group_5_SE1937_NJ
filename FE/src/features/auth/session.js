@@ -9,8 +9,13 @@ export function canAccessGarage(user) {
   ].includes(permission)) || false;
 }
 
+export function canAccessOwner(user) {
+  return user?.roles?.some((role) => ['OWNER', 'CAR_OWNER'].includes(role)) || false;
+}
+
 export function getLoginDestination(user) {
   if (user?.roles?.some((role) => ['MANAGER', 'ADMIN'].includes(role))) return '/#/manager';
+  if (canAccessOwner(user)) return '/owner';
   return canAccessGarage(user) ? '/garage' : '/#trang-chu';
 }
 

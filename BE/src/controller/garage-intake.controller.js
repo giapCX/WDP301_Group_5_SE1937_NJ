@@ -1,13 +1,10 @@
 import { Types } from 'mongoose';
-import { createVehicleIntakeService } from '../service/garage-intake.service.js';
-import { createVehicleIntakeRepository } from '../repositories/garage-intake.repository.js';
 import { parseConfirmation, parseIntakeDraft, parseIntakeList } from '../validators/garage-intake.validator.js';
 import { httpError, objectId } from '../utils/http-error.js';
 
 const { ObjectId } = Types;
 
-export function createVehicleIntakeController(database) {
-  const service = createVehicleIntakeService(createVehicleIntakeRepository(database));
+export function createVehicleIntakeController(service) {
   return {
     candidates: async (request, response) => {
       const query = parseIntakeList(request.query);

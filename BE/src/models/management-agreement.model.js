@@ -23,6 +23,8 @@ export const managementAgreementSchema = createSchema({
     method: String,
     owner_signed_at: Date,
     platform_signed_at: Date,
+    owner_signature_name: String,
+    terms_version: String,
   }),
   signed_document_key: String,
   status: String,

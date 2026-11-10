@@ -274,6 +274,8 @@ Tài liệu: [lấy thông tin Cloudinary](https://cloudinary.com/documentation/
 | POST | `/api/auth/login` | Dang nhap bang email/so dien thoai va mat khau (tra ve JWT & user info) |
 | GET | `/api/auth/me` | Lay thong tin user hien tai qua JWT Bearer token |
 | POST | `/api/auth/logout` | Dang xuat |
+| GET | `/api/owner/dashboard` | Danh sach xe, doi soat thu nhap va hop dong theo Owner dang dang nhap |
+| POST | `/api/owner/vehicles` | Tai ho so xe, ky thoa thuan quan ly dien tu va gui xe cho luong xac minh |
 
 Query ho tro cho listings: `page`, `limit`, `q` (tim trong tieu de), `city`, `startAt`, `endAt`, `minPrice`, `maxPrice`, `fuelType`, `transmission`, `vehicleType`, `seats`, `sort` (`newest`, `price_asc`, `price_desc`). `startAt` va `endAt` la cap thoi gian ISO; API loai xe trung booking dang cho xu ly/thanh toan, da xac nhan, dang thue hoac khoang lich bi khoa. Ket qua tim kiem khong giu cho; tao booking sau nay can kiem tra lai va chong tranh chap dong thoi.
 Query ho tro: `page`, `limit`, `q` (tieu de, mo ta, hang va mau xe), `city`, `minPrice`, `maxPrice`, `fuelType`, `transmission`, `vehicleType`, `seats`, `minYear`, `ids`, `startAt`, `endAt`, `sort` (`newest`, `price_asc`, `price_desc`). `vehicleType` nhan nhieu gia tri cach nhau bang dau phay, khong phan biet hoa thuong (vi du `sedan,suv`). `ids` la danh sach listing ObjectId cach nhau bang dau phay (toi da 100); chuoi rong tra ve danh sach rong.
@@ -295,9 +297,11 @@ Giao dien dang nhap tai `/#/login` da duoc ket noi truc tiep toi API backend `/a
 
 Dashboard quan ly tai `/#/manager` goi cac endpoint `/api/manager/*` va chi cho phep tai khoan co role hien tai `MANAGER` hoac `ADMIN`. API tinh xe tu listings published, ho so cho duyet va su co chua dong tu collections tuong ung; doanh thu lay phi nen tang trong `owner_settlements` da thanh toan, hoat dong lay tu `audit_logs`. Query dashboard `period` chap nhan `7d`, `30d` hoac `month`. Thao tac duyet, boi thuong, dong su co, sua chinh sach va quan ly nhan su deu ghi audit log.
 
+Cong chu xe tai `/#/owner` goi `/api/owner/dashboard` va `/api/owner/vehicles`. Dang ky xe yeu cau role `OWNER`, ba loai giay to xe, tu 2 den 5 anh xe va xac nhan thoa thuan. Tai lieu duoc luu trong MongoDB GridFS; xe gui thanh cong vao trang thai `submitted` cho quy trinh gara/quan ly tiep tuc.
+
 ## Kiem tra
 
-`npm test --prefix BE` chay test model, database, API, auth, listings, homepage, Garage va Manager. Integration test tu tao replica set va database tam, seed fixture va tu don; khong sua database ung dung. Can cai MongoDB Server (`mongod`) hoac cau hinh `MONGOD_BINARY` / `INTAKE_TEST_MONGODB_URI` cho moi truong test. `npm test --prefix FE -- --watchAll=false` chay UI test.
+`npm test --prefix BE` chay test model, database, API, auth, listings, homepage, Garage, Manager va Owner. Integration test tu tao replica set va database tam, seed fixture va tu don; khong sua database ung dung. Can cai MongoDB Server (`mongod`) hoac cau hinh `MONGOD_BINARY` / `INTAKE_TEST_MONGODB_URI` cho moi truong test. `npm test --prefix FE -- --watchAll=false` chay UI test.
 
 ## Tai lieu cho nhom
 
