@@ -11,7 +11,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 export const env = {
   port,
   host: process.env.HOST || '127.0.0.1',
-  mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017',
+  mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27018/?replicaSet=rs0',
   databaseName: process.env.MONGODB_DB_NAME || 'xedi',
   frontendOrigin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
   jwtSecret: process.env.JWT_SECRET || 'xedi-super-secret-jwt-key-2026-development',

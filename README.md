@@ -23,7 +23,7 @@ BE/
 
 ## Cai dat
 
-Cần Node.js >= 20.19. Nhóm dùng **MongoDB Atlas làm database chung**; thành viên không cần chạy MongoDB Server local để chạy ứng dụng. MongoDB Compass là công cụ xem/quản lý dữ liệu, có thể kết nối tới Atlas. Xem [hướng dẫn Atlas cho thành viên](#dùng-mongodb-atlas-cho-nhóm) trước khi khởi động.
+Cần Node.js >= 20.19 và **MongoDB Server local có replica set**. Cấu hình mặc định dùng local, không cần Atlas. MongoDB Compass là công cụ xem/quản lý dữ liệu. Xem [hướng dẫn local](#dùng-mongodb-local-không-cần-atlas); [Atlas](#dùng-mongodb-atlas-cho-nhóm) là lựa chọn nếu cần database chung trên cloud.
 
 Backend dung kien truc `Routes -> Controller -> Service -> Repository -> Mongoose Model`. Khi cap nhat tu ban Native Driver, chay `npm ci --prefix BE` va `npm run db:setup`; database hien co tiep tuc dung duoc, khong can seed lai. Chi tiet schema, connection va transaction xem [kien truc backend](docs/ARCHITECTURE.md#mongoose-và-dữ-liệu-hiện-có).
 
@@ -32,7 +32,8 @@ Tai thu muc goc:
 ```powershell
 npm run install:all
 if (!(Test-Path BE/.env)) { Copy-Item BE/.env.example BE/.env }
-# Điền cấu hình Atlas vào BE/.env theo hướng dẫn bên dưới trước khi chạy tiếp.
+npm run db:local
+# Kiểm tra BE/.env dùng URI local theo hướng dẫn bên dưới trước khi chạy tiếp.
 npm run db:setup
 npm run dev
 ```
@@ -41,7 +42,7 @@ Khong can copy de len `.env` neu file da ton tai. Dieu chinh `MONGODB_URI` trong
 
 - FE: http://localhost:3000
 - BE: http://127.0.0.1:5000/api/health
-- Compass: dùng cùng URI Atlas trong `BE/.env` để xem database chung; `mongodb://127.0.0.1:27017` chỉ xem dữ liệu local.
+- Compass: dùng cùng URI trong `BE/.env`; mặc định `mongodb://127.0.0.1:27018/?replicaSet=rs0`.
 - Database mac dinh: `xedi`
 
 `npm run db:setup` tao 18 collection va index. `npm run db:seed` thuc hien setup roi nhap du lieu, chuyen `$oid` thanh ObjectId va `$date` thanh Date. Chay lai seed chi them ID chua co, giu nguyen ban ghi da ton tai; khong xoa collection. Neu du lieu hien co vi pham unique index, script bao loi de kiem tra.
@@ -56,7 +57,47 @@ npm run dev:be
 npm run dev:fe
 ```
 
+## Dùng MongoDB local không cần Atlas
+
+Mặc định dự án dùng replica set **một node `rs0`**, chỉ lắng nghe trên máy hiện tại ở cổng **27018**. Cấu hình này hỗ trợ transaction cho kiểm định, tiếp nhận, bàn giao và sự cố; không cần Atlas hoặc IP Access List. Cần cài MongoDB Server (MongoDB 6.0+; nên dùng phiên bản hiện tại), cài Compass riêng là chưa đủ.
+
+Tại thư mục gốc repository, sau khi cài dependencies:
+
+```powershell
+npm run db:local
+```
+
+Lệnh tự tìm `mongod.exe` trong `Program Files/MongoDB/Server` trên Windows; trên hệ điều hành khác cần có `mongod` trong PATH. Nếu cài ở vị trí khác, đặt biến môi trường `MONGOD_BINARY` trỏ tới executable. Lệnh khởi động MongoDB chạy nền, khởi tạo replica set nếu cần và đợi node trở thành primary. Có thể chạy lại lệnh khi database đang hoạt động.
+
+Trong `BE/.env`, đặt:
+
+```dotenv
+MONGODB_URI=mongodb://127.0.0.1:27018/?replicaSet=rs0
+MONGODB_DB_NAME=xedi
+```
+
+Sau đó chạy tại thư mục gốc:
+
+```powershell
+npm run db:setup
+# Chỉ seed khi cần nạp dữ liệu mẫu vào database mới:
+npm run db:seed
+npm run dev
+```
+
+Sau khi khởi động lại máy tính, chạy `npm run db:local` trước `npm run dev`. Nếu terminal đang ở `BE`, các lệnh `db:local`, `db:setup`, `db:seed` và `dev` cũng dùng được; `dev` tại `BE` chỉ khởi động backend. Khởi động lại backend sau khi đổi `.env`. Trong Compass, thêm kết nối bằng URI local phía trên.
+
+**Dữ liệu local:** lưu bền vững tại `BE/storage/mongodb-local/`, được Git bỏ qua. Không xóa thư mục này nếu cần giữ database. Log nằm tại `BE/storage/mongodb-local/mongod.log`. Tiến trình này dùng cổng và thư mục riêng, không chuyển đổi MongoDB standalone đang chạy ở cổng 27017. Dữ liệu ở 27017 hoặc Atlas không tự xuất hiện ở 27018; cần chuyển dữ liệu nếu muốn giữ biên bản cũ, còn seed chỉ nạp các file JSON mẫu.
+
+Mỗi thành viên dùng local có **database riêng**. Cùng Cloudinary chỉ chia sẻ file ảnh; không đồng bộ biên bản giữa các database. Để mọi người thấy cùng dữ liệu cần một database server chung có replica set, hoặc dùng tùy chọn Atlas bên dưới. Replica set một node local phục vụ phát triển, không cung cấp khả năng dự phòng khi máy hỏng.
+
+Nếu `db:local` báo không tìm thấy executable, kiểm tra cài đặt MongoDB Server hoặc `MONGOD_BINARY`. Nếu cổng 27018 đã có MongoDB standalone/replica set khác, lệnh sẽ báo lỗi thay vì tự đổi cấu hình server đó. Nếu backend vẫn yêu cầu replica set, kiểm tra URI cổng 27018 và khởi động lại backend; thêm `replicaSet=rs0` vào URI không thay thế được bước khởi tạo replica set.
+
+Tài liệu MongoDB: [khởi tạo replica set](https://www.mongodb.com/docs/v8.0/reference/method/rs.initiate/).
+
 ## Dùng MongoDB Atlas cho nhóm
+
+Phần này là **tùy chọn** khi nhóm muốn database chung trên cloud; bỏ qua nếu dùng local phía trên.
 
 ### Vì sao dùng Atlas?
 
@@ -142,6 +183,79 @@ Trong Compass, chọn **Add new connection**, dán URI Atlas đã điền thông
 | Sửa `.env.example` nhưng backend không đổi | Sửa `BE/.env`; kiểm tra biến `MONGODB_URI` trong môi trường terminal nếu vẫn thấy cấu hình cũ, rồi khởi động lại backend. |
 
 Tài liệu chính thức: [kết nối Atlas](https://www.mongodb.com/docs/atlas/connect-to-database-deployment/), [xử lý lỗi kết nối](https://www.mongodb.com/docs/atlas/troubleshoot-connection/), [yêu cầu transaction](https://www.mongodb.com/docs/manual/core/transactions-production-consideration/).
+
+## Dùng Cloudinary để chia sẻ ảnh Garage
+
+Atlas lưu dữ liệu biên bản và key ảnh; **Cloudinary lưu file ảnh**. Muốn các thành viên xem cùng biên bản và ảnh, mỗi backend phải kết nối cùng database Atlas và cùng Cloudinary product environment. Các biến môi trường được đặt trên từng máy, không tự đi theo khi pull code.
+
+### 1. Chuẩn bị tài khoản và thông tin kết nối
+
+Người phụ trách tạo tài khoản tại [Cloudinary](https://cloudinary.com/), chọn product environment của nhóm và vào **Settings → API Keys** để lấy:
+
+| Biến trong backend | Giá trị lấy từ Cloudinary |
+| --- | --- |
+| `CLOUDINARY_CLOUD_NAME` | Cloud Name của product environment |
+| `CLOUDINARY_API_KEY` | API Key |
+| `CLOUDINARY_API_SECRET` | API Secret của key đó |
+
+Thành viên tham gia sau nhận thông tin qua kênh riêng; không tạo Cloudinary environment riêng nếu muốn dùng cùng kho ảnh. Không gửi secret vào frontend, commit Git hoặc điền giá trị thật vào `.env.example`. Nếu secret bị lộ, người phụ trách thay key/secret và thông báo để mọi người cập nhật `.env`.
+
+### 2. Cấu hình trên máy thành viên
+
+Sau khi pull code, chạy tại **thư mục gốc repository** để cài dependency Cloudinary theo lockfile:
+
+```powershell
+npm ci --prefix BE
+```
+
+Điền đủ ba biến trong **`BE/.env`**, giữ nguyên cấu hình Atlas và các biến khác:
+
+```dotenv
+CLOUDINARY_CLOUD_NAME=<cloud_name_cua_nhom>
+CLOUDINARY_API_KEY=<api_key_cua_nhom>
+CLOUDINARY_API_SECRET=<api_secret_cua_nhom>
+```
+
+Thay toàn bộ phần `<...>` bằng giá trị thật và bỏ dấu `< >`. Mỗi biến chỉ khai báo một lần. Dừng backend đang chạy bằng `Ctrl+C`, rồi khởi động lại từ thư mục gốc:
+
+```powershell
+npm run dev
+```
+
+- Đủ cả ba biến: backend lưu/đọc ảnh Garage qua Cloudinary.
+- Trống cả ba biến: backend dùng `BE/storage/garage-photos` hoặc `GARAGE_UPLOAD_DIRECTORY`; ảnh chỉ nằm trên máy chạy backend đó.
+- Chỉ có một hoặc hai biến: backend từ chối khởi động và báo cấu hình chưa đủ.
+
+Backend upload bằng SDK với loại **`authenticated`**, không cần tạo unsigned upload preset. Key trả về vẫn có dạng `garage-photos/<userId>/<uuid>.jpg` (hoặc `.png`, `.webp`). Khi xem ảnh, frontend gửi JWT tới backend, backend tạo URL ký có hạn để tải ảnh từ Cloudinary rồi trả nội dung ảnh về frontend. URL `/api/garage/photos/...` là địa chỉ API của ứng dụng, không phải URL public của Cloudinary.
+
+### 3. Kiểm tra upload và chia sẻ ảnh
+
+1. Đăng nhập tài khoản Garage Staff trên ứng dụng.
+2. Mở biên bản, chọn ảnh JPG/PNG/WebP tối đa **500 KB/ảnh**, tối đa **4 ảnh/biên bản**. Chờ upload hoàn tất rồi lưu nháp hoặc gửi biên bản để lưu key ảnh vào Atlas.
+3. Vào **Cloudinary → Media Library**, tìm asset theo UUID trong key ảnh. Ảnh được upload ngay lúc chọn file; có ảnh trên Cloudinary chưa có nghĩa biên bản đã được lưu.
+4. Tải lại trang và mở lại biên bản: ảnh cần hiển thị trong giao diện Garage.
+5. Thành viên khác dùng cùng Atlas và Cloudinary, đăng nhập tài khoản có quyền Garage rồi mở biên bản đó để kiểm tra xem ảnh dùng chung.
+
+Mở trực tiếp URL API ảnh trong thanh địa chỉ sẽ thiếu header JWT và có thể báo `Chưa cung cấp token xác thực.` Hãy kiểm tra bằng giao diện ứng dụng sau khi đăng nhập.
+
+### 4. Ảnh cũ và giới hạn hiện tại
+
+Ảnh đã lưu local trước khi bật Cloudinary **không được tự chuyển lên cloud**. Khi bật Cloudinary, backend đọc key ảnh từ kho cloud; file local có cùng key không được dùng làm dự phòng. Với biên bản còn sửa được, cần đính kèm lại ảnh qua ứng dụng và lưu biên bản. Với biên bản đã khóa/gửi, cần thống nhất việc chuyển file với người phụ trách, giữ nguyên key để không làm sai liên kết dữ liệu.
+
+Các ảnh demo trong JSON có thể chỉ có key minh họa và không có file thật. Chạy `db:seed` không tạo hoặc upload các file ảnh đó. Việc xóa ảnh khỏi danh sách đính kèm hiện chỉ bỏ liên kết trong biểu mẫu; ứng dụng chưa có luồng xóa asset trên Cloudinary hoặc tự dọn ảnh upload nhưng chưa lưu biên bản.
+
+### Các lỗi ảnh thường gặp
+
+| Hiện tượng | Cách kiểm tra |
+| --- | --- |
+| Người upload xem được, máy khác không có ảnh | Kiểm tra hai máy cùng Atlas, cùng Cloudinary environment, đủ ba biến và đã khởi động lại backend. Máy upload có thể vẫn đang dùng local. |
+| `Không thể tải ảnh lên Cloudinary` | Kiểm tra bộ Cloud Name/API Key/API Secret cùng environment, key còn hoạt động, kết nối Internet và hạn mức tài khoản. |
+| `Ảnh chưa có tệp hoặc không tải được` | Kiểm tra asset tồn tại, ảnh có phải key demo/file local cũ không; xem trạng thái request ảnh trong Network của trình duyệt. |
+| `Không thể đọc ảnh từ Cloudinary` | Kiểm tra credentials, kết nối cloud và asset trong đúng environment; gửi HTTP status của API để người phụ trách kiểm tra. |
+| `Chưa cung cấp token xác thực` | Đăng nhập lại và mở ảnh qua giao diện Garage; không kiểm tra bằng URL trực tiếp thiếu JWT. |
+| Upload báo quá dung lượng hoặc sai định dạng | Chọn JPG/PNG/WebP không quá 500 KB và giữ số lượng tối đa 4 ảnh. |
+
+Tài liệu: [lấy thông tin Cloudinary](https://cloudinary.com/documentation/developer_onboarding_faq_find_credentials), [SDK upload Node.js](https://cloudinary.com/documentation/node_image_and_video_upload), [kiểm soát truy cập ảnh](https://cloudinary.com/documentation/control_access_to_media), [API Garage của dự án](BE/docs/garage-staff.md#ảnh).
 
 ## API
 

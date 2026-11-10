@@ -6,6 +6,7 @@
     "dev": "concurrently --kill-others --names BE,FE \"npm run dev --prefix BE\" \"npm start --prefix FE\"",
     "dev:be": "npm run dev --prefix BE",
     "dev:fe": "npm start --prefix FE",
+    "db:local": "npm run db:local --prefix BE",
     "db:setup": "npm run db:setup --prefix BE",
     "db:seed": "npm run db:seed --prefix BE",
     "install:all": "npm install && npm ci --prefix BE && npm ci --prefix FE",
