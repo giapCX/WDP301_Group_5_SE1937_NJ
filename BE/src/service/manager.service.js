@@ -6,7 +6,7 @@ const {
 import bcrypt from "bcryptjs";
 const STAFF_ROLES = ["MANAGER", "OPERATION_STAFF", "GARAGE_STAFF", "ADMIN"];
 const MANAGED_STAFF_ROLES = ["OPERATION_STAFF", "GARAGE_STAFF"];
-const OPEN_INCIDENT_STATUSES = ["reported", "open", "investigating", "pending_review", "awaiting_response"];
+const OPEN_INCIDENT_STATUSES = ["reported", "open", "investigating", "pending_review", "awaiting_response", "pending_manager", "under_review", "in_progress"];
 const dayStart = date => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const toId = value => ObjectId.isValid(value) ? new ObjectId(value) : null;
 async function buildOperationsReport(repository, from, to) {
@@ -966,6 +966,7 @@ export function createManagerService(repository) {
       }
       const result = await repository.collection("incident_cases").updateOne({
         _id: id,
+        case_type: { $ne: "traffic_violation" },
         status: {
           $in: OPEN_INCIDENT_STATUSES
         },
@@ -1000,6 +1001,54 @@ export function createManagerService(repository) {
           status: "resolved"
         }
       };
+    },
+    reviewTrafficViolation: async input => {
+      const id = toId(input.id);
+      const { decision, amount, note = "" } = input.body || {};
+      if (!id || !["approve", "reject"].includes(decision) ||
+        typeof note !== "string" || !note.trim() || note.length > 1000 ||
+        decision === "approve" && (!Number.isSafeInteger(amount) || amount < 0))
+        throw httpError(400, "Thông tin quyết định vi phạm không hợp lệ.");
+      const cases = repository.collection("incident_cases");
+      const incident = await cases.findOne({
+        _id: id,
+        case_type: "traffic_violation",
+        status: "pending_manager",
+        "traffic_violation_details.official_confirmation": "pending_manager_review",
+      });
+      if (!incident) throw httpError(409, "Vi phạm chưa được Operation chuyển đến Manager hoặc đã có quyết định.");
+      const claimed = incident.traffic_violation_details?.fine_amount_claimed;
+      if (decision === "approve" && Number.isFinite(claimed) && amount > claimed)
+        throw httpError(400, "Khoản phạt được duyệt không được vượt quá số tiền có chứng cứ.");
+      const now = new Date();
+      const status = decision === "approve" ? "resolved" : "closed";
+      const result = await cases.updateOne({
+        _id: id,
+        case_type: "traffic_violation",
+        status: "pending_manager",
+        "traffic_violation_details.official_confirmation": "pending_manager_review",
+      }, {
+        $set: {
+          status,
+          reviewed_by_manager_id: input.actorId,
+          updated_at: now,
+          "investigation.review_status": decision === "approve" ? "approved" : "rejected",
+          "traffic_violation_details.official_confirmation": decision === "approve" ? "confirmed" : "rejected",
+          "traffic_violation_details.penalty_fee": decision === "approve" ? amount : 0,
+          resolution: {
+            outcome: decision === "approve" ? "traffic_violation_approved" : "traffic_violation_rejected",
+            amount: decision === "approve" ? amount : 0,
+            note: note.trim(),
+            resolved_at: now,
+          },
+        },
+      });
+      if (!result.modifiedCount) throw httpError(409, "Vi phạm vừa được một Manager khác xử lý.");
+      await writeAudit(input.actorId, `traffic_violation.${decision}`, "incident_cases", id, {
+        amount: decision === "approve" ? amount : 0,
+        note: note.trim(),
+      });
+      return { data: { id: id.toString(), status, decision } };
     },
     policies: async input => {
       const data = await repository.collection("platform_policies").find({

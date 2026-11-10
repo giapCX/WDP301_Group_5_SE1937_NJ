@@ -13,6 +13,7 @@ import { createGarageIncidentRouter } from './routes/garage-incident.routes.js';
 import { createGaragePhotoRouter } from './routes/garage-photo.routes.js';
 import { createGarageWorkspaceRouter } from './routes/garage-workspace.routes.js';
 import { createOwnerRouter } from './routes/owner.routes.js';
+import { createOperationRouter } from './modules/operation/operation.routes.js';
 
 export function createApp(database, options = {}) {
   const app = express();
@@ -41,6 +42,7 @@ export function createApp(database, options = {}) {
   app.use('/api/garage', createGarageWorkspaceRouter(database));
   app.use('/api/manager', createManagerRouter(database));
   app.use('/api/owner', createOwnerRouter(database));
+  app.use('/api/operation', createOperationRouter(database));
   app.use(notFound);
   app.use(errorHandler);
   return app;

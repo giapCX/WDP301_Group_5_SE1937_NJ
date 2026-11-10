@@ -17,6 +17,7 @@ export function createManagerController(service) {
     incidents: async (request,response) => response.status(200).json(await service.incidents(input(request))),
     reviewCompensation: async (request,response) => response.status(200).json(await service.reviewCompensation(input(request))),
     reviewIncident: async (request,response) => response.status(200).json(await service.reviewIncident(input(request))),
+    reviewTrafficViolation: async (request,response) => response.status(200).json(await service.reviewTrafficViolation(input(request))),
     policies: async (request,response) => response.status(200).json(await service.policies(input(request))),
     updatePolicy: async (request,response) => response.status(201).json(await service.updatePolicy(input(request))),
     staff: async (request,response) => response.status(200).json(await service.staff(input(request))),

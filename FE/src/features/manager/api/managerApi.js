@@ -51,6 +51,8 @@ export const reviewCompensation = (id, body) =>
   patchApi(`/manager/incidents/${id}/compensation`, body);
 export const reviewIncident = (id, body) =>
   patchApi(`/manager/incidents/${id}/review`, body);
+export const reviewTrafficViolation = (id, body) =>
+  patchApi(`/manager/incidents/${id}/violation`, body);
 export const updatePolicy = (type, body) =>
   putApi(`/manager/policies/${type}`, body);
 export const updateStaff = (id, body) => patchApi(`/manager/staff/${id}`, body);
