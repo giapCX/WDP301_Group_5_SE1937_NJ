@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Icon from './Icon';
-import { canAccessGarage, clearSession, getCurrentUser } from '../features/auth/session';
+import { canAccessGarage, canAccessOwner, clearSession, getCurrentUser } from '../features/auth/session';
 
 export function Brand({ light = false }) {
   return (
@@ -51,6 +51,7 @@ export default function SiteHeader({ onLogin }) {
           <a href="#chu-xe">Trở thành chủ xe</a>
           <a href="#huong-dan">Hướng dẫn</a>
           <a href="#ve-xedi">Về chúng tôi</a>
+          {canAccessOwner(currentUser) && <a href="/owner">Không gian chủ xe</a>}
           {canAccessGarage(currentUser) && <a href="/garage">Không gian gara</a>}
         </nav>
         <div className="header-actions">
@@ -86,8 +87,8 @@ export default function SiteHeader({ onLogin }) {
               Đăng nhập
             </button>
           )}
-          <a className="button button-primary header-host" href="#chu-xe">
-            <span>＋</span> Đăng xe cho thuê
+          <a className="button button-primary header-host" href={canAccessOwner(currentUser) ? '/owner' : '#chu-xe'}>
+            <span>＋</span> {canAccessOwner(currentUser) ? 'Không gian chủ xe' : 'Đăng xe cho thuê'}
           </a>
           <button
             className="icon-button mobile-menu"

@@ -51,6 +51,53 @@ test('owner dashboard is role-protected and only returns the signed-in owner rec
   assert.equal(result.status, 200, JSON.stringify(result));
   assert.ok(result.body.data.vehicles.every((vehicle) => vehicle.id !== otherVehicle?._id.toString()));
   assert.ok(result.body.data.agreements.every((agreement) => agreement.number));
+  assert.equal(result.body.data.payoutAccount?.accountMasked, '****1001');
+});
+
+test('owner signs a pending management agreement and no other owner can access it', async () => {
+  const vehicle = await models.Vehicle.findOne({ owner_id: ownerId }).lean();
+  const agreement = await models.ManagementAgreement.create({
+    vehicle_id: vehicle._id, owner_id: ownerId, agreement_number: `MGMT-TEST-${Date.now()}`,
+    commission_rate_pct: 10, status: 'pending_signatures', created_at: new Date(), updated_at: new Date(),
+  });
+  const detail = await request(`/owner/agreements/${agreement._id}`);
+  assert.equal(detail.status, 200);
+  assert.equal(detail.body.data.canOwnerSign, true);
+  const signed = await request(`/owner/agreements/${agreement._id}/sign`, 'POST', { acceptedTerms: true, signatureName: 'Test Owner' });
+  assert.equal(signed.status, 200, JSON.stringify(signed));
+  const updated = await models.ManagementAgreement.findById(agreement._id).lean();
+  assert.equal(updated.status, 'pending_signatures');
+  assert.equal(updated.signature_info.owner_signature_name, 'Test Owner');
+  assert.equal((await request(`/owner/agreements/${agreement._id}`, 'GET', undefined, renterToken)).status, 403);
+});
+
+test('owner payout, withdrawal and incident requests are scoped to the owner account', async () => {
+  const now = new Date();
+  const vehicle = await models.Vehicle.create({
+    owner_id: ownerId, license_plate: `TEST-${Date.now()}`, brand: 'Test', model: 'Owner flow',
+    onboarding_status: 'approved', physical_status: 'at_garage', created_at: now, updated_at: now,
+  });
+  const agreement = await models.ManagementAgreement.create({
+    vehicle_id: vehicle._id, owner_id: ownerId, agreement_number: `MGMT-WITHDRAW-${Date.now()}`,
+    commission_rate_pct: 10, status: 'active', created_at: now, updated_at: now,
+  });
+  const settlement = await models.OwnerSettlement.create({
+    owner_id: ownerId, vehicle_id: vehicle._id, management_agreement_id: agreement._id,
+    net_owner_payout: 150000, payout_status: 'payable', created_at: now,
+  });
+  const payout = await request('/owner/payout-requests', 'POST', {});
+  assert.equal(payout.status, 201, JSON.stringify(payout));
+  const reserved = await models.OwnerSettlement.findById(settlement._id).lean();
+  assert.equal(reserved.payout_status, 'payout_requested');
+  const payment = await models.PaymentTransaction.findById(payout.body.data.transactionId).lean();
+  assert.equal(payment.provider_response.account_masked, '****1001');
+  assert.ok(payment.provider_response.account_token);
+  const withdrawal = await request('/owner/vehicle-withdrawals', 'POST', { vehicleId: vehicle._id.toString(), reason: 'Cần sử dụng xe cho gia đình.' });
+  assert.equal(withdrawal.status, 201, JSON.stringify(withdrawal));
+  assert.equal((await models.ManagementAgreement.findById(agreement._id).lean()).status, 'termination_requested');
+  const incident = await request('/owner/incidents', 'POST', { vehicleId: vehicle._id.toString(), caseType: 'vehicle_damage', description: 'Xe có vết xước mới ở cản trước sau khi bàn giao.' });
+  assert.equal(incident.status, 201, JSON.stringify(incident));
+  assert.equal((await models.IncidentCase.findById(incident.body.data.id).lean()).vehicle_id.toString(), vehicle._id.toString());
 });
 
 test('vehicle registration stores private files, signs a management agreement and submits the vehicle', async () => {

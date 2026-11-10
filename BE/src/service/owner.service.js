@@ -43,13 +43,13 @@ export function createOwnerService(repository) {
   return {
     async dashboard(actor) {
       const ownerId = await actorId(actor);
-      const [vehicles, settlements, agreements, withdrawals, incidents] = await Promise.all([
+      const [vehicles, settlements, agreements, withdrawals] = await Promise.all([
         repository.findVehicles(ownerId),
         repository.findSettlements(ownerId),
         repository.findAgreements(ownerId),
         repository.findWithdrawalRequests(ownerId),
-        repository.findIncidents(ownerId),
       ]);
+      const incidents = await repository.findIncidents(vehicles.map((vehicle) => vehicle._id));
       const vehiclesById = new Map(vehicles.map((vehicle) => [vehicle._id.toString(), vehicle]));
       const totals = settlements.reduce((result, item) => {
         result.gross += Number(item.gross_rental_revenue) || 0;
@@ -66,6 +66,9 @@ export function createOwnerService(repository) {
           operatingStatus: vehicle.physical_status, updatedAt: vehicle.updated_at || vehicle.created_at,
         })),
         totals,
+        payoutAccount: actor.user?.payout_profile?.bank_name && actor.user?.payout_profile?.account_masked
+          ? { bankName: actor.user.payout_profile.bank_name, accountMasked: actor.user.payout_profile.account_masked }
+          : null,
         settlements: settlements.map((item) => ({
           id: item._id.toString(), periodStart: item.period_start, periodEnd: item.period_end,
           gross: Number(item.gross_rental_revenue) || 0,
@@ -129,12 +132,11 @@ export function createOwnerService(repository) {
       return { id: agreement._id.toString(), number: agreement.agreement_number, status: active ? 'active' : 'pending_signatures', signedAt: now };
     },
 
-    async requestPayout(body, actor) {
+    async requestPayout(_body, actor) {
       const ownerId = await actorId(actor);
-      const bankName = text(body?.bankName, 'Ngân hàng', { max: 80 });
-      const accountName = text(body?.accountName, 'Tên chủ tài khoản', { max: 120 });
-      const accountNumber = text(body?.accountNumber, 'Số tài khoản', { min: 6, max: 34 }).replace(/[\s-]/g, '');
-      if (!/^[\p{L}0-9]+$/u.test(accountNumber)) throw httpError(400, 'Số tài khoản không hợp lệ.');
+      const payoutProfile = actor.user?.payout_profile;
+      if (!payoutProfile?.bank_name || !payoutProfile?.account_token || !payoutProfile?.account_masked)
+        throw httpError(400, 'Bạn cần liên kết tài khoản ngân hàng trước khi yêu cầu chi trả.');
       const available = await repository.findPayableSettlements(ownerId);
       let amount = 0;
       const selected = [];
@@ -154,12 +156,12 @@ export function createOwnerService(repository) {
         }
         const now = new Date();
         const idempotencyKey = `owner-payout:${ownerId}:${transactionId}`;
-        await repository.createPaymentTransaction({ _id: transactionId, initiator_user_id: ownerId, transaction_type: 'owner_payout', direction: 'outbound', amount, currency: 'VND', payment_method: 'bank_transfer', provider: 'manual', provider_response: { bank_name: bankName, account_name: accountName, account_number: accountNumber }, idempotency_key: idempotencyKey, status: 'pending', created_at: now });
+        await repository.createPaymentTransaction({ _id: transactionId, initiator_user_id: ownerId, transaction_type: 'owner_payout', direction: 'outbound', amount, currency: 'VND', payment_method: 'bank_transfer', provider: 'manual', provider_response: { bank_name: payoutProfile.bank_name, account_token: payoutProfile.account_token, account_masked: payoutProfile.account_masked }, idempotency_key: idempotencyKey, status: 'pending', created_at: now });
       } catch (error) {
         if (reserved.length) await repository.releaseSettlements(reserved, transactionId);
         throw error;
       }
-      await repository.createAudit({ actor_user_id: ownerId, action: 'withdrawal.request', entity_type: 'payment_transaction', entity_id: transactionId, sanitized_changes: { amount, settlement_count: reserved.length }, created_at: new Date() }).catch(() => {});
+      await repository.createAudit({ actor_user_id: ownerId, action: 'payout.request', entity_type: 'payment_transaction', entity_id: transactionId, sanitized_changes: { amount, settlement_count: reserved.length }, created_at: new Date() }).catch(() => {});
       return { transactionId: transactionId.toString(), amount, status: 'pending' };
     },
 
@@ -172,6 +174,7 @@ export function createOwnerService(repository) {
       ]);
       if (!vehicle) throw httpError(404, 'Không tìm thấy xe thuộc tài khoản của bạn.');
       if (!['approved', 'revision_required'].includes(vehicle.onboarding_status)) throw httpError(400, 'Chỉ xe đã được tiếp nhận mới có thể yêu cầu rút khỏi nền tảng.');
+      if (['rented', 'maintenance'].includes(vehicle.physical_status)) throw httpError(409, 'Xe đang vận hành hoặc bảo dưỡng, chưa thể yêu cầu rút.');
       if (activeBookings.length) throw httpError(409, 'Xe còn chuyến đã xác nhận hoặc đang diễn ra; vui lòng hoàn tất trước khi rút xe.');
       if (existing) throw httpError(409, 'Xe đã có yêu cầu rút đang được xử lý.');
       const requestedReturnAt = body.requestedReturnAt ? new Date(body.requestedReturnAt) : undefined;
