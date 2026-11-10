@@ -15,6 +15,7 @@ export function createApp(database) {
   app.disable('x-powered-by');
   app.use(cors({ origin: env.frontendOrigin }));
   app.use('/api/owner/vehicles', express.json({ limit: '48mb' }));
+  app.use('/api/owner', express.json({ limit: '20mb' }));
   app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/health', async (_request, response) => {
