@@ -1260,7 +1260,7 @@
   padding: 7px;
   color: #8b9ab0;
 }
-.gs-photo-grid button {
+.gs-photo-grid .gs-photo-remove {
   position: absolute;
   right: 4px;
   top: 4px;
@@ -1270,6 +1270,101 @@
   background: #ffffffed;
   color: #607697;
   border-radius: 50%;
+}
+.gs-photo-grid .gs-photo-preview {
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: #f3f6fb;
+  cursor: zoom-in;
+}
+.gs-photo-preview img {
+  display: block;
+}
+.gs-photo-preview:focus-visible {
+  outline: 3px solid #155eef;
+  outline-offset: -3px;
+}
+.gs-photo-viewer {
+  width: min(1200px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  height: min(900px, 92dvh);
+  max-height: 92dvh;
+  padding: 0;
+  border: 1px solid #dce4ef;
+  border-radius: 14px;
+  background: #101828;
+  color: #fff;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.gs-photo-viewer[open] {
+  display: flex;
+  flex-direction: column;
+}
+.gs-photo-viewer::backdrop {
+  background: #101828cc;
+}
+.gs-photo-viewer-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  color: #17243a;
+}
+.gs-photo-viewer-heading > div:first-child {
+  min-width: 0;
+}
+.gs-photo-viewer-heading h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.gs-photo-viewer-heading p {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #607697;
+}
+.gs-photo-viewer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.gs-photo-viewer-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px;
+  border: 1px solid #dce4ef;
+  border-radius: 7px;
+  background: #f8faff;
+  color: #155eef;
+  cursor: pointer;
+}
+.gs-photo-viewer-stage {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+}
+.gs-photo-viewer-stage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.gs-photo-viewer-stage.is-zoomed img {
+  width: 200%;
+  height: auto;
+  max-width: none;
+  max-height: none;
 }
 .gs-recommendations {
   display: flex;

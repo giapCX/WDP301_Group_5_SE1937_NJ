@@ -89,6 +89,7 @@ export default function GaragePhotoUpload({
             {!readOnly && (
               <button
                 type="button"
+                className="gs-photo-remove"
                 disabled={loading}
                 aria-label={`Xóa ảnh ${photo.name}`}
                 onClick={() => onChange(photos.filter((_, i) => i !== index))}
