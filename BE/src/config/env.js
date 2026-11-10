@@ -17,4 +17,5 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET || 'xedi-super-secret-jwt-key-2026-development',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   defaultUserPassword: process.env.DEFAULT_USER_PASSWORD || '123456',
+  garageUploadDirectory: process.env.GARAGE_UPLOAD_DIRECTORY || fileURLToPath(new URL('../../storage/garage-photos/', import.meta.url)),
 };

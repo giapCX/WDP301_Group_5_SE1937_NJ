@@ -12,6 +12,11 @@ export const rentalHandoverSchema = createSchema({
   odometer_km: integer({ min: 0, max: 10000000 }),
   fuel_level_pct: integer({ min: 0, max: 100 }),
   vehicle_condition: embedded({
+    exterior: String,
+    interior: String,
+    engine: String,
+    tires: String,
+    note: String,
     condition: String,
     photo_keys: arrayOf(String),
     renter_signature_recorded: Boolean,
@@ -23,5 +28,8 @@ export const rentalHandoverSchema = createSchema({
     basis: String,
   })),
   status: String,
+  version: integer({ min: 0 }),
+  confirmed_from_version: integer({ min: 0 }),
+  updated_at: Date,
   created_at: Date,
 });

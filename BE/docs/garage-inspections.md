@@ -1,6 +1,6 @@
 # API kiểm định đầu vào — Garage Staff
 
-Base URL: `http://127.0.0.1:5000/api/garage`. API xử lý **kiểm định onboarding trước khi tiếp nhận xe từ chủ xe**. Chưa có kiểm định định kỳ, duyệt kết quả của Manager hoặc tích hợp FE `/garage`.
+Base URL: `http://127.0.0.1:5000/api/garage`. API xử lý **kiểm định onboarding trước khi tiếp nhận xe từ chủ xe**. FE `/garage` đã nối các API này qua workspace; xem [luồng Garage Staff](garage-staff.md). Kiểm định định kỳ và duyệt kết quả của Manager để bước sau.
 
 ## Cấu hình và quyền
 
@@ -75,7 +75,7 @@ Nếu có `openInspection`, mở biên bản đó. `eligible` ở danh sách xe 
 
 Tạo nháp chỉ bắt buộc `vehicleId`. Các trường báo cáo được phép thiếu và bổ sung sau. BE tự đặt `inspection_type: onboarding`, `approval_status: draft`, `garage_staff_id` từ tài khoản hiện tại, `version: 0`. Nháp chưa có `inspected_at`, không được coi là kết quả đã kiểm tra.
 
-`condition` nhận `good`, `attention`, `damaged` cho bốn hạng mục. Ghi chú tối đa 1500 ký tự. `photoKeys` tối đa 4 khóa, mỗi khóa 250 ký tự; không nhận URL/base64 hoặc đường dẫn traversal. Chưa có API upload ảnh: client cần dịch vụ lưu ảnh để có key, ảnh không bắt buộc.
+`condition` nhận `good`, `attention`, `damaged` cho bốn hạng mục. Ghi chú tối đa 1500 ký tự. `photoKeys` tối đa 4 khóa, mỗi khóa 250 ký tự; không nhận URL/base64 hoặc đường dẫn traversal. Upload qua `POST /api/garage/photos` trước để có key; ảnh không bắt buộc.
 
 `recommendation` theo schema BE:
 

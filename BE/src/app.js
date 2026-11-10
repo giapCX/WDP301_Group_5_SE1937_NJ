@@ -8,8 +8,12 @@ import { createAuthRouter } from './routes/auth.routes.js';
 import { createGarageIntakesRouter } from './routes/garage-intake.routes.js';
 import { createGarageInspectionsRouter } from './routes/garage-inspection.routes.js';
 import { createManagerRouter } from './routes/manager.routes.js';
+import { createGarageHandoverRouter } from './routes/garage-handover.routes.js';
+import { createGarageIncidentRouter } from './routes/garage-incident.routes.js';
+import { createGaragePhotoRouter } from './routes/garage-photo.routes.js';
+import { createGarageWorkspaceRouter } from './routes/garage-workspace.routes.js';
 
-export function createApp(database) {
+export function createApp(database, options = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(cors({ origin: env.frontendOrigin }));
@@ -28,6 +32,10 @@ export function createApp(database) {
   app.use('/api/homepage', createHomepageRouter(database));
   app.use('/api/garage', createGarageIntakesRouter(database));
   app.use('/api/garage', createGarageInspectionsRouter(database));
+  app.use('/api/garage', createGarageHandoverRouter(database));
+  app.use('/api/garage', createGarageIncidentRouter(database));
+  app.use('/api/garage', createGaragePhotoRouter(database, options.garageUploadDirectory));
+  app.use('/api/garage', createGarageWorkspaceRouter(database));
   app.use('/api/manager', createManagerRouter(database));
   app.use(notFound);
   app.use(errorHandler);

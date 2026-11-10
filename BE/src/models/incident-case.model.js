@@ -11,6 +11,10 @@ export const incidentCaseSchema = createSchema({
   vehicle_id: { type: ObjectId, ref: 'Vehicle', required: true },
   booking_id: { type: ObjectId, ref: 'Booking' },
   case_type: String,
+  severity: { type: String, enum: ['low', 'medium', 'high'] },
+  source_handover_id: { type: ObjectId, ref: 'RentalHandover' },
+  request_key: String,
+  request_fingerprint: String,
   description: { type: String, required: true },
   evidence: arrayOf(embedded({
     kind: String,

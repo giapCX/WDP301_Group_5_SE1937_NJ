@@ -106,8 +106,14 @@ Frontend: `FE/src/app` va `FE/src/features/{auth,home,listings,garage,manager}`.
 
 ## API tiep nhan xe (Garage Staff)
 
-Da co API danh sach xe cho tiep nhan, kiem tra dieu kien, tao/sua nhap va xac nhan tiep nhan tai `/api/garage`. Dung JWT tu API login va quyen hien tai trong database. Xac nhan dung MongoDB transaction, yeu cau replica set/Atlas. Huong dan endpoint, body, version va cach test: [BE/docs/garage-intakes.md](BE/docs/garage-intakes.md). FE `/garage` da noi xac thuc; du lieu cong viec van la ban thu nghiem local, chua noi cac API nghiep vu nay.
+Da co API danh sach xe cho tiep nhan, kiem tra dieu kien, tao/sua nhap va xac nhan tiep nhan tai `/api/garage`. Dung JWT tu API login va quyen hien tai trong database. Xac nhan dung MongoDB transaction, yeu cau replica set/Atlas. Huong dan endpoint, body, version va cach test: [BE/docs/garage-intakes.md](BE/docs/garage-intakes.md). FE `/garage` da noi du lieu that, gom phu kien, luu nhap va xac nhan.
 
 ## API kiem dinh xe (Garage Staff)
 
 Da co `/api/garage/inspection-vehicles`, `/api/garage/inspections` va luong tao/sua nhap, gui de xuat kiem dinh onboarding. Can permission `vehicle.inspect`, doc lap voi `vehicle.intake`. Garage Staff chi gui sang `pending`, khong tu phe duyet xe. Partial unique index yeu cau MongoDB 6.0+; gui de xuat dung transaction nen can replica set/Atlas. Chi tiet request/response va mapping FE: [BE/docs/garage-inspections.md](BE/docs/garage-inspections.md).
+
+## Garage Staff: ban giao, nhan tra, su co va anh
+
+FE `/garage` dung `/api/garage/workspace` de hien cong viec, tong quan va lich su that; khong luu nghiep vu trong localStorage. Da co API nhap/xac nhan ban giao va nhan tra, doi chieu hien trang pickup, tu tao su co khi co hu hong moi, gui bao cao su co rieng va upload/doc anh qua JWT. Xe co hu hong moi duoc giu o maintenance; khong tu duyet boi thuong/hoan coc. Luong Manager de buoc sau.
+
+Chay `npm run db:setup` de bo sung index, sau do `npm run dev`. Can MongoDB replica set/Atlas de gui/xac nhan va tao su co. Anh mac dinh luu tai `BE/storage/garage-photos` (gitignore); co the dat `GARAGE_UPLOAD_DIRECTORY`. Chi tiet API, request/version, quyen va cach kiem thu: [BE/docs/garage-staff.md](BE/docs/garage-staff.md).

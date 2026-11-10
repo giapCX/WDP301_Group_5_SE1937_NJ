@@ -54,7 +54,7 @@ export const collections = [
     ],
   },
   { name: 'rental_agreements', unique: ['contract_number', 'booking_id'] },
-  { name: 'rental_handovers', indexes: [{ booking_id: 1, handover_type: 1 }] },
+  { name: 'rental_handovers', indexDefinitions: [{ key: { booking_id: 1, handover_type: 1 }, options: { unique: true, name: 'one_rental_handover_per_booking_type' } }] },
   {
     name: 'payment_transactions',
     unique: ['idempotency_key'],
@@ -66,6 +66,10 @@ export const collections = [
     name: 'incident_cases',
     unique: ['case_number'],
     indexes: [{ booking_id: 1 }, { status: 1, assigned_operation_staff_id: 1 }],
+    indexDefinitions: [
+      { key: { reported_by_user_id: 1, request_key: 1 }, options: { unique: true, partialFilterExpression: { request_key: { $type: 'string' } } } },
+      { key: { source_handover_id: 1 }, options: { unique: true, partialFilterExpression: { source_handover_id: { $type: 'objectId' } } } },
+    ],
   },
   {
     name: 'vehicle_withdrawal_requests',

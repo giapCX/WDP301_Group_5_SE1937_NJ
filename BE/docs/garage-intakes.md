@@ -1,6 +1,6 @@
 # API tiếp nhận xe — Garage Staff
 
-API nằm dưới `/api/garage`. Đây là luồng tiếp nhận xe từ chủ xe theo **hợp đồng quản lý**, khác với luồng nhận xe khách thuê trả. FE `/garage` hiện vẫn dùng dữ liệu mẫu; thay đổi này cung cấp API để nối FE ở bước tiếp theo.
+API nằm dưới `/api/garage`. Đây là luồng tiếp nhận xe từ chủ xe theo **hợp đồng quản lý**, khác với luồng nhận xe khách thuê trả. FE `/garage` đã nối API thật, gồm phụ kiện, lưu nháp và xác nhận; xem [luồng Garage Staff](garage-staff.md).
 
 ## Điều kiện sử dụng
 
@@ -102,7 +102,7 @@ Kết quả xác nhận: `{ data: <biên bản>, replayed: false }`. Gửi lại
 
 5. Gọi GET chi tiết/danh sách để hiển thị biên bản đã lưu.
 
-Ảnh hiện nhận **khóa file**, không nhận URL, binary hoặc base64. Tối đa 4 ảnh, mỗi key tối đa 250 ký tự. API upload ảnh và tạo PDF chưa nằm trong luồng này; FE cần chuyển ảnh qua dịch vụ lưu file trước khi gửi key.
+Biên bản nhận **khóa file**, không nhận URL, binary hoặc base64. Tối đa 4 ảnh, mỗi key tối đa 250 ký tự. FE upload qua `POST /api/garage/photos` trước khi gửi key. Chưa cung cấp xuất PDF.
 
 ## Kiểm thử
 

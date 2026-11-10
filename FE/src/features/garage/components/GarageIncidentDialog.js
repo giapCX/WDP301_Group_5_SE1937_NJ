@@ -4,12 +4,17 @@ import Icon from '../../../components/ui/Icon';
 import GaragePhotoUpload from './GaragePhotoUpload';
 
 export default function GarageIncidentDialog({
-  tasks,
+  tasks = [],
+  vehicles = [],
   incident,
   onSave,
   onClose,
 }) {
-  const [taskId, setTaskId] = useState(tasks[0]?.id || '');
+  const [vehicleId, setVehicleId] = useState(vehicles[0]?.id || '');
+  const [bookingId, setBookingId] = useState('');
+  const [requestId] = useState(() => window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [description, setDescription] = useState(incident?.description || '');
   const [severity, setSeverity] = useState(incident?.severity || 'medium');
   const [photos, setPhotos] = useState(incident?.photos || []);
@@ -18,31 +23,34 @@ export default function GarageIncidentDialog({
     <Modal
       title={incident ? `Báo cáo ${incident.id}` : 'Tạo báo cáo sự cố'}
       className="gs-dialog"
-      onClose={onClose}
+      onClose={busy || uploading ? () => {} : onClose}
     >
       <p className="gs-dialog-intro">
         Ghi nhận hiện trạng và chuyển bộ phận vận hành tiếp nhận, xác minh.
       </p>
       <form
         className="gs-report-form"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          const task = tasks.find((item) => item.id === taskId);
-          if (!task || description.trim().length < 10) {
+          if (busy || uploading) return;
+          if (!vehicleId || description.trim().length < 10) {
             setError('Chọn xe và mô tả sự cố ít nhất 10 ký tự.');
             return;
           }
-          onSave({
-            taskId,
-            vehicle: task.vehicle,
-            plate: task.plate,
+          setBusy(true);
+          setError('');
+          try { await onSave({
+            vehicleId,
+            ...(bookingId ? { bookingId } : {}),
             description: description.trim(),
             severity,
             photos,
-          });
+          }, requestId); }
+          catch (failure) { setError(failure.message); }
+          finally { setBusy(false); }
         }}
       >
-        <fieldset disabled={!!incident}>
+        <fieldset disabled={!!incident || busy || uploading}>
           <legend className="gs-form-section-title">
             <span>Thông tin sự cố</span>
           </legend>
@@ -55,17 +63,24 @@ export default function GarageIncidentDialog({
               />
             ) : (
               <select
-                value={taskId}
-                onChange={(e) => setTaskId(e.target.value)}
+                value={vehicleId}
+                onChange={(e) => { setVehicleId(e.target.value); setBookingId(''); }}
               >
-                {tasks.map((task) => (
-                  <option key={task.id} value={task.id}>
-                    {task.vehicle} · {task.plate}
+                <option value="">Chọn xe</option>
+                {vehicles.map((vehicle) => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.vehicle} · {vehicle.plate}
                   </option>
                 ))}
               </select>
             )}
           </label>
+          {!incident && <label>Đơn thuê liên quan (nếu có)
+            <select value={bookingId} onChange={(e) => setBookingId(e.target.value)}>
+              <option value="">Không gắn đơn thuê</option>
+              {[...new Map(tasks.filter((task) => task.vehicleId === vehicleId && task.bookingId).map((task) => [task.bookingId, task])).values()].map((task) => <option key={task.bookingId} value={task.bookingId}>{task.reference}</option>)}
+            </select>
+          </label>}
           <label>
             Mức độ ghi nhận
             <select
@@ -91,7 +106,8 @@ export default function GarageIncidentDialog({
         <GaragePhotoUpload
           photos={photos}
           onChange={setPhotos}
-          readOnly={!!incident}
+          readOnly={!!incident || busy}
+          onBusyChange={setUploading}
         />
         {error && (
           <p role="alert" className="gs-form-error">
@@ -103,13 +119,14 @@ export default function GarageIncidentDialog({
             type="button"
             className="gs-button gs-button-secondary"
             onClick={onClose}
+            disabled={busy || uploading}
           >
             Đóng
           </button>
           {!incident && (
-            <button type="submit" className="gs-button gs-button-primary">
+            <button type="submit" className="gs-button gs-button-primary" disabled={busy || uploading}>
               <Icon name="arrow" size={15} />
-              Gửi bộ phận vận hành
+              {busy ? 'Đang gửi...' : 'Gửi bộ phận vận hành'}
             </button>
           )}
         </div>

@@ -15,10 +15,13 @@ export function requireGarageStaff(database, permission = 'vehicle.intake') {
       ...(session.user.additional_role_ids || []),
     ].filter((id) => id instanceof ObjectId);
     // Read current permissions from MongoDB; JWT claims can outlive a role change.
-    const role = await repository.findRoleWithPermission(roleIds, permission);
-    if (!role) throw httpError(403, `Tài khoản không có quyền ${permission}.`);
+    const roles = await repository.findRolesByIds(roleIds);
+    const permissions = [...new Set(roles.flatMap((role) => role.permissions || []))];
+    const required = Array.isArray(permission) ? permission : [permission];
+    if (!required.some((value) => permissions.includes(value))) throw httpError(403, `Tài khoản không có quyền ${required.join(' / ')}.`);
     Object.assign(request, session);
     request.actor = { _id: session.user._id };
+    request.garagePermissions = permissions;
     next();
   };
 }

@@ -2,6 +2,11 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import App from '../../../app/App';
 import { clearSession, saveSession } from '../../auth/session';
 
+jest.mock('../api/garageApi', () => ({
+  ...jest.requireActual('../api/garageApi'),
+  getGarageWorkspace: jest.fn(async () => ({ data: { tasks: [], incidents: [], history: [], vehicles: [], permissions: [] } })),
+}));
+
 const staff = {
   _id: 'garage-user', full_name: 'Nhân viên thật',
   roles: ['GARAGE_STAFF'], permissions: ['vehicle.intake'],

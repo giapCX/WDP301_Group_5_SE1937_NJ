@@ -1,112 +1,53 @@
-import { useEffect, useState } from 'react';
-import { createGarageDemo, taskKinds } from '../data/garage';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { clearSession } from '../../auth/session';
+import { getGarageWorkspace, reportGarageIncident, saveGarageTask } from '../api/garageApi';
 
-export const GARAGE_STORAGE_KEY = 'xedi.garage.preview.v1';
-function loadWorkspace() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(GARAGE_STORAGE_KEY));
-    if (
-      saved?.version === 1 &&
-      Array.isArray(saved.tasks) &&
-      Array.isArray(saved.incidents) &&
-      Array.isArray(saved.history) &&
-      saved.tasks.every((task) => task.id && task.kind && task.requirements)
-    )
-      return saved;
-  } catch {
-    /* Start fresh when storage is unavailable or contains an invalid draft. */
-  }
-  return createGarageDemo();
-}
+const empty = { tasks: [], incidents: [], history: [], vehicles: [], permissions: [] };
 export default function useGarageWorkspace() {
-  const [workspace, setWorkspace] = useState(loadWorkspace);
-  const [storageError, setStorageError] = useState('');
-  useEffect(() => {
+  const [workspace, setWorkspace] = useState(empty);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const tasks = useRef([]);
+  const checkpoints = useRef(new Map());
+  const request = useRef();
+  const alive = useRef(true);
+  const reload = useCallback(async () => {
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
+    setLoading(true);
+    setError('');
     try {
-      localStorage.setItem(GARAGE_STORAGE_KEY, JSON.stringify(workspace));
-      setStorageError('');
-    } catch {
-      setStorageError(
-        'Trình duyệt chưa lưu được thay đổi. Hãy giảm số ảnh đính kèm; dữ liệu hiện chỉ được giữ trong trang đang mở.',
-      );
+      const { data } = await getGarageWorkspace({ signal: controller.signal });
+      if (!controller.signal.aborted && alive.current) {
+        tasks.current = data.tasks;
+        checkpoints.current.clear();
+        setWorkspace(data);
+      }
+    } catch (failure) {
+      if (!controller.signal.aborted && alive.current) {
+        if (failure.status === 401) clearSession();
+        setError(failure.message);
+      }
+    } finally {
+      if (!controller.signal.aborted && alive.current) setLoading(false);
     }
-  }, [workspace]);
-  function saveReport(id, report, draft) {
-    setWorkspace((previous) => {
-      const task = previous.tasks.find((item) => item.id === id);
-      if (!task || ['submitted', 'completed'].includes(task.status))
-        return previous;
-      const time = new Date().toISOString();
-      const status = draft
-        ? 'draft'
-        : task.kind === 'inspection'
-          ? 'submitted'
-          : 'completed';
-      const damage =
-        !draft &&
-        task.kind === 'return' &&
-        ['exterior', 'interior', 'engine', 'tires'].some(
-          (key) => report[key] !== 'good',
-        );
-      const incident = damage
-        ? {
-            id: `SC-${Date.now()}`,
-            taskId: id,
-            vehicle: task.vehicle,
-            plate: task.plate,
-            description: report.note,
-            severity: 'medium',
-            photos: report.photos,
-            time,
-            status: 'submitted',
-          }
-        : null;
-      return {
-        ...previous,
-        tasks: previous.tasks.map((item) =>
-          item.id === id ? { ...item, status, report, updatedAt: time } : item,
-        ),
-        incidents: incident
-          ? [incident, ...previous.incidents]
-          : previous.incidents,
-        history: [
-          {
-            id: `LOG-${Date.now()}`,
-            time,
-            title: `${draft ? 'Lưu nháp' : task.kind === 'inspection' ? 'Gửi đề xuất' : 'Hoàn tất'} ${taskKinds[task.kind].toLowerCase()}`,
-            detail: `${task.id} · ${task.vehicle} · ${task.plate}${damage ? ' · Đã chuyển báo cáo sự cố cho vận hành' : ''}`,
-            type: status,
-          },
-          ...previous.history,
-        ],
-      };
-    });
+  }, []);
+  useEffect(() => {
+    alive.current = true;
+    reload();
+    return () => { alive.current = false; request.current?.abort(); };
+  }, [reload]);
+  async function saveReport(id, report, draft) {
+    const task = tasks.current.find((item) => item.id === id);
+    if (!task || task.readOnly) throw new Error('Không thể chỉnh sửa biên bản này.');
+    await saveGarageTask({ ...task, ...checkpoints.current.get(id) }, report, draft, (value) => checkpoints.current.set(id, value));
+    checkpoints.current.delete(id);
+    await reload();
   }
-  function addIncident(incident) {
-    const time = new Date().toISOString();
-    setWorkspace((previous) => ({
-      ...previous,
-      incidents: [
-        { ...incident, id: `SC-${Date.now()}`, time, status: 'submitted' },
-        ...previous.incidents,
-      ],
-      history: [
-        {
-          id: `LOG-${Date.now()}`,
-          time,
-          title: 'Gửi báo cáo sự cố',
-          detail: `${incident.vehicle} · ${incident.plate}`,
-          type: 'submitted',
-        },
-        ...previous.history,
-      ],
-    }));
+  async function addIncident(incident, requestId) {
+    await reportGarageIncident(incident, requestId);
+    await reload();
   }
-  return {
-    workspace,
-    storageError,
-    saveReport,
-    addIncident,
-    reset: () => setWorkspace(createGarageDemo()),
-  };
+  return { workspace, loading, error, reload, saveReport, addIncident };
 }

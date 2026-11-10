@@ -66,3 +66,15 @@ async function updateApi(method, path, body, { signal } = {}) {
 
 export const patchApi = (path, body, options) => updateApi('PATCH', path, body, options);
 export const putApi = (path, body, options) => updateApi('PUT', path, body, options);
+
+export async function getBlobApi(path, { signal } = {}) {
+  const token = getSessionToken();
+  const response = await fetch(`/api${path}`, { signal, headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const error = new Error(body.error?.message || 'Không tải được tệp.');
+    error.status = response.status;
+    throw error;
+  }
+  return response.blob();
+}
