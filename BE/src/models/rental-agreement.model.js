@@ -15,6 +15,7 @@ export const rentalAgreementSchema = createSchema({
   renter_details_snapshot: embedded({
     renter_id: { type: ObjectId, ref: 'User' },
     verified_license: Boolean,
+    full_name: String,
   }),
   terms_snapshot: embedded({
     daily_rate: Number,
@@ -23,6 +24,12 @@ export const rentalAgreementSchema = createSchema({
     start_at: Date,
     end_at: Date,
     signature_method: String,
+    mileage_policy: Schema.Types.Mixed,
+    rental_policy: Schema.Types.Mixed,
+    cancellation: Schema.Types.Mixed,
+    deposit_refund: Schema.Types.Mixed,
+    discount_code: String,
+    discount_amount: Number,
   }),
   signing_info: embedded({
     method: String,
