@@ -8,6 +8,8 @@ Baseline bao phủ toàn bộ UC01–UC41 trong SRS và các nghiệp vụ đư�
 
 ## 1 Phạm vi và vai trò
 
+**Trạng thái triển khai phần hợp đồng:** xác nhận điện tử bằng tài khoản và họ tên, hai bên ký riêng; chưa tích hợp OTP/chữ ký số. Owner đăng ký xe chỉ tạo hợp đồng nháp, ký sau khi xe được duyệt. Xem [luồng ký đang chạy và giới hạn hiện tại](CONTRACT_SIGNING.md). Các mô tả OTP/thanh toán bên dưới tiếp tục là đặc tả đích.
+
 Phiên bản đầu vận hành nhận và trả tại cùng gara, thuê theo ngày, tối thiểu 24 giờ. Giao xe tận nơi, trả khác gara, thuê có tài xế, đổi xe giữa chuyến và định vị GPS liên tục là phần mở rộng; không hiển thị như chức năng đang khả dụng. GPS trong báo cáo sự cố là vị trí được người dùng chia sẻ, không mặc nhiên là thiết bị theo dõi trên xe.
 
 | Vai trò | Trách nhiệm chính | Giới hạn |

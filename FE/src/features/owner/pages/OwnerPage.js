@@ -67,7 +67,7 @@ export default function OwnerPage() {
   const user = getCurrentUser();
   const onCreated = result => {
     setRegisterOpen(false);
-    setNotice(`Đã ký hợp đồng ${result.agreementNumber} và gửi hồ sơ. Xe sẽ được kiểm tra trước khi niêm yết.`);
+    setNotice('Đã gửi hồ sơ xe. Sau khi Manager duyệt, hai bên sẽ ký hợp đồng quản lý riêng.');
     setView('vehicles');
     refresh();
   };

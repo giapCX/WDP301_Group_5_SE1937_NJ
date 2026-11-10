@@ -27,6 +27,8 @@ Hướng dẫn các danh sách và tham số phân trang: [Phân trang](docs/PAG
 
 Dữ liệu và cách chạy thử bốn ca Garage–Manager: [Hướng dẫn demo](docs/GARAGE_MANAGER_DEMO.md).
 
+Các bước Owner/Renter và Manager ký riêng từng bên: [Luồng ký hợp đồng](docs/CONTRACT_SIGNING.md).
+
 Cần Node.js >= 20.19 và **MongoDB Server local có replica set**. Cấu hình mặc định dùng local, không cần Atlas. MongoDB Compass là công cụ xem/quản lý dữ liệu. Xem [hướng dẫn local](#dùng-mongodb-local-không-cần-atlas); [Atlas](#dùng-mongodb-atlas-cho-nhóm) là lựa chọn nếu cần database chung trên cloud.
 
 Backend dung kien truc `Routes -> Controller -> Service -> Repository -> Mongoose Model`. Khi cap nhat tu ban Native Driver, chay `npm ci --prefix BE` va `npm run db:setup`; database hien co tiep tuc dung duoc, khong can seed lai. Chi tiet schema, connection va transaction xem [kien truc backend](docs/ARCHITECTURE.md#mongoose-và-dữ-liệu-hiện-có).

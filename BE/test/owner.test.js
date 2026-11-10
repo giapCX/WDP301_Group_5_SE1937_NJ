@@ -54,7 +54,7 @@ test('owner dashboard is role-protected and only returns the signed-in owner rec
   assert.equal(result.body.data.payoutAccount?.accountMasked, '****1001');
 });
 
-test('owner signs a pending management agreement and no other owner can access it', async () => {
+test('owner cannot sign an unprepared legacy agreement and other roles cannot access owner endpoints', async () => {
   const vehicle = await models.Vehicle.findOne({ owner_id: ownerId }).lean();
   const agreement = await models.ManagementAgreement.create({
     vehicle_id: vehicle._id, owner_id: ownerId, agreement_number: `MGMT-TEST-${Date.now()}`,
@@ -62,12 +62,12 @@ test('owner signs a pending management agreement and no other owner can access i
   });
   const detail = await request(`/owner/agreements/${agreement._id}`);
   assert.equal(detail.status, 200);
-  assert.equal(detail.body.data.canOwnerSign, true);
+  assert.equal(detail.body.data.canOwnerSign, false);
   const signed = await request(`/owner/agreements/${agreement._id}/sign`, 'POST', { acceptedTerms: true, signatureName: 'Test Owner' });
-  assert.equal(signed.status, 200, JSON.stringify(signed));
+  assert.equal(signed.status, 409, JSON.stringify(signed));
   const updated = await models.ManagementAgreement.findById(agreement._id).lean();
   assert.equal(updated.status, 'pending_signatures');
-  assert.equal(updated.signature_info.owner_signature_name, 'Test Owner');
+  assert.equal(updated.signature_info?.owner_signed_at, undefined);
   assert.equal((await request(`/owner/agreements/${agreement._id}`, 'GET', undefined, renterToken)).status, 403);
 });
 
@@ -100,7 +100,7 @@ test('owner payout, withdrawal and incident requests are scoped to the owner acc
   assert.equal((await models.IncidentCase.findById(incident.body.data.id).lean()).vehicle_id.toString(), vehicle._id.toString());
 });
 
-test('vehicle registration stores private files, signs a management agreement and submits the vehicle', async () => {
+test('vehicle registration stores private files and an unsigned draft without impersonating either signer', async () => {
   const licensePlate = `90A-${Date.now().toString().slice(-5)}`;
   const body = {
     brand: 'Test', model: 'Owner Car', licensePlate, year: 2022, seats: 5,
@@ -122,16 +122,16 @@ test('vehicle registration stores private files, signs a management agreement an
   assert.equal(vehicle.owner_id.toString(), ownerId.toString());
   assert.equal(vehicle.documents.insurance.verified, false);
   assert.equal(vehicle.photos.length, 2);
-  assert.equal(agreement.status, 'active');
+  assert.equal(agreement.status, 'draft');
   assert.equal(agreement.commission_rate_pct, 10);
-  assert.equal(agreement.signature_info.method, 'electronic_acceptance');
-  assert.ok(agreement.signature_info.owner_signed_at);
-  assert.ok(agreement.signature_info.platform_signed_at);
-  assert.ok(await models.AuditLog.findOne({ entity_id: agreement._id, action: 'agreement.sign' }).lean());
+  assert.equal(agreement.signature_info.owner_signed_at, undefined);
+  assert.equal(agreement.signature_info.platform_signed_at, undefined);
+  assert.equal(response.body.data.signedAt, null);
+  assert.ok(await models.AuditLog.findOne({ entity_id: agreement._id, action: 'agreement.draft' }).lean());
 });
 
 test('registration rejects missing agreement acceptance and duplicate or malformed inputs', async () => {
   const result = await request('/owner/vehicles', 'POST', { acceptedTerms: false });
   assert.equal(result.status, 400);
-  assert.match(result.body.error.message, /điều khoản/);
+  assert.match(result.body.error.message, /quy trình đăng ký/);
 });

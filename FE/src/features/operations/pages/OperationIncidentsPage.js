@@ -62,6 +62,7 @@ export default function OperationIncidentsPage() {
   const reload = () => setRevision((value) => value + 1);
   return <main className="operation-incidents-page">
     <header><div><h1>Xác minh sự cố</h1><p>Operation kiểm tra chứng cứ và lập đề xuất; Manager duyệt trách nhiệm và khoản tiền.</p></div><a href="/#trang-chu">Trang chủ</a><button onClick={reload}>Tải lại</button></header>
+    <p><a href="/#/contracts">Lập hợp đồng thuê cho booking đã duyệt →</a></p>
     {loading ? <p>Đang tải hồ sơ…</p> : error ? <p role="alert">{error}</p> : <>
       {items.map((item) => <article key={item._id}>
         <h2>{item.case_number}</h2><p>{item.description}</p><p>Trạng thái: {item.status}</p>

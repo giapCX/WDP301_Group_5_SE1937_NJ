@@ -6,9 +6,9 @@ export default function Pagination({ page = 1, pageSize = 10, total = 0, onPageC
   const current = Math.min(Math.max(1, page), pages);
   return <nav className="xedi-pagination" aria-label={label}>
     <span>{(current - 1) * pageSize + 1}–{Math.min(current * pageSize, total)} / {total}</span>
-    <label>Số dòng mỗi trang<select aria-label="Số dòng mỗi trang" value={pageSize} disabled={disabled} onChange={(event) => onPageSizeChange(Number(event.target.value))}>
+    {onPageSizeChange && <label>Số dòng mỗi trang<select aria-label="Số dòng mỗi trang" value={pageSize} disabled={disabled} onChange={(event) => onPageSizeChange(Number(event.target.value))}>
       {[10, 20, 50].map((size) => <option key={size} value={size}>{size}</option>)}
-    </select></label>
+    </select></label>}
     <div>
       <button type="button" aria-label="Trang đầu" disabled={disabled || current === 1} onClick={() => onPageChange(1)}>«</button>
       <button type="button" aria-label="Trang trước" disabled={disabled || current === 1} onClick={() => onPageChange(current - 1)}>‹</button>

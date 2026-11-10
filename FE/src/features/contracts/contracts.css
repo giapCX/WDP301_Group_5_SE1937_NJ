@@ -1,0 +1,29 @@
+.contracts-page { max-width: 1100px; margin: auto; padding: 32px 20px; color: #20304a; }
+.contracts-page header, .contracts-page nav, .contract-filters, .contract-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.contracts-page button, .contract-dialog button { padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #155eef; color: white; cursor: pointer; }
+.contracts-page button:disabled, .contract-dialog button:disabled { opacity: .5; cursor: default; }
+.contract-filters { justify-content: flex-start; margin: 24px 0; }
+.contracts-page label, .contract-dialog label { display: grid; gap: 8px; }
+.contracts-page select, .contracts-page input, .contract-dialog input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
+.contract-prepare, .contract-list article { padding: 20px; border: 1px solid #dce4ef; border-radius: 12px; margin-bottom: 16px; background: white; }
+.contract-prepare { display: grid; gap: 16px; }
+.contract-prepare h2, .contract-list h2 { font-size: 18px; margin: 0; }
+.contract-list article { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.contract-backdrop { position: fixed; inset: 0; background: #14223e99; z-index: 2000; display: grid; place-items: center; padding: 20px; }
+.contract-dialog { width: min(850px, 100%); max-height: 90vh; overflow: auto; border-radius: 16px; padding: 24px; background: white; color: #20304a; }
+.contract-content { line-height: 1.7; }
+.contract-content dl > div { display: grid; grid-template-columns: minmax(120px, 1fr) 2fr; gap: 16px; border-bottom: 1px solid #e5eaf0; padding: 8px 0; }
+.contract-content dd { margin: 0; overflow-wrap: anywhere; }
+.contract-content li { margin-bottom: 12px; }
+.contract-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.contract-sign-form { display: grid; gap: 16px; margin-top: 24px; border-top: 1px solid #dce4ef; padding-top: 20px; }
+.contract-sign-form .contract-accept { display: flex; align-items: flex-start; }
+.contracts-page [role=alert], .contract-dialog [role=alert] { background: #fff1f2; padding: 12px; color: #9f1239; }
+@media print {
+  body * { visibility: hidden; }
+  .contract-dialog, .contract-dialog * { visibility: visible; }
+  .contract-dialog { position: absolute; inset: 0; width: 100%; max-height: none; overflow: visible; box-shadow: none; }
+  .contract-toolbar, .contract-sign-form, .contract-dialog [role=alert], .contract-dialog [role=status] { display: none; }
+  .contract-backdrop { position: absolute; display: block; background: white; }
+}
+@media (max-width: 600px) { .contract-list article { align-items: flex-start; flex-direction: column; } .contract-dialog { padding: 16px; } }

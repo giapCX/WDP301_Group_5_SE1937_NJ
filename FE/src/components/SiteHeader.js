@@ -51,6 +51,7 @@ export default function SiteHeader({ onLogin }) {
           <a href="#chu-xe">Trở thành chủ xe</a>
           <a href="#huong-dan">Hướng dẫn</a>
           <a href="#ve-xedi">Về chúng tôi</a>
+          {currentUser && <a href="/#/contracts">Hợp đồng</a>}
           {canAccessOwner(currentUser) && <a href="/owner">Không gian chủ xe</a>}
           {canAccessGarage(currentUser) && <a href="/garage">Không gian gara</a>}
           {currentUser?.roles?.includes('OPERATION_STAFF') && <a href="/#/operations">Xác minh sự cố</a>}

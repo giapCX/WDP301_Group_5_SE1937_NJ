@@ -37,6 +37,7 @@ export default function ContractsWorkspace({
   return <section className="manager-panel workspace-panel">
     <div className="workspace-header"><div><h2>Quản lý hợp đồng</h2><p>Điều chỉnh hợp đồng đã ký bằng amendment chờ chữ ký các bên.</p></div></div>
     <label className="manager-period"><select value={contractType} onChange={event => setContractType(event.target.value)} aria-label="Loại hợp đồng"><option value="management">Hợp đồng quản lý xe</option><option value="rental">Hợp đồng thuê xe</option></select></label>
+    <p><a href="/#/contracts">Lập nội dung và ký hợp đồng phía nền tảng →</a></p>
     <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>MÃ HỢP ĐỒNG</th><th>TRẠNG THÁI</th><th>ĐIỀU KHOẢN HIỆN TẠI</th><th>AMENDMENT CHỜ KÝ</th><th>THAO TÁC</th></tr></thead><tbody>{contracts.map(item => <tr key={item.id}><td><strong>{item.number}</strong><span>{item.signedAt ? new Date(item.signedAt).toLocaleDateString('vi-VN') : 'Chưa ký'}</span></td><td><span className={`contract-status ${item.status}`}>{formatDisplayValue(item.status, 'status')}</span></td><td><DataFields className="contract-term-fields" data={item.terms} /></td><td><span className="amendment-count">{(item.amendments || []).filter(amendment => amendment.status === 'pending_signatures').length}</span><span>chờ chữ ký</span></td><td><div className="workspace-actions"><button className="action-review" onClick={() => {
                   const reason = window.prompt('Lý do rà soát:');
                   if (!reason) return;

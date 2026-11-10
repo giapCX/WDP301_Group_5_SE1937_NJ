@@ -49,4 +49,6 @@ export const bookingSchema = createSchema({
   status: { type: String, enum: ["pending", "awaiting_payment", "confirmed", "ongoing", "completed", "cancelled", "rejected", "expired"], required: true },
   created_at: Date,
   updated_at: Date,
+  payment_deadline_at: Date,
+  contract_workflow_version: integer({ min: 0 }),
 });

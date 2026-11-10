@@ -1,5 +1,6 @@
 import { Schema } from 'mongoose';
 import { createSchema, embedded, arrayOf } from './schema.js';
+import { contractDocument } from './contract-document.js';
 
 const { ObjectId } = Schema.Types;
 
@@ -28,7 +29,14 @@ export const rentalAgreementSchema = createSchema({
     method: String,
     renter_confirmed: Boolean,
     platform_signer_user_id: ObjectId,
+    renter_signer_user_id: ObjectId,
+    renter_signature_name: String,
+    renter_signed_at: Date,
+    platform_signature_name: String,
+    platform_signed_at: Date,
+    terms_version: String,
   }),
+  contract_document: contractDocument(),
   signed_document_key: String,
   amendments: arrayOf(embedded({ proposed_terms: Schema.Types.Mixed, reason: String, status: String, created_by_manager_id: ObjectId, created_at: Date })),
   manager_review: embedded({ note: String, reason: String, reviewed_by_manager_id: ObjectId, reviewed_at: Date }),

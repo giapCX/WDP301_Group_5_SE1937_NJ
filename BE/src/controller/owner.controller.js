@@ -6,7 +6,7 @@ export function createOwnerController(service) {
     },
     registerVehicle: async (request, response) => {
       const result = await service.registerVehicle(request.body, { user: request.user, tokenPayload: request.tokenPayload });
-      response.status(201).json({ data: result, message: 'Đã ký thỏa thuận quản lý và gửi hồ sơ xe để xác minh.' });
+      response.status(201).json({ data: result, message: 'Đã gửi hồ sơ xe. Hợp đồng sẽ được lập và ký riêng sau khi xe được duyệt.' });
     },
     agreementDetails: async (request, response) => {
       const data = await service.agreementDetails(request.params.id, { user: request.user, tokenPayload: request.tokenPayload });

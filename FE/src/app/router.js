@@ -7,6 +7,7 @@ import ManagerPage from '../features/manager/pages/ManagerPage';
 import OwnerPage from '../features/owner/pages/OwnerPage';
 import AdminPage from '../features/manager/pages/AdminPage';
 import OperationIncidentsPage from '../features/operations/pages/OperationIncidentsPage';
+import ContractsPage from '../features/contracts/ContractsPage';
 
 export default function AppRouter() {
   const [isLogin, setIsLogin] = useState(() => window.location.hash.startsWith('#/login'));
@@ -15,6 +16,7 @@ export default function AppRouter() {
   const [isManager, setIsManager] = useState(() => window.location.hash.startsWith('#/manager'));
   const [isAdmin, setIsAdmin] = useState(() => window.location.hash.startsWith('#/admin'));
   const [isOperations, setIsOperations] = useState(() => window.location.hash.startsWith('#/operations'));
+  const [isContracts, setIsContracts] = useState(() => window.location.hash.startsWith('#/contracts'));
 
   useEffect(() => {
     const onHashChange = () => {
@@ -24,13 +26,14 @@ export default function AppRouter() {
       setIsOwner(window.location.hash.startsWith('#/owner'));
       setIsAdmin(window.location.hash.startsWith('#/admin'));
       setIsOperations(window.location.hash.startsWith('#/operations'));
+      setIsContracts(window.location.hash.startsWith('#/contracts'));
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   useEffect(() => {
-    document.title = isOperations ? 'Xác minh sự cố — XeDi' : isGarage
+    document.title = isContracts ? 'Hợp đồng — XeDi' : isOperations ? 'Xác minh sự cố — XeDi' : isGarage
       ? 'Garage Staff — XeDi'
       : isOwner
       ? 'Cổng chủ xe — XeDi'
@@ -42,8 +45,9 @@ export default function AppRouter() {
           ? 'Quản lý vận hành — XeDi'
         : 'XeDi — Thuê xe tự lái, vi vu mọi nẻo đường';
     window.scrollTo(0, 0);
-  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations]);
+  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isContracts]);
 
+  if (isContracts) return <ContractsPage />;
   if (isGarage) return <GarageAccess>{(user) => <GaragePage user={user} />}</GarageAccess>;
   if (isOwner) return <OwnerPage />;
   if (isAdmin) return <AdminPage />;

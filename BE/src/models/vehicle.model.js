@@ -42,6 +42,7 @@ export const vehicleSchema = createSchema({
   created_at: Date,
   updated_at: Date,
   inspection_workflow_version: integer({ min: 0 }),
+  contract_workflow_version: integer({ min: 0 }),
   reviewed_by_manager_id: { type: ObjectId, ref: 'User' },
   review_note: String,
 });

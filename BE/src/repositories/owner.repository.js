@@ -21,7 +21,6 @@ export function createOwnerRepository(connection) {
     findWithdrawalRequests: (ownerId) => models.VehicleWithdrawalRequest.find({ owner_id: ownerId }).sort({ created_at: -1 }).lean(),
     findIncidents: (vehicleIds) => models.IncidentCase.find({ vehicle_id: { $in: vehicleIds } }).sort({ created_at: -1 }).lean(),
     findAgreement: (ownerId, agreementId) => models.ManagementAgreement.findOne({ _id: agreementId, owner_id: ownerId }).lean(),
-    signPendingAgreement: (ownerId, agreementId, signatureInfo, active) => models.ManagementAgreement.updateOne({ _id: agreementId, owner_id: ownerId, status: 'pending_signatures', $or: [{ 'signature_info.owner_signed_at': { $exists: false } }, { 'signature_info.owner_signed_at': null }] }, { $set: { signature_info: signatureInfo, status: active ? 'active' : 'pending_signatures', updated_at: signatureInfo.owner_signed_at } }),
     requestAgreementTermination: (ownerId, agreementId, at, reason) => models.ManagementAgreement.updateOne({ _id: agreementId, owner_id: ownerId, status: 'active' }, { $set: { status: 'termination_requested', termination_info: { reason, notice_method: 'owner_portal', legal_effective_at: at }, updated_at: at } }),
     findVehicle: (ownerId, vehicleId) => models.Vehicle.findOne({ _id: vehicleId, owner_id: ownerId }).lean(),
     findBooking: (vehicleId, bookingId) => models.Booking.findOne({ _id: bookingId, vehicle_id: vehicleId }).select({ _id: 1 }).lean(),

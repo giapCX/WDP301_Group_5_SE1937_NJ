@@ -29,7 +29,7 @@ function text(value, field, { min = 1, max = 120 } = {}) {
   return value.trim();
 }
 
-export function createOwnerService(repository) {
+export function createOwnerService(repository, contracts) {
   async function actorId(actor) {
     const id = actor?.tokenPayload?.sub;
     if (typeof id !== 'string' || !/^[a-f\d]{24}$/i.test(id)) throw httpError(401, 'Phiên đăng nhập không hợp lệ.');
@@ -92,44 +92,12 @@ export function createOwnerService(repository) {
     },
 
     async agreementDetails(agreementId, actor) {
-      const ownerId = await actorId(actor);
-      if (!/^[a-f\d]{24}$/i.test(agreementId || '')) throw httpError(400, 'Mã hợp đồng không hợp lệ.');
-      const item = await repository.findAgreement(ownerId, new ObjectId(agreementId));
-      if (!item) throw httpError(404, 'Không tìm thấy hợp đồng thuộc tài khoản của bạn.');
-      return {
-        id: item._id.toString(), number: item.agreement_number, status: item.status,
-        commissionRatePct: item.commission_rate_pct, startDate: item.start_date, endDate: item.end_date,
-        scope: item.authorization_scope, signature: item.signature_info,
-        canOwnerSign: item.status === 'pending_signatures' && !item.signature_info?.owner_signed_at,
-        terms: [
-          'Chủ xe ủy quyền XeDi quản lý thông tin niêm yết và điều phối đặt xe.',
-          `Phí nền tảng là ${item.commission_rate_pct}% trên phí thuê, không tính tiền đặt cọc.`,
-          'Chủ xe cung cấp giấy tờ hợp lệ và phối hợp bàn giao, bảo dưỡng phương tiện.',
-          'Việc chấm dứt hợp đồng cần gửi yêu cầu rút xe và hoàn tất các chuyến đang thực hiện.',
-          'Các khoản đối soát được thanh toán theo kỳ sau khi khấu trừ phí và điều chỉnh hợp lệ.',
-        ],
-      };
+      await actorId(actor);
+      return contracts.detail('management', agreementId, actor);
     },
-
     async signAgreement(agreementId, body, actor) {
-      const ownerId = await actorId(actor);
-      if (!/^[a-f\d]{24}$/i.test(agreementId || '')) throw httpError(400, 'Mã hợp đồng không hợp lệ.');
-      if (body?.acceptedTerms !== true) throw httpError(400, 'Bạn cần xác nhận đã đọc và đồng ý nội dung hợp đồng.');
-      const signatureName = text(body.signatureName, 'Tên người ký', { max: 120 });
-      const agreement = await repository.findAgreement(ownerId, new ObjectId(agreementId));
-      if (!agreement) throw httpError(404, 'Không tìm thấy hợp đồng thuộc tài khoản của bạn.');
-      if (agreement.status !== 'pending_signatures' || agreement.signature_info?.owner_signed_at) throw httpError(409, 'Hợp đồng này không còn chờ chữ ký chủ xe.');
-      const now = new Date();
-      const signatureInfo = {
-        ...(agreement.signature_info || {}), method: 'electronic_acceptance',
-        owner_signed_at: now, owner_signature_name: signatureName,
-        terms_version: 'xedi-management-v1',
-      };
-      const active = Boolean(signatureInfo.platform_signed_at);
-      const result = await repository.signPendingAgreement(ownerId, agreement._id, signatureInfo, active);
-      if (result.modifiedCount !== 1) throw httpError(409, 'Hợp đồng vừa được cập nhật. Tải lại danh sách rồi thử lại.');
-      await repository.createAudit({ actor_user_id: ownerId, action: 'agreement.sign', entity_type: 'management_agreement', entity_id: agreement._id, sanitized_changes: { agreement_number: agreement.agreement_number, terms_version: signatureInfo.terms_version }, created_at: now }).catch(() => {});
-      return { id: agreement._id.toString(), number: agreement.agreement_number, status: active ? 'active' : 'pending_signatures', signedAt: now };
+      await actorId(actor);
+      return contracts.sign('management', agreementId, body, actor);
     },
 
     async requestPayout(_body, actor) {
@@ -233,7 +201,7 @@ export function createOwnerService(repository) {
     async registerVehicle(body, actor) {
       const ownerId = await actorId(actor);
       if (!body || typeof body !== 'object' || Array.isArray(body)) throw httpError(400, 'Thông tin đăng ký xe không hợp lệ.');
-      if (body.acceptedTerms !== true) throw httpError(400, 'Bạn cần xác nhận đồng ý điều khoản quản lý xe trước khi ký.');
+      if (body.acceptedTerms !== true) throw httpError(400, 'Bạn cần xác nhận thông tin hồ sơ và đồng ý quy trình đăng ký xe.');
       const licensePlate = text(body.licensePlate, 'Biển số xe', { max: 16 }).toUpperCase();
       const brand = text(body.brand, 'Hãng xe', { max: 60 });
       const model = text(body.model, 'Dòng xe', { max: 60 });
@@ -291,7 +259,7 @@ export function createOwnerService(repository) {
         await repository.createVehicle(vehicle);
         const agreement = {
           _id: agreementId, vehicle_id: vehicleId, owner_id: ownerId,
-          agreement_number: agreementNumber, start_date: now, end_date: null,
+          agreement_number: agreementNumber,
           commission_rate_pct: 10,
           authorization_scope: {
             rental_contract_signing: true, vehicle_custody: true,
@@ -299,22 +267,17 @@ export function createOwnerService(repository) {
             owner_confirmation_per_booking: false,
             commission_basis: 'rental_fee_excluding_security_deposit',
           },
-          signature_info: {
-            method: 'electronic_acceptance', owner_signed_at: now,
-            platform_signed_at: now,
-            owner_signature_name: actor.user?.full_name || '',
-            terms_version: 'xedi-management-v1',
-          },
-          status: 'active', termination_info: null, created_at: now, updated_at: now,
+          signature_info: { terms_version: 'xedi-acceptance-v1' },
+          status: 'draft', termination_info: null, created_at: now, updated_at: now,
         };
         await repository.createAgreement(agreement);
         await repository.createAudit({
-          actor_user_id: ownerId, action: 'agreement.sign', entity_type: 'management_agreement',
+          actor_user_id: ownerId, action: 'agreement.draft', entity_type: 'management_agreement',
           entity_id: agreementId,
           sanitized_changes: { vehicle_id: vehicleId, agreement_number: agreementNumber, commission_rate_pct: 10, terms_version: 'xedi-management-v1' },
           created_at: now,
         });
-        return { id: vehicleId.toString(), agreementId: agreementId.toString(), agreementNumber, signedAt: now, commissionRatePct: 10, status: 'submitted' };
+        return { id: vehicleId.toString(), agreementId: agreementId.toString(), agreementNumber, signedAt: null, commissionRatePct: 10, status: 'submitted' };
       } catch (error) {
         const failure = error.code === 11000 && error.keyPattern?.license_plate
           ? httpError(409, 'Biển số xe đã được đăng ký trên hệ thống.')
