@@ -28,15 +28,11 @@ afterEach(() => {
   HTMLDialogElement.prototype.close = originalClose;
 });
 
-test('opens the authenticated image at full size, zooms and closes without loading a public URL', async () => {
+test('opens the authenticated image at full size and closes without loading a public URL', async () => {
   const { unmount } = render(<GaragePhotoPreview photo={photo} />);
   fireEvent.click(await screen.findByRole('button', { name: `Xem ảnh ${photo.name}` }));
   const viewer = screen.getByRole('dialog', { name: 'Ảnh hiện trạng' });
   expect(within(viewer).getByRole('img')).toHaveAttribute('src', 'blob:garage-photo');
-  fireEvent.click(within(viewer).getByRole('button', { name: 'Phóng to 2×' }));
-  expect(within(viewer).getByLabelText('Vùng xem ảnh')).toHaveClass('is-zoomed');
-  fireEvent.click(within(viewer).getByRole('button', { name: 'Vừa màn hình' }));
-  expect(within(viewer).getByLabelText('Vùng xem ảnh')).not.toHaveClass('is-zoomed');
   fireEvent.click(within(viewer).getByRole('button', { name: 'Đóng ảnh' }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(getGaragePhoto).toHaveBeenCalledTimes(1);

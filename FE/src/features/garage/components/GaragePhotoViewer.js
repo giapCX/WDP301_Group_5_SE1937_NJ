@@ -1,11 +1,10 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from '../../../components/ui/Icon';
 
 export default function GaragePhotoViewer({ source, name, onClose }) {
   const dialogRef = useRef(null);
   const titleId = useId();
-  const [zoomed, setZoomed] = useState(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -34,15 +33,12 @@ export default function GaragePhotoViewer({ source, name, onClose }) {
           <p title={name}>{name}</p>
         </div>
         <div className="gs-photo-viewer-actions">
-          <button type="button" aria-pressed={zoomed} onClick={() => setZoomed((value) => !value)}>
-            {zoomed ? 'Vừa màn hình' : 'Phóng to 2×'}
-          </button>
           <button type="button" aria-label="Đóng ảnh" onClick={onClose} autoFocus>
             <Icon name="close" size={20} />
           </button>
         </div>
       </header>
-      <div className={`gs-photo-viewer-stage${zoomed ? ' is-zoomed' : ''}`} tabIndex={0} aria-label="Vùng xem ảnh">
+      <div className="gs-photo-viewer-stage" aria-label="Vùng xem ảnh">
         <img src={source} alt={name} />
       </div>
     </dialog>,
