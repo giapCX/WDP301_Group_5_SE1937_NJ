@@ -1,0 +1,6 @@
+.xedi-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; color: #52627a; font-size: 12px; }
+.xedi-pagination label, .xedi-pagination > div { display: flex; align-items: center; gap: 8px; }
+.xedi-pagination button, .xedi-pagination select { min-height: 34px; padding: 6px 10px; border: 1px solid #dce4ef; border-radius: 6px; background: white; color: #155eef; cursor: pointer; }
+.xedi-pagination button:disabled, .xedi-pagination select:disabled { opacity: .45; cursor: default; }
+.xedi-pagination button:focus-visible, .xedi-pagination select:focus-visible { outline: 2px solid #155eef; outline-offset: 2px; }
+@media (max-width: 600px) { .xedi-pagination > div { justify-content: center; width: 100%; } }

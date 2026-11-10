@@ -4,6 +4,7 @@ import { createAuthRepository } from '../repositories/auth.repository.js';
 import { createManagerRepository } from '../repositories/manager.repository.js';
 import { createManagerGarageService } from '../service/manager-garage.service.js';
 import { httpError } from '../utils/http-error.js';
+import { findPageRows } from '../utils/pagination.js';
 
 export function createOperationIncidentRouter(connection) {
   const router = Router();
@@ -15,9 +16,10 @@ export function createOperationIncidentRouter(connection) {
     if (!roles.some((role) => role.code === 'OPERATION_STAFF' && role.permissions?.includes('incident.review'))) throw httpError(403, 'Chỉ Operation có quyền điều tra được lập đề xuất.');
     next();
   });
-  router.get('/incidents', async (_request, response) => response.json({
-    data: await repository.collection('incident_cases').find({ status: { $in: ['reported', 'open', 'investigating', 'awaiting_response', 'pending_review'] } }).sort({ created_at: -1 }).limit(200).exec(),
-  }));
+  router.get('/incidents', async (request, response) => {
+    const rows = await findPageRows(repository.collection('incident_cases'), { status: { $in: ['reported', 'open', 'investigating', 'awaiting_response', 'pending_review'] } }, { ...request.query, page: request.query.page ?? '1', limit: request.query.limit ?? '10' }, { sort: { created_at: -1 } });
+    response.json({ data: rows, pagination: rows.pagination });
+  });
   router.post('/incidents/:id/compensation-proposal', async (request, response) => response.status(201).json(await service.proposeCompensation({ id: request.params.id, body: request.body, actorId: request.user._id })));
   return router;
 }

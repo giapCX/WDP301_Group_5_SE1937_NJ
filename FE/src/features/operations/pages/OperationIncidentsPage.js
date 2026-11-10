@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getApi, postApi } from '../../../services/httpClient';
 import GaragePhotoPreview from '../../garage/components/GaragePhotoPreview';
 import './operationIncidents.css';
+import Pagination from '../../../components/ui/Pagination';
 
 function ProposalForm({ incident, onSaved }) {
   const pendingIndex = (incident.compensation_claims || []).findIndex((claim) => !claim.decision || claim.decision === 'pending');
@@ -43,15 +44,21 @@ export default function OperationIncidentsPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [pagination, setPagination] = useState(null);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError('');
-    getApi('/operations/incidents', { signal: controller.signal }).then(({ data }) => {
-      if (!controller.signal.aborted) setItems(data);
+    getApi(`/operations/incidents?page=${page}&limit=${pageSize}`, { signal: controller.signal }).then(({ data, pagination: metadata }) => {
+      if (!controller.signal.aborted) {
+        setItems(data); setPagination(metadata);
+        if (metadata) setPage(metadata.page);
+      }
     }).catch((failure) => { if (!controller.signal.aborted) setError(failure.message); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [revision]);
+  }, [revision, page, pageSize]);
   const reload = () => setRevision((value) => value + 1);
   return <main className="operation-incidents-page">
     <header><div><h1>Xác minh sự cố</h1><p>Operation kiểm tra chứng cứ và lập đề xuất; Manager duyệt trách nhiệm và khoản tiền.</p></div><a href="/#trang-chu">Trang chủ</a><button onClick={reload}>Tải lại</button></header>
@@ -62,6 +69,7 @@ export default function OperationIncidentsPage() {
         <ProposalForm key={`${item._id}-${item.updated_at || ''}`} incident={item} onSaved={reload} />
       </article>)}
       {!items.length && <p>Không có sự cố đang mở.</p>}
+      <Pagination page={pagination?.page ?? page} pageSize={pageSize} total={pagination?.total ?? 0} onPageChange={setPage} onPageSizeChange={(value) => { setPageSize(value); setPage(1); }} label="Phân trang sự cố Operation" />
     </>}
   </main>;
 }

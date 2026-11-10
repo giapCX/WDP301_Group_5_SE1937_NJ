@@ -1,3 +1,4 @@
+import { findPageRows } from "../utils/pagination.js";
 import { createManagerGarageService } from './manager-garage.service.js';
 import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
@@ -125,14 +126,20 @@ export function createManagerService(repository) {
           }
         }];
       }
-      const [users, roles] = await Promise.all([repository.collection("users").find(match).select({
+      const roles = await repository.collection('roles').find({}).exec();
+      if (role !== 'all') {
+        const roleId = roles.find((item) => item.code === role)?._id;
+        match.$and = [{ $or: [{ primary_role_id: roleId || null }, { additional_role_ids: roleId || null }] }];
+        if (!roleId) match._id = { $in: [] };
+      }
+      const users = await findPageRows(repository.collection('users'), match, input.query, { projection: {
         password_hash: 0,
         identity_kyc: 0,
         driver_license: 0,
         payout_profile: 0
-      }).sort({
+      }, sort: {
         created_at: -1
-      }).limit(300).exec(), repository.collection("roles").find({}).exec()]);
+      } });
       const roleMap = new Map(roles.map(item => [item._id.toString(), item]));
       const data = users.map(user => {
         const roleIds = [user.primary_role_id, ...(user.additional_role_ids || [])].filter(Boolean);
@@ -149,7 +156,7 @@ export function createManagerService(repository) {
         };
       }).filter(item => role === "all" || item.roles.includes(role));
       return {
-        data
+        data, pagination: users.pagination
       };
     },
     createAccount: async input => {
@@ -271,9 +278,11 @@ export function createManagerService(repository) {
       };
     },
     roles: async input => {
-      const rows = await repository.collection("roles").find({}).sort({
-        code: 1
-      }).exec();
+      const rows = await findPageRows(repository.collection("roles"), {}, input.query, {
+        sort: {
+          code: 1
+        }
+      });
       return {
         data: rows.map(item => ({
           id: item._id.toString(),
@@ -281,7 +290,8 @@ export function createManagerService(repository) {
           name: item.display_name,
           description: item.description,
           permissions: item.permissions || []
-        }))
+        })),
+        pagination: rows.pagination
       };
     },
     createRole: async input => {
@@ -354,8 +364,6 @@ export function createManagerService(repository) {
       };
     },
     auditLogs: async input => {
-      const page = Math.max(1, Number.parseInt(input.query.page, 10) || 1);
-      const limit = Math.min(100, Math.max(1, Number.parseInt(input.query.limit, 10) || 25));
       const match = {};
       for (const key of ["action", "entity_type"]) if (typeof input.query[key] === "string" && input.query[key].trim()) match[key] = input.query[key].trim();
       if (input.query.from || input.query.to) {
@@ -367,9 +375,7 @@ export function createManagerService(repository) {
         }
       }
       const logs = repository.collection("audit_logs");
-      const [total, rows] = await Promise.all([logs.countDocuments(match), logs.find(match).sort({
-        created_at: -1
-      }).skip((page - 1) * limit).limit(limit).exec()]);
+      const rows = await findPageRows(logs, match, { ...input.query, page: input.query.page ?? '1', limit: input.query.limit ?? '25' }, { sort: { created_at: -1 } });
       const actorIds = [...new Map(rows.map(row => row.actor_user_id).filter(Boolean).map(id => [id.toString(), id])).values()];
       const actors = actorIds.length ? await repository.collection("users").find({
         _id: {
@@ -392,21 +398,18 @@ export function createManagerService(repository) {
           ipAddressMasked: row.ip_address_masked || null,
           createdAt: row.created_at
         })),
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit)
-        }
+        pagination: rows.pagination
       };
     },
     systemReports: async input => {
       const filter = input.currentRoles?.includes("MANAGER") ? {} : {
         report_type: "finance"
       };
-      const rows = await repository.collection("system_reports").find(filter).sort({
-        generated_at: -1
-      }).limit(100).exec();
+      const rows = await findPageRows(repository.collection("system_reports"), filter, input.query, {
+        sort: {
+          generated_at: -1
+        }
+      });
       return {
         data: rows.map(item => ({
           id: item._id.toString(),
@@ -415,7 +418,8 @@ export function createManagerService(repository) {
           from: item.period_from,
           to: item.period_to,
           generatedAt: item.generated_at
-        }))
+        })),
+        pagination: rows.pagination
       };
     },
     systemReport: async input => {
@@ -667,9 +671,11 @@ export function createManagerService(repository) {
           $in: ["submitted", "pending_review", "revision_required"]
         } : status
       };
-      const items = await repository.collection("vehicles").find(match).sort({
-        updated_at: -1
-      }).limit(200).exec();
+      const items = await findPageRows(repository.collection("vehicles"), match, input.query, {
+        sort: {
+          updated_at: -1
+        }
+      });
       const owners = [...new Set(items.map(item => item.owner_id?.toString()).filter(Boolean))].map(id => new ObjectId(id));
       const ownerRows = owners.length ? await repository.collection("users").find({
         _id: {
@@ -687,7 +693,8 @@ export function createManagerService(repository) {
           $in: itemIds
         }
       }).sort({
-        created_at: -1, _id: -1
+        created_at: -1,
+        _id: -1
       }).exec() : [];
       const inspectionMap = new Map();
       for (const inspection of inspections) if (!inspectionMap.has(inspection.vehicle_id.toString())) inspectionMap.set(inspection.vehicle_id.toString(), inspection);
@@ -718,7 +725,8 @@ export function createManagerService(repository) {
           owner: ownerMap.get(item.owner_id?.toString()) || null,
           createdAt: item.created_at,
           updatedAt: item.updated_at
-        }))
+        })),
+        pagination: items.pagination
       };
     },
     reviewVehicle: input => garage.reviewVehicle(input),
@@ -729,9 +737,11 @@ export function createManagerService(repository) {
           $in: OPEN_INCIDENT_STATUSES
         } : status
       };
-      const items = await repository.collection("incident_cases").find(match).sort({
-        updated_at: -1
-      }).limit(200).exec();
+      const items = await findPageRows(repository.collection("incident_cases"), match, input.query, {
+        sort: {
+          updated_at: -1
+        }
+      });
       return {
         data: items.map(item => ({
           id: item._id.toString(),
@@ -747,17 +757,20 @@ export function createManagerService(repository) {
           vehicleId: item.vehicle_id?.toString(),
           createdAt: item.created_at,
           updatedAt: item.updated_at
-        }))
+        })),
+        pagination: items.pagination
       };
     },
     reviewCompensation: input => garage.reviewCompensation(input),
     reviewIncident: input => garage.reviewIncident(input),
     policies: async input => {
-      const data = await repository.collection("platform_policies").find({
+      const data = await findPageRows(repository.collection("platform_policies"), {
         status: "active"
-      }).sort({
-        policy_type: 1
-      }).exec();
+      }, input.query, {
+        sort: {
+          policy_type: 1
+        }
+      });
       return {
         data: data.map(item => ({
           id: item._id.toString(),
@@ -765,7 +778,8 @@ export function createManagerService(repository) {
           version: item.version,
           config: item.config,
           effectiveFrom: item.effective_from
-        }))
+        })),
+        pagination: data.pagination
       };
     },
     updatePolicy: async input => {
@@ -784,7 +798,11 @@ export function createManagerService(repository) {
       const previous = await policies.findOne({
         policy_type: type,
         status: "active"
-      }, { sort: { version: -1 } });
+      }, {
+        sort: {
+          version: -1
+        }
+      });
       const version = (previous?.version || 0) + 1;
       await policies.updateMany({
         policy_type: type,
@@ -833,7 +851,7 @@ export function createManagerService(repository) {
       const roleById = new Map(roleRows.map(role => [role._id.toString(), role]));
       const roleIds = roleRows.map(role => role._id);
       const privilegedRoleIds = privilegedRoles.map(role => role._id);
-      const staff = await repository.collection("users").find({
+      const staff = await findPageRows(repository.collection("users"), {
         $and: [{
           $or: [{
             primary_role_id: {
@@ -855,16 +873,19 @@ export function createManagerService(repository) {
             }
           }]
         }]
-      }).select({
-        full_name: 1,
-        email: 1,
-        phone: 1,
-        account_status: 1,
-        primary_role_id: 1,
-        created_at: 1
-      }).sort({
-        full_name: 1
-      }).exec();
+      }, input.query, {
+        sort: {
+          full_name: 1
+        },
+        projection: {
+          full_name: 1,
+          email: 1,
+          phone: 1,
+          account_status: 1,
+          primary_role_id: 1,
+          created_at: 1
+        }
+      });
       return {
         data: staff.map(user => ({
           id: user._id.toString(),
@@ -877,7 +898,8 @@ export function createManagerService(repository) {
           status: user.account_status,
           role: roleById.get(user.primary_role_id?.toString())?.code || "STAFF",
           createdAt: user.created_at
-        }))
+        })),
+        pagination: staff.pagination
       };
     },
     createStaff: async input => {
@@ -1039,10 +1061,12 @@ export function createManagerService(repository) {
       const collectionName = type === "rental" ? "rental_agreements" : "management_agreements";
       const filter = {};
       if (input.query.status && input.query.status !== "all") filter.status = input.query.status;
-      const rows = await repository.collection(collectionName).find(filter).sort({
-        updated_at: -1,
-        created_at: -1
-      }).limit(200).exec();
+      const rows = await findPageRows(repository.collection(collectionName), filter, input.query, {
+        sort: {
+          updated_at: -1,
+          created_at: -1
+        }
+      });
       return {
         data: rows.map(item => ({
           id: item._id.toString(),
@@ -1057,7 +1081,8 @@ export function createManagerService(repository) {
           managerReview: item.manager_review || null,
           amendments: item.amendments || [],
           updatedAt: item.updated_at || item.created_at
-        }))
+        })),
+        pagination: rows.pagination
       };
     },
     updateContract: async input => {
@@ -1176,9 +1201,11 @@ export function createManagerService(repository) {
           if (input.query.to.length === 10) filter.inspected_at.$lte.setHours(23, 59, 59, 999);
         }
       }
-      const data = await repository.collection("vehicle_inspections").find(filter).sort({
-        inspected_at: -1
-      }).limit(200).exec();
+      const data = await findPageRows(repository.collection("vehicle_inspections"), filter, input.query, {
+        sort: {
+          inspected_at: -1
+        }
+      });
       const vehicleIds = [...new Map(data.map(row => row.vehicle_id).filter(Boolean).map(id => [id.toString(), id])).values()];
       const vehicles = vehicleIds.length ? await repository.collection("vehicles").find({
         _id: {
@@ -1197,7 +1224,8 @@ export function createManagerService(repository) {
           result: row.approval_status || row.result || row.inspection_result || row.status || row.recommendation || "completed",
           notes: row.decision_reason || row.notes || Object.values(row.condition_report || {}).filter(value => typeof value === "string").join(", "),
           vehicle: map.get(row.vehicle_id?.toString()) || null
-        }))
+        })),
+        pagination: data.pagination
       };
     },
     financeReport: async input => {
@@ -1207,29 +1235,27 @@ export function createManagerService(repository) {
         throw httpError(400, "Khoảng ngày báo cáo không hợp lệ.");
       }
       if (input.query.to?.length === 10) to.setUTCHours(23, 59, 59, 999);
-      const rows = await repository.collection("owner_settlements").find({
+      const filter = {
         settled_at: {
           $gte: from,
           $lte: to
         },
         payout_status: "paid"
-      }).select({
+      };
+      const rows = await findPageRows(repository.collection('owner_settlements'), filter, input.query, { projection: {
         settled_at: 1,
         gross_rental_revenue: 1,
         platform_commission: 1,
         net_owner_payout: 1
-      }).sort({
+      }, sort: {
         settled_at: 1
-      }).exec();
-      const totals = rows.reduce((result, item) => ({
-        grossRentalRevenue: result.grossRentalRevenue + (Number(item.gross_rental_revenue) || 0),
-        platformCommission: result.platformCommission + (Number(item.platform_commission) || 0),
-        ownerPayout: result.ownerPayout + (Number(item.net_owner_payout) || 0)
-      }), {
-        grossRentalRevenue: 0,
-        platformCommission: 0,
-        ownerPayout: 0
-      });
+      } });
+      const [summary] = await repository.collection('owner_settlements').aggregate([
+        { $match: filter },
+        { $group: { _id: null, grossRentalRevenue: { $sum: '$gross_rental_revenue' }, platformCommission: { $sum: '$platform_commission' }, ownerPayout: { $sum: '$net_owner_payout' } } },
+        { $project: { _id: 0 } },
+      ]).exec();
+      const totals = summary || { grossRentalRevenue: 0, platformCommission: 0, ownerPayout: 0 };
       return {
         data: {
           from,
@@ -1241,7 +1267,8 @@ export function createManagerService(repository) {
             platformCommission: item.platform_commission || 0,
             ownerPayout: item.net_owner_payout || 0
           }))
-        }
+        },
+        pagination: rows.pagination
       };
     },
     operationsReport: async input => {

@@ -1,5 +1,6 @@
 import IncomeCalculator from '../components/IncomeCalculator';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Pagination from '../../../components/ui/Pagination';
 import SiteHeader from '../../../components/SiteHeader';
 import SiteFooter from '../../../components/SiteFooter';
 import Icon from '../../../components/Icon';
@@ -44,14 +45,18 @@ function SectionHeading({ eyebrow, title, description, left = false }) {
 export default function HomePage() {
   const [category, setCategory] = useState(0);
   const [sort, setSort] = useState('newest');
-  const [limit, setLimit] = useState(6);
+  const [limit, setLimit] = useState(10);
+  const [page, setPage] = useState(1);
   const [dates, setDates] = useState(initialDates);
   const [city, setCity] = useState('');
   const [search, setSearch] = useState(null);
   const [searchError, setSearchError] = useState('');
   const [dialog, setDialog] = useState(null);
   const { homepage, catalog, metaError, setMetaRetry } = useHomeOverview();
-  const { listings, total, loading, error, setRetry } = useListings({ filters: categories[category].query, sort, search, limit });
+  const { listings, total, loading, error, setRetry } = useListings({ filters: categories[category].query, sort, search, limit, page });
+  useEffect(() => {
+    if (!loading && !error) setPage((value) => Math.min(value, Math.max(1, Math.ceil(total / limit))));
+  }, [loading, error, total, limit]);
   const policies = homepage?.policies;
   const refundDays = policies?.depositRefundBusinessDays;
   const cancelHours = policies?.freeCancellationHours;
@@ -70,7 +75,7 @@ export default function HomePage() {
       return;
     }
     setSearchError('');
-    setLimit(6);
+    setPage(1);
     setSearch({ city, startAt: start.toISOString(), endAt: end.toISOString() });
     document.getElementById('xe-noi-bat').scrollIntoView({ behavior: 'smooth' });
   };
@@ -79,7 +84,7 @@ export default function HomePage() {
     setSearch(null);
     setCity('');
     setCategory(0);
-    setLimit(6);
+    setPage(1);
     setSearchError('');
   };
 
@@ -289,7 +294,7 @@ export default function HomePage() {
                     aria-pressed={category === index}
                     onClick={() => {
                       setCategory(index);
-                      setLimit(6);
+                      setPage(1);
                     }}
                   >
                     <Icon name={item.icon} size={14} />
@@ -316,7 +321,7 @@ export default function HomePage() {
                 <select
                   id="listing-sort"
                   value={sort}
-                  onChange={(event) => setSort(event.target.value)}
+                  onChange={(event) => { setSort(event.target.value); setPage(1); }}
                 >
                   <option value="newest">Mới nhất</option>
                   <option value="price_asc">Giá thấp đến cao</option>
@@ -370,16 +375,7 @@ export default function HomePage() {
                 </button>
               </div>
             )}
-            {!loading && !error && listings.length < total && (
-              <div className="view-all">
-                <button
-                  className="button button-outline"
-                  onClick={() => setLimit((value) => Math.min(value + 6, 100))}
-                >
-                  Xem thêm xe <Icon name="arrow" size={17} />
-                </button>
-              </div>
-            )}
+            {!error && <Pagination page={page} pageSize={limit} total={total} disabled={loading} onPageChange={setPage} onPageSizeChange={(value) => { setLimit(value); setPage(1); }} label="Phân trang xe cho thuê" />}
           </div>
         </section>
 

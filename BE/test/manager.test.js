@@ -51,6 +51,60 @@ test('manager read endpoints use Mongoose and keep role protection and public re
   }
 });
 
+test('pagination traverses every result beyond old list caps with stable ordering', async () => {
+  const original = await models.Vehicle.findOne().lean();
+  const vehicles = await models.Vehicle.insertMany(Array.from({ length: 205 }, (_, index) => ({
+    ...original, _id: new Types.ObjectId(), license_plate: `PAGE-${index}`, created_at: new Date('2031-01-01'),
+  })));
+  try {
+    const all = await request('/manager/vehicles?status=all');
+    const total = all.body.data.length;
+    assert.ok(total > 200);
+    const ids = [];
+    for (let page = 1; page <= Math.ceil(total / 50); page += 1) {
+      const result = await request(`/manager/vehicles?status=all&page=${page}&limit=50`);
+      assert.equal(result.status, 200, JSON.stringify(result));
+      assert.equal(result.body.pagination.total, total);
+      ids.push(...result.body.data.map((row) => row.id));
+    }
+    assert.deepEqual(ids, all.body.data.map((row) => row.id));
+    assert.equal(new Set(ids).size, total);
+    const last = await request('/manager/vehicles?status=all&page=999&limit=50');
+    assert.equal(last.body.pagination.page, Math.ceil(total / 50));
+    assert.ok(last.body.data.length > 0);
+    for (const query of ['page=0', 'page=-1', 'page=1.5', 'limit=101', 'limit=abc', 'page=1&page=2']) {
+      assert.equal((await request(`/manager/vehicles?${query}`)).status, 400, query);
+    }
+  } finally {
+    await models.Vehicle.deleteMany({ _id: { $in: vehicles.map((vehicle) => vehicle._id) } });
+  }
+});
+
+test('account role filters apply before page totals and finance totals cover the whole period', async () => {
+  const accounts = await request('/manager/accounts?role=GARAGE_STAFF', 'GET', undefined, adminToken);
+  const page = await request('/manager/accounts?role=GARAGE_STAFF&page=1&limit=1', 'GET', undefined, adminToken);
+  assert.equal(page.status, 200, JSON.stringify(page));
+  assert.equal(page.body.pagination.total, accounts.body.data.length);
+  assert.equal(page.body.data.length, 1);
+  assert.ok(page.body.data[0].roles.includes('GARAGE_STAFF'));
+  const owner = await models.User.findOne().lean();
+  const records = await models.OwnerSettlement.insertMany(Array.from({ length: 3 }, () => ({
+    owner_id: owner._id, settled_at: new Date('2031-04-05'), payout_status: 'paid',
+    gross_rental_revenue: 100, platform_commission: 10, net_owner_payout: 90,
+  })));
+  try {
+    for (const page of [1, 2, 3]) {
+      const result = await request(`/manager/reports/finance?from=2031-04-01&to=2031-04-30&page=${page}&limit=1`);
+      assert.equal(result.status, 200, JSON.stringify(result));
+      assert.equal(result.body.data.settlements.length, 1);
+      assert.equal(result.body.pagination.total, 3);
+      assert.deepEqual(result.body.data.totals, { grossRentalRevenue: 300, platformCommission: 30, ownerPayout: 270 });
+    }
+  } finally {
+    await models.OwnerSettlement.deleteMany({ _id: { $in: records.map((row) => row._id) } });
+  }
+});
+
 test('vehicle review keeps review fields, nested history and the manager audit actor', async () => {
   const vehicle = await models.Vehicle.findOne({ onboarding_status: 'submitted' }).lean();
   assert.ok(vehicle);

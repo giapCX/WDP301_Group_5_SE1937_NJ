@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import usePagination from '../../../hooks/usePagination';
+import Pagination from '../../../components/ui/Pagination';
 import GarageLayout from '../components/GarageLayout';
 import GarageOverview from '../components/GarageOverview';
 import GarageTaskTable from '../components/GarageTaskTable';
@@ -132,6 +134,7 @@ export default function GaragePage({ user }) {
   const logs = workspace.history.filter((item) =>
     normalize(`${item.title} ${item.detail}`).includes(normalize(query)),
   );
+  const listPage = usePagination(section === 'history' ? logs : section === 'incidents' ? incidents : filteredTasks, JSON.stringify([section, query, status, date]));
   async function reportSaved(id, report, draft) {
     await saveReport(id, report, draft);
     setDialog(null);
@@ -236,7 +239,7 @@ export default function GaragePage({ user }) {
                 <div className="gs-list-summary">
                   {logs.length} hoạt động được ghi nhận
                 </div>
-                {logs.map((log) => (
+                {listPage.items.map((log) => (
                   <div className="gs-activity-row" key={log.id}>
                     <span className="gs-activity-check">
                       <Icon
@@ -269,7 +272,7 @@ export default function GaragePage({ user }) {
                 <div className="gs-list-summary">
                   {incidents.length} báo cáo sự cố
                 </div>
-                {incidents.map((item) => (
+                {listPage.items.map((item) => (
                   <button
                     key={item.id}
                     className="gs-incident-row"
@@ -327,7 +330,7 @@ export default function GaragePage({ user }) {
                   <span>· Danh sách chung theo quyền; chỉ người lập được sửa nháp</span>
                 </div>
                 <GarageTaskTable
-                  tasks={filteredTasks}
+                  tasks={listPage.items}
                   onOpen={(task) => setDialog({ type: 'report', task })}
                   onClear={() => {
                     setQuery('');
@@ -338,6 +341,7 @@ export default function GaragePage({ user }) {
               </>
             )}
           </section>
+          <Pagination {...listPage} label="Phân trang công việc Garage" />
           <div className="gs-workflow-note">
             <Icon name="shield" size={17} />
             {section === 'inspections'

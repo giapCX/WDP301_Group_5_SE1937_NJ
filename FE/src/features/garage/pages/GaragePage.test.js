@@ -71,6 +71,20 @@ test('loads actual workspace using login JWT and never substitutes a saved demo 
   expect(global.fetch).toHaveBeenCalledWith('/api/garage/workspace', expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer garage-jwt' }) }));
 });
 
+test('paginates inspection tasks and returns to the first page when searching', async () => {
+  const task = workspace.tasks[0];
+  workspace.tasks = Array.from({ length: 21 }, (_, i) => ({ ...task, id: `inspection-${i}`, vehicle: `Paging vehicle ${i}`, plate: `PAGE-${i}` }));
+  render(<GaragePage />);
+  await screen.findByText('Paging vehicle 0');
+  expect(screen.queryByText('Paging vehicle 20')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText('Trang cuối'));
+  expect(screen.getByText('Paging vehicle 20')).toBeInTheDocument();
+  expect(screen.queryByText('Paging vehicle 0')).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Tìm kiếm công việc'), { target: { value: 'PAGE-0' } });
+  expect(screen.getByText('Paging vehicle 0')).toBeInTheDocument();
+  expect(screen.getByLabelText('Trang trước')).toBeDisabled();
+});
+
 test('saves a real inspection draft and retains it when the page loads again', async () => {
   const view = render(<GaragePage />);
   const dialog = await openReport();
