@@ -1094,6 +1094,10 @@ export function createManagerService(repository) {
       const type = input.query.type === "rental" ? "rental" : "management";
       const collectionName = type === "rental" ? "rental_agreements" : "management_agreements";
       const filter = {};
+      if (type === "management") {
+        const approvedVehicles = await repository.vehicles.find({ onboarding_status: "approved" }, { projection: { _id: 1 } }).exec();
+        filter.vehicle_id = { $in: approvedVehicles.map(vehicle => vehicle._id) };
+      }
       if (input.query.status && input.query.status !== "all") filter.status = input.query.status;
       const rows = await findPageRows(repository.collection(collectionName), filter, input.query, {
         sort: {

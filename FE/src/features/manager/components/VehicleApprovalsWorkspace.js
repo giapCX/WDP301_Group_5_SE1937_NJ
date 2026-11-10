@@ -17,10 +17,6 @@ const inspectionText = {
   revision_required: 'Cần kiểm định lại',
   rejected: 'Không đạt'
 };
-function DocumentCard({
-  title,
-  document
-}) {
 function DocumentCard({ title, document, onOpen }) {
   const verified = Boolean(document?.verified);
   return <div className={`vehicle-document-card ${verified ? 'is-verified' : 'is-pending'}`}>

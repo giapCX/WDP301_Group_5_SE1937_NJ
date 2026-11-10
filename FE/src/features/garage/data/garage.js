@@ -160,3 +160,28 @@ export function validateGarageReport(task, report) {
 }
 
 export const isFinished = (task) => ['completed', 'submitted', 'approved', 'revision_required', 'rejected'].includes(task.status);
+
+export function sortGarageTasks(tasks, now = new Date()) {
+  const today = bangkokDate();
+  const priority = (task) => {
+    if (isFinished(task) || task.readOnly) return 6;
+    if (taskBlockers(task).length) return 5;
+    if (task.scheduled !== false) {
+      const time = new Date(task.schedule).getTime();
+      if (Number.isFinite(time) && time < now.getTime()) return 0;
+      if (String(task.schedule).startsWith(today)) return 1;
+      return 4;
+    }
+    if (task.status === 'draft') return 2;
+    return 3;
+  };
+  return [...tasks].sort((a, b) => {
+    const aPriority = priority(a);
+    const bPriority = priority(b);
+    if (aPriority !== bPriority) return aPriority - bPriority;
+    const aTime = new Date(a.schedule).getTime();
+    const bTime = new Date(b.schedule).getTime();
+    if (aPriority === 6) return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0);
+    return (Number.isFinite(aTime) ? aTime : 0) - (Number.isFinite(bTime) ? bTime : 0);
+  });
+}

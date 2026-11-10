@@ -110,7 +110,13 @@ export function createContractService(repository) {
         requireRole(actor, type === 'management' ? ['OWNER', 'CAR_OWNER'] : ['RENTER']);
         if (type === 'management') filter.owner_id = actor.id;
         else filter.booking_id = { $in: (await repository.bookings.find({ renter_id: actor.id }, { projection: { _id: 1 } }).exec()).map((row) => row._id) };
-      } else requireRole(actor, ['MANAGER', 'OPERATION_STAFF']);
+      } else {
+        requireRole(actor, ['MANAGER', 'OPERATION_STAFF']);
+        if (type === 'management') {
+          const approvedVehicles = await repository.vehicles.find({ onboarding_status: 'approved' }, { projection: { _id: 1 } }).exec();
+          filter.vehicle_id = { $in: approvedVehicles.map((vehicle) => vehicle._id) };
+        }
+      }
       const rows = await findPageRows(repository.agreement(type), filter, { ...query, page: query.page ?? '1', limit: query.limit ?? '10' }, { sort: { created_at: -1 } });
       const data = [];
       for (const row of rows) data.push(serialize(type, row, await context(type, row), mode, actor));
@@ -127,6 +133,17 @@ export function createContractService(repository) {
       requireRole(actor, type === 'management' ? ['MANAGER'] : ['MANAGER', 'OPERATION_STAFF']);
       const repo = type === 'management' ? repository.vehicles : repository.bookings;
       const filter = type === 'management' ? { onboarding_status: 'approved', physical_status: { $in: ['with_owner', 'returned_to_owner'] } } : { status: 'awaiting_payment', start_at: { $gt: new Date() } };
+      if (type === 'management') {
+        const existing = await repository.agreement('management').find({
+          status: { $nin: ['terminated', 'expired', 'cancelled'] },
+          $or: [
+            { contract_document: { $exists: true } },
+            { status: { $in: ['active', 'termination_requested'] } },
+          ],
+        }, { projection: { vehicle_id: 1 } }).exec();
+        const excluded = [...new Map(existing.map((row) => [String(row.vehicle_id), row.vehicle_id])).values()];
+        if (excluded.length) filter._id = { $nin: excluded };
+      }
       const rows = await findPageRows(repo, filter, { ...query, page: query.page ?? '1', limit: query.limit ?? '10' });
       return { data: rows.map((row) => ({ id: String(row._id), label: type === 'management' ? `${row.brand} ${row.model} · ${row.license_plate}` : `${row.booking_code} · ${date(row.start_at)}` })), pagination: rows.pagination };
     },

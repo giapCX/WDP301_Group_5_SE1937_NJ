@@ -6,21 +6,24 @@ import './contracts.css';
 
 export const contractStatus = { draft: 'Chờ lập nội dung', awaiting_signature: 'Chờ lập nội dung ký', pending_signatures: 'Chờ chữ ký các bên', pending_signature: 'Chờ lập nội dung ký', signed: 'Đã ký đủ', active: 'Có hiệu lực', terminated: 'Đã chấm dứt', expired: 'Hết hạn', cancelled: 'Đã hủy' };
 const time = (value) => value ? new Date(value).toLocaleString('vi-VN') : 'Chưa ký';
+const statusTone = (status) => ['active', 'signed'].includes(status) ? 'success' : ['terminated', 'expired', 'cancelled'].includes(status) ? 'muted' : 'pending';
+const signatureState = (name, signedAt) => signedAt ? { title: 'Đã ký', name: name || 'Đã xác nhận', date: time(signedAt) } : { title: 'Chờ ký', name: 'Chưa ghi nhận chữ ký', date: 'Đang chờ xác nhận' };
 
 export function ContractContent({ agreement }) {
+  const partyLabel = agreement.type === 'management' ? 'Chủ xe' : 'Khách thuê';
+  const partySignature = signatureState(agreement.partyName, agreement.partySignedAt);
+  const platformSignature = signatureState(agreement.platformName, agreement.platformSignedAt);
   return <div className="contract-content">
-    <h2>{agreement.document?.title || 'Hồ sơ hợp đồng'}</h2>
-    <p><strong>{agreement.number}</strong> · {contractStatus[agreement.status] || agreement.status}</p>
+    <div className="contract-document-heading"><div><span className="contract-eyebrow">VĂN BẢN TRÌNH KÝ</span><h2>{agreement.document?.title || 'Hồ sơ hợp đồng'}</h2><p className="contract-number">{agreement.number}</p></div><span className={`contract-status contract-status--${statusTone(agreement.status)}`}>{contractStatus[agreement.status] || agreement.status}</span></div>
     {agreement.document ? <>
-      <dl>{agreement.document.facts.map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
-      <ol>{agreement.document.clauses.map((clause) => <li key={clause}>{clause}</li>)}</ol>
-      <p>Phiên bản: {agreement.document.version} · Lập lúc {time(agreement.document.prepared_at)}</p>
+      <div className="contract-facts"><h3>Thông tin chính</h3><dl>{(agreement.document.facts || []).map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></div>
+      <div className="contract-terms"><h3>Điều khoản hợp đồng</h3><ol>{(agreement.document.clauses || []).map((clause, index) => <li key={`${index}-${clause}`}><span className="contract-clause-number">{String(index + 1).padStart(2, '0')}</span><span>{clause}</span></li>)}</ol></div>
+      <p className="contract-document-meta">Phiên bản {agreement.document.version} <span>·</span> Lập lúc {time(agreement.document.prepared_at)}</p>
     </> : <p>Hồ sơ này chưa có bản nội dung để ký trực tuyến. Với hợp đồng cũ đã ký giấy, giữ hồ sơ hiện có; không ký lại hoặc tự đổi nội dung.</p>}
-    <div className="contract-signatures">
-      <p><strong>{agreement.type === 'management' ? 'Chủ xe' : 'Khách thuê'}</strong><br />{agreement.partyName || '—'}<br />{time(agreement.partySignedAt)}</p>
-      <p><strong>Đại diện XeDi</strong><br />{agreement.platformName || '—'}<br />{time(agreement.platformSignedAt)}</p>
+    <div className="contract-signatures"><h3>Trạng thái chữ ký</h3>
+      {[{ label: partyLabel, ...partySignature }, { label: 'Đại diện XeDi', ...platformSignature }].map((signature) => <div className="contract-signature" key={signature.label}><span className={`contract-signature-check ${signature.title === 'Đã ký' ? 'is-signed' : ''}`}>{signature.title === 'Đã ký' ? '✓' : '·'}</span><div><strong>{signature.label}</strong><span>{signature.name}</span><small>{signature.date}</small></div><b>{signature.title}</b></div>)}
     </div>
-    <small>Xác nhận điện tử bằng tài khoản đăng nhập; chưa tích hợp OTP hoặc chữ ký số có chứng thực.</small>
+    <p className="contract-signing-note">Xác nhận được ghi nhận theo tài khoản đang đăng nhập. Hệ thống hiện chưa tích hợp OTP hoặc chữ ký số có chứng thực.</p>
   </div>;
 }
 
@@ -50,21 +53,21 @@ function SigningDialog({ item, view, onClose, onSigned }) {
     finally { setBusy(false); }
   }
   return <div className="contract-backdrop"><section role="dialog" aria-modal="true" aria-label="Nội dung và ký hợp đồng" className="contract-dialog">
-    <div className="contract-toolbar"><button onClick={() => window.print()} disabled={!agreement}>In / lưu PDF</button><button onClick={onClose} disabled={busy} autoFocus>Đóng</button></div>
-    {error && <p role="alert">{error}</p>}
-    {!agreement ? <p>Đang tải hợp đồng…</p> : <>
+    <div className="contract-dialog-header"><div><span className="contract-eyebrow">XEDI · KÝ KẾT ĐIỆN TỬ</span><h2>Rà soát hợp đồng</h2><p>Đọc kỹ nội dung trước khi xác nhận.</p></div><div className="contract-toolbar"><button className="contract-button contract-button--secondary" onClick={() => window.print()} disabled={!agreement}>In / lưu PDF</button><button className="contract-close" onClick={onClose} disabled={busy} autoFocus aria-label="Đóng cửa sổ">×</button></div></div>
+    {error && <p className="contract-alert" role="alert">{error}</p>}
+    {!agreement ? <div className="contract-loading" role="status"><span className="contract-spinner" />Đang tải nội dung hợp đồng…</div> : <>
       <ContractContent agreement={agreement} />
       {agreement.canSign ? <form onSubmit={sign} className="contract-sign-form">
-        <p>Bạn ký với tư cách <strong>{view === 'staff' ? 'đại diện nền tảng XeDi' : item.type === 'management' ? 'chủ xe' : 'khách thuê'}</strong>.</p>
+        <div className="contract-sign-intro"><span className="contract-sign-intro-icon">✍</span><div><strong>Xác nhận chữ ký của bạn</strong><p>Bạn ký với tư cách {view === 'staff' ? 'đại diện nền tảng XeDi' : item.type === 'management' ? 'chủ xe' : 'khách thuê'}.</p></div></div>
         <label>Họ tên người ký<input required minLength={2} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} disabled={busy} /></label>
-        <label className="contract-accept"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} disabled={busy} />Tôi đã đọc toàn bộ nội dung và đồng ý ký hợp đồng này.</label>
-        <button type="submit" disabled={busy || !accepted}>{busy ? 'Đang ghi nhận…' : 'Xác nhận ký hợp đồng'}</button>
-      </form> : <p role="status">{agreement.status === 'pending_signatures' ? 'Chữ ký của bạn đã được ghi nhận hoặc bạn không có quyền ký phía này. Chờ bên còn lại xác nhận.' : 'Hợp đồng hiện không cần chữ ký của bạn.'}</p>}
+        <label className="contract-accept"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} disabled={busy} /><span>Tôi đã đọc toàn bộ nội dung và đồng ý ký hợp đồng này.</span></label>
+        <button className="contract-button contract-button--primary" type="submit" disabled={busy || !accepted}>{busy ? 'Đang ghi nhận…' : 'Xác nhận ký hợp đồng'}</button>
+      </form> : <p className="contract-signing-note" role="status">{agreement.status === 'pending_signatures' ? 'Bạn không cần ký phía này hoặc chữ ký của bạn đã được ghi nhận. Hợp đồng đang chờ bên còn lại xác nhận.' : 'Hợp đồng hiện không cần chữ ký của bạn.'}</p>}
     </>}
   </section></div>;
 }
 
-export default function ContractsPage() {
+export default function ContractsPage({ embedded = false } = {}) {
   const user = getCurrentUser(), roles = user?.roles || [];
   const staff = roles.some((role) => ['MANAGER', 'OPERATION_STAFF'].includes(role));
   const owner = roles.some((role) => ['OWNER', 'CAR_OWNER'].includes(role));
@@ -90,7 +93,7 @@ export default function ContractsPage() {
   }, [type, view, page, limit, revision]);
   useEffect(() => {
     if (!canPrepare) return;
-    const controller = new AbortController(); setReference(''); setCandidates([]);
+    const controller = new AbortController(); setReference(''); setCandidates([]); setCandidateMeta(null);
     getApi(`/contracts/${type}/candidates?page=${candidatePage}&limit=10`, { signal: controller.signal })
       .then((result) => { if (!controller.signal.aborted) { setCandidates(result.data); setCandidateMeta(result.pagination); setCandidatePage(result.pagination.page); } })
       .catch((reason) => { if (!controller.signal.aborted) setError(reason.message); });
@@ -106,21 +109,27 @@ export default function ContractsPage() {
     finally { setBusy(false); }
   }
   const reset = () => { setPage(1); setCandidatePage(1); setReference(''); setSelected(null); };
-  if (!getSessionToken()) return <main className="contracts-page"><h1>Hợp đồng</h1><a href="/#/login">Đăng nhập để xem hợp đồng của bạn</a></main>;
-  return <main className="contracts-page">
-    <header><div><h1>Hợp đồng</h1><p>Đọc nội dung, ký riêng từng bên và theo dõi hiệu lực.</p></div><nav><a href="/#trang-chu">Trang chủ</a>{staff && <a href={roles.includes('MANAGER') ? '/#/manager' : '/#/operations'}>Không gian làm việc</a>}{owner && <a href="/owner">Chủ xe</a>}<button onClick={refresh}>Tải lại</button></nav></header>
-    <div className="contract-filters">
+  if (!getSessionToken()) return <main className="contracts-page"><section className="contract-login-card"><span className="contract-hero-icon">▤</span><span className="contract-eyebrow">XEDI · HỒ SƠ ĐIỆN TỬ</span><h1>Hợp đồng của bạn</h1><p>Đăng nhập để xem nội dung, theo dõi chữ ký và trạng thái hiệu lực.</p><a className="contract-button contract-button--primary" href="/#/login">Đăng nhập</a></section></main>;
+  const pendingCount = rows.filter((item) => ['draft', 'awaiting_signature', 'pending_signature', 'pending_signatures'].includes(item.status)).length;
+  const effectiveCount = rows.filter((item) => ['active', 'signed'].includes(item.status)).length;
+  return <main className={`contracts-page${embedded ? ' contracts-page--embedded' : ''}`}>
+    {!embedded && <header className="contracts-header"><div className="contracts-brand"><span className="contract-hero-icon">▤</span><div><span className="contract-eyebrow">XEDI · HỒ SƠ ĐIỆN TỬ</span><h1>Hợp đồng</h1><p>Rà soát nội dung, hoàn tất chữ ký và theo dõi hiệu lực.</p></div></div><nav><a href="/#trang-chu">Trang chủ</a>{staff && <a href={roles.includes('MANAGER') ? '/#/manager' : '/#/operations'}>Không gian làm việc</a>}{owner && <a href="/owner">Chủ xe</a>}<button className="contract-button contract-button--secondary" onClick={refresh} aria-label="Tải lại danh sách">↻ <span>Tải lại</span></button></nav></header>}
+    <section className="contract-welcome"><div><span className="contract-eyebrow">{view === 'staff' ? 'KHÔNG GIAN NỀN TẢNG' : 'KHÔNG GIAN CỦA BẠN'}</span><h2>{type === 'management' ? 'Quản lý xe' : 'Thuê xe'}</h2><p>{type === 'management' ? 'Theo dõi thỏa thuận giữa chủ xe và XeDi, từ khâu trình ký đến khi có hiệu lực.' : 'Theo dõi hợp đồng thuê xe và chữ ký của khách hàng cùng XeDi.'}</p></div><div className="contract-summary"><div><strong>{pagination?.total ?? rows.length}</strong><span>Tổng hồ sơ</span></div><div><strong>{pendingCount}</strong><span>Chờ ký · trang này</span></div><div><strong>{effectiveCount}</strong><span>Hiệu lực · trang này</span></div></div></section>
+    <section className="contract-controls"><div className="contract-filters">
       {staff && <label>Phạm vi<select value={view} onChange={(event) => { setView(event.target.value); setType(typesFor(event.target.value)[0]); reset(); }}><option value="staff">Nền tảng</option>{(owner || roles.includes('RENTER')) && <option value="party">Hợp đồng của tôi</option>}</select></label>}
       <label>Loại hợp đồng<select value={type} onChange={(event) => { setType(event.target.value); reset(); }}>{typesFor(view).map((value) => <option value={value} key={value}>{value === 'management' ? 'Quản lý xe' : 'Thuê xe'}</option>)}</select></label>
-    </div>
-    {error && <p role="alert">{error}</p>}
-    {canPrepare && <form onSubmit={prepare} className="contract-prepare"><h2>Lập nội dung trình ký</h2><p>{type === 'management' ? 'Chỉ lập sau khi xe và biên bản kiểm định được duyệt. Mặc định thời hạn một năm; có thể chọn ngày trước khi lập.' : 'Chọn booking đã duyệt. Giá thuê, cọc và lịch lấy từ booking; hệ thống kiểm tra lại hồ sơ và quyền cho thuê.'}</p>
-      <label>{type === 'management' ? 'Xe được duyệt' : 'Booking chờ ký'}<select required value={reference} onChange={(event) => setReference(event.target.value)}><option value="">Chọn hồ sơ</option>{candidates.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
+    </div><span className="contract-access-note">🔒 Chỉ người có quyền mới xem và ký được hợp đồng.</span></section>
+    {error && <p className="contract-alert" role="alert">{error}<button className="contract-alert-close" onClick={() => setError('')} aria-label="Đóng thông báo">×</button></p>}
+    {canPrepare && <form onSubmit={prepare} className="contract-prepare"><div className="contract-prepare-heading"><span className="contract-step">01</span><div><span className="contract-eyebrow">TẠO HỒ SƠ</span><h2>Lập nội dung trình ký</h2><p>{type === 'management' ? 'Chỉ lập sau khi xe và biên bản kiểm định được duyệt. Thời hạn mặc định một năm.' : 'Chọn booking đã duyệt. Giá thuê, tiền cọc và lịch được lấy từ booking.'}</p></div></div>
+      <div className="contract-prepare-fields"><label>{type === 'management' ? 'Xe được duyệt, chưa có hồ sơ hợp đồng' : 'Booking chờ ký'}<select required value={reference} onChange={(event) => setReference(event.target.value)}><option value="">{!candidateMeta ? 'Đang tải hồ sơ…' : candidates.length ? 'Chọn xe chưa có hồ sơ' : 'Không có hồ sơ phù hợp'}</option>{candidates.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
       {type === 'management' && <><label>Ngày bắt đầu<input type="date" value={start} onChange={(event) => setStart(event.target.value)} /></label><label>Ngày kết thúc<input type="date" value={end} min={start || undefined} onChange={(event) => setEnd(event.target.value)} /></label></>}
-      <button disabled={busy || !reference}>Lập / mở hợp đồng</button>
+      <button className="contract-button contract-button--primary" disabled={busy || !reference}>{busy ? 'Đang chuẩn bị…' : 'Lập / mở hợp đồng'} <span aria-hidden="true">→</span></button></div>
+      {type === 'management' && candidateMeta && !candidates.length && <p className="contract-candidate-empty">Chưa có xe nào cần lập hồ sơ mới. Xe đã có hồ sơ trình ký hoặc hợp đồng còn hiệu lực được ẩn khỏi danh sách này.</p>}
       <Pagination page={candidatePage} pageSize={10} total={candidateMeta?.total || 0} onPageChange={setCandidatePage} label="Phân trang hồ sơ lập hợp đồng" />
     </form>}
-    {loading ? <p>Đang tải danh sách…</p> : <><div className="contract-list">{rows.map((item) => <article key={item.id}><div><h2>{item.number}</h2><p>{item.vehicle}</p><p>{contractStatus[item.status] || item.status}</p><small>Bên khách hàng: {time(item.partySignedAt)} · XeDi: {time(item.platformSignedAt)}</small></div><button onClick={() => setSelected(item)}>{item.canSign ? 'Đọc và ký' : 'Xem hợp đồng'}</button></article>)}</div>{!rows.length && <p>Chưa có hợp đồng trong phạm vi này.</p>}</>}
+    <section className="contract-results"><div className="contract-results-heading"><div><span className="contract-eyebrow">DANH SÁCH</span><h2>Hồ sơ hợp đồng</h2></div><span>{pagination?.total ?? rows.length} hồ sơ</span></div>
+    {loading ? <div className="contract-loading" role="status"><span className="contract-spinner" />Đang tải danh sách hợp đồng…</div> : rows.length ? <div className="contract-list">{rows.map((item) => <article className="contract-card" key={item.id}><div className="contract-card-main"><div className="contract-card-top"><span className={`contract-status contract-status--${statusTone(item.status)}`}>{contractStatus[item.status] || item.status}</span><span className="contract-card-type">{item.type === 'management' ? 'Hợp đồng quản lý xe' : 'Hợp đồng thuê xe'}</span></div><h3>{item.number}</h3><p className="contract-card-vehicle">{item.vehicle}</p><div className="contract-card-signatures"><span><i className={item.partySignedAt ? 'is-signed' : ''}>{item.partySignedAt ? '✓' : '·'}</i>{item.type === 'management' ? 'Chủ xe' : 'Khách thuê'}: {item.partySignedAt ? 'Đã ký' : 'Chờ ký'}</span><span><i className={item.platformSignedAt ? 'is-signed' : ''}>{item.platformSignedAt ? '✓' : '·'}</i>XeDi: {item.platformSignedAt ? 'Đã ký' : 'Chờ ký'}</span></div></div><button className={`contract-button ${item.canSign ? 'contract-button--primary' : 'contract-button--secondary'}`} onClick={() => setSelected(item)}>{item.canSign ? 'Đọc và ký' : 'Xem hợp đồng'} <span aria-hidden="true">→</span></button></article>)}</div> : <div className="contract-empty"><span className="contract-empty-icon">▤</span><h3>Chưa có hợp đồng trong danh sách này</h3><p>{canPrepare ? 'Chọn hồ sơ phía trên để lập hoặc mở nội dung trình ký.' : 'Khi hợp đồng được tạo, hồ sơ sẽ xuất hiện tại đây.'}</p></div>}
+    </section>
     <Pagination page={page} pageSize={limit} total={pagination?.total || 0} disabled={loading} onPageChange={setPage} onPageSizeChange={(value) => { setLimit(value); setPage(1); }} />
     {selected && <SigningDialog key={`${selected.type}-${selected.id}-${view}`} item={selected} view={view} onClose={() => setSelected(null)} onSigned={refresh} />}
   </main>;

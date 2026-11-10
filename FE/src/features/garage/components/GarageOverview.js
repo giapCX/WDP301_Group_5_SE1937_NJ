@@ -1,6 +1,6 @@
 import Icon from '../../../components/ui/Icon';
 import GarageTaskTable from './GarageTaskTable';
-import { bangkokDate, displayTime, taskKinds, isFinished } from '../data/garage';
+import { bangkokDate, displayTime, taskKinds, isFinished, sortGarageTasks } from '../data/garage';
 
 export default function GarageOverview({ workspace, user, onNavigate, onOpen }) {
   const today = bangkokDate();
@@ -11,9 +11,7 @@ export default function GarageOverview({ workspace, user, onNavigate, onOpen }) 
     isFinished(task),
   ).length;
   const todayPending = todayTasks.filter((task) => !isFinished(task));
-  const pending = workspace.tasks
-    .filter((task) => !isFinished(task))
-    .sort((a, b) => a.schedule.localeCompare(b.schedule));
+  const pending = sortGarageTasks(workspace.tasks.filter((task) => !isFinished(task)));
   const stats = [
     {
       label: 'Công việc hôm nay',

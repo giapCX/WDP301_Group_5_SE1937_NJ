@@ -17,6 +17,7 @@ import {
   sectionKinds,
   statusLabels,
   taskKinds,
+  sortGarageTasks,
 } from '../data/garage';
 import '../styles/garage.css';
 
@@ -112,7 +113,7 @@ export default function GaragePage({ user }) {
   }
   const active = garageSections.find((item) => item.id === section);
   const today = bangkokDate();
-  const filteredTasks = workspace.tasks
+  const filteredTasks = sortGarageTasks(workspace.tasks
     .filter(
       (task) =>
         (!sectionKinds[section] || task.kind === sectionKinds[section]) &&
@@ -124,8 +125,7 @@ export default function GaragePage({ user }) {
         normalize(
           `${task.vehicle} ${task.plate} ${task.id} ${task.contact}`,
         ).includes(normalize(query)),
-    )
-    .sort((a, b) => a.schedule.localeCompare(b.schedule));
+    ));
   const incidents = workspace.incidents.filter((item) =>
     normalize(`${item.vehicle} ${item.plate} ${item.description}`).includes(
       normalize(query),
@@ -327,7 +327,7 @@ export default function GaragePage({ user }) {
               <>
                 <div className="gs-list-summary">
                   {filteredTasks.length} công việc{' '}
-                  <span>· Danh sách chung theo quyền; chỉ người lập được sửa nháp</span>
+                  <span>· Ưu tiên: quá giờ hẹn → hôm nay → nháp → việc mở → lịch sắp tới → bị chặn → đã xử lý. Chỉ người lập được sửa nháp.</span>
                 </div>
                 <GarageTaskTable
                   tasks={listPage.items}
