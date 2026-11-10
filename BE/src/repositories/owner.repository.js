@@ -10,7 +10,7 @@ export function createOwnerRepository(connection, fileRepository) {
   return {
     findRoles: (ids) => models.Role.find({ _id: { $in: ids } }).select({ code: 1 }).lean(),
     findVehicles: (ownerId) => vehicles.find({ owner_id: ownerId }, {
-      projection: { brand: 1, model: 1, manufacture_year: 1, license_plate: 1, onboarding_status: 1, review_note: 1, physical_status: 1, created_at: 1, updated_at: 1 },
+      projection: { brand: 1, model: 1, manufacture_year: 1, license_plate: 1, onboarding_status: 1, review_note: 1, physical_status: 1, created_at: 1, updated_at: 1, documents: 1, photos: 1 },
       sort: { updated_at: -1, _id: -1 },
     }),
     findSettlements: (ownerId) => settlements.find({ owner_id: ownerId }, { sort: { period_start: -1 } }),
@@ -33,6 +33,7 @@ export function createOwnerRepository(connection, fileRepository) {
     uploadPrivateFile: (ownerId, input, purpose) => fileRepository.save(ownerId, input, purpose),
     deletePrivateFiles: (keys) => fileRepository.remove(keys),
     createVehicle: (vehicle) => vehicles.create(vehicle),
+    updateVehicle: (id, ownerId, update) => models.Vehicle.updateOne({ _id: id, owner_id: ownerId }, update),
     deleteVehicle: (id) => models.Vehicle.deleteOne({ _id: id }),
     createAgreement: (agreement) => agreements.create(agreement),
     deleteAgreement: (id) => models.ManagementAgreement.deleteOne({ _id: id }),

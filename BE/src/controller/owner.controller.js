@@ -8,6 +8,10 @@ export function createOwnerController(service) {
       const result = await service.registerVehicle(request.body, { user: request.user, tokenPayload: request.tokenPayload });
       response.status(201).json({ data: result, message: 'Đã ký thỏa thuận quản lý và gửi hồ sơ xe để xác minh.' });
     },
+    resubmitVehicleDocuments: async (request, response) => {
+      const data = await service.resubmitVehicleDocuments(request.params.id, request.body, { user: request.user, tokenPayload: request.tokenPayload });
+      response.json({ data, message: 'Đã gửi tài liệu bổ sung để Quản lý xét duyệt lại.' });
+    },
     agreementDetails: async (request, response) => {
       const data = await service.agreementDetails(request.params.id, { user: request.user, tokenPayload: request.tokenPayload });
       response.json({ data });

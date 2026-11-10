@@ -22,6 +22,7 @@ export function createOwnerRouter(connection, { useLocalFileStorage = false, fil
   router.use(createAuthMiddleware(connection));
   router.get('/dashboard', controller.dashboard);
   router.post('/vehicles', controller.registerVehicle);
+  router.patch('/vehicles/:id/documents', controller.resubmitVehicleDocuments);
   router.get('/agreements/:id', controller.agreementDetails);
   router.post('/agreements/:id/sign', controller.signAgreement);
   router.post('/payout-requests', controller.requestPayout);

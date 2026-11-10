@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
 
 const { ObjectId } = Types;
-const RENTER_ROLES = new Set(['RENTER']);
+const ALLOWED_EKYC_ROLES = new Set(['RENTER', 'OWNER', 'CAR_OWNER']);
 const allowedFiles = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
 const statuses = new Set(['pending', 'verified', 'revision_required', 'rejected']);
 const mask = (value) => `***${value.replace(/\s/g, '').slice(-4)}`;
@@ -26,7 +26,7 @@ function text(value, label, min, max) {
   if (typeof value !== 'string' || value.trim().length < min || value.trim().length > max) throw httpError(400, `${label} không hợp lệ.`);
   return value.trim();
 }
-async function requireRenter(repository, actor) {
+async function requireEkycUser(repository, actor) {
   const id = actor?.tokenPayload?.sub;
   if (!ObjectId.isValid(id)) throw httpError(401, 'Phiên đăng nhập không hợp lệ.');
   const userId = new ObjectId(id);
@@ -34,7 +34,7 @@ async function requireRenter(repository, actor) {
   if (!user || user.account_status !== 'active') throw httpError(401, 'Tài khoản không hợp lệ hoặc đã bị khóa.');
   const roleIds = [user.primary_role_id, ...(user.additional_role_ids || [])].filter(Boolean);
   const roles = roleIds.length ? await repository.findRoles(roleIds) : [];
-  if (!roles.some((role) => RENTER_ROLES.has(role.code))) throw httpError(403, 'Chỉ tài khoản khách thuê có thể gửi eKYC.');
+  if (!roles.some((role) => ALLOWED_EKYC_ROLES.has(role.code))) throw httpError(403, 'Bạn không có quyền thực hiện xác minh eKYC.');
   return { userId, user };
 }
 function serialize(user) {
@@ -47,12 +47,12 @@ function serialize(user) {
 export function createIdentityVerificationService(repository, fileRepository) {
   return {
     async mine(actor) {
-      const { user } = await requireRenter(repository, actor);
+      const { user } = await requireEkycUser(repository, actor);
       return serialize(user);
     },
     async submit(body, actor) {
-      const { userId, user } = await requireRenter(repository, actor);
-      if (user.identity_kyc?.status === 'verified' || user.driver_license?.verification_status === 'verified') {
+      const { userId, user } = await requireEkycUser(repository, actor);
+      if (user.identity_kyc?.status === 'verified' && user.driver_license?.verification_status === 'verified') {
         throw httpError(409, 'Hồ sơ eKYC đã được xác minh. Liên hệ hỗ trợ nếu cần thay đổi giấy tờ.');
       }
       if (!body || typeof body !== 'object' || Array.isArray(body)) throw httpError(400, 'Hồ sơ eKYC không hợp lệ.');

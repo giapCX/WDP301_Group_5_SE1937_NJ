@@ -64,6 +64,11 @@ export function createOwnerService(repository) {
           year: vehicle.manufacture_year, licensePlate: vehicle.license_plate,
           approvalStatus: vehicle.onboarding_status, reviewNote: vehicle.review_note || '',
           operatingStatus: vehicle.physical_status, updatedAt: vehicle.updated_at || vehicle.created_at,
+          documents: {
+            registration: { verified: Boolean(vehicle.documents?.registration?.verified), reviewStatus: vehicle.documents?.registration?.review_status || null, reviewNote: vehicle.documents?.registration?.review_note || '' },
+            inspectionCertificate: { verified: Boolean(vehicle.documents?.inspection_certificate?.verified), reviewStatus: vehicle.documents?.inspection_certificate?.review_status || null, reviewNote: vehicle.documents?.inspection_certificate?.review_note || '' },
+            insurance: { verified: Boolean(vehicle.documents?.insurance?.verified), reviewStatus: vehicle.documents?.insurance?.review_status || null, reviewNote: vehicle.documents?.insurance?.review_note || '' },
+          },
         })),
         totals,
         payoutAccount: actor.user?.payout_profile?.bank_name && actor.user?.payout_profile?.account_masked
@@ -325,6 +330,121 @@ export function createOwnerService(repository) {
         await Promise.allSettled(cleanup);
         await repository.deletePrivateFiles(fileKeys);
         throw failure;
+      }
+    },
+
+    async resubmitVehicleDocuments(vehicleIdStr, body, actor) {
+      const ownerId = await actorId(actor);
+      if (!/^[a-f\d]{24}$/i.test(vehicleIdStr || '')) throw httpError(400, 'Mã phương tiện không hợp lệ.');
+      const vehicleId = new ObjectId(vehicleIdStr);
+      const vehicle = await repository.findVehicle(ownerId, vehicleId);
+      if (!vehicle) throw httpError(404, 'Không tìm thấy xe thuộc tài khoản của bạn.');
+      if (vehicle.onboarding_status !== 'revision_required') {
+        throw httpError(409, 'Xe này không ở trạng thái yêu cầu bổ sung hồ sơ.');
+      }
+
+      const docs = body?.documents || {};
+      const hasPhotos = Array.isArray(body?.photos) && body.photos.length > 0;
+      const hasDocs = Boolean(docs.registration || docs.inspectionCertificate || docs.insurance);
+      if (!hasDocs && !hasPhotos) {
+        throw httpError(400, 'Vui lòng tải lên ít nhất một tài liệu hoặc ảnh xe cần bổ sung.');
+      }
+
+      const uploadedKeys = [];
+      try {
+        const store = async (input, purpose) => {
+          const key = await repository.uploadPrivateFile(ownerId, input, purpose);
+          uploadedKeys.push(key);
+          return key;
+        };
+
+        const now = new Date();
+        const updates = {
+          onboarding_status: 'pending_review',
+          updated_at: now,
+        };
+
+        if (docs.registration) {
+          const file = validateFile(docs.registration, 'Giấy đăng ký xe');
+          const key = await store(file, 'vehicle_registration');
+          updates['documents.registration.file_key'] = key;
+          updates['documents.registration.verified'] = false;
+          updates['documents.registration.review_status'] = 'pending';
+          updates['documents.registration.review_note'] = '';
+          updates['documents.registration.reviewed_at'] = null;
+        }
+
+        if (docs.inspectionCertificate) {
+          const file = validateFile(docs.inspectionCertificate, 'Giấy chứng nhận đăng kiểm');
+          const key = await store(file, 'inspection_certificate');
+          updates['documents.inspection_certificate.file_key'] = key;
+          updates['documents.inspection_certificate.verified'] = false;
+          updates['documents.inspection_certificate.review_status'] = 'pending';
+          updates['documents.inspection_certificate.review_note'] = '';
+          updates['documents.inspection_certificate.reviewed_at'] = null;
+        }
+
+        if (docs.insurance) {
+          const file = validateFile(docs.insurance, 'Giấy chứng nhận bảo hiểm');
+          const key = await store(file, 'insurance');
+          updates['documents.insurance.file_key'] = key;
+          updates['documents.insurance.verified'] = false;
+          updates['documents.insurance.review_status'] = 'pending';
+          updates['documents.insurance.review_note'] = '';
+          updates['documents.insurance.reviewed_at'] = null;
+        }
+
+        if (hasPhotos) {
+          if (body.photos.length < 2 || body.photos.length > 5) {
+            throw httpError(400, 'Tải lên từ 2 đến 5 ảnh ngoại thất hoặc nội thất xe.');
+          }
+          const photoFiles = body.photos.map((p, idx) => validateFile(p, `Ảnh xe số ${idx + 1}`, ['image/jpeg', 'image/png', 'image/webp']));
+          const photoKeys = [];
+          for (const photo of photoFiles) {
+            photoKeys.push(await store(photo, 'vehicle_photo'));
+          }
+          updates.photos = photoKeys;
+        }
+
+        const note = typeof body?.note === 'string' ? body.note.trim().slice(0, 500) : '';
+        const result = await repository.updateVehicle(vehicleId, ownerId, {
+          $set: updates,
+          $push: {
+            registration_history: {
+              action: 'revision_submitted',
+              by_user_id: ownerId,
+              at: now,
+              note: note || 'Chủ xe đã gửi hồ sơ bổ sung',
+            },
+          },
+        });
+
+        if (result.modifiedCount !== 1) {
+          throw httpError(409, 'Không thể cập nhật hồ sơ xe.');
+        }
+
+        await repository.createAudit({
+          actor_user_id: ownerId,
+          action: 'vehicle.revision.submit',
+          entity_type: 'vehicles',
+          entity_id: vehicleId,
+          sanitized_changes: {
+            resubmitted_documents: Object.keys(docs),
+            has_new_photos: hasPhotos,
+          },
+          created_at: now,
+        }).catch(() => {});
+
+        return {
+          id: vehicleId.toString(),
+          onboardingStatus: 'pending_review',
+          resubmittedAt: now,
+        };
+      } catch (error) {
+        if (uploadedKeys.length) {
+          await repository.deletePrivateFiles(uploadedKeys);
+        }
+        throw error;
       }
     },
   };
