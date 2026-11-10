@@ -4,15 +4,16 @@ import { useState } from 'react';
 import useManagerActions from '../hooks/useManagerActions';
 import useManagerCollection from '../hooks/useManagerCollection';
 import { DataFields, humanizeField } from './dataDisplay';
-export default function OperationsWorkspace({
-  active,
-  onNotice
-}) {
+const formatMoney = (amount) => new Intl.NumberFormat('vi-VN').format(amount);
+const requestStatus = (status) => ({ submitted: 'Chờ duyệt', pending_review: 'Chờ duyệt', reported: 'Mới tiếp nhận', open: 'Mới tiếp nhận', investigating: 'Đang xem xét', awaiting_response: 'Chờ phản hồi', pending_manager: 'Chờ Manager quyết định' }[status] || status);
+
+export default function OperationsWorkspace({ active, onNotice }) {
   const request = useManagerCollection(active);
   const {
     createStaff,
     reviewCompensation,
     reviewIncident,
+    reviewTrafficViolation,
     updatePolicy,
     updateStaff
   } = useManagerActions();

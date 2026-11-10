@@ -7,13 +7,13 @@ import { createCloudinaryGaragePhotoRepository } from '../repositories/cloudinar
 import { createGaragePhotoService } from '../service/garage-photo.service.js';
 import { createGaragePhotoController } from '../controller/garage-photo.controller.js';
 
-export function createGaragePhotoRouter(connection, directory) {
+export function createGaragePhotoRouter(connection, directory, { useLocalFileStorage = false } = {}) {
   const router = Router();
   const configured = Object.values(env.cloudinary).filter(Boolean).length;
-  if (directory === undefined && configured > 0 && configured < 3) {
+  if (!useLocalFileStorage && directory === undefined && configured > 0 && configured < 3) {
     throw new Error('Configure all three CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET variables.');
   }
-  const repository = directory === undefined && configured === 3
+  const repository = !useLocalFileStorage && directory === undefined && configured === 3
     ? createCloudinaryGaragePhotoRepository(env.cloudinary)
     : createGaragePhotoRepository(directory ?? env.garageUploadDirectory);
   const controller = createGaragePhotoController(createGaragePhotoService(repository));

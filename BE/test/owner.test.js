@@ -135,3 +135,53 @@ test('registration rejects missing agreement acceptance and duplicate or malform
   assert.equal(result.status, 400);
   assert.match(result.body.error.message, /quy trình đăng ký/);
 });
+
+test('owner can resubmit vehicle documents when revision is required', async () => {
+  const now = new Date();
+  const vehicle = await models.Vehicle.create({
+    owner_id: ownerId,
+    license_plate: `REV-${Date.now().toString().slice(-5)}`,
+    brand: 'Toyota',
+    model: 'Vios',
+    onboarding_status: 'revision_required',
+    physical_status: 'with_owner',
+    review_note: 'Vui lòng nộp lại giấy đăng kiểm rõ nét hơn',
+    documents: {
+      registration: { file_key: 'old_reg_key', verified: true, review_status: 'approved' },
+      inspection_certificate: { file_key: 'old_insp_key', verified: false, review_status: 'revision_required', review_note: 'Bị mờ' },
+      insurance: { file_key: 'old_ins_key', verified: true, review_status: 'approved' },
+    },
+    created_at: now,
+    updated_at: now,
+  });
+
+  // Verify dashboard returns reviewNote and documents for the vehicle
+  const dash = await request('/owner/dashboard');
+  assert.equal(dash.status, 200);
+  const found = dash.body.data.vehicles.find((v) => v.id === vehicle._id.toString());
+  assert.ok(found);
+  assert.equal(found.approvalStatus, 'revision_required');
+  assert.equal(found.reviewNote, 'Vui lòng nộp lại giấy đăng kiểm rõ nét hơn');
+  assert.equal(found.documents.inspectionCertificate.reviewStatus, 'revision_required');
+
+  // Reject resubmitting with empty documents
+  const emptyResubmit = await request(`/owner/vehicles/${vehicle._id}/documents`, 'PATCH', {});
+  assert.equal(emptyResubmit.status, 400);
+
+  // Successfully resubmit the inspection certificate
+  const resubmit = await request(`/owner/vehicles/${vehicle._id}/documents`, 'PATCH', {
+    documents: {
+      inspectionCertificate: doc('new_inspection.pdf'),
+    },
+    note: 'Đã chụp lại bản quét PDF giấy đăng kiểm nét hơn',
+  });
+  assert.equal(resubmit.status, 200, JSON.stringify(resubmit));
+  assert.equal(resubmit.body.data.onboardingStatus, 'pending_review');
+
+  const updatedVehicle = await models.Vehicle.findById(vehicle._id).lean();
+  assert.equal(updatedVehicle.onboarding_status, 'pending_review');
+  assert.notEqual(updatedVehicle.documents.inspection_certificate.file_key, 'old_insp_key');
+  assert.equal(updatedVehicle.documents.inspection_certificate.review_status, 'pending');
+  assert.equal(updatedVehicle.registration_history.at(-1).action, 'revision_submitted');
+  assert.ok(await models.AuditLog.findOne({ entity_id: vehicle._id, action: 'vehicle.revision.submit' }).lean());
+});

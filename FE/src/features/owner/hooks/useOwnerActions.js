@@ -1,4 +1,4 @@
-import { reportOwnerIncident, requestOwnerPayout, requestOwnerVehicleWithdrawal, signOwnerAgreement } from '../api/ownerApi';
+import { reportOwnerIncident, requestOwnerPayout, requestOwnerVehicleWithdrawal, resubmitVehicleDocuments, signOwnerAgreement } from '../api/ownerApi';
 
 export default function useOwnerActions() {
   return {
@@ -6,5 +6,6 @@ export default function useOwnerActions() {
     requestPayout: (payload) => requestOwnerPayout(payload),
     requestVehicleWithdrawal: (payload) => requestOwnerVehicleWithdrawal(payload),
     reportIncident: (payload) => reportOwnerIncident(payload),
+    resubmitVehicleDocuments: (id, payload) => resubmitVehicleDocuments(id, payload),
   };
 }

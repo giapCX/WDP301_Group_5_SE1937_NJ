@@ -8,6 +8,8 @@ import OwnerPage from '../features/owner/pages/OwnerPage';
 import AdminPage from '../features/manager/pages/AdminPage';
 import OperationIncidentsPage from '../features/operations/pages/OperationIncidentsPage';
 import ContractsPage from '../features/contracts/ContractsPage';
+import VerificationPage from '../features/verification/pages/VerificationPage';
+import OperationPage from '../features/operation/pages/OperationPage';
 
 export default function AppRouter() {
   const [isLogin, setIsLogin] = useState(() => window.location.hash.startsWith('#/login'));
@@ -17,6 +19,8 @@ export default function AppRouter() {
   const [isAdmin, setIsAdmin] = useState(() => window.location.hash.startsWith('#/admin'));
   const [isOperations, setIsOperations] = useState(() => window.location.hash.startsWith('#/operations'));
   const [isContracts, setIsContracts] = useState(() => window.location.hash.startsWith('#/contracts'));
+  const [isVerification, setIsVerification] = useState(() => window.location.hash.startsWith('#/verification'));
+  const [isOperation, setIsOperation] = useState(() => window.location.hash.startsWith('#/operation'));
 
   useEffect(() => {
     const onHashChange = () => {
@@ -27,6 +31,8 @@ export default function AppRouter() {
       setIsAdmin(window.location.hash.startsWith('#/admin'));
       setIsOperations(window.location.hash.startsWith('#/operations'));
       setIsContracts(window.location.hash.startsWith('#/contracts'));
+      setIsVerification(window.location.hash.startsWith('#/verification'));
+      setIsOperation(window.location.hash.startsWith('#/operation'));
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
@@ -37,22 +43,28 @@ export default function AppRouter() {
       ? 'Garage Staff — XeDi'
       : isOwner
       ? 'Cổng chủ xe — XeDi'
+      : isVerification
+      ? 'Xác minh eKYC — XeDi'
       : isLogin
       ? 'Đăng nhập & Đăng ký — XeDi'
       : isAdmin
         ? 'Quản trị hệ thống — XeDi'
-        : isManager
-          ? 'Quản lý vận hành — XeDi'
-        : 'XeDi — Thuê xe tự lái, vi vu mọi nẻo đường';
+        : isOperation
+          ? 'Operation Management — XeDi'
+          : isManager
+            ? 'Quản lý vận hành — XeDi'
+            : 'XeDi — Thuê xe tự lái, vi vu mọi nẻo đường';
     window.scrollTo(0, 0);
-  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isContracts]);
+  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isContracts, isVerification, isOperation]);
 
   if (isContracts) return <ContractsPage />;
   if (isGarage) return <GarageAccess>{(user) => <GaragePage user={user} />}</GarageAccess>;
   if (isOwner) return <OwnerPage />;
   if (isAdmin) return <AdminPage />;
+  if (isOperation) return <OperationPage />;
   if (isManager) return <ManagerPage />;
   if (isOperations) return <OperationIncidentsPage />;
+  if (isVerification) return <VerificationPage />;
 
   return isLogin ? (
     <div className="login-page">

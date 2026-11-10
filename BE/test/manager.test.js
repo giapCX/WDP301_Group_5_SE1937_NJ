@@ -142,6 +142,39 @@ test('incident compensation and resolution retain nested fields through strict s
   assert.equal((await request(`/manager/incidents/${other._id}/review`, 'PATCH', { action: 'resolve', note: 'Closed after review' })).status, 200);
 });
 
+test('traffic violation penalties require the Manager decision endpoint', async () => {
+  const vehicle = await models.Vehicle.findOne().lean();
+  const incident = await models.IncidentCase.create({
+    case_number: `MONGOOSE-VIOLATION-${new Types.ObjectId()}`,
+    vehicle_id: vehicle._id,
+    description: 'Traffic violation submitted by Operation',
+    case_type: 'traffic_violation',
+    status: 'pending_manager',
+    traffic_violation_details: {
+      official_confirmation: 'pending_manager_review',
+      fine_amount_claimed: 500,
+      operation_recommendation: 'confirm',
+      operation_recommended_penalty_fee: 400,
+    },
+  });
+  const bypass = await request(`/manager/incidents/${incident._id}/review`, 'PATCH', {
+    action: 'resolve',
+    note: 'Attempt to bypass violation decision',
+  });
+  assert.equal(bypass.status, 409);
+
+  const result = await request(`/manager/incidents/${incident._id}/violation`, 'PATCH', {
+    decision: 'approve',
+    amount: 400,
+    note: 'Evidence reviewed by Manager',
+  });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  const updated = await models.IncidentCase.findById(incident._id).lean();
+  assert.equal(updated.status, 'resolved');
+  assert.equal(updated.traffic_violation_details.official_confirmation, 'confirmed');
+  assert.equal(updated.traffic_violation_details.penalty_fee, 400);
+});
+
 test('policy versioning and staff updates validate through Mongoose', async () => {
   const policy = await request('/manager/policies/commission_default', 'PUT', { config: { default_commission_pct: 12, existing_agreements_unaffected: true } });
   assert.equal(policy.status, 201, JSON.stringify(policy));
