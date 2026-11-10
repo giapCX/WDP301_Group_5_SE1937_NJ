@@ -5,11 +5,11 @@ Ung dung thue xe tu lai: React JavaScript, Node.js, Express va MongoDB qua Mongo
 ```text
 FE/                    Ung dung React hien tai
 BE/
-  data/                18 file JSON du lieu mau cua nhom
+  data/                19 file JSON du lieu mau cua nhom
   scripts/             Tao collection, index va nhap du lieu
   src/config/          Cau hinh moi truong va ket noi MongoDB
   src/database/        Index, khoi tao collection va seed
-  src/models/          18 schema/model Mongoose
+  src/models/          19 schema/model Mongoose
   src/routes/          Khai bao endpoint
   src/controller/      Dieu phoi HTTP
   src/service/         Nghiep vu
@@ -45,7 +45,7 @@ Khong can copy de len `.env` neu file da ton tai. Dieu chinh `MONGODB_URI` trong
 - Compass: dùng cùng URI trong `BE/.env`; mặc định `mongodb://127.0.0.1:27018/?replicaSet=rs0`.
 - Database mac dinh: `xedi`
 
-`npm run db:setup` tao 18 collection va index. `npm run db:seed` thuc hien setup roi nhap du lieu, chuyen `$oid` thanh ObjectId va `$date` thanh Date. Chay lai seed chi them ID chua co, giu nguyen ban ghi da ton tai; khong xoa collection. Neu du lieu hien co vi pham unique index, script bao loi de kiem tra.
+`npm run db:setup` tao 19 collection va index. `npm run db:seed` thuc hien setup roi nhap du lieu, chuyen `$oid` thanh ObjectId va `$date` thanh Date. Chay lai seed chi them ID chua co, giu nguyen ban ghi da ton tai; khong xoa collection. Neu du lieu hien co vi pham unique index, script bao loi de kiem tra.
 
 Co the chay rieng tung ben trong hai terminal:
 
@@ -149,7 +149,7 @@ Backend đọc **`BE/.env`**, không đọc `.env.example`. Chuỗi `mongodb+srv
 npm run db:setup
 ```
 
-Kết quả thành công có dạng `Database xedi: 18 collections and indexes are ready.` Chỉ chạy tiếp sau khi bước này thành công:
+Kết quả thành công có dạng `Database xedi: 19 collections and indexes are ready.` Chỉ chạy tiếp sau khi bước này thành công:
 
 ```powershell
 npm run dev
@@ -266,11 +266,18 @@ Tài liệu: [lấy thông tin Cloudinary](https://cloudinary.com/documentation/
 | GET | `/api/listings` | Danh sach tin xe da published va xe da approved |
 | GET | `/api/listings/:id` | Chi tiet tin xe theo listing ObjectId |
 | GET | `/api/manager/dashboard?period=7d` | Dashboard van hanh cho tai khoan Manager/Admin (JWT), gom chi so, doanh thu da doi soat, yeu cau xe/su co va audit log |
-| GET/PATCH | `/api/manager/vehicles` va `/api/manager/vehicles/:id/review` | Danh sach xe; duyet, tu choi hoac yeu cau bo sung ho so |
-| GET/PATCH | `/api/manager/incidents` va `/api/manager/incidents/:id/*` | Xem su co; duyet/tu choi boi thuong hoac dong ho so |
-| GET/PUT | `/api/manager/policies` va `/api/manager/policies/:type` | Xem chinh sach dang ap dung; tao phien ban moi |
-| GET/PATCH | `/api/manager/staff` va `/api/manager/staff/:id` | Liet ke nhan su, doi vai tro va trang thai tai khoan |
-| GET | `/api/manager/reports/finance`, `/api/manager/reports/inspections` | Bao cao doi soat tai chinh va lich su kiem dinh, co loc ngay |
+| GET/PATCH | `/api/manager/vehicles` va `/api/manager/vehicles/:id/review` | Manager: danh sach xe; duyet, tu choi hoac yeu cau bo sung ho so |
+| GET/PATCH | `/api/manager/incidents` va `/api/manager/incidents/:id/*` | Manager: xem su co; duyet/tu choi boi thuong hoac dong ho so |
+| GET/PUT | `/api/manager/policies` va `/api/manager/policies/:type` | Manager: xem chinh sach dang ap dung; tao phien ban moi |
+| GET/PATCH | `/api/manager/staff` va `/api/manager/staff/:id` | Manager: quan ly nhan vien van hanh/gara |
+| POST | `/api/manager/staff` | Manager: tao tai khoan nhan vien van hanh/gara |
+| GET/POST/PATCH | `/api/manager/accounts` va `/api/manager/accounts/:id` | Admin: tao tai khoan, gan nhieu role, khoa/mo khoa |
+| GET/POST/PATCH | `/api/manager/roles` va `/api/manager/roles/:id` | Admin: tao role, xem role va cap nhat ten, mo ta, permissions |
+| GET | `/api/manager/audit-logs` | Admin: tra cuu, loc theo ngay/action/entity va phan trang audit logs |
+| GET/PATCH | `/api/manager/contracts?type=management|rental` va `/api/manager/contracts/:type/:id` | Manager: xem, ghi nhan review, de nghi amendment va cham dut hop dong quan ly |
+| GET | `/api/manager/reports/finance` | Admin hoac Manager: bao cao doi soat tai chinh, co loc ngay |
+| GET | `/api/manager/reports/inspections`, `/api/manager/reports/operations` | Manager: bao cao kiem dinh va hoat dong, co loc ngay |
+| GET/POST | `/api/manager/reports/system` | Admin/Manager: luu va xem danh sach bao cao da tao; Admin chi thay bao cao tai chinh |
 | POST | `/api/auth/login` | Dang nhap bang email/so dien thoai va mat khau (tra ve JWT & user info) |
 | GET | `/api/auth/me` | Lay thong tin user hien tai qua JWT Bearer token |
 | POST | `/api/auth/logout` | Dang xuat |
@@ -295,7 +302,7 @@ Noi dung duyet booking, nhan/tra tai gara, hoan coc, phi hoa hong theo database 
 
 Giao dien dang nhap tai `/#/login` da duoc ket noi truc tiep toi API backend `/api/auth/login` voi du lieu that tu MongoDB. Khi dang nhap thanh cong, token duoc luu vao localStorage/sessionStorage va thong tin nguoi dung duoc hien thi tren Header.
 
-Dashboard quan ly tai `/#/manager` goi cac endpoint `/api/manager/*` va chi cho phep tai khoan co role hien tai `MANAGER` hoac `ADMIN`. API tinh xe tu listings published, ho so cho duyet va su co chua dong tu collections tuong ung; doanh thu lay phi nen tang trong `owner_settlements` da thanh toan, hoat dong lay tu `audit_logs`. Query dashboard `period` chap nhan `7d`, `30d` hoac `month`. Thao tac duyet, boi thuong, dong su co, sua chinh sach va quan ly nhan su deu ghi audit log.
+Giao dien quan tri tach theo URL va role: `/#/admin` cho `ADMIN`, `/#/manager` cho `MANAGER`. Dang nhap tu dong chuyen tai khoan den dung khu vuc; neu mo sai URL, giao dien chuyen ve khu vuc ma role duoc phep. Backend van kiem tra role theo tung endpoint: chi `MANAGER` duoc duyet xe, xu ly su co/boi thuong, sua chinh sach, quan ly nhan vien van hanh/gara, quan ly hop dong va xem bao cao van hanh; `ADMIN` duoc quan ly tai khoan, role/permission va audit logs; hai role duoc xem bao cao tai chinh. Amendment hop dong da ky duoc ghi nhu de nghi cho chu the ky, khong ghi de snapshot dieu khoan cua booking cu. Bao cao tai chinh va hoat dong co the luu thanh snapshot trong `system_reports`. Thao tac quan tri ghi audit log.
 
 Cong chu xe tai `/#/owner` goi `/api/owner/dashboard` va `/api/owner/vehicles`. Dang ky xe yeu cau role `OWNER`, ba loai giay to xe, tu 2 den 5 anh xe va xac nhan thoa thuan. Tai lieu duoc luu trong MongoDB GridFS; xe gui thanh cong vao trang thai `submitted` cho quy trinh gara/quan ly tiep tuc.
 

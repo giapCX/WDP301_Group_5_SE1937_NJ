@@ -5,5 +5,6 @@ export const roleSchema = createSchema({
   display_name: String,
   permissions: arrayOf(String),
   description: String,
+  created_at: Date,
   updated_at: Date,
 });

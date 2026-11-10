@@ -13,6 +13,7 @@ export const openInspectionIndex = {
 };
 
 export const collections = [
+  { name: 'system_reports', indexes: [{ report_type: 1, generated_at: -1 }, { generated_by: 1, generated_at: -1 }] },
   { name: 'roles', unique: ['code'] },
   { name: 'users', unique: ['email'], indexes: [{ primary_role_id: 1 }] },
   {

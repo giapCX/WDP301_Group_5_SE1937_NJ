@@ -14,7 +14,8 @@ export function canAccessOwner(user) {
 }
 
 export function getLoginDestination(user) {
-  if (user?.roles?.some((role) => ['MANAGER', 'ADMIN'].includes(role))) return '/#/manager';
+  if (user?.roles?.includes('ADMIN')) return '/#/admin';
+  if (user?.roles?.includes('MANAGER')) return '/#/manager';
   if (canAccessOwner(user)) return '/owner';
   return canAccessGarage(user) ? '/garage' : '/#trang-chu';
 }

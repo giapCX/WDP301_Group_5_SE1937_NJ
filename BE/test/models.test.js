@@ -4,9 +4,9 @@ import { test } from 'node:test';
 import mongoose from 'mongoose';
 import { getModels, modelDefinitions } from '../src/models/index.js';
 
-test('all 18 models validate the existing seed dataset and preserve BSON values', async () => {
+test('all registered models validate the existing seed dataset and preserve BSON values', async () => {
   const models = getModels(mongoose.createConnection());
-  assert.equal(Object.keys(models).length, 18);
+  assert.equal(Object.keys(models).length, Object.keys(modelDefinitions).length);
   for (const [name, { collection }] of Object.entries(modelDefinitions)) {
     const content = await readFile(new URL(`../data/${collection}.json`, import.meta.url), 'utf8');
     const documents = mongoose.mongo.BSON.EJSON.parse(content.replace(/^\uFEFF/, ''), { relaxed: true });

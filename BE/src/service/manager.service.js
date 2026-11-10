@@ -1,64 +1,535 @@
-import { httpError } from '../utils/http-error.js';
 import { Types } from 'mongoose';
+import { httpError } from '../utils/http-error.js';
 const {
   ObjectId
 } = Types;
-const STAFF_ROLES = ['MANAGER', 'OPERATION_STAFF', 'GARAGE_STAFF', 'ADMIN'];
-const OPEN_INCIDENT_STATUSES = ['reported', 'open', 'investigating', 'pending_review', 'awaiting_response'];
+import bcrypt from "bcryptjs";
+const STAFF_ROLES = ["MANAGER", "OPERATION_STAFF", "GARAGE_STAFF", "ADMIN"];
+const MANAGED_STAFF_ROLES = ["OPERATION_STAFF", "GARAGE_STAFF"];
+const OPEN_INCIDENT_STATUSES = ["reported", "open", "investigating", "pending_review", "awaiting_response"];
 const dayStart = date => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const toId = value => ObjectId.isValid(value) ? new ObjectId(value) : null;
+async function buildOperationsReport(repository, from, to) {
+  const [bookings, incidents, fleetSize] = await Promise.all([repository.collection("bookings").find({
+    start_at: {
+      $gte: from,
+      $lte: to
+    }
+  }).select({
+    status: 1,
+    vehicle_id: 1,
+    rental_fee_amount: 1
+  }).exec(), repository.collection("incident_cases").find({
+    created_at: {
+      $gte: from,
+      $lte: to
+    }
+  }).select({
+    status: 1
+  }).exec(), repository.collection("vehicles").countDocuments({
+    onboarding_status: "approved"
+  })]);
+  const byStatus = bookings.reduce((result, item) => {
+    const key = item.status || "unknown";
+    result[key] = (result[key] || 0) + 1;
+    return result;
+  }, {});
+  const activeStatuses = new Set(["confirmed", "ongoing", "completed"]);
+  const utilizedVehicles = new Set(bookings.filter(item => activeStatuses.has(item.status)).map(item => item.vehicle_id?.toString()).filter(Boolean)).size;
+  const openIncidents = incidents.filter(item => OPEN_INCIDENT_STATUSES.includes(item.status)).length;
+  return {
+    from,
+    to,
+    bookings: {
+      total: bookings.length,
+      byStatus,
+      rentalRevenue: bookings.reduce((sum, item) => sum + (Number(item.rental_fee_amount) || 0), 0)
+    },
+    fleet: {
+      approvedVehicles: fleetSize,
+      vehiclesWithBookings: utilizedVehicles,
+      utilizationPct: fleetSize ? Math.round(utilizedVehicles / fleetSize * 1000) / 10 : 0
+    },
+    incidents: {
+      total: incidents.length,
+      open: openIncidents,
+      resolved: incidents.length - openIncidents
+    }
+  };
+}
 function formatRequest(item, kind) {
   const createdAt = item.created_at || item.updated_at || new Date(0);
-  const isVehicle = kind === 'vehicle';
+  const isVehicle = kind === "vehicle";
   return {
     id: item._id.toString(),
     code: isVehicle ? `XE-${item.license_plate || item._id.toString().slice(-6)}` : item.case_number,
-    title: isVehicle ? `${item.brand || ''} ${item.model || ''} ${item.manufacture_year || ''}`.trim() || 'Hồ sơ xe mới' : `Yêu cầu sự cố ${item.case_number}`,
-    type: isVehicle ? 'Hồ sơ xe mới' : 'Khiếu nại & sự cố',
-    owner: item.owner_name || 'Chưa cập nhật người gửi',
+    title: isVehicle ? `${item.brand || ""} ${item.model || ""} ${item.manufacture_year || ""}`.trim() || "Hồ sơ xe mới" : `Yêu cầu sự cố ${item.case_number}`,
+    type: isVehicle ? "Hồ sơ xe mới" : "Khiếu nại & sự cố",
+    owner: item.owner_name || "Chưa cập nhật người gửi",
     createdAt,
     status: item.onboarding_status || item.status
   };
 }
 export function createManagerService(repository) {
   async function writeAudit(actorId, action, entityType, entityId, changes = {}) {
-    await repository.auditLogs.create({
-      actor_user_id: actorId, action, entity_type: entityType, entity_id: entityId,
-      sanitized_changes: changes, ip_address_masked: null, created_at: new Date(),
+    await repository.collection('audit_logs').create({
+      actor_user_id: actorId,
+      action,
+      entity_type: entityType,
+      entity_id: entityId,
+      sanitized_changes: changes,
+      ip_address_masked: null,
+      created_at: new Date()
     });
   }
   return {
     async authorizeDashboard(user) {
       const roleIds = [user.primary_role_id, ...(user.additional_role_ids || [])].filter(Boolean);
-      const rows = roleIds.length
-        ? await repository.roles.find({ _id: { $in: roleIds } }).select({ code: 1 }).exec()
-        : [];
-      const codes = rows.map(({ code }) => code);
-      if (!codes.includes('MANAGER') && !codes.includes('ADMIN')) {
-        throw httpError(403, 'Bạn không có quyền xem trang quản lý.');
-      }
+      const rows = await repository.collection('roles').find({
+        _id: {
+          $in: roleIds
+        }
+      }).select({
+        code: 1
+      }).exec();
+      const codes = rows.map(row => row.code);
+      if (!codes.some(code => ['MANAGER', 'ADMIN'].includes(code))) throw httpError(403, 'Bạn không có quyền xem trang quản lý.');
       return codes;
+    },
+    requireRoles: (...allowedRoles) => (request, response, next) => {
+      if (!allowedRoles.some(role => request.currentRoles?.includes(role))) return next(httpError(403, 'Bạn không có quyền thực hiện chức năng này.'));
+      next();
+    },
+    accounts: async input => {
+      const {
+        q = "",
+        status = "all",
+        role = "all"
+      } = input.query;
+      const match = {};
+      if (status !== "all") match.account_status = status;
+      if (typeof q === "string" && q.trim()) {
+        const safe = q.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        match.$or = [{
+          full_name: {
+            $regex: safe,
+            $options: "i"
+          }
+        }, {
+          email: {
+            $regex: safe,
+            $options: "i"
+          }
+        }, {
+          phone: {
+            $regex: safe,
+            $options: "i"
+          }
+        }];
+      }
+      const [users, roles] = await Promise.all([repository.collection("users").find(match).select({
+        password_hash: 0,
+        identity_kyc: 0,
+        driver_license: 0,
+        payout_profile: 0
+      }).sort({
+        created_at: -1
+      }).limit(300).exec(), repository.collection("roles").find({}).exec()]);
+      const roleMap = new Map(roles.map(item => [item._id.toString(), item]));
+      const data = users.map(user => {
+        const roleIds = [user.primary_role_id, ...(user.additional_role_ids || [])].filter(Boolean);
+        const userRoles = roleIds.map(id => roleMap.get(id.toString())).filter(Boolean);
+        return {
+          id: user._id.toString(),
+          name: user.full_name,
+          email: user.email,
+          phone: user.phone,
+          status: user.account_status,
+          roles: userRoles.map(item => item.code),
+          roleNames: userRoles.map(item => item.display_name),
+          createdAt: user.created_at
+        };
+      }).filter(item => role === "all" || item.roles.includes(role));
+      return {
+        data
+      };
+    },
+    createAccount: async input => {
+      const {
+        name,
+        email,
+        phone = "",
+        password,
+        roles: roleCodes = [],
+        status = "active"
+      } = input.body || {};
+      if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 120 || typeof email !== "string" || email.trim().length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || typeof phone !== "string" || phone.trim().length > 40 || typeof password !== "string" || password.length < 8 || password.length > 128 || !Array.isArray(roleCodes) || !roleCodes.length || roleCodes.some(code => typeof code !== "string" || !code.trim()) || !["active", "suspended"].includes(status)) {
+        throw httpError(400, "Thông tin tài khoản không hợp lệ; mật khẩu phải có ít nhất 8 ký tự.");
+      }
+      const normalizedRoleCodes = [...new Set(roleCodes.map(code => code.trim().toUpperCase()))];
+      if (normalizedRoleCodes.includes("ADMIN")) throw httpError(400, "Không thể tạo tài khoản có quyền Admin.");
+      const normalizedEmail = email.trim().toLowerCase();
+      const users = repository.collection("users");
+      if (await users.findOne({
+        email: {
+          $regex: `^${normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          $options: "i"
+        }
+      })) {
+        throw httpError(409, "Email đã được sử dụng.");
+      }
+      const roleRows = await repository.collection("roles").find({
+        code: {
+          $in: normalizedRoleCodes
+        }
+      }).exec();
+      if (roleRows.length !== normalizedRoleCodes.length) throw httpError(400, "Một hoặc nhiều vai trò không tồn tại.");
+      const now = new Date();
+      const inserted = await users.create({
+        full_name: name.trim(),
+        email: normalizedEmail,
+        phone: phone.trim(),
+        password_hash: await bcrypt.hash(password, 12),
+        primary_role_id: roleRows[0]._id,
+        additional_role_ids: roleRows.slice(1).map(item => item._id),
+        account_status: status,
+        created_at: now,
+        updated_at: now
+      });
+      await writeAudit(input.actorId, "account.create", "users", inserted._id, {
+        roles: roleRows.map(item => item.code),
+        status
+      });
+      return {
+        data: {
+          id: inserted._id.toString(),
+          name: name.trim(),
+          email: normalizedEmail,
+          status,
+          roles: roleRows.map(item => item.code)
+        }
+      };
+    },
+    updateAccount: async input => {
+      const id = toId(input.id);
+      const {
+        status,
+        roles: roleCodes
+      } = input.body || {};
+      if (!id || status === undefined && roleCodes === undefined) throw httpError(400, "Thông tin cập nhật không hợp lệ.");
+      if (status !== undefined && !["active", "suspended"].includes(status)) throw httpError(400, "Trạng thái tài khoản không hợp lệ.");
+      const target = await repository.collection("users").findOne({
+        _id: id
+      });
+      if (!target) throw httpError(404, "Không tìm thấy tài khoản.");
+      const adminRole = await repository.collection("roles").findOne({
+        code: "ADMIN"
+      });
+      const targetRoleIds = [target.primary_role_id, ...(target.additional_role_ids || [])].filter(Boolean);
+      const targetIsAdmin = Boolean(adminRole && targetRoleIds.some(roleId => roleId.equals(adminRole._id)));
+      if (id.equals(input.actorId) && (status === "suspended" || roleCodes && !roleCodes.includes("ADMIN"))) {
+        throw httpError(400, "Không thể khóa hoặc gỡ quyền Admin của tài khoản đang đăng nhập.");
+      }
+      const update = {
+        updated_at: new Date()
+      };
+      if (status !== undefined) update.account_status = status;
+      if (roleCodes !== undefined) {
+        if (!Array.isArray(roleCodes) || !roleCodes.length) throw httpError(400, "Tài khoản phải có ít nhất một vai trò.");
+        const roles = await repository.collection("roles").find({
+          code: {
+            $in: [...new Set(roleCodes)]
+          }
+        }).exec();
+        if (roles.length !== new Set(roleCodes).size) throw httpError(400, "Một hoặc nhiều vai trò không tồn tại.");
+        if (!targetIsAdmin && roles.some(item => item.code === "ADMIN")) throw httpError(400, "Không thể cấp quyền Admin qua chỉnh sửa tài khoản.");
+        if (targetIsAdmin && !roles.some(item => item.code === "ADMIN")) throw httpError(400, "Không thể gỡ quyền Admin của một Admin khác.");
+        update.primary_role_id = roles[0]._id;
+        update.additional_role_ids = roles.slice(1).map(item => item._id);
+      }
+      await repository.collection("users").updateOne({
+        _id: id
+      }, {
+        $set: update
+      });
+      await writeAudit(input.actorId, "account.update", "users", id, {
+        ...(status ? {
+          status
+        } : {}),
+        ...(roleCodes ? {
+          roles: roleCodes
+        } : {})
+      });
+      return {
+        data: {
+          id: id.toString(),
+          ...(status ? {
+            status
+          } : {}),
+          ...(roleCodes ? {
+            roles: roleCodes
+          } : {})
+        }
+      };
+    },
+    roles: async input => {
+      const rows = await repository.collection("roles").find({}).sort({
+        code: 1
+      }).exec();
+      return {
+        data: rows.map(item => ({
+          id: item._id.toString(),
+          code: item.code,
+          name: item.display_name,
+          description: item.description,
+          permissions: item.permissions || []
+        }))
+      };
+    },
+    createRole: async input => {
+      const {
+        code,
+        name,
+        description = "",
+        permissions = []
+      } = input.body || {};
+      if (typeof code !== "string" || !/^[A-Z][A-Z0-9_]{1,49}$/.test(code) || typeof name !== "string" || !name.trim() || name.length > 100 || typeof description !== "string" || description.length > 500 || !Array.isArray(permissions) || permissions.length > 200 || permissions.some(item => typeof item !== "string" || !/^[a-z][a-z0-9._:-]{1,79}$/.test(item))) {
+        throw httpError(400, "Thông tin vai trò hoặc quyền không hợp lệ.");
+      }
+      if (await repository.collection("roles").findOne({
+        code
+      })) throw httpError(409, "Mã vai trò đã tồn tại.");
+      const now = new Date();
+      const role = {
+        code,
+        display_name: name.trim(),
+        description: description.trim(),
+        permissions: [...new Set(permissions)],
+        created_at: now,
+        updated_at: now
+      };
+      const inserted = await repository.collection("roles").create(role);
+      await writeAudit(input.actorId, "role.create", "roles", inserted._id, {
+        code,
+        name: role.display_name,
+        permissions: role.permissions
+      });
+      return {
+        data: {
+          id: inserted._id.toString(),
+          code,
+          name: role.display_name,
+          description: role.description,
+          permissions: role.permissions
+        }
+      };
+    },
+    updateRole: async input => {
+      const id = toId(input.id);
+      const {
+        permissions,
+        name,
+        description
+      } = input.body || {};
+      if (!id || !Array.isArray(permissions) && name === undefined && description === undefined) throw httpError(400, "Thông tin vai trò không hợp lệ.");
+      if (permissions !== undefined && (!Array.isArray(permissions) || permissions.some(item => typeof item !== "string" || !/^[a-z][a-z0-9._:-]{1,79}$/.test(item)))) throw httpError(400, "Danh sách quyền không hợp lệ.");
+      if (name !== undefined && (typeof name !== "string" || !name.trim() || name.length > 100)) throw httpError(400, "Tên vai trò không hợp lệ.");
+      if (description !== undefined && (typeof description !== "string" || description.length > 500)) throw httpError(400, "Mô tả vai trò không hợp lệ.");
+      const set = {
+        updated_at: new Date()
+      };
+      if (permissions !== undefined) set.permissions = [...new Set(permissions)];
+      if (name !== undefined) set.display_name = name.trim();
+      if (description !== undefined) set.description = description.trim();
+      const result = await repository.collection("roles").updateOne({
+        _id: id
+      }, {
+        $set: set
+      });
+      if (!result.matchedCount) throw httpError(404, "Không tìm thấy vai trò.");
+      await writeAudit(input.actorId, "role.update", "roles", id, set);
+      return {
+        data: {
+          id: id.toString(),
+          ...set
+        }
+      };
+    },
+    auditLogs: async input => {
+      const page = Math.max(1, Number.parseInt(input.query.page, 10) || 1);
+      const limit = Math.min(100, Math.max(1, Number.parseInt(input.query.limit, 10) || 25));
+      const match = {};
+      for (const key of ["action", "entity_type"]) if (typeof input.query[key] === "string" && input.query[key].trim()) match[key] = input.query[key].trim();
+      if (input.query.from || input.query.to) {
+        match.created_at = {};
+        if (input.query.from && !Number.isNaN(Date.parse(input.query.from))) match.created_at.$gte = new Date(input.query.from);
+        if (input.query.to && !Number.isNaN(Date.parse(input.query.to))) {
+          match.created_at.$lte = new Date(input.query.to);
+          if (input.query.to.length === 10) match.created_at.$lte.setHours(23, 59, 59, 999);
+        }
+      }
+      const logs = repository.collection("audit_logs");
+      const [total, rows] = await Promise.all([logs.countDocuments(match), logs.find(match).sort({
+        created_at: -1
+      }).skip((page - 1) * limit).limit(limit).exec()]);
+      const actorIds = [...new Map(rows.map(row => row.actor_user_id).filter(Boolean).map(id => [id.toString(), id])).values()];
+      const actors = actorIds.length ? await repository.collection("users").find({
+        _id: {
+          $in: actorIds
+        }
+      }).select({
+        full_name: 1,
+        email: 1
+      }).exec() : [];
+      const actorMap = new Map(actors.map(item => [item._id.toString(), item]));
+      return {
+        data: rows.map(row => ({
+          id: row._id.toString(),
+          action: row.action,
+          entityType: row.entity_type,
+          entityId: row.entity_id?.toString() || null,
+          actor: actorMap.get(row.actor_user_id?.toString())?.full_name || "System",
+          actorEmail: actorMap.get(row.actor_user_id?.toString())?.email || null,
+          changes: row.sanitized_changes || {},
+          ipAddressMasked: row.ip_address_masked || null,
+          createdAt: row.created_at
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      };
+    },
+    systemReports: async input => {
+      const filter = input.currentRoles?.includes("MANAGER") ? {} : {
+        report_type: "finance"
+      };
+      const rows = await repository.collection("system_reports").find(filter).sort({
+        generated_at: -1
+      }).limit(100).exec();
+      return {
+        data: rows.map(item => ({
+          id: item._id.toString(),
+          type: item.report_type,
+          title: item.title,
+          from: item.period_from,
+          to: item.period_to,
+          generatedAt: item.generated_at
+        }))
+      };
+    },
+    systemReport: async input => {
+      const id = toId(input.id);
+      if (!id) throw httpError(400, "Mã báo cáo không hợp lệ.");
+      const filter = input.currentRoles?.includes("MANAGER") ? {
+        _id: id
+      } : {
+        _id: id,
+        report_type: "finance"
+      };
+      const report = await repository.collection("system_reports").findOne(filter);
+      if (!report) throw httpError(404, "Không tìm thấy báo cáo.");
+      return {
+        data: {
+          id: report._id.toString(),
+          type: report.report_type,
+          title: report.title,
+          from: report.period_from,
+          to: report.period_to,
+          generatedAt: report.generated_at,
+          report: report.report_data
+        }
+      };
+    },
+    saveSystemReport: async input => {
+      const {
+        type,
+        from: fromValue,
+        to: toValue
+      } = input.body || {};
+      if (!["finance", "operations"].includes(type)) throw httpError(400, "Loại báo cáo không hợp lệ.");
+      if (type === "operations" && !input.currentRoles?.includes("MANAGER")) throw httpError(403, "Chỉ Manager được tạo báo cáo hoạt động.");
+      const from = fromValue ? new Date(fromValue) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const to = toValue ? new Date(toValue) : new Date();
+      if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) throw httpError(400, "Khoảng ngày báo cáo không hợp lệ.");
+      if (typeof toValue === "string" && toValue.length === 10) to.setUTCHours(23, 59, 59, 999);
+      let data;
+      if (type === "operations") data = await buildOperationsReport(repository, from, to);else {
+        const rows = await repository.collection("owner_settlements").find({
+          settled_at: {
+            $gte: from,
+            $lte: to
+          },
+          payout_status: "paid"
+        }).select({
+          settled_at: 1,
+          gross_rental_revenue: 1,
+          platform_commission: 1,
+          net_owner_payout: 1
+        }).sort({
+          settled_at: 1
+        }).exec();
+        data = {
+          from,
+          to,
+          totals: rows.reduce((sum, item) => ({
+            grossRentalRevenue: sum.grossRentalRevenue + (Number(item.gross_rental_revenue) || 0),
+            platformCommission: sum.platformCommission + (Number(item.platform_commission) || 0),
+            ownerPayout: sum.ownerPayout + (Number(item.net_owner_payout) || 0)
+          }), {
+            grossRentalRevenue: 0,
+            platformCommission: 0,
+            ownerPayout: 0
+          }),
+          count: rows.length
+        };
+      }
+      const now = new Date();
+      const inserted = await repository.collection("system_reports").create({
+        report_type: type,
+        title: type === "finance" ? "Báo cáo tài chính" : "Báo cáo hoạt động",
+        period_from: from,
+        period_to: to,
+        report_data: data,
+        generated_by: input.actorId,
+        generated_at: now
+      });
+      await writeAudit(input.actorId, "report.generated", "system_reports", inserted._id, {
+        report_type: type,
+        period_from: from,
+        period_to: to
+      });
+      return {
+        data: {
+          id: inserted._id.toString(),
+          type,
+          title: type === "finance" ? "Báo cáo tài chính" : "Báo cáo hoạt động",
+          generatedAt: now
+        }
+      };
     },
     dashboard: async input => {
       const today = new Date();
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-      const period = ['30d', 'month'].includes(input.query.period) ? input.query.period : '7d';
-      const numberOfDays = period === 'month' ? today.getDate() : period === '30d' ? 30 : 7;
-      const periodStart = period === 'month' ? monthStart : dayStart(today);
-      if (period !== 'month') periodStart.setDate(periodStart.getDate() - numberOfDays + 1);
+      const period = ["30d", "month"].includes(input.query.period) ? input.query.period : "7d";
+      const numberOfDays = period === "month" ? today.getDate() : period === "30d" ? 30 : 7;
+      const periodStart = period === "month" ? monthStart : dayStart(today);
+      if (period !== "month") periodStart.setDate(periodStart.getDate() - numberOfDays + 1);
       const seriesStart = new Date(periodStart);
-      const vehicles = repository.vehicles;
-      const listings = repository.listings;
-      const incidents = repository.incidents;
-      const settlements = repository.settlements;
-      const auditLogs = repository.auditLogs;
-      const users = repository.users;
-      const roles = repository.roles;
+      const vehicles = repository.collection("vehicles");
+      const listings = repository.collection("vehicle_listings");
+      const incidents = repository.collection("incident_cases");
+      const settlements = repository.collection("owner_settlements");
+      const auditLogs = repository.collection("audit_logs");
+      const users = repository.collection("users");
+      const roles = repository.collection("roles");
       const [activeVehicles, pendingVehicleCount, openIncidents, approvedSettlements, monthSettlements, roleDocs, requestVehicles, requestIncidents, recentLogs] = await Promise.all([listings.countDocuments({
-        status: 'published'
+        status: "published"
       }), vehicles.countDocuments({
         onboarding_status: {
-          $in: ['submitted', 'pending_review']
+          $in: ["submitted", "pending_review"]
         }
       }), incidents.countDocuments({
         status: {
@@ -68,7 +539,7 @@ export function createManagerService(repository) {
         settled_at: {
           $gte: seriesStart
         },
-        payout_status: 'paid'
+        payout_status: "paid"
       }).select({
         settled_at: 1,
         platform_commission: 1
@@ -76,7 +547,7 @@ export function createManagerService(repository) {
         settled_at: {
           $gte: monthStart
         },
-        payout_status: 'paid'
+        payout_status: "paid"
       }).select({
         platform_commission: 1
       }).exec(), roles.find({
@@ -87,7 +558,7 @@ export function createManagerService(repository) {
         _id: 1
       }).exec(), vehicles.find({
         onboarding_status: {
-          $in: ['submitted', 'pending_review']
+          $in: ["submitted", "pending_review"]
         }
       }).sort({
         created_at: -1
@@ -116,11 +587,11 @@ export function createManagerService(repository) {
       const pending = requestVehicles.map(vehicle => ({
         ...vehicle,
         owner_name: personNames.get(vehicle.owner_id?.toString())
-      })).map(vehicle => formatRequest(vehicle, 'vehicle'));
+      })).map(vehicle => formatRequest(vehicle, "vehicle"));
       const cases = requestIncidents.map(incident => ({
         ...incident,
         owner_name: personNames.get(incident.reported_by_user_id?.toString())
-      })).map(incident => formatRequest(incident, 'incident'));
+      })).map(incident => formatRequest(incident, "incident"));
       const dashboardRequests = [...pending, ...cases].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8);
       const daily = Array.from({
         length: numberOfDays
@@ -141,15 +612,15 @@ export function createManagerService(repository) {
       }
       const activities = recentLogs.map(log => ({
         id: log._id.toString(),
-        action: log.action || 'system.activity',
-        entityType: log.entity_type || 'system',
+        action: log.action || "system.activity",
+        entityType: log.entity_type || "system",
         entityId: log.entity_id?.toString() || null,
-        actor: personNames.get(log.actor_user_id?.toString()) || 'Hệ thống',
+        actor: personNames.get(log.actor_user_id?.toString()) || "Hệ thống",
         createdAt: log.created_at || null
       }));
       const staffRoleIds = roleDocs.map(role => role._id);
       const [staffCount, lastPeriodSettlements] = await Promise.all([staffRoleIds.length ? users.countDocuments({
-        account_status: 'active',
+        account_status: "active",
         $or: [{
           primary_role_id: {
             $in: staffRoleIds
@@ -164,7 +635,7 @@ export function createManagerService(repository) {
           $gte: new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1),
           $lt: monthStart
         },
-        payout_status: 'paid'
+        payout_status: "paid"
       }).select({
         platform_commission: 1
       }).exec()]);
@@ -187,22 +658,22 @@ export function createManagerService(repository) {
             series: daily
           },
           requests: dashboardRequests,
-          activities
+          activities: input.currentRoles?.includes("ADMIN") ? activities : []
         }
       };
     },
     vehicles: async input => {
-      const status = input.query.status || 'pending';
-      const match = status === 'all' ? {} : {
-        onboarding_status: status === 'pending' ? {
-          $in: ['submitted', 'pending_review']
+      const status = input.query.status || "pending";
+      const match = status === "all" ? {} : {
+        onboarding_status: status === "pending" ? {
+          $in: ["submitted", "pending_review"]
         } : status
       };
-      const items = await repository.vehicles.find(match).sort({
+      const items = await repository.collection("vehicles").find(match).sort({
         updated_at: -1
       }).limit(200).exec();
       const owners = [...new Set(items.map(item => item.owner_id?.toString()).filter(Boolean))].map(id => new ObjectId(id));
-      const ownerRows = owners.length ? await repository.users.find({
+      const ownerRows = owners.length ? await repository.collection("users").find({
         _id: {
           $in: owners
         }
@@ -212,7 +683,7 @@ export function createManagerService(repository) {
       }).exec() : [];
       const ownerMap = new Map(ownerRows.map(owner => [owner._id.toString(), owner]));
       const itemIds = items.map(item => item._id);
-      const inspections = itemIds.length ? await repository.inspections.find({
+      const inspections = itemIds.length ? await repository.collection("vehicle_inspections").find({
         vehicle_id: {
           $in: itemIds
         }
@@ -233,6 +704,7 @@ export function createManagerService(repository) {
           transmission: item.transmission,
           physicalStatus: item.physical_status,
           status: item.onboarding_status,
+          reviewNote: item.review_note || "",
           documents: item.documents || {},
           inspection: inspectionMap.get(item._id.toString()) ? {
             status: inspectionMap.get(item._id.toString()).approval_status,
@@ -249,34 +721,34 @@ export function createManagerService(repository) {
       const id = toId(input.id);
       const {
         action,
-        note = ''
+        note = ""
       } = input.body || {};
       const statuses = {
-        approve: 'approved',
-        reject: 'rejected',
-        revision: 'revision_required'
+        approve: "approved",
+        reject: "rejected",
+        revision: "revision_required"
       };
-      if (!id || !statuses[action] || typeof note !== 'string' || note.length > 1000) {
-        throw httpError(400, 'Thông tin duyệt xe không hợp lệ.');
+      if (!id || !statuses[action] || typeof note !== "string" || note.trim().length > 1000 || ["revision", "reject"].includes(action) && note.trim().length < 5) {
+        throw httpError(400, ["revision", "reject"].includes(action) ? "Yêu cầu bổ sung hoặc từ chối cần có nội dung giải thích từ 5 đến 1.000 ký tự." : "Thông tin duyệt xe không hợp lệ.");
       }
-      if (action === 'approve') {
-        const approvalPolicy = await repository.policies.findOne({
-          policy_type: 'vehicle_approval',
-          status: 'active'
+      if (action === "approve") {
+        const approvalPolicy = await repository.collection("platform_policies").findOne({
+          policy_type: "vehicle_approval",
+          status: "active"
         });
         if (approvalPolicy?.config?.inspection_report_required) {
-          const inspection = await repository.inspections.findOne({
+          const inspection = await repository.collection("vehicle_inspections").findOne({
             vehicle_id: id,
-            approval_status: 'approved',
-            recommendation: 'pass'
+            approval_status: "approved",
+            recommendation: "pass"
           });
-          if (!inspection) throw httpError(409, 'Cần có biên bản kiểm định đạt yêu cầu trước khi duyệt xe.');
+          if (!inspection) throw httpError(409, "Cần có biên bản kiểm định đạt yêu cầu trước khi duyệt xe.");
         }
       }
-      const result = await repository.vehicles.updateOne({
+      const result = await repository.collection("vehicles").updateOne({
         _id: id,
         onboarding_status: {
-          $in: ['submitted', 'pending_review']
+          $in: ["submitted", "pending_review"]
         }
       }, {
         $set: {
@@ -294,8 +766,8 @@ export function createManagerService(repository) {
           }
         }
       });
-      if (!result.modifiedCount) throw httpError(409, 'Hồ sơ xe không còn ở trạng thái chờ duyệt.');
-      await writeAudit(input.actorId, `vehicle.${action}`, 'vehicles', id, {
+      if (!result.modifiedCount) throw httpError(409, "Hồ sơ xe không còn ở trạng thái chờ duyệt.");
+      await writeAudit(input.actorId, `vehicle.${action}`, "vehicles", id, {
         status: statuses[action],
         note: note.trim()
       });
@@ -307,13 +779,13 @@ export function createManagerService(repository) {
       };
     },
     incidents: async input => {
-      const status = input.query.status || 'open';
-      const match = status === 'all' ? {} : {
-        status: status === 'open' ? {
+      const status = input.query.status || "open";
+      const match = status === "all" ? {} : {
+        status: status === "open" ? {
           $in: OPEN_INCIDENT_STATUSES
         } : status
       };
-      const items = await repository.incidents.find(match).sort({
+      const items = await repository.collection("incident_cases").find(match).sort({
         updated_at: -1
       }).limit(200).exec();
       return {
@@ -339,63 +811,147 @@ export function createManagerService(repository) {
       const {
         decision,
         amount,
-        note = ''
+        note = ""
       } = input.body || {};
-      if (!id || !['approve', 'reject'].includes(decision) || typeof note !== 'string' || note.length > 1000 || decision === 'approve' && (!Number.isSafeInteger(amount) || amount < 0)) {
-        throw httpError(400, 'Thông tin xử lý bồi thường không hợp lệ.');
+      if (!id || !["approve", "reject"].includes(decision) || typeof note !== "string" || note.length > 1000 || decision === "approve" && (!Number.isSafeInteger(amount) || amount < 0)) {
+        throw httpError(400, "Thông tin xử lý bồi thường không hợp lệ.");
       }
-      const cases = repository.incidents;
+      const cases = repository.collection("incident_cases");
       const incident = await cases.findOne({
         _id: id,
         status: {
           $in: OPEN_INCIDENT_STATUSES
         }
       });
-      if (!incident) throw httpError(404, 'Không tìm thấy sự cố đang mở.');
+      if (!incident) throw httpError(404, "Không tìm thấy sự cố đang mở.");
       const claims = incident.compensation_claims || [];
-      const claimIndex = claims.findIndex(claim => !claim.decision || claim.decision === 'pending');
-      if (claimIndex < 0) throw httpError(409, 'Sự cố này không có yêu cầu bồi thường đang chờ.');
-      if (decision === 'approve' && Number.isFinite(Number(claims[claimIndex].requested_amount)) && amount > claims[claimIndex].requested_amount) {
-        throw httpError(400, 'Số tiền duyệt không được vượt quá số tiền yêu cầu.');
+      const claimIndex = claims.findIndex(claim => !claim.decision || claim.decision === "pending");
+      if (claimIndex < 0) throw httpError(409, "Sự cố này không có yêu cầu bồi thường đang chờ.");
+      if (decision === "approve" && Number.isFinite(Number(claims[claimIndex].requested_amount)) && amount > claims[claimIndex].requested_amount) {
+        throw httpError(400, "Số tiền duyệt không được vượt quá số tiền yêu cầu.");
       }
       const now = new Date();
       const nextClaim = {
         ...claims[claimIndex],
-        decision: decision === 'approve' ? 'approved' : 'rejected',
-        approved_amount: decision === 'approve' ? amount : 0,
+        decision: decision === "approve" ? "approved" : "rejected",
+        approved_amount: decision === "approve" ? amount : 0,
         decision_at: now,
         reviewed_by_manager_id: input.actorId,
         manager_note: note.trim()
       };
       claims[claimIndex] = nextClaim;
-      const allDecided = claims.every(claim => claim.decision && claim.decision !== 'pending');
-      await cases.updateOne({
-        _id: id
-      }, {
-        $set: {
-          compensation_claims: claims,
-          reviewed_by_manager_id: input.actorId,
-          updated_at: now,
-          ...(allDecided ? {
-            status: 'resolved',
-            resolution: {
-              outcome: decision === 'approve' ? 'compensation_approved' : 'compensation_rejected',
-              amount: decision === 'approve' ? amount : 0,
-              note: note.trim(),
-              resolved_at: now
-            }
-          } : {})
+      const allDecided = claims.every(claim => claim.decision && claim.decision !== "pending");
+      let deposit = null;
+      if (decision === "approve" && amount > 0) {
+        if (!incident.booking_id) throw httpError(409, "Không thể trừ tiền bồi thường khi sự cố chưa liên kết booking.");
+        const deposits = repository.collection("security_deposits");
+        deposit = await deposits.findOne({
+          booking_id: incident.booking_id
+        });
+        if (!deposit || !Number.isFinite(deposit.refundable_amount) || deposit.refundable_amount < amount) {
+          throw httpError(409, "Tiền cọc có thể hoàn không đủ để khấu trừ khoản bồi thường.");
         }
+        const deduction = {
+          incident_case_id: id,
+          amount,
+          status: "approved_after_manager_review",
+          approved_by_user_id: input.actorId,
+          renter_response: claims[claimIndex].renter_response || "manager_arbitration",
+          contract_basis: "manager_compensation_decision"
+        };
+        const deducted = await deposits.updateOne({
+          _id: deposit._id,
+          refundable_amount: {
+            $gte: amount
+          },
+          deduction_decisions: {
+            $not: {
+              $elemMatch: {
+                incident_case_id: id
+              }
+            }
+          },
+          status: {
+            $in: ["collected", "held", "pending_refund", "refunded"]
+          }
+        }, {
+          $inc: {
+            deducted_amount: amount,
+            refundable_amount: -amount
+          },
+          $push: {
+            movements: {
+              type: "deducted",
+              amount,
+              incident_case_id: id,
+              at: now
+            },
+            deduction_decisions: deduction
+          },
+          $set: {
+            updated_at: now
+          }
+        });
+        if (!deducted.modifiedCount) throw httpError(409, "Tiền cọc đã thay đổi hoặc khoản bồi thường đã được ghi nhận.");
+      }
+      const claimPath = `compensation_claims.${claimIndex}`;
+      const update = {
+        [claimPath]: nextClaim,
+        reviewed_by_manager_id: input.actorId,
+        updated_at: now,
+        ...(allDecided ? {
+          status: "resolved",
+          resolution: {
+            outcome: decision === "approve" ? "compensation_approved" : "compensation_rejected",
+            amount: decision === "approve" ? amount : 0,
+            note: note.trim(),
+            resolved_at: now
+          }
+        } : {})
+      };
+      const saved = await cases.updateOne({
+        _id: id,
+        status: {
+          $in: OPEN_INCIDENT_STATUSES
+        },
+        [`compensation_claims.${claimIndex}.decision`]: {
+          $in: [null, "pending"]
+        }
+      }, {
+        $set: update
       });
-      await writeAudit(input.actorId, `compensation.${decision}`, 'incident_cases', id, {
-        amount: decision === 'approve' ? amount : 0,
+      if (!saved.modifiedCount) {
+        if (deposit && decision === "approve" && amount > 0) await repository.collection("security_deposits").updateOne({
+          _id: deposit._id
+        }, {
+          $inc: {
+            deducted_amount: -amount,
+            refundable_amount: amount
+          },
+          $pull: {
+            movements: {
+              incident_case_id: id,
+              type: "deducted"
+            },
+            deduction_decisions: {
+              incident_case_id: id
+            }
+          },
+          $set: {
+            updated_at: new Date()
+          }
+        });
+        throw httpError(409, "Yêu cầu bồi thường đã được xử lý bởi một quản lý khác.");
+      }
+      await writeAudit(input.actorId, `compensation.${decision}`, "incident_cases", id, {
+        amount: decision === "approve" ? amount : 0,
         note: note.trim()
       });
       return {
         data: {
           id: id.toString(),
           decision: nextClaim.decision,
-          status: allDecided ? 'resolved' : incident.status
+          status: allDecided ? "resolved" : incident.status
         }
       };
     },
@@ -403,12 +959,12 @@ export function createManagerService(repository) {
       const id = toId(input.id);
       const {
         action,
-        note = ''
+        note = ""
       } = input.body || {};
-      if (!id || action !== 'resolve' || typeof note !== 'string' || !note.trim() || note.length > 1000) {
-        throw httpError(400, 'Vui lòng nhập ghi chú kết luận sự cố.');
+      if (!id || action !== "resolve" || typeof note !== "string" || !note.trim() || note.length > 1000) {
+        throw httpError(400, "Vui lòng nhập ghi chú kết luận sự cố.");
       }
-      const result = await repository.incidents.updateOne({
+      const result = await repository.collection("incident_cases").updateOne({
         _id: id,
         status: {
           $in: OPEN_INCIDENT_STATUSES
@@ -417,37 +973,37 @@ export function createManagerService(repository) {
           $not: {
             $elemMatch: {
               decision: {
-                $in: ['pending', null]
+                $in: ["pending", null]
               }
             }
           }
         }
       }, {
         $set: {
-          status: 'resolved',
+          status: "resolved",
           reviewed_by_manager_id: input.actorId,
           updated_at: new Date(),
           resolution: {
-            outcome: 'manager_resolved',
+            outcome: "manager_resolved",
             note: note.trim(),
             resolved_at: new Date()
           }
         }
       });
-      if (!result.modifiedCount) throw httpError(409, 'Sự cố đã đóng hoặc còn yêu cầu bồi thường chờ quyết định.');
-      await writeAudit(input.actorId, 'incident.resolve', 'incident_cases', id, {
+      if (!result.modifiedCount) throw httpError(409, "Sự cố đã đóng hoặc còn yêu cầu bồi thường chờ quyết định.");
+      await writeAudit(input.actorId, "incident.resolve", "incident_cases", id, {
         note: note.trim()
       });
       return {
         data: {
           id: id.toString(),
-          status: 'resolved'
+          status: "resolved"
         }
       };
     },
     policies: async input => {
-      const data = await repository.policies.find({
-        status: 'active'
+      const data = await repository.collection("platform_policies").find({
+        status: "active"
       }).sort({
         policy_type: 1
       }).exec();
@@ -464,31 +1020,27 @@ export function createManagerService(repository) {
     updatePolicy: async input => {
       const type = input.type;
       const config = input.body?.config;
-      const allowed = ['commission_default', 'cancellation', 'deposit_refund', 'late_return', 'mileage', 'damage_handling', 'traffic_violation', 'withdrawal', 'vehicle_approval', 'listing_publication'];
-      if (!allowed.includes(type) || !config || typeof config !== 'object' || Array.isArray(config)) {
-        throw httpError(400, 'Loại hoặc cấu hình chính sách không hợp lệ.');
+      const allowed = ["commission_default", "cancellation", "deposit_refund", "late_return", "mileage", "damage_handling", "traffic_violation", "withdrawal", "vehicle_approval", "listing_publication"];
+      if (!allowed.includes(type) || !config || typeof config !== "object" || Array.isArray(config)) {
+        throw httpError(400, "Loại hoặc cấu hình chính sách không hợp lệ.");
       }
-      const numericValues = Object.values(config).filter(value => typeof value === 'number');
-      if (numericValues.some(value => !Number.isFinite(value) || value < 0) || type === 'commission_default' && (config.default_commission_pct < 0 || config.default_commission_pct > 100)) {
-        throw httpError(400, 'Giá trị chính sách nằm ngoài giới hạn cho phép.');
+      const numericValues = Object.values(config).filter(value => typeof value === "number");
+      if (numericValues.some(value => !Number.isFinite(value) || value < 0) || type === "commission_default" && (config.default_commission_pct < 0 || config.default_commission_pct > 100)) {
+        throw httpError(400, "Giá trị chính sách nằm ngoài giới hạn cho phép.");
       }
-      const policies = repository.policies;
+      const policies = repository.collection("platform_policies");
       const now = new Date();
       const previous = await policies.findOne({
         policy_type: type,
-        status: 'active'
-      }, {
-        sort: {
-          version: -1
-        }
-      });
+        status: "active"
+      }, { sort: { version: -1 } });
       const version = (previous?.version || 0) + 1;
       await policies.updateMany({
         policy_type: type,
-        status: 'active'
+        status: "active"
       }, {
         $set: {
-          status: 'superseded',
+          status: "superseded",
           effective_until: now
         }
       });
@@ -499,10 +1051,10 @@ export function createManagerService(repository) {
         effective_from: now,
         effective_until: null,
         updated_by_manager_id: input.actorId,
-        status: 'active',
+        status: "active",
         created_at: now
       });
-      await writeAudit(input.actorId, 'policy.update', 'platform_policies', inserted._id, {
+      await writeAudit(input.actorId, "policy.update", "platform_policies", inserted._id, {
         policy_type: type,
         version
       });
@@ -517,22 +1069,40 @@ export function createManagerService(repository) {
       };
     },
     staff: async input => {
-      const roleRows = await repository.roles.find({
+      const roleRows = await repository.collection("roles").find({
         code: {
-          $in: STAFF_ROLES
+          $in: MANAGED_STAFF_ROLES
+        }
+      }).exec();
+      const privilegedRoles = await repository.collection("roles").find({
+        code: {
+          $in: ["MANAGER", "ADMIN"]
         }
       }).exec();
       const roleById = new Map(roleRows.map(role => [role._id.toString(), role]));
       const roleIds = roleRows.map(role => role._id);
-      const staff = await repository.users.find({
-        $or: [{
-          primary_role_id: {
-            $in: roleIds
-          }
+      const privilegedRoleIds = privilegedRoles.map(role => role._id);
+      const staff = await repository.collection("users").find({
+        $and: [{
+          $or: [{
+            primary_role_id: {
+              $in: roleIds
+            }
+          }, {
+            additional_role_ids: {
+              $in: roleIds
+            }
+          }]
         }, {
-          additional_role_ids: {
-            $in: roleIds
-          }
+          $nor: [{
+            primary_role_id: {
+              $in: privilegedRoleIds
+            }
+          }, {
+            additional_role_ids: {
+              $in: privilegedRoleIds
+            }
+          }]
         }]
       }).select({
         full_name: 1,
@@ -550,10 +1120,66 @@ export function createManagerService(repository) {
           name: user.full_name,
           email: user.email,
           phone: user.phone,
+          department: user.department || "",
+          jobTitle: user.job_title || "",
+          workScope: user.work_scope || "",
           status: user.account_status,
-          role: roleById.get(user.primary_role_id?.toString())?.code || 'STAFF',
+          role: roleById.get(user.primary_role_id?.toString())?.code || "STAFF",
           createdAt: user.created_at
         }))
+      };
+    },
+    createStaff: async input => {
+      const {
+        name,
+        email,
+        phone = "",
+        password,
+        role,
+        department = "",
+        jobTitle = "",
+        workScope = ""
+      } = input.body || {};
+      if (typeof name !== "string" || name.trim().length < 2 || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || typeof phone !== "string" || phone.length > 40 || typeof password !== "string" || password.length < 8 || password.length > 128 || !MANAGED_STAFF_ROLES.includes(role) || [department, jobTitle, workScope].some(value => typeof value !== "string" || value.length > 1000)) {
+        throw httpError(400, "Thông tin nhân viên không hợp lệ; mật khẩu phải có ít nhất 8 ký tự.");
+      }
+      const normalizedEmail = email.trim().toLowerCase();
+      const users = repository.collection("users");
+      if (await users.findOne({
+        email: normalizedEmail
+      })) throw httpError(409, "Email đã được sử dụng.");
+      const roleDoc = await repository.collection("roles").findOne({
+        code: role
+      });
+      if (!roleDoc) throw httpError(400, "Không tìm thấy vai trò nhân viên.");
+      const now = new Date();
+      const inserted = await users.create({
+        full_name: name.trim(),
+        email: normalizedEmail,
+        phone: phone.trim(),
+        password_hash: await bcrypt.hash(password, 12),
+        primary_role_id: roleDoc._id,
+        additional_role_ids: [],
+        account_status: "active",
+        department: department.trim(),
+        job_title: jobTitle.trim(),
+        work_scope: workScope.trim(),
+        created_at: now,
+        updated_at: now
+      });
+      await writeAudit(input.actorId, "staff.create", "users", inserted._id, {
+        role,
+        department: department.trim(),
+        job_title: jobTitle.trim()
+      });
+      return {
+        data: {
+          id: inserted._id.toString(),
+          name: name.trim(),
+          email: normalizedEmail,
+          role,
+          status: "active"
+        }
       };
     },
     updateStaff: async input => {
@@ -566,30 +1192,78 @@ export function createManagerService(repository) {
         updated_at: new Date()
       };
       if (status !== undefined) {
-        if (!['active', 'suspended'].includes(status)) throw httpError(400, 'Trạng thái nhân sự không hợp lệ.');
-        if (id?.equals(input.actorId) && status !== 'active') throw httpError(400, 'Không thể tự khóa tài khoản đang đăng nhập.');
+        if (!["active", "suspended"].includes(status)) throw httpError(400, "Trạng thái nhân sự không hợp lệ.");
         set.account_status = status;
       }
       if (role !== undefined) {
-        if (!STAFF_ROLES.includes(role) || role === 'ADMIN') throw httpError(400, 'Vai trò nhân sự không hợp lệ.');
-        if (id?.equals(input.actorId) && role !== 'MANAGER') throw httpError(400, 'Không thể tự hạ quyền tài khoản quản lý đang đăng nhập.');
-        const roleDoc = await repository.roles.findOne({
+        if (!MANAGED_STAFF_ROLES.includes(role)) throw httpError(400, "Vai trò nhân sự không hợp lệ.");
+        const roleDoc = await repository.collection("roles").findOne({
           code: role
         });
-        if (!roleDoc) throw httpError(400, 'Không tìm thấy vai trò được chọn.');
+        if (!roleDoc) throw httpError(400, "Không tìm thấy vai trò được chọn.");
         set.primary_role_id = roleDoc._id;
       }
-      if (!id || Object.keys(set).length === 1) throw httpError(400, 'Vui lòng cung cấp thông tin cần cập nhật.');
-      const result = await repository.users.updateOne({
-        _id: id
+      const profileFields = {
+        name: "full_name",
+        phone: "phone",
+        department: "department",
+        jobTitle: "job_title",
+        workScope: "work_scope"
+      };
+      for (const [input, field] of Object.entries(profileFields)) {
+        if (input.body?.[input] === undefined) continue;
+        const value = input.body[input];
+        if (typeof value !== "string" || value.trim().length > (input === "workScope" ? 1000 : 120)) throw httpError(400, "Thông tin hồ sơ nhân viên không hợp lệ.");
+        set[field] = value.trim();
+      }
+      if (!id || Object.keys(set).length === 1) throw httpError(400, "Vui lòng cung cấp thông tin cần cập nhật.");
+      const managedRoleRows = await repository.collection("roles").find({
+        code: {
+          $in: MANAGED_STAFF_ROLES
+        }
+      }).exec();
+      const managedRoleIds = managedRoleRows.map(item => item._id);
+      const privilegedRoles = await repository.collection("roles").find({
+        code: {
+          $in: ["MANAGER", "ADMIN"]
+        }
+      }).exec();
+      const privilegedRoleIds = privilegedRoles.map(item => item._id);
+      const result = await repository.collection("users").updateOne({
+        $and: [{
+          _id: id
+        }, {
+          $or: [{
+            primary_role_id: {
+              $in: managedRoleIds
+            }
+          }, {
+            additional_role_ids: {
+              $in: managedRoleIds
+            }
+          }]
+        }, {
+          $nor: [{
+            primary_role_id: {
+              $in: privilegedRoleIds
+            }
+          }, {
+            additional_role_ids: {
+              $in: privilegedRoleIds
+            }
+          }]
+        }]
       }, {
         $set: set
       });
-      if (!result.matchedCount) throw httpError(404, 'Không tìm thấy nhân sự.');
-      await writeAudit(input.actorId, 'staff.update', 'users', id, {
-        ...(status ? {
-          account_status: status
-        } : {}),
+      if (!result.matchedCount) throw httpError(404, "Không tìm thấy nhân sự.");
+      const {
+        updated_at,
+        primary_role_id,
+        ...auditChanges
+      } = set;
+      await writeAudit(input.actorId, "staff.update", "users", id, {
+        ...auditChanges,
         ...(role ? {
           role
         } : {})
@@ -602,9 +1276,144 @@ export function createManagerService(repository) {
           } : {}),
           ...(role ? {
             role
+          } : {}),
+          ...(auditChanges.full_name ? {
+            name: auditChanges.full_name
           } : {})
         }
       };
+    },
+    contracts: async input => {
+      const type = input.query.type === "rental" ? "rental" : "management";
+      const collectionName = type === "rental" ? "rental_agreements" : "management_agreements";
+      const filter = {};
+      if (input.query.status && input.query.status !== "all") filter.status = input.query.status;
+      const rows = await repository.collection(collectionName).find(filter).sort({
+        updated_at: -1,
+        created_at: -1
+      }).limit(200).exec();
+      return {
+        data: rows.map(item => ({
+          id: item._id.toString(),
+          type,
+          number: item.agreement_number || item.contract_number,
+          status: item.status,
+          startDate: item.start_date || item.terms_snapshot?.start_at || null,
+          endDate: item.end_date || item.terms_snapshot?.end_at || null,
+          commissionRatePct: item.commission_rate_pct ?? null,
+          terms: item.terms_snapshot || item.authorization_scope || {},
+          signedAt: item.signed_at || item.signature_info?.owner_signed_at || null,
+          managerReview: item.manager_review || null,
+          amendments: item.amendments || [],
+          updatedAt: item.updated_at || item.created_at
+        }))
+      };
+    },
+    updateContract: async input => {
+      const id = toId(input.id);
+      const type = input.type;
+      const {
+        action,
+        reason,
+        proposedTerms,
+        note
+      } = input.body || {};
+      if (!id || !["management", "rental"].includes(type) || typeof reason !== "string" || !reason.trim() || reason.length > 1000) {
+        throw httpError(400, "Thông tin cập nhật hợp đồng không hợp lệ.");
+      }
+      const collectionName = type === "rental" ? "rental_agreements" : "management_agreements";
+      const contracts = repository.collection(collectionName);
+      const contract = await contracts.findOne({
+        _id: id
+      });
+      if (!contract) throw httpError(404, "Không tìm thấy hợp đồng.");
+      const now = new Date();
+      if (action === "amend") {
+        if (!proposedTerms || typeof proposedTerms !== "object" || Array.isArray(proposedTerms) || Object.keys(proposedTerms).length > 30) {
+          throw httpError(400, "Nội dung điều chỉnh hợp đồng không hợp lệ.");
+        }
+        const amendment = {
+          proposed_terms: proposedTerms,
+          reason: reason.trim(),
+          status: "pending_signatures",
+          created_by_manager_id: input.actorId,
+          created_at: now
+        };
+        await contracts.updateOne({
+          _id: id
+        }, {
+          $push: {
+            amendments: amendment
+          },
+          $set: {
+            updated_at: now
+          }
+        });
+        await writeAudit(input.actorId, "contract.amendment_requested", collectionName, id, {
+          reason: reason.trim(),
+          proposed_terms: proposedTerms
+        });
+        return {
+          data: {
+            id: id.toString(),
+            status: "pending_signatures",
+            amendment
+          }
+        };
+      }
+      if (action === "terminate" && type === "management") {
+        if (!["active", "pending"].includes(contract.status)) throw httpError(409, "Chỉ có thể chấm dứt hợp đồng quản lý đang hiệu lực.");
+        await contracts.updateOne({
+          _id: id,
+          status: contract.status
+        }, {
+          $set: {
+            status: "terminated",
+            termination_info: {
+              reason: reason.trim(),
+              terminated_at: now,
+              terminated_by_manager_id: input.actorId
+            },
+            updated_at: now
+          }
+        });
+        await writeAudit(input.actorId, "contract.terminated", collectionName, id, {
+          reason: reason.trim()
+        });
+        return {
+          data: {
+            id: id.toString(),
+            status: "terminated"
+          }
+        };
+      }
+      if (action === "review" && typeof note === "string" && note.trim().length && note.length <= 1000) {
+        const managerReview = {
+          note: note.trim(),
+          reason: reason.trim(),
+          reviewed_by_manager_id: input.actorId,
+          reviewed_at: now
+        };
+        await contracts.updateOne({
+          _id: id
+        }, {
+          $set: {
+            manager_review: managerReview,
+            updated_at: now
+          }
+        });
+        await writeAudit(input.actorId, "contract.reviewed", collectionName, id, {
+          reason: reason.trim(),
+          note: note.trim()
+        });
+        return {
+          data: {
+            id: id.toString(),
+            managerReview
+          }
+        };
+      }
+      throw httpError(400, "Hành động hợp đồng không được hỗ trợ.");
     },
     inspectionReport: async input => {
       const filter = {};
@@ -616,11 +1425,11 @@ export function createManagerService(repository) {
           if (input.query.to.length === 10) filter.inspected_at.$lte.setHours(23, 59, 59, 999);
         }
       }
-      const data = await repository.inspections.find(filter).sort({
+      const data = await repository.collection("vehicle_inspections").find(filter).sort({
         inspected_at: -1
       }).limit(200).exec();
       const vehicleIds = [...new Map(data.map(row => row.vehicle_id).filter(Boolean).map(id => [id.toString(), id])).values()];
-      const vehicles = vehicleIds.length ? await repository.vehicles.find({
+      const vehicles = vehicleIds.length ? await repository.collection("vehicles").find({
         _id: {
           $in: vehicleIds
         }
@@ -634,8 +1443,8 @@ export function createManagerService(repository) {
         data: data.map(row => ({
           id: row._id.toString(),
           inspectedAt: row.inspected_at,
-          result: row.approval_status || row.result || row.inspection_result || row.status || row.recommendation || 'completed',
-          notes: row.decision_reason || row.notes || Object.values(row.condition_report || {}).filter(value => typeof value === 'string').join(', '),
+          result: row.approval_status || row.result || row.inspection_result || row.status || row.recommendation || "completed",
+          notes: row.decision_reason || row.notes || Object.values(row.condition_report || {}).filter(value => typeof value === "string").join(", "),
           vehicle: map.get(row.vehicle_id?.toString()) || null
         }))
       };
@@ -644,15 +1453,15 @@ export function createManagerService(repository) {
       const from = input.query.from ? new Date(input.query.from) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
       const to = input.query.to ? new Date(input.query.to) : new Date();
       if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) {
-        throw httpError(400, 'Khoảng ngày báo cáo không hợp lệ.');
+        throw httpError(400, "Khoảng ngày báo cáo không hợp lệ.");
       }
-      if (input.query.to?.length === 10) to.setHours(23, 59, 59, 999);
-      const rows = await repository.settlements.find({
+      if (input.query.to?.length === 10) to.setUTCHours(23, 59, 59, 999);
+      const rows = await repository.collection("owner_settlements").find({
         settled_at: {
           $gte: from,
           $lte: to
         },
-        payout_status: 'paid'
+        payout_status: "paid"
       }).select({
         settled_at: 1,
         gross_rental_revenue: 1,
@@ -682,6 +1491,62 @@ export function createManagerService(repository) {
             ownerPayout: item.net_owner_payout || 0
           }))
         }
+      };
+    },
+    operationsReport: async input => {
+      const from = input.query.from ? new Date(input.query.from) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const to = input.query.to ? new Date(input.query.to) : new Date();
+      if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) throw httpError(400, "Khoảng ngày báo cáo không hợp lệ.");
+      if (input.query.to?.length === 10) to.setHours(23, 59, 59, 999);
+      const [bookings, incidents, fleetSize] = await Promise.all([repository.collection("bookings").find({
+        start_at: {
+          $gte: from,
+          $lte: to
+        }
+      }).select({
+        status: 1,
+        vehicle_id: 1,
+        rental_fee_amount: 1
+      }).exec(), repository.collection("incident_cases").find({
+        created_at: {
+          $gte: from,
+          $lte: to
+        }
+      }).select({
+        status: 1
+      }).exec(), repository.collection("vehicles").countDocuments({
+        onboarding_status: "approved"
+      })]);
+      const byStatus = bookings.reduce((result, item) => {
+        const key = item.status || "unknown";
+        result[key] = (result[key] || 0) + 1;
+        return result;
+      }, {});
+      const activeStatuses = new Set(["confirmed", "ongoing", "completed"]);
+      const activeBookings = bookings.filter(item => activeStatuses.has(item.status));
+      const utilizedVehicles = new Set(activeBookings.map(item => item.vehicle_id?.toString()).filter(Boolean)).size;
+      const openIncidents = incidents.filter(item => OPEN_INCIDENT_STATUSES.includes(item.status)).length;
+      const report = {
+        from,
+        to,
+        bookings: {
+          total: bookings.length,
+          byStatus,
+          rentalRevenue: bookings.reduce((sum, item) => sum + (Number(item.rental_fee_amount) || 0), 0)
+        },
+        fleet: {
+          approvedVehicles: fleetSize,
+          vehiclesWithBookings: utilizedVehicles,
+          utilizationPct: fleetSize ? Math.round(utilizedVehicles / fleetSize * 1000) / 10 : 0
+        },
+        incidents: {
+          total: incidents.length,
+          open: openIncidents,
+          resolved: incidents.length - openIncidents
+        }
+      };
+      return {
+        data: report
       };
     }
   };

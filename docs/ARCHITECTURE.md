@@ -51,7 +51,7 @@ BE/
 ├── src/
 │   ├── config/               # env và kết nối database
 │   ├── database/             # Index, khởi tạo collection và seed
-│   ├── models/               # 18 schema/model Mongoose, đăng ký theo connection
+│   ├── models/               # 19 schema/model Mongoose, đăng ký theo connection
 │   ├── routes/               # auth, listing, homepage, garage-intake, garage-inspection, manager, owner
 │   ├── controller/           # Nhận request, gọi service, trả response
 │   ├── service/              # Nghiệp vụ và điều phối transaction
@@ -182,7 +182,7 @@ npm test --prefix FE -- --watchAll=false --runInBand
 npm run build
 ```
 
-Backend integration test tự tạo replica set tạm bằng `mongod`, database mang tên ngẫu nhiên và tự dọn sau khi chạy; không ghi vào database ứng dụng. Test API/auth/Manager tự seed database tạm qua các model Mongoose. Cần cài MongoDB Server hoặc đặt `MONGOD_BINARY`; có thể dùng `INTAKE_TEST_MONGODB_URI` trỏ tới replica set dành cho kiểm thử. Test model kiểm tra cả 18 dataset, giữ nguyên BSON và dữ liệu cũ; test database kiểm tra seed lặp và validation khi update.
+Backend integration test tự tạo replica set tạm bằng `mongod`, database mang tên ngẫu nhiên và tự dọn sau khi chạy; không ghi vào database ứng dụng. Test API/auth/Manager tự seed database tạm qua các model Mongoose. Cần cài MongoDB Server hoặc đặt `MONGOD_BINARY`; có thể dùng `INTAKE_TEST_MONGODB_URI` trỏ tới replica set dành cho kiểm thử. Test model kiểm tra cả 19 dataset, giữ nguyên BSON và dữ liệu cũ; test database kiểm tra seed lặp và validation khi update.
 
 ## 8. Phạm vi còn lại
 

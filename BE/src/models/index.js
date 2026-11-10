@@ -17,6 +17,7 @@ import { vehicleWithdrawalRequestSchema } from './vehicle-withdrawal-request.mod
 import { platformPolicySchema } from './platform-policy.model.js';
 import { notificationSchema } from './notification.model.js';
 import { auditLogSchema } from './audit-log.model.js';
+import { systemReportSchema } from './system-report.model.js';
 
 export const modelDefinitions = {
   Role: { collection: 'roles', schema: roleSchema },
@@ -37,6 +38,7 @@ export const modelDefinitions = {
   PlatformPolicy: { collection: 'platform_policies', schema: platformPolicySchema },
   Notification: { collection: 'notifications', schema: notificationSchema },
   AuditLog: { collection: 'audit_logs', schema: auditLogSchema },
+  SystemReport: { collection: 'system_reports', schema: systemReportSchema },
 };
 
 for (const { collection, schema } of Object.values(modelDefinitions)) {

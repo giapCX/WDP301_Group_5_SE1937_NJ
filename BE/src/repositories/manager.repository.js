@@ -1,9 +1,14 @@
-import { getModels } from '../models/index.js';
+import { getModels, modelDefinitions } from '../models/index.js';
 import { createModelRepository } from './base.repository.js';
 
 export function createManagerRepository(connection) {
   const models = getModels(connection);
+  const collections = Object.fromEntries(Object.entries(modelDefinitions).map(([name, definition]) => [definition.collection, createModelRepository(models[name])]));
   return {
+    collection(name) {
+      if (!collections[name]) throw new Error(`Unknown manager collection: ${name}`);
+      return collections[name];
+    },
     vehicles: createModelRepository(models.Vehicle),
     listings: createModelRepository(models.VehicleListing),
     incidents: createModelRepository(models.IncidentCase),
