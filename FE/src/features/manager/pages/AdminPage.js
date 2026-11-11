@@ -29,7 +29,7 @@ const actionLabels = {
   'auth.login.failed': 'Đăng nhập thất bại',
 };
 
-function AdminOverview({ onSelect }) {
+function AdminOverview({ onSnapshot }) {
   const [snapshot, setSnapshot] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,11 +44,15 @@ function AdminOverview({ onSelect }) {
       getManagerResource('roles', { signal: controller.signal }),
       getManagerResource('auditLogs', { limit: 5, signal: controller.signal }),
     ])
-      .then(([accounts, roles, logs]) => setSnapshot({ accounts: accounts.data || [], roles: roles.data || [], logs: logs.data || [] }))
+      .then(([accounts, roles, logs]) => {
+        const summary = { accounts: accounts.data || [], roles: roles.data || [], logs: logs.data || [] };
+        setSnapshot(summary);
+        onSnapshot(summary);
+      })
       .catch((reason) => { if (reason.name !== 'AbortError') setError(reason.message); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [reload]);
+  }, [reload, onSnapshot]);
 
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải tổng quan quản trị…</p></section>;
   if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={() => setReload((value) => value + 1)}>Thử lại</button></div></section>;
@@ -60,7 +64,7 @@ function AdminOverview({ onSelect }) {
       <article className="manager-metric"><span className="manager-metric-label">Tài khoản hoạt động</span><strong>{snapshot.accounts.filter((item) => item.status === 'active').length}</strong><span className="manager-metric-detail">Có thể đăng nhập</span></article>
       <article className="manager-metric"><span className="manager-metric-label">Hoạt động gần đây</span><strong>{snapshot.logs.length}</strong><span className="manager-metric-detail">Bản ghi gần nhất</span></article>
     </section>
-    <section className="manager-panel admin-recent-panel"><div className="manager-panel-heading"><div><h2>Hoạt động quản trị gần đây</h2><p>Các thay đổi tài khoản, vai trò và báo cáo mới nhất.</p></div><button className="all-requests" onClick={() => onSelect('auditLogs')}>Mở nhật ký <span>→</span></button></div>
+    <section className="manager-panel admin-recent-panel"><div className="manager-panel-heading"><div><h2>Hoạt động quản trị gần đây</h2><p>Các thay đổi tài khoản, vai trò và báo cáo mới nhất.</p></div></div>
       <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>THỜI GIAN</th><th>NGƯỜI THỰC HIỆN</th><th>THAO TÁC</th><th>THAY ĐỔI</th></tr></thead><tbody>{snapshot.logs.map((item) => <tr key={item.id}><td>{item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '—'}</td><td>{item.actor}<span>{item.actorEmail || ''}</span></td><td><span className="audit-action-pill">{actionLabels[item.action] || humanizeField(item.action)}</span></td><td><ChangeSummary changes={item.changes} /></td></tr>)}</tbody></table>{!snapshot.logs.length && <p className="manager-empty">Chưa có hoạt động quản trị.</p>}</div>
     </section>
   </>;
@@ -70,6 +74,7 @@ export default function AdminPage() {
   const [active, setActive] = useState('overview');
   const [notice, setNotice] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [adminSnapshot, setAdminSnapshot] = useState(null);
   const user = useMemo(() => {
     try { return JSON.parse(localStorage.getItem('xedi_user') || sessionStorage.getItem('xedi_user') || '{}'); }
     catch { return {}; }
@@ -89,6 +94,25 @@ export default function AdminPage() {
     setNotice(id === 'overview' ? '' : `Đang xem mục ${adminSections.find((item) => item.id === id)?.label}.`);
   };
 
+  const exportOverview = () => {
+    if (!adminSnapshot) return;
+    const rows = [
+      ['Chỉ số quản trị', 'Giá trị'],
+      ['Tài khoản được liệt kê', adminSnapshot.accounts.length],
+      ['Vai trò', adminSnapshot.roles.length],
+      ['Tài khoản hoạt động', adminSnapshot.accounts.filter((item) => item.status === 'active').length],
+      ['Hoạt động gần đây', adminSnapshot.logs.length],
+    ];
+    const csv = rows.map((row) => row.map((value) => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'xedi-admin-report.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    setNotice('Đã xuất báo cáo quản trị.');
+  };
+
   if (!canAdminister) return <div className="manager-app"><main className="manager-content"><section className="manager-panel"><p className="manager-empty">Đang chuyển đến khu vực phù hợp với tài khoản…</p></section></main></div>;
 
   return <div className="manager-app admin-app">
@@ -105,9 +129,9 @@ export default function AdminPage() {
     <div className="manager-main">
       <header className="manager-topbar"><button className="manager-menu-toggle" aria-label="Mở menu" onClick={() => setMenuOpen(true)}><Icon name="menu" /></button><div className="manager-breadcrumb">Quản trị hệ thống <span>/</span> <strong>{adminSections.find((item) => item.id === active)?.label}</strong></div><div className="manager-top-actions"><span className="manager-live"><i /> Hệ thống hoạt động</span><UserMenu user={user} roleLabel="Quản trị viên hệ thống" /></div></header>
       <main className="manager-content">
-        <section className="manager-page-heading"><div><span className="manager-eyebrow"><span /> {new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date()).toLocaleUpperCase('vi-VN')}</span><h1>{active === 'overview' ? 'Tổng quan quản trị' : adminSections.find((item) => item.id === active)?.label}</h1><p>Quản lý tài khoản, vai trò và hoạt động hệ thống XeDi.</p></div><div className="manager-heading-actions"><button className="manager-primary" onClick={() => window.location.reload()}>↻ <span>Làm mới</span></button></div></section>
+        <section className="manager-page-heading"><div><span className="manager-eyebrow"><span /> {new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date()).toLocaleUpperCase('vi-VN')}</span><h1>{active === 'overview' ? 'Tổng quan quản trị' : adminSections.find((item) => item.id === active)?.label}</h1><p>Quản lý tài khoản, vai trò và hoạt động hệ thống XeDi.</p></div>{active === 'overview' && <div className="manager-heading-actions"><button className="manager-export" disabled={!adminSnapshot} onClick={exportOverview}>↓ <span>Xuất báo cáo</span></button><button className="manager-primary" onClick={() => window.location.reload()}>↻ <span>Làm mới</span></button></div>}</section>
         {notice && <div className="manager-notice" role="status"><Icon name="info" size={17} />{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo">×</button></div>}
-        {active === 'overview' ? <AdminOverview onSelect={selectSection} />
+        {active === 'overview' ? <AdminOverview onSnapshot={setAdminSnapshot} />
           : active === 'accounts' ? <AccountsWorkspace onNotice={setNotice} />
             : active === 'roles' || active === 'auditLogs' ? <AdminToolsWorkspace key={active} active={active} onNotice={setNotice} />
               : <ReportsWorkspace key={active} active={active} onNotice={setNotice} />}
