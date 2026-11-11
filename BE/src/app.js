@@ -1,3 +1,4 @@
+import { createRenterRouter } from './routes/renter.routes.js';
 import express from 'express';
 import cors from 'cors';
 import { notFound, errorHandler } from './middleware/error.middleware.js';
@@ -36,6 +37,7 @@ export function createApp(database, options = {}) {
   app.use('/api/owner/vehicles', express.json({ limit: '48mb' }));
   app.use('/api/owner', express.json({ limit: '20mb' }));
   app.use('/api/identity-verifications', express.json({ limit: '12mb' }));
+  app.use('/api/renter/files', express.json({ limit: '29mb' }));
   app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/health', async (_request, response) => {
@@ -46,6 +48,7 @@ export function createApp(database, options = {}) {
       response.status(503).json({ status: 'unavailable' });
     }
   });
+  app.use('/api/renter', createRenterRouter(database));
   app.use('/api/auth', createAuthRouter(database));
   app.use('/api/identity-verifications', createIdentityVerificationRouter(database, privateFileRepository));
   app.use('/api/listings', createListingsRouter(database));

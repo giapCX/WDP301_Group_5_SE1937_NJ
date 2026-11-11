@@ -52,6 +52,7 @@ export default function SiteHeader({ onLogin }) {
           <a href="#huong-dan">Hướng dẫn</a>
           <a href="#ve-xedi">Về chúng tôi</a>
           {currentUser && <a href="/#/contracts">Hợp đồng</a>}
+          {currentUser?.roles?.includes('RENTER') && <><a href="#/renter">Trang chủ của tôi</a><a href="#/renter/bookings">Chuyến đi của tôi</a><a href="#/renter/profile">Hồ sơ cá nhân</a></>}
           {canAccessOwner(currentUser) && <a href="/owner">Không gian chủ xe</a>}
           {canAccessGarage(currentUser) && <a href="/garage">Không gian gara</a>}
           {currentUser?.roles?.includes('OPERATION_STAFF') && <a href="/#/operations">Xác minh sự cố</a>}

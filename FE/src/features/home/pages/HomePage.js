@@ -1,11 +1,12 @@
+import BookingPanel from '../../renter/components/BookingPanel';
 import IncomeCalculator from '../components/IncomeCalculator';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Pagination from '../../../components/ui/Pagination';
 import SiteHeader from '../../../components/SiteHeader';
 import SiteFooter from '../../../components/SiteFooter';
 import Icon from '../../../components/Icon';
 import Modal from '../../../components/Modal';
-import VehicleCard, { money, fuelLabels } from '../../listings/components/VehicleCard';
+import VehicleCard from '../../listings/components/VehicleCard';
 import useHomeOverview from '../hooks/useHomeOverview';
 import useListings from '../../listings/hooks/useListings';
 import './HomePage.css';
@@ -43,6 +44,7 @@ function SectionHeading({ eyebrow, title, description, left = false }) {
 }
 
 export default function HomePage() {
+  const [extraFilters, setExtraFilters] = useState({});
   const [category, setCategory] = useState(0);
   const [sort, setSort] = useState('newest');
   const [limit, setLimit] = useState(10);
@@ -53,7 +55,8 @@ export default function HomePage() {
   const [searchError, setSearchError] = useState('');
   const [dialog, setDialog] = useState(null);
   const { homepage, catalog, metaError, setMetaRetry } = useHomeOverview();
-  const { listings, total, loading, error, setRetry } = useListings({ filters: categories[category].query, sort, search, limit, page });
+  const filters = useMemo(() => ({ ...categories[category].query, ...extraFilters }), [category, extraFilters]);
+  const { listings, total, loading, error, setRetry } = useListings({ filters, sort, search, limit, page });
   useEffect(() => {
     if (!loading && !error) setPage((value) => Math.min(value, Math.max(1, Math.ceil(total / limit))));
   }, [loading, error, total, limit]);
@@ -85,7 +88,18 @@ export default function HomePage() {
     setCity('');
     setCategory(0);
     setPage(1);
+    setExtraFilters({});
     setSearchError('');
+  };
+
+  const updateExtraFilter = (key, value) => {
+    setPage(1);
+    setExtraFilters((current) => {
+      const next = { ...current };
+      if (value) next[key] = value;
+      else delete next[key];
+      return next;
+    });
   };
 
   const steps = [
@@ -302,6 +316,32 @@ export default function HomePage() {
                   </button>
                 ))}
               </div>
+            </div>
+            <div className="renter-filter-grid">
+              {[['brand', 'Hãng xe'], ['minPrice', 'Giá tối thiểu'], ['maxPrice', 'Giá tối đa']].map(([key, label]) => (
+                <label key={key}>
+                  {label}
+                  <input
+                    type={key === 'brand' ? 'text' : 'number'}
+                    min="0"
+                    value={extraFilters[key] || ''}
+                    onChange={(event) => updateExtraFilter(key, event.target.value)}
+                  />
+                </label>
+              ))}
+              {[
+                ['transmission', 'Hộp số', [['automatic', 'Tự động'], ['manual', 'Số sàn']]],
+                ['fuelType', 'Nhiên liệu', [['gasoline', 'Xăng'], ['diesel', 'Dầu'], ['electric', 'Điện']]],
+                ['seats', 'Số chỗ', [['4', '4 chỗ'], ['5', '5 chỗ'], ['7', '7 chỗ']]],
+              ].map(([key, label, options]) => (
+                <label key={key}>
+                  {label}
+                  <select value={extraFilters[key] || ''} onChange={(event) => updateExtraFilter(key, event.target.value)}>
+                    <option value="">Tất cả</option>
+                    {options.map(([value, title]) => <option key={value} value={value}>{title}</option>)}
+                  </select>
+                </label>
+              ))}
             </div>
             <div className="results-toolbar">
               <span aria-live="polite">
@@ -551,46 +591,7 @@ export default function HomePage() {
           onClose={() => setDialog(null)}
         >
           {dialog.type === 'vehicle' ? (
-            <>
-              <span className="green-pill">Xe đã kiểm duyệt · Nhận tại gara</span>
-              <p>{dialog.listing.description}</p>
-              <dl className="vehicle-details">
-                <div>
-                  <dt>Địa điểm nhận xe</dt>
-                  <dd>
-                    {dialog.listing.pickup_location.branch_name} ·{' '}
-                    {dialog.listing.pickup_location.city}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Giá thuê mỗi ngày</dt>
-                  <dd>{money(dialog.listing.daily_price)} đ</dd>
-                </div>
-                <div>
-                  <dt>Tiền cọc đảm bảo</dt>
-                  <dd>{money(dialog.listing.security_deposit_amount)} đ</dd>
-                </div>
-                <div>
-                  <dt>Thông số xe</dt>
-                  <dd>
-                    {dialog.listing.vehicle.seats} chỗ ·{' '}
-                    {fuelLabels[dialog.listing.vehicle.fuel_type]} ·{' '}
-                    {dialog.listing.vehicle.transmission === 'automatic' ? 'Tự động' : 'Số sàn'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Giới hạn quãng đường</dt>
-                  <dd>
-                    {dialog.listing.mileage_policy?.included_km_per_day} km/ngày · Phụ trội{' '}
-                    {money(dialog.listing.mileage_policy?.extra_km_fee || 0)} đ/km
-                  </dd>
-                </div>
-              </dl>
-              <p className="dialog-note">
-                Đặt xe trực tuyến sẽ sớm được mở. Bạn có thể tham khảo thông tin và chi phí trước
-                khi lên kế hoạch.
-              </p>
-            </>
+            <BookingPanel listingId={dialog.listing._id} initialDates={dates} />
           ) : dialog.type === 'policy' ? (
             <div className="policy-content">
               <h3>Đặt và nhận xe</h3>

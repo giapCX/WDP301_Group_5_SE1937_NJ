@@ -32,6 +32,12 @@ FE/src/
 │       ├── api/listingApi.js
 │       ├── components/VehicleCard.js
 │       └── hooks/useListings.js
+│   ├── renter/
+│   │   ├── api/renterApi.js
+│   │   ├── hooks/                 # Workspace and overview data flows
+│   │   ├── pages/                 # Renter portal pages
+│   │   ├── components/            # Booking, profile and portal UI
+│   │   └── styles/
 │   ├── garage/               # Garage page, components, hooks and styles
 │   ├── manager/              # Manager dashboard feature
 │   └── owner/
@@ -51,11 +57,11 @@ BE/
 ├── src/
 │   ├── config/               # env và kết nối database
 │   ├── database/             # Index, khởi tạo collection và seed
-│   ├── models/               # 19 schema/model Mongoose, đăng ký theo connection
-│   ├── routes/               # auth, listing, homepage, garage-intake, garage-inspection, manager, owner
+│   ├── models/               # Schema/model Mongoose, đăng ký theo connection
+│   ├── routes/               # auth, listing, homepage, renter, garage, manager, owner
 │   ├── controller/           # Nhận request, gọi service, trả response
 │   ├── service/              # Nghiệp vụ và điều phối transaction
-│   ├── repositories/         # Truy cập model và base.repository.js dùng chung
+│   ├── repositories/         # Truy cập Mongoose model và base.repository.js dùng chung
 │   ├── validators/           # Kiểm tra đầu vào listing và Garage
 │   ├── middleware/
 │   │   ├── auth.middleware.js
@@ -66,6 +72,8 @@ BE/
 │   └── server.js             # Kết nối DB, mở cổng và đóng kết nối
 └── test/                     # API integration và middleware tests
 ```
+
+Feature Renter dùng `features/renter/api/`, `hooks/`, `pages/`, `components/` và `styles/`. Backend Renter giữ route, controller, service, repository và schema trong các tầng hiện có; repository truy cập dữ liệu qua Mongoose model.
 
 Chỉ tạo thư mục khi có code sử dụng. Khi thêm nghiệp vụ, đặt từng file vào thư mục đúng tầng thay vì tạo lại `src/modules/`. Ảnh tĩnh hiện nằm trong `FE/public/`.
 

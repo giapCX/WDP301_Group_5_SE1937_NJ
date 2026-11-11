@@ -18,6 +18,7 @@ import { platformPolicySchema } from './platform-policy.model.js';
 import { notificationSchema } from './notification.model.js';
 import { auditLogSchema } from './audit-log.model.js';
 import { systemReportSchema } from './system-report.model.js';
+import { renterChallengeSchema, renterFileSchema, renterFileChunkSchema, renterContactKeySchema, discountCodeSchema } from './renter.model.js';
 
 export const modelDefinitions = {
   Role: { collection: 'roles', schema: roleSchema },
@@ -39,6 +40,11 @@ export const modelDefinitions = {
   Notification: { collection: 'notifications', schema: notificationSchema },
   AuditLog: { collection: 'audit_logs', schema: auditLogSchema },
   SystemReport: { collection: 'system_reports', schema: systemReportSchema },
+  RenterChallenge: { collection: 'renter_challenges', schema: renterChallengeSchema },
+  RenterFile: { collection: 'renter_files', schema: renterFileSchema },
+  RenterFileChunk: { collection: 'renter_file_chunks', schema: renterFileChunkSchema },
+  RenterContactKey: { collection: 'renter_contact_keys', schema: renterContactKeySchema },
+  DiscountCode: { collection: 'discount_codes', schema: discountCodeSchema },
 };
 
 for (const { collection, schema } of Object.values(modelDefinitions)) {

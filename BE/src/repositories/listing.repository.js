@@ -60,7 +60,13 @@ export function publicListingPipeline(match, vehicleMatch = {}, rentalPeriod) {
             $and: [{
               $eq: ['$vehicle_id', '$$vehicleId']
             }, {
-              $in: ['$status', ['pending', 'awaiting_payment', 'confirmed', 'ongoing']]
+              $or: [
+                { $in: ['$status', ['confirmed', 'ongoing']] },
+                { $and: [
+                  { $in: ['$status', ['pending', 'awaiting_payment']] },
+                  { $or: [{ $eq: [{ $type: '$hold_expires_at' }, 'missing'] }, { $gt: ['$hold_expires_at', new Date()] }] }
+                ] }
+              ]
             }, {
               $lt: ['$start_at', rentalPeriod.end]
             }, {
@@ -119,6 +125,7 @@ export function createListingRepository(database) {
         _id: new ObjectId(id),
         status: 'published'
       })).exec();
+      if (listing) listing.reviews = await database.db.collection('reviews').find({ vehicle_id: listing.vehicle_id, is_visible: true }, { projection: { rating: 1, comment: 1, created_at: 1 } }).sort({ created_at: -1 }).limit(20).toArray();
       return listing;
     }
   };

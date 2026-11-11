@@ -1,0 +1,116 @@
+/* Renter uses the same portal shell and form treatment as the owner workspace. */
+.renter-portal { --primary: #155eef; }
+.renter-sidebar-link {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  color: #59677d;
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.renter-sidebar-link svg { flex-shrink: 0; }
+.renter-sidebar-link:hover { background: #f7f9fd; }
+.renter-sidebar-link.selected { background: #eef3ff; color: #155eef; font-weight: 700; }
+.renter-heading-action { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; text-decoration: none; }
+.renter-content { font-size: 12px; line-height: 1.65; }
+.renter-content .owner-heading { gap: 18px; }
+.renter-content .owner-heading h1 { font-weight: 700; }
+.renter-content .owner-heading p { max-width: 680px; line-height: 1.6; }
+.renter-content .renter-stack { gap: 17px; }
+.renter-content .renter-card {
+  border: 1px solid #e7ebf2;
+  border-radius: 11px;
+  box-shadow: 0 2px 4px #16233b05;
+  padding: 20px;
+}
+.renter-content .renter-card h2 {
+  font-size: 14px;
+  font-weight: 700;
+  margin: -20px -20px 18px;
+  padding: 17px 20px;
+  border-bottom: 1px solid #edf0f5;
+  color: #25354e;
+}
+.renter-content .renter-card h3 { font-size: 13px; color: #25354e; }
+.renter-content .renter-card p { color: #758198; }
+.renter-content .renter-field { font-size: 11px; color: #4f5d73; gap: 6px; margin: 8px 0; }
+.renter-content .renter-field input,
+.renter-content .renter-field select,
+.renter-content .renter-field textarea {
+  padding: 10px 11px;
+  border: 1px solid #dfe4ec;
+  border-radius: 7px;
+  color: #25354e;
+  font: 400 11px 'Be Vietnam Pro', Arial, sans-serif;
+  background: white;
+  outline: none;
+}
+.renter-content input:focus-visible,
+.renter-content select:focus-visible,
+.renter-content textarea:focus-visible { border-color: #155eef; box-shadow: 0 0 0 3px #155eef12; }
+.renter-content input[type=checkbox] { accent-color: #155eef; }
+.renter-content .renter-grid { gap: 15px; }
+.renter-content button {
+  border: 1px solid #dce3ef;
+  border-radius: 7px;
+  background: white;
+  color: #53647d;
+  padding: 9px 13px;
+  font: 600 11px 'Be Vietnam Pro', Arial, sans-serif;
+  cursor: pointer;
+}
+.renter-content button:hover { border-color: #b8cbf8; background: #f7f9ff; }
+.renter-content button:disabled { opacity: .55; cursor: not-allowed; }
+.renter-content button[type=submit],
+.renter-content form > button:not([type=button]),
+.renter-content .renter-booking button.primary { border-color: #155eef; background: #155eef; color: white; box-shadow: 0 3px 9px #155eef20; }
+.renter-content .renter-welcome { background: #fff; color: #25354e; padding: 20px; border: 1px solid #e7ebf2; border-radius: 11px; box-shadow: 0 2px 4px #16233b05; }
+.renter-content .renter-welcome > span { color: #155eef; font-size: 9px; font-weight: 700; letter-spacing: .9px; }
+.renter-content .renter-welcome h2 { font-size: 19px; margin: 8px 0 5px; }
+.renter-content .renter-welcome p { font-size: 11px; color: #7b8799; }
+.renter-content .renter-shortcuts { gap: 14px; }
+.renter-content .renter-shortcuts > a { min-height: 148px; padding: 17px; gap: 9px; }
+.renter-content .renter-shortcuts > a:nth-child(2) { background: #f1f5ff; border-color: #dfe8ff; }
+.renter-content .renter-shortcuts > a:hover { border-color: #bbd0ff; }
+.renter-content .renter-shortcuts span { color: #7d899c; font-size: 9px; letter-spacing: .4px; }
+.renter-content .renter-shortcuts strong { font-size: 25px; color: #25354e; }
+.renter-content .renter-shortcuts .renter-shortcut-label { font-size: 15px; }
+.renter-content .renter-shortcuts > a:nth-child(2) strong,
+.renter-content .renter-shortcuts b { color: #155eef; }
+.renter-content .renter-shortcuts p,
+.renter-content .renter-shortcuts b { font-size: 10px; }
+.renter-content .renter-upcoming { background: #f7f9fd; border: 1px solid #edf0f5; color: #25354e; }
+.renter-content .renter-upcoming > span { color: #155eef; font-size: 11px; }
+.renter-content .renter-upcoming p { font-size: 10px; }
+.renter-content .renter-catalog > div > h2 { font-size: 16px; }
+.renter-content .renter-catalog .vehicle-card { border: 1px solid #e7ebf2; border-radius: 11px; box-shadow: 0 2px 4px #16233b05; }
+.renter-content .renter-catalog .vehicle-card .button-primary { background: #155eef; }
+.renter-content .renter-catalog .vehicle-card h3 { font-size: 15px; }
+.renter-content .renter-price { color: #155eef; font-size: 18px; }
+.renter-content .renter-muted { color: #758198; font-size: 11px; }
+.renter-content .renter-table th { background: #fafbfd; font-size: 10px; letter-spacing: .4px; color: #8b96a7; }
+.renter-content .renter-table td { font-size: 11px; color: #4e5e75; }
+.renter-content .renter-table td,
+.renter-content .renter-table th { padding: 12px; border-color: #edf0f5; }
+.renter-content .renter-contract { background: #f7f9fd; border-color: #dfe4ec; border-radius: 8px; font-size: 12px; }
+.renter-content .renter-notice { background: #eff4ff; color: #365f9b; border: 1px solid #dbe6ff; border-radius: 8px; font-size: 11px; }
+.renter-content .renter-error { background: #fff0ef; border: 1px solid #ffc9c4; color: #a1372e; border-radius: 8px; font-size: 11px; }
+.renter-content .renter-check { color: #53647d; font-size: 11px; }
+.renter-offline { color: #a87208; }
+.renter-offline i { background: #e4a11b; }
+@media (max-width: 1100px) { .renter-content .renter-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) {
+  .renter-sidebar-link { justify-content: center; padding: 10px 0; }
+  .renter-sidebar-link > span { display: none; }
+  .renter-content .renter-card { padding: 15px; }
+  .renter-content .renter-card h2 { margin: -15px -15px 15px; padding: 14px 15px; }
+  .renter-content .owner-heading { flex-direction: column; }
+  .renter-content .renter-shortcuts { gap: 8px; }
+  .renter-content .renter-shortcuts > a { padding: 12px; }
+  .renter-content .renter-shortcuts .renter-shortcut-label { font-size: 13px; }
+  .renter-content .renter-grid { grid-template-columns: 1fr; }
+}

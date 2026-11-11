@@ -18,7 +18,9 @@ export function getLoginDestination(user) {
   if (user?.roles?.includes('MANAGER')) return '/#/manager';
   if (user?.roles?.includes('OPERATION_STAFF')) return '/#/operations';
   if (canAccessOwner(user)) return '/owner';
-  return canAccessGarage(user) ? '/garage' : '/#trang-chu';
+  if (canAccessGarage(user)) return '/garage';
+  if (user?.roles?.includes('RENTER')) return '/#/renter';
+  return '/#trang-chu';
 }
 
 export function getCurrentUser() {

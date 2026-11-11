@@ -4,6 +4,7 @@ import { createSchema, embedded, arrayOf, integer } from './schema.js';
 const { ObjectId } = Schema.Types;
 
 export const vehicleSchema = createSchema({
+  renter_calendar_version: Number,
   owner_id: { type: ObjectId, ref: 'User', required: true },
   license_plate: { type: String, required: true },
   vin: String,

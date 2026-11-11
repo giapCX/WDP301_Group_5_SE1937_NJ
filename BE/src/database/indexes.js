@@ -14,6 +14,11 @@ export const openInspectionIndex = {
 
 export const collections = [
   { name: 'system_reports', indexes: [{ report_type: 1, generated_at: -1 }, { generated_by: 1, generated_at: -1 }] },
+  { name: 'renter_challenges', indexDefinitions: [{ key: { expires_at: 1 }, options: { expireAfterSeconds: 0 } }] },
+  { name: 'renter_files', indexes: [{ owner_id: 1, created_at: -1 }] },
+  { name: 'renter_file_chunks', indexes: [{ file_id: 1, n: 1 }] },
+  { name: 'renter_contact_keys', unique: ['_id'] },
+  { name: 'discount_codes', unique: ['code'] },
   { name: 'roles', unique: ['code'] },
   { name: 'users', unique: ['email'], indexes: [{ primary_role_id: 1 }] },
   {

@@ -90,6 +90,8 @@ export function parseListingsQuery(query) {
       throw invalid(`Invalid ${key}.`);
     vehicleMatch[`vehicle.${field}`] = { $in: values.map(exact) };
   }
+  const brand = text(query, 'brand', 60);
+  if (brand) vehicleMatch['vehicle.brand'] = exact(brand);
   const seats = number(query, 'seats', undefined, 1, 50);
   if (seats !== undefined) vehicleMatch['vehicle.seats'] = seats;
   const minYear = number(query, 'minYear', undefined, 1900, 2100);

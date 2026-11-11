@@ -25,12 +25,15 @@ export const userSchema = createSchema({
     reviewed_by_user_id: { type: ObjectId, ref: 'User' },
     review_note: String,
     provider: String,
+    evidence_keys: arrayOf(String),
+    verification_environment: String,
   }),
   driver_license: embedded({
     class: String,
     license_masked: String,
     expires_at: Date,
     verification_status: String,
+    evidence_keys: arrayOf(String),
     evidence_key: String,
     submitted_at: Date,
     reviewed_at: Date,
@@ -48,6 +51,7 @@ export const userSchema = createSchema({
   })),
   contact_profile: embedded({
     city: String,
+    address: String,
     avatar_key: String,
   }),
   payout_profile: embedded({

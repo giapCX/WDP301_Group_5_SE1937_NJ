@@ -4,6 +4,11 @@ import { createSchema, embedded, arrayOf, integer } from './schema.js';
 const { ObjectId } = Schema.Types;
 
 export const bookingSchema = createSchema({
+  hold_expires_at: Date,
+  policy_snapshot: Schema.Types.Mixed,
+  request_key: String,
+  discount_code: String,
+  discount_amount: Number,
   booking_code: { type: String, required: true },
   renter_id: { type: ObjectId, ref: 'User', required: true },
   vehicle_id: { type: ObjectId, ref: 'Vehicle', required: true },
@@ -46,6 +51,10 @@ export const bookingSchema = createSchema({
     cancelled_at: Date,
     reason: String,
     refund_decision: String,
+    refund_amount: Number,
+    refund_status: String,
+    policy_version: Number,
+    note: String,
   }),
   status_history: arrayOf(embedded({
     from: String,
