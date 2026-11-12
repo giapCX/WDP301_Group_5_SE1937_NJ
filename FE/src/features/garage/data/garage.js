@@ -30,6 +30,12 @@ export const garageSections = [
     description: 'Đối chiếu tình trạng trước và sau chuyến thuê.',
   },
   {
+    id: 'owner-returns',
+    label: 'Trả xe cho chủ',
+    icon: 'delivery',
+    description: 'Lập biên bản trả xe theo yêu cầu rút xe.',
+  },
+  {
     id: 'incidents',
     label: 'Báo cáo sự cố',
     icon: 'alert',
@@ -47,12 +53,14 @@ export const taskKinds = {
   intake: 'Tiếp nhận',
   handover: 'Bàn giao',
   return: 'Nhận trả',
+  'owner-return': 'Trả xe cho chủ',
 };
 export const sectionKinds = {
   inspections: 'inspection',
   intakes: 'intake',
   handovers: 'handover',
   returns: 'return',
+  'owner-returns': 'owner-return',
 };
 export const statusLabels = {
   pending: 'Chờ thực hiện',
@@ -151,10 +159,18 @@ export function validateGarageReport(task, report) {
   if (
     task.kind === 'inspection' &&
     report.recommendation === 'pass' &&
-    conditionFields.some(([key]) => report[key] !== 'good')
+    conditionFields.some(([key]) => report[key] !== 'good' &&
+      (!['exterior', 'interior'].includes(key) || !report.checklist?.some((item) => item.key === key && item.result === 'recorded')))
   )
     return 'Xe có hạng mục bất thường; hãy chọn yêu cầu bổ sung hoặc không đạt.';
-  if (task.kind !== 'inspection' && !report.confirmed)
+  if (task.kind === 'inspection' && (task.conditionDeclaration || report.checklist?.length)
+    && (report.checklist?.length !== 10 || report.checklist.some((item) => item.result === 'unverified')))
+    return 'Cần hoàn tất tất cả mục checklist kiểm định.';
+  if (['return', 'owner-return'].includes(task.kind) && !report.occurredAt)
+    return 'Cần ghi giờ xe về thực tế.';
+  if (task.kind === 'return' && !report.confirmed && !report.photos.length)
+    return 'Cần đính kèm ảnh hiện trạng khi khách chưa xác nhận.';
+  if (!['inspection', 'owner-return'].includes(task.kind) && !report.confirmed && !(task.kind === 'return' && report.disputeNote?.trim()))
     return 'Cần ghi nhận xác nhận của bên giao / nhận xe.';
   return '';
 }

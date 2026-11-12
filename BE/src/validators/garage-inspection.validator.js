@@ -4,6 +4,49 @@ import { parseIntakeDraft, parseVersion } from './garage-intake.validator.js';
 
 const { ObjectId } = Types;
 
+export const inspectionChecklistKeys = [
+  'identity', 'odometer', 'exterior', 'interior', 'tires', 'brakes',
+  'powertrain', 'leaks', 'lights', 'accessories',
+];
+const checklistResults = ['pass', 'recorded', 'fail', 'unverified', 'not_applicable'];
+const optionalChecks = ['accessories'];
+
+function parseChecklist(items, photos) {
+  if (!Array.isArray(items) || items.length > inspectionChecklistKeys.length)
+    throw httpError(400, 'Checklist kiểm định không hợp lệ.');
+  const seen = new Set();
+  return items.map((item) => {
+    bodyObject(item, ['key', 'result', 'note', 'photo_key']);
+    const { key, result, note = '', photo_key = '' } = item;
+    if (!inspectionChecklistKeys.includes(key) || seen.has(key) || !checklistResults.includes(result)
+      || typeof note !== 'string' || note.length > 500
+      || typeof photo_key !== 'string' || (photo_key && !photos.includes(photo_key))
+      || (result === 'not_applicable' && !optionalChecks.includes(key)))
+      throw httpError(400, 'Mục checklist, kết quả hoặc ảnh tham chiếu không hợp lệ.');
+    seen.add(key);
+    return { key, result, note: note.trim(), photo_key };
+  });
+}
+
+export function validateInspectionChecklist(report, recommendation) {
+  const items = report.checklist;
+  if (items === undefined) return false;
+  if (items.length !== inspectionChecklistKeys.length || items.some((item) => item.result === 'unverified'))
+    throw httpError(400, 'Cần hoàn tất tất cả mục checklist trước khi gửi.');
+  for (const item of items) {
+    if (item.result !== 'pass' && !item.note)
+      throw httpError(400, 'Cần ghi căn cứ cho từng mục bất thường hoặc không áp dụng.');
+    if ((item.result === 'recorded' && !item.photo_key)
+      || (item.photo_key && !report.photo_keys?.includes(item.photo_key)))
+      throw httpError(400, 'Cần ảnh hiện trạng hợp lệ cho lỗi được ghi nhận.');
+    if (item.result === 'recorded' && !['exterior', 'interior', 'accessories'].includes(item.key))
+      throw httpError(400, 'Chỉ ghi nhận ngoại lệ nhỏ ở ngoại thất, nội thất hoặc phụ kiện.');
+  }
+  if (items.some((item) => item.result === 'fail') !== (recommendation !== 'pass'))
+    throw httpError(400, 'Kết luận kiểm định phải phù hợp với các mục không đạt.');
+  return true;
+}
+
 export const inspectionRecommendations = ['pass', 'requires_repair', 'fail'];
 export const inspectionStatuses = [
   'draft',
@@ -39,6 +82,7 @@ export function parseInspectionDraft(body, create = false) {
       'tires',
       'note',
       'photoKeys',
+      'checklist',
     ]);
   }
   // Share numeric/condition/key validation with intake; only the validated report fields are retained.
@@ -48,12 +92,14 @@ export function parseInspectionDraft(body, create = false) {
     ...(body.fuelLevelPct !== undefined
       ? { fuelLevelPct: body.fuelLevelPct }
       : {}),
-    condition: body.condition || {},
+    condition: Object.fromEntries(Object.entries(body.condition || {}).filter(([key]) => key !== 'checklist')),
   });
   const result = create
     ? { vehicle_id: new ObjectId(objectId(body.vehicleId, 'vehicleId')) }
     : { version: parseVersion(body.version) };
   const report = { ...condition_snapshot };
+  if (body.condition?.checklist !== undefined)
+    report.checklist = parseChecklist(body.condition.checklist, report.photo_keys || []);
   if (odometer_km !== undefined) report.odometer_km = odometer_km;
   if (fuel_level_pct !== undefined) report.fuel_level_pct = fuel_level_pct;
   if (Object.keys(report).length) result.condition_report = report;

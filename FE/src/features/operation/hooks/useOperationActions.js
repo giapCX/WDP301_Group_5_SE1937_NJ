@@ -95,7 +95,10 @@ export function useOperationActions({ section, currentUser, perform, setError })
       field('title', 'Tên tin xe', 'text', item.title || '', { required: true, maxLength: 160 }),
       field('description', 'Mô tả', 'textarea', item.description || '', { maxLength: 3000 }),
       field('dailyPrice', 'Giá thuê mỗi ngày (VND)', 'number', item.dailyPrice ?? '', { required: true, min: 0, step: 1 }),
-      field('securityDepositAmount', 'Tiền đặt cọc (VND)', 'number', item.securityDepositAmount ?? '', { min: 0, step: 1 }),
+      field('securityDepositAmount', 'Tiền đặt cọc (VND)', 'number', item.securityDepositAmount ?? '', { required: true, min: 0, step: 1 }),
+      field('branchName', 'Tên điểm giao xe', 'text', item.pickupLocation?.branch_name || '', { required: true, maxLength: 120 }),
+      field('city', 'Tỉnh / thành phố', 'text', item.pickupLocation?.city || '', { required: true, maxLength: 100 }),
+      field('addressLabel', 'Địa chỉ giao xe', 'text', item.pickupLocation?.address_label || '', { required: true, maxLength: 300 }),
     ],
   });
 
@@ -195,7 +198,10 @@ export function useOperationActions({ section, currentUser, perform, setError })
         success = 'Đã cập nhật trạng thái tin xe.';
         break;
       case 'editListing': {
-        const body = { title: values.title, dailyPrice: Number(values.dailyPrice) };
+        const body = {
+          title: values.title, dailyPrice: Number(values.dailyPrice),
+          pickupLocation: { branchName: values.branchName, city: values.city, addressLabel: values.addressLabel },
+        };
         if (values.description || item.description !== undefined) body.description = values.description;
         if (values.securityDepositAmount !== '') body.securityDepositAmount = Number(values.securityDepositAmount);
         if (!Number.isSafeInteger(body.dailyPrice) || body.dailyPrice < 0 || (body.securityDepositAmount !== undefined && (!Number.isSafeInteger(body.securityDepositAmount) || body.securityDepositAmount < 0))) {

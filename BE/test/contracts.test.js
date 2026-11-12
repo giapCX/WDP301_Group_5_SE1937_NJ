@@ -66,6 +66,78 @@ test('management requires approval, freezes displayed facts and separates both s
   assert.deepEqual(signed.document, row.document);
 });
 
+test('new owner vehicle moves through scheduling, approval, paper signing and public listing', async () => {
+  const doc = { name: 'xe.pdf', contentType: 'application/pdf', data: Buffer.from('%PDF-1.4 fixture').toString('base64') };
+  const photo = { name: 'xe.png', contentType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aL94AAAAASUVORK5CYII=' };
+  const { data: submitted } = await request('/owner/vehicles', 'POST', {
+    brand: 'Toyota', model: 'Vios', licensePlate: '30A-TEST-9001', vin: 'XEDI123456789',
+    ownerContactAddress: 'Địa chỉ chủ xe thử nghiệm', publishVehiclePhotos: true, year: 2022, seats: 5,
+    vehicleType: 'Sedan', transmission: 'automatic', fuelType: 'gasoline', dailyPrice: 700000,
+    mileageLimit: 200, extraMileageFee: 3000, acceptedTerms: true,
+    description: 'Xe thử nghiệm đủ điều kiện tiếp nhận.', conditionDeclaration: 'Chưa phát hiện lỗi.',
+    documents: { registration: doc, inspectionCertificate: doc, insurance: doc }, photos: [photo, photo],
+  }, 'owner', 201);
+  const vehicleId = submitted.id;
+  assert.ok(vehicleId);
+  const documentPath = `${base}/operation/vehicles/${vehicleId}/documents/registration`;
+  const inspectionFile = await fetch(documentPath, { headers: { Authorization: `Bearer ${tokens.operation}` } });
+  assert.equal(inspectionFile.status, 200);
+  assert.equal(inspectionFile.headers.get('content-type'), 'application/pdf');
+  assert.equal((await fetch(documentPath, { headers: { Authorization: `Bearer ${tokens.owner}` } })).status, 403);
+  const condition = { exterior: 'good', interior: 'good', engine: 'good', tires: 'good' };
+  await request('/garage/inspections', 'POST', { vehicleId }, 'garage', 409);
+  await request(`/operation/vehicles/${vehicleId}/screen`, 'PATCH', {
+    action: 'schedule_inspection', garageStaffId: String(actors.garage._id),
+    scheduledFor: new Date(Date.now() + 3600000).toISOString(), note: 'Kiểm định tại gara thử nghiệm.',
+  }, 'operation');
+  const inspection = await models.VehicleInspection.findOne({ vehicle_id: vehicleId, approval_status: 'draft' }).lean();
+  const inspectionPath = `/garage/inspections/${inspection._id}`;
+  const keys = ['identity', 'odometer', 'exterior', 'interior', 'tires', 'brakes', 'powertrain', 'leaks', 'lights', 'accessories'];
+  await request(inspectionPath, 'PATCH', {
+    version: 0, odometerKm: 10000, fuelLevelPct: 70, recommendation: 'pass',
+    condition: { ...condition, checklist: keys.map((key) => ({ key, result: 'pass' })) },
+  }, 'garage');
+  const { data: report } = await request(`${inspectionPath}/submit`, 'POST', { version: 1 }, 'garage');
+  const approval = { action: 'approve', note: '', inspectionId: report._id, inspectionVersion: report.version };
+  const reviewPath = `/manager/vehicles/${vehicleId}/review`;
+  await request(reviewPath, 'PATCH', approval, 'manager', 409);
+  await request(`/owner/vehicles/${vehicleId}/inspections/${inspection._id}`, 'PATCH', { status: 'accepted', version: report.version }, 'owner');
+  await request(reviewPath, 'PATCH', { ...approval, inspectionVersion: report.version + 1 });
+  const { data: contract } = await request(`/contracts/management/prepare/${vehicleId}`, 'POST', {
+    commissionRatePct: 12.5, place: 'Hà Nội', garage: 'Gara XeDi Hà Nội',
+  });
+  assert.equal(contract.document.version, 'xedi-management-paper-v1');
+  assert.ok(contract.document.articles.length >= 6);
+  assert.ok(contract.document.parties[0].facts.some(({ value }) => value === 'Địa chỉ chủ xe thử nghiệm'));
+  assert.ok(contract.document.facts.some(({ value }) => value === '12.5%'));
+  await sign(contract, 'owner');
+  await sign(contract, 'manager', 'staff');
+  const { data: intake } = await request('/garage/intakes', 'POST', {
+    vehicleId, managementAgreementId: contract.id, odometerKm: 10020, fuelLevelPct: 70, condition,
+  }, 'garage', 201);
+  const confirmPath = `/garage/intakes/${intake._id}/confirm`;
+  await request(confirmPath, 'POST', { version: intake.version, ownerConfirmed: true }, 'garage', 409);
+  await request(`/owner/vehicles/${vehicleId}/intakes/${intake._id}`, 'PATCH', { status: 'accepted', version: intake.version }, 'owner');
+  await request(confirmPath, 'POST', { version: intake.version + 1, ownerConfirmed: true }, 'garage');
+  const listing = await models.VehicleListing.findOne({ vehicle_id: vehicleId }).lean();
+  assert.equal(listing.status, 'draft');
+  await request(`/listings/${listing._id}`, 'GET', undefined, 'owner', 404);
+  const photoPath = base.slice(0, -4) + listing.photos[0];
+  assert.equal((await fetch(photoPath)).status, 404);
+  const listingPath = `/operation/listings/${listing._id}`;
+  await request(`${listingPath}/review`, 'PATCH', { action: 'approve' }, 'operation', 409);
+  await request(listingPath, 'PATCH', {
+    securityDepositAmount: 3000000, pickupLocation: { branchName: 'Gara XeDi', city: 'Hà Nội', addressLabel: 'Gara thử nghiệm' },
+  }, 'operation');
+  await request(`${listingPath}/review`, 'PATCH', { action: 'approve' }, 'operation');
+  assert.equal((await request(`/listings/${listing._id}`, 'GET', undefined, 'owner')).data.daily_price, 700000);
+  const image = await fetch(photoPath);
+  assert.equal(image.status, 200);
+  assert.equal(image.headers.get('content-type'), 'image/png');
+  await request(`${listingPath}/review`, 'PATCH', { action: 'deactivate' }, 'operation');
+  assert.equal((await fetch(photoPath)).status, 404);
+});
+
 test('ownership, staff authority, acceptance and stale document guards cannot be bypassed', async () => {
   const row = (await (await managementFixture()).prepare()).data;
   await sign(row, 'otherOwner', 'party', signature(row), 404);

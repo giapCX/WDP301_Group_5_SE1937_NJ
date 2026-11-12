@@ -8,6 +8,7 @@ export function createGarageHandoverRouter(connection) {
   const router = Router();
   const controller = createGarageHandoverController(createGarageHandoverService(createGarageHandoverRepository(connection)));
   router.use(['/handovers', '/bookings/:bookingId/handover-eligibility'], requireGarageStaff(connection, 'handover.record'));
+  router.patch('/owner-returns/:id', requireGarageStaff(connection, 'handover.record'), controller.saveOwnerReturn);
   router.get('/bookings/:bookingId/handover-eligibility', controller.eligibility);
   router.get('/handovers/:id', controller.get);
   router.post('/handovers', controller.create);

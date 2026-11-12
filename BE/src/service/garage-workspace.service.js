@@ -19,7 +19,7 @@ export function createGarageWorkspaceService(repository, inspectionService, inta
         const status = rejectedApplication ? 'rejected' : !record ? 'pending' : kind === 'inspection' ? (rawStatus === 'pending' ? 'submitted' : rawStatus) : rawStatus === 'draft' ? 'draft' : 'completed';
         const staffId = record?.garage_staff_id || record?.created_by_garage_staff_id || record?.received_by_garage_staff_id;
         const editable = !rejectedApplication && (!record || (rawStatus === 'draft' && same(staffId, actor._id)));
-        const schedule = booking ? (kind === 'return' ? booking.end_at : booking.start_at) : record?.created_at || vehicle.created_at;
+        const schedule = booking ? (kind === 'return' ? booking.end_at : booking.start_at) : record?.scheduled_for || record?.created_at || vehicle.created_at;
         tasks.push({
           id: `${kind}:${record?._id || booking?._id || vehicleId}`,
           kind, recordId: record?._id, version: record?.version, vehicleId, bookingId: booking?._id,
@@ -29,9 +29,17 @@ export function createGarageWorkspaceService(repository, inspectionService, inta
           decisionReason: record?.decision_reason || '',
           vehicleReviewNote: vehicle.review_note || '',
           vehicleReviewStatus: vehicle.onboarding_status,
+          scheduleNote: record?.schedule_note,
+          conditionDeclaration: vehicle.condition_declaration || '',
+          baselineCondition: context.baselineCondition,
+          occurredAt: record?.occurred_at,
+          damageChanges: record?.damage_changes,
+          ownerReview: record?.owner_review,
+          renterResponse: record?.renter_response,
+          renterDisputeNote: record?.renter_dispute_note,
           odometer: context.baselineOdometerKm || record?.odometer_km || 0,
           fuel: context.baselineFuelPct ?? record?.fuel_level_pct ?? report?.fuel_level_pct ?? 0,
-          schedule: iso(schedule), scheduled: Boolean(booking),
+          schedule: iso(schedule), scheduled: Boolean(booking || record?.scheduled_for),
           reference: booking?.booking_code || agreement?.agreement_number || String(record?._id || vehicleId),
           location: booking?.pickup_location?.branch || 'Chưa có thông tin địa điểm', bay: 'Chưa có thông tin vị trí',
           requirements: {}, blockers: editable ? (context.blockers || []).map((item) => item.message) : [], readOnly: !editable,
@@ -39,6 +47,7 @@ export function createGarageWorkspaceService(repository, inspectionService, inta
             odometer: String(record?.odometer_km ?? report.odometer_km ?? ''), fuel: String(record?.fuel_level_pct ?? report.fuel_level_pct ?? ''),
             ...Object.fromEntries(['exterior', 'interior', 'engine', 'tires'].map((key) => [key, normalizeCondition(report[key])])),
             note: report.note || '', photos: (report.photo_keys || []).map(photo), accessories: report.accessories || [], recommendation: recommendation[record?.recommendation] || '',
+            checklist: report.checklist, defects: report.defects,
             confirmed: Boolean(record?.owner_confirmed_at || record?.renter_confirmed_at),
           } : null,
         });
@@ -71,6 +80,30 @@ export function createGarageWorkspaceService(repository, inspectionService, inta
         }
       }
       if (permissions.includes('handover.record')) {
+        for (const withdrawal of data.withdrawals) {
+          const vehicle = vehicles.get(String(withdrawal.vehicle_id));
+          const intake = [...data.intakes, ...data.returnIntakes].find((item) =>
+            same(item.management_agreement_id, withdrawal.management_agreement_id) && item.status === 'completed');
+          if (!vehicle || !intake) continue;
+          const report = withdrawal.owner_return_handover;
+          const saved = report ? {
+            ...report, _id: withdrawal._id, condition_snapshot: report.condition, occurred_at: report.returned_at,
+            status: withdrawal.status === 'withdrawn' ? 'completed' : 'draft',
+          } : null;
+          const blockers = ['at_garage', 'maintenance'].includes(vehicle.physical_status) ? [] : [{ message: 'Xe chưa có mặt tại gara để trả chủ.' }];
+          task('owner-return', withdrawal.vehicle_id, saved, {
+            blockers, baselineOdometerKm: intake.odometer_km, baselineFuelPct: intake.fuel_level_pct,
+            baselineCondition: intake.condition_snapshot,
+          });
+          const item = tasks.at(-1);
+          item.id = `owner-return:${withdrawal._id}`;
+          item.withdrawalId = withdrawal._id;
+          item.reference = String(withdrawal._id);
+          if (withdrawal.requested_return_at) {
+            item.schedule = iso(withdrawal.requested_return_at);
+            item.scheduled = true;
+          }
+        }
         for (const record of data.handovers) {
           const booking = data.bookings.find((item) => same(item._id, record.booking_id));
           const context = booking ? await handoverService.context(booking._id, record.handover_type) : {};

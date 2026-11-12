@@ -35,6 +35,16 @@ export function createAuthRepository(database) {
   const roles = createModelRepository(models.Role);
   const audits = createModelRepository(models.AuditLog);
   return {
+    async canViewOwnerGaragePhoto(ownerId, key) {
+      const vehicles = await models.Vehicle.find({ owner_id: ownerId }).select('_id').lean();
+      const vehicle_id = { $in: vehicles.map(({ _id }) => _id) };
+      const [inspection, intake, ownerReturn] = await Promise.all([
+        models.VehicleInspection.exists({ vehicle_id, approval_status: { $ne: 'draft' }, 'condition_report.photo_keys': key }),
+        models.VehicleWithdrawalRequest.exists({ vehicle_id, owner_id: ownerId, 'owner_return_handover.condition.photo_keys': key }),
+        models.VehicleIntake.exists({ vehicle_id, status: { $in: ['draft', 'completed'] }, 'condition_snapshot.photo_keys': key }),
+      ]);
+      return Boolean(inspection || intake || ownerReturn);
+    },
     findByAccount: account => users.findOne(buildAccountQuery(account)),
     findById: id => users.findOne({
       _id: new ObjectId(id)

@@ -98,7 +98,9 @@ export default function VehicleApprovalsWorkspace({
     {error && <div className="manager-notice manager-error" role="alert">{error}<button onClick={() => setActionError('')} aria-label="Đóng">×</button></div>}
     <div className="vehicle-approval-list">{vehicles.map(vehicle => {
         const canDecide = !vehicle.inspection || ['pending', 'approved'].includes(vehicle.inspection.status);
-        const canApprove = canDecide && vehicle.inspection?.recommendation === 'pass';
+        const ownerReviewRequired = vehicle.inspection?.status === 'pending' && Boolean(vehicle.inspection?.conditionReport?.checklist);
+        const canApprove = canDecide && vehicle.inspection?.recommendation === 'pass'
+          && (!ownerReviewRequired || vehicle.inspection.ownerReview?.status === 'accepted');
         return <article className="vehicle-approval-card" key={vehicle.id}>
         <header className="vehicle-card-header"><div><span className="vehicle-card-kicker">HỒ SƠ XE · {vehicle.id.slice(-6).toUpperCase()}</span><h3>{vehicle.brand} {vehicle.model}</h3><p>{vehicle.licensePlate} <span>·</span> {vehicle.year || 'Chưa rõ năm sản xuất'} <span>·</span> {vehicle.seats || '—'} chỗ</p></div><span className="vehicle-review-status">{statusText[vehicle.status] || vehicle.status}</span></header>
         <div className="vehicle-owner-row"><div><small>CHỦ XE</small><strong>{vehicle.owner?.full_name || 'Chưa cập nhật tên'}</strong></div><div><small>EMAIL</small><strong>{vehicle.owner?.email || '—'}</strong></div><div><small>HỘP SỐ / NHIÊN LIỆU</small><strong>{vehicle.transmission || '—'} · {vehicle.fuelType || '—'}</strong></div></div>
@@ -107,7 +109,7 @@ export default function VehicleApprovalsWorkspace({
         <InspectionReviewDetails inspection={vehicle.inspection} />
         {!canDecide && <p className="vehicle-prior-note">Chờ Garage gửi biên bản kiểm định mới trước khi quyết định.</p>}
         <footer className="vehicle-card-actions"><button className="action-approve" disabled={!canApprove || busyId === vehicle.id} title={!canApprove ? 'Cần Garage gửi biên bản đề xuất đạt trước khi duyệt' : ''} onClick={() => {
-              const note = window.prompt('Ghi chú xét duyệt (không bắt buộc):', '');
+              const note = window.prompt('Xác nhận đã kiểm tra đăng ký xe, đăng kiểm và bảo hiểm. Nhập ghi chú nếu cần.', '');
               if (note !== null) act(vehicle, 'approve', note.trim());
             }}>{busyId === vehicle.id ? 'Đang lưu…' : 'Duyệt xe và kiểm định'}</button><button className="action-review" disabled={!canDecide || busyId === vehicle.id} onClick={() => requestAdditionalInfo(vehicle)}>Yêu cầu bổ sung / kiểm định lại</button><button className="action-reject" disabled={!canDecide || busyId === vehicle.id} onClick={() => rejectApplication(vehicle)}>Từ chối hồ sơ</button></footer>
       </article>;

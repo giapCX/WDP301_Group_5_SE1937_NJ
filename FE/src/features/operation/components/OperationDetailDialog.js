@@ -1,4 +1,5 @@
-import { updateComplaint, updateDispute, updateIncident } from '../api/operationApi';
+import { useState } from 'react';
+import { getVehicleDocument, updateComplaint, updateDispute, updateIncident } from '../api/operationApi';
 import { formatOperationDate, formatOperationMoney, operationStatusLabels } from '../operationConfig';
 
 function caseUpdater(section) {
@@ -16,6 +17,18 @@ function Status({ value }) {
 }
 
 function VehicleDetails({ vehicle }) {
+  const [error, setError] = useState('');
+  async function openDocument(kind) {
+    setError('');
+    try {
+      const blob = await getVehicleDocument(vehicle.id, kind);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (failure) {
+      setError(failure.message);
+    }
+  }
   return (
     <>
       <p><strong>Biển số:</strong> {vehicle.licensePlate || '—'} · <strong>Năm:</strong> {vehicle.year || '—'}</p>
@@ -23,11 +36,13 @@ function VehicleDetails({ vehicle }) {
         <strong>Chủ xe:</strong> {vehicle.owner?.full_name || '—'} · {vehicle.owner?.email || ''} · {vehicle.owner?.phone || ''}
       </p>
       <p><strong>Trạng thái xe:</strong> {operationStatusLabels[vehicle.physicalStatus] || vehicle.physicalStatus || '—'}</p>
-      <p>
-        <strong>Giấy đăng ký:</strong> {vehicle.documents?.registration?.file_key || 'Chưa có'} ·
-        <strong> Đăng kiểm:</strong> {vehicle.documents?.inspectionCertificate?.file_key || 'Chưa có'} ·
-        <strong> Bảo hiểm:</strong> {vehicle.documents?.insurance?.file_key || 'Chưa có'}
-      </p>
+      {vehicle.conditionDeclaration && <p><strong>Chủ xe khai báo:</strong> {vehicle.conditionDeclaration}</p>}
+      <ul>{[['registration', 'Giấy đăng ký'], ['inspectionCertificate', 'Đăng kiểm'], ['insurance', 'Bảo hiểm']].map(([kind, label]) =>
+        <li key={kind}>{label} · {vehicle.documents?.[kind]
+          ? <button type="button" className="operation-row-link" onClick={() => openDocument(kind)}>Mở tài liệu</button>
+          : 'Chưa có'}</li>
+      )}</ul>
+      {error && <p role="alert">{error}</p>}
       {vehicle.reviewNote && <p><strong>Ghi chú sàng lọc:</strong> {vehicle.reviewNote}</p>}
       {vehicle.inspection && (
         <p>

@@ -29,7 +29,16 @@ function text(value, field, { min = 1, max = 120 } = {}) {
   return value.trim();
 }
 
-export function createOwnerService(repository, contracts) {
+function ownerReview(body, ownerId) {
+  const { version, status, note = '' } = body || {};
+  if (!Number.isSafeInteger(version) || version < 0 || !['accepted', 'disputed'].includes(status)
+    || typeof note !== 'string' || note.length > 1000 || (status === 'disputed' && !note.trim())) {
+    throw httpError(400, 'Cần xác nhận hoặc ghi rõ nội dung bất đồng.');
+  }
+  return { version, review: { status, note: note.trim(), reviewed_at: new Date(), owner_id: ownerId, reviewed_version: version } };
+}
+
+export function createOwnerService(repository, contracts, handovers) {
   async function actorId(actor) {
     const id = actor?.tokenPayload?.sub;
     if (typeof id !== 'string' || !/^[a-f\d]{24}$/i.test(id)) throw httpError(401, 'Phiên đăng nhập không hợp lệ.');
@@ -49,7 +58,14 @@ export function createOwnerService(repository, contracts) {
         repository.findAgreements(ownerId),
         repository.findWithdrawalRequests(ownerId),
       ]);
-      const incidents = await repository.findIncidents(vehicles.map((vehicle) => vehicle._id));
+      const vehicleIds = vehicles.map((vehicle) => vehicle._id);
+      const [incidents, inspections, intakes, listings] = await Promise.all([
+        repository.findIncidents(vehicleIds), repository.findInspections(vehicleIds), repository.findLatestIntakes(vehicleIds), repository.findListings(vehicleIds),
+      ]);
+      const latestByVehicle = (records) => new Map([...records].reverse().map((item) => [String(item.vehicle_id), item]));
+      const inspectionMap = latestByVehicle(inspections);
+      const intakeMap = latestByVehicle(intakes);
+      const listingMap = latestByVehicle(listings);
       const vehiclesById = new Map(vehicles.map((vehicle) => [vehicle._id.toString(), vehicle]));
       const totals = settlements.reduce((result, item) => {
         result.gross += Number(item.gross_rental_revenue) || 0;
@@ -59,17 +75,35 @@ export function createOwnerService(repository, contracts) {
         return result;
       }, { gross: 0, commission: 0, net: 0, withdrawable: 0 });
       return {
-        vehicles: vehicles.map((vehicle) => ({
+        vehicles: vehicles.map((vehicle) => {
+          const inspection = inspectionMap.get(String(vehicle._id));
+          const intake = intakeMap.get(String(vehicle._id));
+          const withdrawal = withdrawals.find((item) => String(item.vehicle_id) === String(vehicle._id) && item.owner_return_handover?.version);
+          return {
           id: vehicle._id.toString(), brand: vehicle.brand, model: vehicle.model,
           year: vehicle.manufacture_year, licensePlate: vehicle.license_plate,
           approvalStatus: vehicle.onboarding_status, reviewNote: vehicle.review_note || '',
           operatingStatus: vehicle.physical_status, updatedAt: vehicle.updated_at || vehicle.created_at,
+          conditionDeclaration: vehicle.condition_declaration || '',
+          listing: listingMap.get(String(vehicle._id)) || null,
+          inspection: inspection ? {
+            id: inspection._id, version: inspection.version, status: inspection.approval_status,
+            scheduledFor: inspection.scheduled_for, scheduleNote: inspection.schedule_note,
+            ...(inspection.approval_status !== 'draft' && { recommendation: inspection.recommendation, conditionReport: inspection.condition_report }),
+            ownerReview: inspection.owner_review, decisionReason: inspection.decision_reason,
+          } : null,
+          intake: intake ? {
+            id: intake._id, status: intake.status, version: intake.version, ownerReview: intake.owner_review, confirmedAt: intake.owner_confirmed_at, agreementId: intake.management_agreement_id,
+            odometer: intake.odometer_km, fuel: intake.fuel_level_pct, condition: intake.condition_snapshot,
+          } : null,
+          ownerReturn: withdrawal ? { id: withdrawal._id, status: withdrawal.status, ...withdrawal.owner_return_handover } : null,
           documents: {
             registration: { verified: Boolean(vehicle.documents?.registration?.verified), reviewStatus: vehicle.documents?.registration?.review_status || null, reviewNote: vehicle.documents?.registration?.review_note || '' },
             inspectionCertificate: { verified: Boolean(vehicle.documents?.inspection_certificate?.verified), reviewStatus: vehicle.documents?.inspection_certificate?.review_status || null, reviewNote: vehicle.documents?.inspection_certificate?.review_note || '' },
             insurance: { verified: Boolean(vehicle.documents?.insurance?.verified), reviewStatus: vehicle.documents?.insurance?.review_status || null, reviewNote: vehicle.documents?.insurance?.review_note || '' },
           },
-        })),
+          };
+        }),
         totals,
         payoutAccount: actor.user?.payout_profile?.bank_name && actor.user?.payout_profile?.account_masked
           ? { bankName: actor.user.payout_profile.bank_name, accountMasked: actor.user.payout_profile.account_masked }
@@ -94,6 +128,42 @@ export function createOwnerService(repository, contracts) {
         withdrawals: withdrawals.map((item) => ({ id: item._id.toString(), vehicleId: item.vehicle_id?.toString(), reason: item.reason, requestedReturnAt: item.requested_return_at, status: item.status, requestedAt: item.requested_at || item.created_at })),
         incidents: incidents.map((item) => ({ id: item._id.toString(), caseNumber: item.case_number, vehicleId: item.vehicle_id?.toString(), bookingId: item.booking_id?.toString(), caseType: item.case_type, description: item.description, status: item.status, createdAt: item.created_at, compensation: (item.compensation_claims || []).reduce((sum, claim) => sum + (Number(claim.approved_amount) || 0), 0) })),
       };
+    },
+
+    async respondToInspection(vehicleValue, inspectionValue, body, actor) {
+      const ownerId = await actorId(actor);
+      if (![vehicleValue, inspectionValue].every((value) => /^[a-f0-9]{24}$/i.test(value))) throw httpError(404, 'Không tìm thấy hồ sơ.');
+      const vehicleId = new ObjectId(vehicleValue);
+      const vehicle = await repository.findVehicle(ownerId, vehicleId);
+      if (!vehicle) throw httpError(404, 'Không tìm thấy hồ sơ xe.');
+      const { version, review } = ownerReview(body, ownerId);
+      const result = await repository.respondToInspection(vehicleId, new ObjectId(inspectionValue), version, review);
+      if (result.modifiedCount !== 1) throw httpError(409, 'Biên bản đã đổi phiên bản hoặc đã được phản hồi. Vui lòng tải lại.');
+    },
+
+    async respondToIntake(vehicleValue, intakeValue, body, actor) {
+      const ownerId = await actorId(actor);
+      if (![vehicleValue, intakeValue].every((value) => /^[a-f0-9]{24}$/i.test(value))) throw httpError(404, 'Không tìm thấy biên bản.');
+      const vehicleId = new ObjectId(vehicleValue);
+      const intakeId = new ObjectId(intakeValue);
+      if (!await repository.findVehicle(ownerId, vehicleId)) throw httpError(404, 'Không tìm thấy hồ sơ xe.');
+      const { version, review } = ownerReview(body, ownerId);
+      const intake = await repository.findIntake(vehicleId, intakeId);
+      if (!intake || !Number.isInteger(intake.odometer_km) || !Number.isInteger(intake.fuel_level_pct)
+        || !['exterior', 'interior', 'engine', 'tires'].every((key) => intake.condition_snapshot?.[key])) {
+        throw httpError(409, 'Garage chưa lưu đủ thông tin biên bản tiếp nhận.');
+      }
+      const result = await repository.respondToIntake(vehicleId, intakeId, version, review);
+      if (result.modifiedCount !== 1) throw httpError(409, 'Biên bản đã đổi phiên bản hoặc đã được phản hồi. Vui lòng tải lại.');
+    },
+
+    async confirmOwnerReturn(value, body, actor) {
+      const ownerId = await actorId(actor);
+      if (!/^[a-f0-9]{24}$/i.test(value) || body?.received !== true)
+        throw httpError(400, 'Cần xác nhận đã nhận xe thực tế.');
+      const confirmation = ownerReview(body, ownerId);
+      const result = await handovers.confirmOwnerReturn(new ObjectId(value), confirmation);
+      return { id: result._id, status: result.status };
     },
 
     async agreementDetails(agreementId, actor) {
@@ -214,6 +284,10 @@ export function createOwnerService(repository, contracts) {
       const transmission = text(body.transmission, 'Hộp số', { max: 30 });
       const fuelType = text(body.fuelType, 'Nhiên liệu', { max: 30 });
       const description = text(body.description, 'Mô tả xe', { min: 10, max: 2000 });
+      const ownerContactAddress = body.ownerContactAddress ? text(body.ownerContactAddress, 'Địa chỉ chủ xe', { max: 250 }) : undefined;
+      const vin = body.vin ? text(body.vin, 'Số khung', { max: 40 }).toUpperCase() : undefined;
+      if (vin && !/^[A-Z0-9-]+$/.test(vin)) throw httpError(400, 'Số khung không hợp lệ.');
+      const conditionDeclaration = text(body.conditionDeclaration, 'Khai báo hiện trạng', { max: 1500 });
       const year = integer(body.year, 'Năm sản xuất', 1990, new Date().getFullYear() + 1);
       const seats = integer(body.seats, 'Số chỗ', 2, 50);
       const dailyPrice = integer(body.dailyPrice, 'Giá thuê mỗi ngày', 100000, 100000000);
@@ -250,9 +324,9 @@ export function createOwnerService(repository, contracts) {
         const vehicle = {
           _id: vehicleId, owner_id: ownerId, brand, model, license_plate: licensePlate,
           manufacture_year: year, seats, vehicle_type: vehicleType, transmission, fuel_type: fuelType,
-          description, daily_price: dailyPrice,
+          description, vin, owner_contact_address: ownerContactAddress, condition_declaration: conditionDeclaration, daily_price: dailyPrice,
           mileage_policy: { included_km_per_day: mileageLimit, extra_km_fee: extraMileageFee },
-          photos: photoKeys, physical_status: 'with_owner', onboarding_status: 'submitted',
+          photos: photoKeys, publish_vehicle_photos: body.publishVehiclePhotos === true, physical_status: 'with_owner', onboarding_status: 'submitted',
           documents: {
             registration: { file_key: registrationKey, verified: false },
             inspection_certificate: { file_key: inspectionKey, verified: false },
@@ -309,8 +383,9 @@ export function createOwnerService(repository, contracts) {
       const docs = body?.documents || {};
       const hasPhotos = Array.isArray(body?.photos) && body.photos.length > 0;
       const hasDocs = Boolean(docs.registration || docs.inspectionCertificate || docs.insurance);
-      if (!hasDocs && !hasPhotos) {
-        throw httpError(400, 'Vui lòng tải lên ít nhất một tài liệu hoặc ảnh xe cần bổ sung.');
+      const note = typeof body?.note === 'string' ? body.note.trim().slice(0, 500) : '';
+      if (!hasDocs && !hasPhotos && (!vehicle.condition_declaration || note.length < 5)) {
+        throw httpError(400, 'Cần tải tài liệu, ảnh xe hoặc mô tả nội dung đã khắc phục.');
       }
 
       const uploadedKeys = [];
@@ -369,7 +444,6 @@ export function createOwnerService(repository, contracts) {
           updates.photos = photoKeys;
         }
 
-        const note = typeof body?.note === 'string' ? body.note.trim().slice(0, 500) : '';
         const result = await repository.updateVehicle(vehicleId, ownerId, {
           $set: updates,
           $push: {

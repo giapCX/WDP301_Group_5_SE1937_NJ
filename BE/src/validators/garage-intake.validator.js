@@ -51,8 +51,28 @@ export function parseIntakeDraft(body, create = false) {
       'note',
       'accessories',
       'photoKeys',
+      'defects',
     ]);
     output.condition_snapshot = {};
+    const defects = body.condition.defects;
+    if (defects !== undefined) {
+      if (!Array.isArray(defects) || defects.length > 30) throw httpError(400, 'Tối đa 30 lỗi hiện trạng.');
+      const codes = new Set();
+      output.condition_snapshot.defects = defects.map((item) => {
+        plain(item, 'Lỗi hiện trạng');
+        keys(item, ['code', 'location', 'description', 'severity', 'photo_key']);
+        const { code, location, description, severity, photo_key } = item;
+        if (typeof code !== 'string' || !/^[a-z0-9-]{1,40}$/i.test(code) || codes.has(code)
+          || typeof location !== 'string' || !location.trim() || location.length > 120
+          || typeof description !== 'string' || !description.trim() || description.length > 500
+          || !['attention', 'damaged'].includes(severity)
+          || typeof photo_key !== 'string' || !Array.isArray(body.condition.photoKeys) || !body.condition.photoKeys.includes(photo_key)) {
+          throw httpError(400, 'Mỗi lỗi cần mã riêng, vị trí, mô tả, mức độ và ảnh trong biên bản.');
+        }
+        codes.add(code);
+        return { code, location: location.trim(), description: description.trim(), severity, photo_key };
+      });
+    }
     for (const field of ['exterior', 'interior', 'engine', 'tires']) {
       if (body.condition[field] === undefined) continue;
       if (!['good', 'attention', 'damaged'].includes(body.condition[field]))
@@ -72,7 +92,7 @@ export function parseIntakeDraft(body, create = false) {
     }
     for (const [input, stored, max] of [
       ['accessories', 'accessories', 20],
-      ['photoKeys', 'photo_keys', 4],
+      ['photoKeys', 'photo_keys', 30],
     ]) {
       const values = body.condition[input];
       if (values === undefined) continue;

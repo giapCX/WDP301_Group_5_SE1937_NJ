@@ -1,0 +1,41 @@
+.management-contract-view { max-width: 210mm; margin-inline: auto; }
+.management-paper-toolbar { display: flex; justify-content: flex-end; padding: 0 0 12px; }
+.management-contract-paper {
+  box-sizing: border-box;
+  width: min(100%, 210mm);
+  min-height: 297mm;
+  margin-inline: auto;
+  padding: clamp(18px, 5vw, 20mm);
+  background: white;
+  border: 1px solid #d8dde4;
+  box-shadow: 0 5px 20px #1b263318;
+  color: #171717;
+  font: 12pt/1.45 'Times New Roman', 'PT Serif', serif;
+  overflow-wrap: anywhere;
+}
+.management-paper-heading { text-align: center; }
+.management-contract-paper .management-paper-heading p { margin: 0 0 3px; font-weight: bold; }
+.management-contract-paper .management-paper-heading h2 { margin: 23px 0 4px; font: bold 17pt/1.25 'Times New Roman', 'PT Serif', serif; }
+.management-contract-paper .management-paper-intro { margin-top: 22px; }
+.management-contract-paper h3 { margin: 13px 0 4px; font-size: inherit; }
+.management-contract-paper p { margin: 0 0 7px; color: inherit; font: inherit; }
+.management-contract-paper dl.management-paper-facts { display: block; margin: 0 0 8px; border: 0; background: none; overflow: visible; }
+.management-contract-paper dl.management-paper-facts > div { display: block; padding: 0; background: none; }
+.management-contract-paper dl.management-paper-facts dt, .management-contract-paper dl.management-paper-facts dd {
+  display: inline; margin: 0; font: inherit; color: inherit; text-transform: none; letter-spacing: normal;
+}
+.management-contract-paper dl.management-paper-facts dt { font-weight: bold; margin-right: .5em; }
+.management-paper-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; break-inside: avoid; }
+.management-paper-signature { display: grid; min-width: 0; text-align: center; align-content: start; gap: 3px; }
+.management-contract-paper .management-paper-version { margin: 22px 0 0; font-size: 9pt; }
+.management-print-frame { position: fixed; left: -10000px; top: 0; width: 210mm; height: 297mm; border: 0; }
+@media print {
+  body.management-print-document, body.management-print-document * { visibility: visible; }
+  .management-print-document .management-contract-paper {
+    width: auto; min-height: 0; padding: 0; margin: 0; border: 0; box-shadow: none;
+    font-size: 11.5pt; line-height: 1.35;
+  }
+  .management-contract-paper h3 { break-after: avoid; }
+  .management-contract-paper p { orphans: 3; widows: 3; }
+  .management-paper-party, .management-paper-facts > div { break-inside: avoid; }
+}

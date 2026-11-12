@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import IncidentConditionComparison from './IncidentConditionComparison';
 import GaragePhotoPreview from '../../garage/components/GaragePhotoPreview';
 
 const money = (value) => new Intl.NumberFormat('vi-VN').format(value || 0);
@@ -37,6 +38,9 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
   </article>;
   return <article className="incident-card">
     <div className="incident-card-heading"><div><strong>{item.caseNumber} · {item.caseType}</strong><p>{item.description}</p></div><span className="request-status rose">{item.status}</span></div>
+    {item.sourceWithdrawalId && <p>Tranh chấp biên bản trả xe cho chủ · {item.sourceWithdrawalId}</p>}
+    <IncidentConditionComparison comparison={item.conditionComparison} />
+    <IncidentConditionComparison comparison={item.ownerConditionComparison} ownerReturn />
     <div className="gs-photo-grid">{(item.evidence || []).filter((evidence) => evidence.file_key?.startsWith('garage-photos/')).map((evidence) => <div key={evidence.file_key}><GaragePhotoPreview photo={{ key: evidence.file_key, name: evidence.file_key.split('/').at(-1) }} /></div>)}</div>
     {claims.map((claim, index) => <div className="claim-row" key={`${item.id}-${index}`}>
       <div><span>Yêu cầu: {money(claim.requested_amount)} ₫</span>

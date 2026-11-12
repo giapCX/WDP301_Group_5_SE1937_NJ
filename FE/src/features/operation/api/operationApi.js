@@ -1,4 +1,4 @@
-import { getApi, patchApi, postApi } from '../../../services/httpClient';
+import { getApi, getBlobApi, patchApi, postApi } from '../../../services/httpClient';
 
 const paths = {
   vehicles: '/vehicles',
@@ -18,6 +18,7 @@ export function getOperationResource(resource, params = {}, options = {}) {
 export const getOperationDashboard = (options) => getApi('/operation/dashboard', options);
 export const getOperationStaff = (options) => getApi('/operation/staff', options);
 export const getGarageStaff = (options) => getApi('/operation/garage-staff', options);
+export const getVehicleDocument = (id, kind) => getBlobApi(`/operation/vehicles/${encodeURIComponent(id)}/documents/${encodeURIComponent(kind)}`);
 export const screenVehicle = (id, body) => patchApi(`/operation/vehicles/${encodeURIComponent(id)}/screen`, body);
 export const getOperationDetail = (resource, id, options) => getApi(`/operation${paths[resource]}/${encodeURIComponent(id)}`, options);
 export const decideBooking = (id, body) => patchApi(`/operation/bookings/${encodeURIComponent(id)}/decision`, body);

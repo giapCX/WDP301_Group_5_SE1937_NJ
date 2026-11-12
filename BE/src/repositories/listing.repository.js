@@ -94,7 +94,7 @@ export function publicListingPipeline(match, vehicleMatch = {}, rentalPeriod) {
   }];
 }
 export function createListingRepository(database) {
-  const { VehicleListing } = getModels(database);
+  const { VehicleListing, Vehicle } = getModels(database);
   return {
     async findPublic({
       match,
@@ -119,6 +119,15 @@ export function createListingRepository(database) {
         }
       }]).exec();
       return result;
+    },
+    async findPublishedPhotoKey(id, index) {
+      const url = `/api/listings/${id}/photos/${index}`;
+      const listing = await VehicleListing.findOne({ _id: new ObjectId(id), status: 'published', photos: url }).select('vehicle_id').lean();
+      if (!listing) return null;
+      const vehicle = await Vehicle.findOne({
+        _id: listing.vehicle_id, onboarding_status: 'approved', physical_status: { $in: ['at_garage', 'rented'] }, publish_vehicle_photos: true,
+      }).select('photos').lean();
+      return vehicle?.photos?.[index] || null;
     },
     async findPublicById(id) {
       const [listing] = await VehicleListing.aggregate(publicListingPipeline({

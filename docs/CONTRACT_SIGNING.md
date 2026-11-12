@@ -3,12 +3,12 @@
 ## Quản lý xe: Owner và Manager
 
 1. Owner đăng ký xe, tải hồ sơ và xác nhận thông tin. Hệ thống tạo hợp đồng `draft` **chưa có chữ ký**, không tự ký thay Owner hoặc nền tảng.
-2. Garage kiểm định và gửi đề xuất. Manager duyệt xe theo biên bản đạt.
-3. Manager mở **Hợp đồng → Lập nội dung và ký hợp đồng phía nền tảng**, hoặc truy cập `/#/contracts`. Chọn xe đã duyệt, ngày bắt đầu/kết thúc rồi **Lập / mở hợp đồng**. Mặc định thời hạn một năm, hoa hồng theo hợp đồng nháp (10% nếu tạo mới).
-4. Nội dung trình ký lưu riêng: thông tin xe, các bên, phạm vi ủy quyền, hoa hồng, thời hạn và điều khoản. Đã lập thì không ghi đè bằng thao tác lập lại.
+2. Operation sàng lọc hồ sơ và phân công lịch. Garage kiểm định và gửi báo cáo. Owner xác nhận hiện trạng, sau đó Manager duyệt theo biên bản đạt.
+3. Manager mở **Hợp đồng → Lập nội dung và ký hợp đồng phía nền tảng**, hoặc truy cập `/#/contracts`. Chọn xe đã duyệt, nhập ngày bắt đầu/kết thúc, hoa hồng, đơn vị nhận ủy quyền, nơi lập và điểm tiếp nhận rồi **Lập / mở hợp đồng**. Mặc định thời hạn một năm, hoa hồng theo hợp đồng nháp (10% nếu tạo mới).
+4. Hợp đồng ủy quyền hiển thị dạng văn bản A4, lấy thông tin từ hồ sơ xe, bản kiểm định đã duyệt và thông tin Manager nhập. Nội dung trình ký được lưu theo phiên bản và có thể in hoặc lưu PDF. Thao tác lập lại mở đúng bản đã trình ký.
 5. Owner mở **Hợp đồng** trong không gian chủ xe, hoặc `/#/contracts`: đọc nội dung, nhập họ tên, tích đồng ý và ký bằng tài khoản của mình.
 6. Manager mở cùng hợp đồng ở phạm vi **Nền tảng**, đọc và ký riêng phía XeDi. Hai bên có thể ký trước/sau nhau; Owner không được ký thay Manager, Operation không được ký phía nền tảng.
-7. Chỉ khi đủ hai chữ ký mới `active`. Garage vẫn kiểm tra thời hạn, quyền giữ xe, biên bản kiểm định và trạng thái xe trước tiếp nhận.
+7. Chỉ khi đủ hai chữ ký mới `active`. Garage kiểm tra thời hạn, quyền giữ xe, biên bản kiểm định và trạng thái xe trước khi lập biên bản nhận xe. Owner xác nhận biên bản, Garage hoàn tất tiếp nhận, rồi Operation hoàn thiện và xuất bản tin nháp.
 
 ## Thuê xe: Renter và Manager
 
@@ -33,7 +33,7 @@ Nếu booking có `payment_deadline_at`, quá thời điểm này không đượ
 
 - `GET /api/contracts/{management|rental}?page=1&limit=10`: hợp đồng của người đăng nhập; thêm `view=staff` cho Manager/Operation.
 - `GET /api/contracts/{type}/candidates`: danh sách xe/booking có thể chọn để lập, có phân trang.
-- `POST /api/contracts/{type}/prepare/{vehicleId|bookingId}`: lập nội dung. Hợp đồng quản lý nhận tùy chọn `startDate`, `endDate`.
+- `POST /api/contracts/{type}/prepare/{vehicleId|bookingId}`: lập nội dung. Hợp đồng quản lý nhận tùy chọn `startDate`, `endDate`, `commissionRatePct`, `platformName`, `place`, `garage`.
 - `GET /api/contracts/{type}/{id}`: nội dung và quyền ký hiện tại.
 - `POST /api/contracts/{type}/{id}/sign`: `{ signatureName, acceptedTerms: true, documentHash }`. Thêm `view=staff` cho Manager ký phía nền tảng.
 - Hai API Owner `/api/owner/agreements/{id}` và `/{id}/sign` dùng chung quy tắc mới, không còn lối ký bỏ qua điều kiện duyệt xe/nội dung.

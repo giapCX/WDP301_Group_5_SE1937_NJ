@@ -9,6 +9,9 @@ import { createOwnerService } from '../service/owner.service.js';
 import { createContractService } from '../service/contract.service.js';
 import { createContractRepository } from '../repositories/contract.repository.js';
 
+import { createGarageHandoverRepository } from '../repositories/garage-handover.repository.js';
+import { createGarageHandoverService } from '../service/garage-handover.service.js';
+
 export function createOwnerRouter(connection, { useLocalFileStorage = false, fileRepository } = {}) {
   const router = Router();
   const configured = Object.values(env.cloudinary).filter(Boolean).length;
@@ -19,15 +22,18 @@ export function createOwnerRouter(connection, { useLocalFileStorage = false, fil
     ? createCloudinaryOwnerFileRepository(env.cloudinary)
     : createGridFsOwnerFileRepository(connection));
   const repository = createOwnerRepository(connection, files);
-  const service = createOwnerService(repository, createContractService(createContractRepository(connection)));
+  const service = createOwnerService(repository, createContractService(createContractRepository(connection)), createGarageHandoverService(createGarageHandoverRepository(connection)));
   const controller = createOwnerController(service);
   router.use(createAuthMiddleware(connection));
   router.get('/dashboard', controller.dashboard);
   router.post('/vehicles', controller.registerVehicle);
   router.patch('/vehicles/:id/documents', controller.resubmitVehicleDocuments);
+  router.patch('/vehicles/:id/inspections/:inspectionId', controller.respondToInspection);
+  router.patch('/vehicles/:id/intakes/:intakeId', controller.respondToIntake);
   router.get('/agreements/:id', controller.agreementDetails);
   router.post('/agreements/:id/sign', controller.signAgreement);
   router.post('/payout-requests', controller.requestPayout);
+  router.patch('/vehicle-withdrawals/:id/handover', controller.confirmOwnerReturn);
   router.post('/vehicle-withdrawals', controller.requestVehicleWithdrawal);
   router.post('/incidents', controller.reportIncident);
   return router;

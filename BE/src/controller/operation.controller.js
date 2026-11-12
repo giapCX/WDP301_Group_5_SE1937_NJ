@@ -18,6 +18,10 @@ export function createOperationController(service) {
     // Vehicle onboarding: Operation screens documents and schedules Garage inspections.
     vehicles: async (request, response) => response.json(await service.listVehicles(request.query)),
     vehicle: async (request, response) => response.json(await service.getVehicle(request.params.id)),
+    vehicleDocument: async (request, response) => {
+      const file = await service.getVehicleDocument(request.params.id, request.params.kind);
+      response.set({ 'Content-Type': file.contentType, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store' }).send(file.bytes);
+    },
     screenVehicle: async (request, response) =>
       response.json(await service.screenVehicle(request, request.params.id, request.body)),
     garageStaff: async (request, response) => response.json(await service.listGarageStaff(request.query)),

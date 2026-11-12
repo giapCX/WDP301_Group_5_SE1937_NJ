@@ -496,3 +496,24 @@ test('validates IDs, query shapes, enum values, photo keys and server-controlled
     400,
   );
 });
+
+test('structured checklist blocks approval for technical failure and records a cosmetic exception', async () => {
+  await db.collection('vehicle_inspections').deleteMany({ vehicle_id: vehicleId, approval_status: { $in: ['draft', 'pending'] } });
+  await db.collection('vehicles').updateOne({ _id: vehicleId }, { $set: { onboarding_status: 'submitted', physical_status: 'with_owner' } });
+  const body = fullDraft();
+  body.condition.exterior = 'attention';
+  body.condition.note = 'Vết xước thẩm mỹ đã ghi ảnh.';
+  body.condition.checklist = ['identity', 'odometer', 'exterior', 'interior', 'tires', 'brakes', 'powertrain', 'leaks', 'lights', 'accessories']
+    .map((key) => ({ key, result: 'pass' }));
+  Object.assign(body.condition.checklist[2], { result: 'recorded', note: 'Vết xước ở cửa trái.', photo_key: body.condition.photoKeys[0] });
+  Object.assign(body.condition.checklist[7], { result: 'fail', note: 'Phát hiện rò dầu.' });
+  const draft = await create(body);
+  assert.equal((await submit(draft._id)).status, 400);
+  body.condition.checklist[7] = { key: 'leaks', result: 'pass' };
+  const patched = await request(`/inspections/${draft._id}`, 'PATCH', { version: 0, condition: body.condition });
+  assert.equal(patched.status, 200, JSON.stringify(patched.body));
+  const submitted = await submit(draft._id, 1);
+  assert.equal(submitted.status, 200, JSON.stringify(submitted.body));
+  assert.equal(submitted.body.data.condition_report.checklist.length, 10);
+  await db.collection('vehicle_inspections').deleteOne({ _id: new ObjectId(draft._id) });
+});

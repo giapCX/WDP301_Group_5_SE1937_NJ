@@ -3,6 +3,7 @@ import { getApi, postApi } from '../../services/httpClient';
 import { getCurrentUser, getSessionToken } from '../auth/session';
 import Pagination from '../../components/ui/Pagination';
 import './contracts.css';
+import ManagementContractPaper from './ManagementContractPaper';
 
 export const contractStatus = { draft: 'Chờ lập nội dung', awaiting_signature: 'Chờ lập nội dung ký', pending_signatures: 'Chờ chữ ký các bên', pending_signature: 'Chờ lập nội dung ký', signed: 'Đã ký đủ', active: 'Có hiệu lực', terminated: 'Đã chấm dứt', expired: 'Hết hạn', cancelled: 'Đã hủy' };
 const time = (value) => value ? new Date(value).toLocaleString('vi-VN') : 'Chưa ký';
@@ -10,6 +11,9 @@ const statusTone = (status) => ['active', 'signed'].includes(status) ? 'success'
 const signatureState = (name, signedAt) => signedAt ? { title: 'Đã ký', name: name || 'Đã xác nhận', date: time(signedAt) } : { title: 'Chờ ký', name: 'Chưa ghi nhận chữ ký', date: 'Đang chờ xác nhận' };
 
 export function ContractContent({ agreement }) {
+  if (agreement.type === 'management' && agreement.document?.articles?.length) {
+    return <div className="contract-content"><ManagementContractPaper agreement={agreement} /></div>;
+  }
   const partyLabel = agreement.type === 'management' ? 'Chủ xe' : 'Khách thuê';
   const partySignature = signatureState(agreement.partyName, agreement.partySignedAt);
   const platformSignature = signatureState(agreement.platformName, agreement.platformSignedAt);
@@ -53,14 +57,13 @@ function SigningDialog({ item, view, onClose, onSigned }) {
     finally { setBusy(false); }
   }
   return <div className="contract-backdrop"><section role="dialog" aria-modal="true" aria-label="Nội dung và ký hợp đồng" className="contract-dialog">
-    <div className="contract-dialog-header"><div><span className="contract-eyebrow">XEDI · KÝ KẾT ĐIỆN TỬ</span><h2>Rà soát hợp đồng</h2><p>Đọc kỹ nội dung trước khi xác nhận.</p></div><div className="contract-toolbar"><button className="contract-button contract-button--secondary" onClick={() => window.print()} disabled={!agreement}>In / lưu PDF</button><button className="contract-close" onClick={onClose} disabled={busy} autoFocus aria-label="Đóng cửa sổ">×</button></div></div>
+    <div className="contract-dialog-header"><div><span className="contract-eyebrow">XEDI · KÝ KẾT ĐIỆN TỬ</span><h2>Rà soát hợp đồng</h2><p>Đọc kỹ nội dung trước khi xác nhận.</p></div><div className="contract-toolbar">{!agreement?.document?.articles?.length && <button className="contract-button contract-button--secondary" onClick={() => window.print()} disabled={!agreement}>In / lưu PDF</button>}<button className="contract-close" onClick={onClose} disabled={busy} autoFocus aria-label="Đóng cửa sổ">×</button></div></div>
     {error && <p className="contract-alert" role="alert">{error}</p>}
     {!agreement ? <div className="contract-loading" role="status"><span className="contract-spinner" />Đang tải nội dung hợp đồng…</div> : <>
       <ContractContent agreement={agreement} />
       {agreement.canSign ? <form onSubmit={sign} className="contract-sign-form">
-        <div className="contract-sign-intro"><span className="contract-sign-intro-icon">✍</span><div><strong>Xác nhận chữ ký của bạn</strong><p>Bạn ký với tư cách {view === 'staff' ? 'đại diện nền tảng XeDi' : item.type === 'management' ? 'chủ xe' : 'khách thuê'}.</p></div></div>
         <label>Họ tên người ký<input required minLength={2} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} disabled={busy} /></label>
-        <label className="contract-accept"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} disabled={busy} /><span>Tôi đã đọc toàn bộ nội dung và đồng ý ký hợp đồng này.</span></label>
+        <label className="contract-accept"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} disabled={busy} /><span>Tôi đã đọc và đồng ý ký hợp đồng.</span></label>
         <button className="contract-button contract-button--primary" type="submit" disabled={busy || !accepted}>{busy ? 'Đang ghi nhận…' : 'Xác nhận ký hợp đồng'}</button>
       </form> : <p className="contract-signing-note" role="status">{agreement.status === 'pending_signatures' ? 'Bạn không cần ký phía này hoặc chữ ký của bạn đã được ghi nhận. Hợp đồng đang chờ bên còn lại xác nhận.' : 'Hợp đồng hiện không cần chữ ký của bạn.'}</p>}
     </>}
@@ -77,6 +80,8 @@ export default function ContractsPage({ embedded = false } = {}) {
   const [page, setPage] = useState(1), [limit, setLimit] = useState(10), [pagination, setPagination] = useState(null);
   const [candidatePage, setCandidatePage] = useState(1), [candidateMeta, setCandidateMeta] = useState(null);
   const [reference, setReference] = useState(''), [start, setStart] = useState(''), [end, setEnd] = useState('');
+  const [terms, setTerms] = useState({ commissionRatePct: '', place: '', garage: '', platformName: '' });
+  const changeTerm = (event) => setTerms((previous) => ({ ...previous, [event.target.name]: event.target.value }));
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [selected, setSelected] = useState(null), [revision, setRevision] = useState(0);
   const canPrepare = view === 'staff' && (type === 'rental' || roles.includes('MANAGER'));
@@ -103,7 +108,12 @@ export default function ContractsPage({ embedded = false } = {}) {
     event.preventDefault(); if (!reference || busy) return;
     setBusy(true); setError('');
     try {
-      const result = await postApi(`/contracts/${type}/prepare/${reference}`, { ...(start ? { startDate: start } : {}), ...(end ? { endDate: end } : {}) });
+      const managementFields = type === 'management' ? {
+        ...(start ? { startDate: start } : {}), ...(end ? { endDate: end } : {}),
+        ...(terms.commissionRatePct !== '' ? { commissionRatePct: Number(terms.commissionRatePct) } : {}),
+        ...Object.fromEntries(['place', 'garage', 'platformName'].filter((key) => terms[key].trim()).map((key) => [key, terms[key]])),
+      } : {};
+      const result = await postApi(`/contracts/${type}/prepare/${reference}`, managementFields);
       setSelected(result.data); refresh();
     } catch (reason) { setError(reason.message); }
     finally { setBusy(false); }
@@ -122,7 +132,12 @@ export default function ContractsPage({ embedded = false } = {}) {
     {error && <p className="contract-alert" role="alert">{error}<button className="contract-alert-close" onClick={() => setError('')} aria-label="Đóng thông báo">×</button></p>}
     {canPrepare && <form onSubmit={prepare} className="contract-prepare"><div className="contract-prepare-heading"><span className="contract-step">01</span><div><span className="contract-eyebrow">TẠO HỒ SƠ</span><h2>Lập nội dung trình ký</h2><p>{type === 'management' ? 'Chỉ lập sau khi xe và biên bản kiểm định được duyệt. Thời hạn mặc định một năm.' : 'Chọn booking đã duyệt. Giá thuê, tiền cọc và lịch được lấy từ booking.'}</p></div></div>
       <div className="contract-prepare-fields"><label>{type === 'management' ? 'Xe được duyệt, chưa có hồ sơ hợp đồng' : 'Booking chờ ký'}<select required value={reference} onChange={(event) => setReference(event.target.value)}><option value="">{!candidateMeta ? 'Đang tải hồ sơ…' : candidates.length ? 'Chọn xe chưa có hồ sơ' : 'Không có hồ sơ phù hợp'}</option>{candidates.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
-      {type === 'management' && <><label>Ngày bắt đầu<input type="date" value={start} onChange={(event) => setStart(event.target.value)} /></label><label>Ngày kết thúc<input type="date" value={end} min={start || undefined} onChange={(event) => setEnd(event.target.value)} /></label></>}
+      {type === 'management' && <><label>Ngày bắt đầu<input type="date" value={start} onChange={(event) => setStart(event.target.value)} /></label><label>Ngày kết thúc<input type="date" value={end} min={start || undefined} onChange={(event) => setEnd(event.target.value)} /></label>
+        <label>Hoa hồng (%)<input name="commissionRatePct" type="number" min="0" max="100" step="0.01" value={terms.commissionRatePct} onChange={changeTerm} placeholder="Theo hồ sơ, mặc định 10" /></label>
+        <label>Đơn vị nhận ủy quyền<input name="platformName" maxLength={150} value={terms.platformName} onChange={changeTerm} placeholder="XeDi" /></label>
+        <label>Nơi lập hợp đồng<input name="place" maxLength={150} value={terms.place} onChange={changeTerm} placeholder="Trực tuyến trên XeDi" /></label>
+        <label>Địa điểm tiếp nhận<input name="garage" maxLength={250} value={terms.garage} onChange={changeTerm} placeholder="Gara XeDi theo lịch tiếp nhận" /></label>
+      </>}
       <button className="contract-button contract-button--primary" disabled={busy || !reference}>{busy ? 'Đang chuẩn bị…' : 'Lập / mở hợp đồng'} <span aria-hidden="true">→</span></button></div>
       {type === 'management' && candidateMeta && !candidates.length && <p className="contract-candidate-empty">Chưa có xe nào cần lập hồ sơ mới. Xe đã có hồ sơ trình ký hoặc hợp đồng còn hiệu lực được ẩn khỏi danh sách này.</p>}
       <Pagination page={candidatePage} pageSize={10} total={candidateMeta?.total || 0} onPageChange={setCandidatePage} label="Phân trang hồ sơ lập hợp đồng" />

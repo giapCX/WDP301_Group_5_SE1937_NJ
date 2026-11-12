@@ -51,7 +51,7 @@ export function createApp(database, options = {}) {
   app.use('/api/renter', createRenterRouter(database));
   app.use('/api/auth', createAuthRouter(database));
   app.use('/api/identity-verifications', createIdentityVerificationRouter(database, privateFileRepository));
-  app.use('/api/listings', createListingsRouter(database));
+  app.use('/api/listings', createListingsRouter(database, options.ownerFileRepository || privateFileRepository));
   app.use('/api/homepage', createHomepageRouter(database));
   app.use('/api/garage', createGarageIntakesRouter(database));
   app.use('/api/garage', createGarageInspectionsRouter(database));
@@ -63,7 +63,7 @@ export function createApp(database, options = {}) {
   app.use('/api/owner', createOwnerRouter(database, { useLocalFileStorage, fileRepository: options.ownerFileRepository || privateFileRepository }));
   app.use('/api/operations', createOperationIncidentRouter(database));
   app.use('/api/contracts', createContractRouter(database));
-  app.use('/api/operation', createOperationRouter(database));
+  app.use('/api/operation', createOperationRouter(database, options.ownerFileRepository || privateFileRepository));
   app.use(notFound);
   app.use(errorHandler);
   return app;

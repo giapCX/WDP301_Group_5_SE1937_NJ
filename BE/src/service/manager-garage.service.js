@@ -70,7 +70,20 @@ export function createManagerGarageService(repository) {
         if (action === 'approve' && (!inspection || inspection.recommendation !== 'pass')) {
           throw httpError(409, 'Chỉ duyệt xe khi có biên bản kiểm định đầu vào đề xuất đạt.');
         }
+        if (action === 'approve' && inspection?.approval_status === 'pending' && inspection.condition_report?.checklist
+          && inspection.owner_review?.status !== 'accepted') {
+          throw httpError(409, 'Chủ xe cần xác nhận hiện trạng trước khi duyệt hồ sơ.');
+        }
+        const documentKeys = ['registration', 'inspection_certificate', 'insurance'];
+        if (action === 'approve' && vehicle.condition_declaration && documentKeys.some((key) => !vehicle.documents?.[key]?.file_key))
+          throw httpError(409, 'Cần đủ đăng ký xe, đăng kiểm và bảo hiểm trước khi duyệt.');
         const now = new Date();
+        const verifiedDocuments = action === 'approve' && vehicle.condition_declaration
+          ? Object.fromEntries(documentKeys.flatMap((key) => [
+            [`documents.${key}.verified`, true],
+            [`documents.${key}.review_status`, 'approved'],
+            [`documents.${key}.reviewed_at`, now],
+          ])) : {};
         if (inspection?.approval_status === 'pending') {
           const changed = await collection('vehicle_inspections').updateOne({ _id: inspection._id, approval_status: 'pending', ...versionFilter(inspection) }, {
             $set: { approval_status: decisions[action], decision_reason: note.trim(), decided_at: now, reviewed_by_manager_id: actorId, updated_at: now },
@@ -80,7 +93,7 @@ export function createManagerGarageService(repository) {
           await audit(actorId, `vehicle.inspection.${action}`, 'vehicle_inspection', inspection._id, { vehicle_id: id, from: 'pending', to: decisions[action], note: note.trim() }, session);
         }
         const changed = await collection('vehicles').updateOne({ _id: id, onboarding_status: vehicle.onboarding_status, physical_status: vehicle.physical_status }, {
-          $set: { onboarding_status: decisions[action], reviewed_by_manager_id: actorId, review_note: note.trim(), updated_at: now },
+          $set: { ...verifiedDocuments, onboarding_status: decisions[action], reviewed_by_manager_id: actorId, review_note: note.trim(), updated_at: now },
           $inc: { inspection_workflow_version: 1 },
           $push: { registration_history: { action: decisions[action], by_user_id: actorId, at: now, note: note.trim() } },
         }, options);

@@ -10,9 +10,24 @@ export function createOwnerRepository(connection, fileRepository) {
   return {
     findRoles: (ids) => models.Role.find({ _id: { $in: ids } }).select({ code: 1 }).lean(),
     findVehicles: (ownerId) => vehicles.find({ owner_id: ownerId }, {
-      projection: { brand: 1, model: 1, manufacture_year: 1, license_plate: 1, onboarding_status: 1, review_note: 1, physical_status: 1, created_at: 1, updated_at: 1, documents: 1, photos: 1 },
+      projection: { brand: 1, model: 1, manufacture_year: 1, license_plate: 1, onboarding_status: 1, review_note: 1, physical_status: 1, created_at: 1, updated_at: 1, documents: 1, photos: 1, condition_declaration: 1 },
       sort: { updated_at: -1, _id: -1 },
     }),
+    findListings: (vehicleIds) => models.VehicleListing.find({ vehicle_id: { $in: vehicleIds } })
+      .select('vehicle_id status').sort({ updated_at: -1, _id: -1 }).lean(),
+    findInspections: (vehicleIds) => models.VehicleInspection.find({
+      vehicle_id: { $in: vehicleIds }, inspection_type: 'onboarding',
+    }).sort({ created_at: -1, _id: -1 }).lean(),
+    findLatestIntakes: (vehicleIds) => models.VehicleIntake.find({
+      vehicle_id: { $in: vehicleIds }, status: { $in: ['draft', 'completed'] },
+    }).sort({ created_at: -1, _id: -1 }).lean(),
+    findIntake: (vehicleId, intakeId) => models.VehicleIntake.findOne({ _id: intakeId, vehicle_id: vehicleId, status: 'draft' }).lean(),
+    respondToIntake: (vehicleId, intakeId, version, ownerReview) => models.VehicleIntake.updateOne({
+      _id: intakeId, vehicle_id: vehicleId, version, status: 'draft', 'owner_review.status': { $exists: false },
+    }, { $set: { owner_review: ownerReview }, $inc: { version: 1 } }),
+    respondToInspection: (vehicleId, inspectionId, version, ownerReview) => models.VehicleInspection.updateOne({
+      _id: inspectionId, vehicle_id: vehicleId, version, approval_status: 'pending', 'owner_review.status': { $exists: false },
+    }, { $set: { owner_review: ownerReview }, $inc: { version: 1 } }),
     findSettlements: (ownerId) => settlements.find({ owner_id: ownerId }, { sort: { period_start: -1 } }),
     findAgreements: (ownerId) => agreements.find({ owner_id: ownerId }, { sort: { created_at: -1 } }),
     findWithdrawalRequests: (ownerId) => models.VehicleWithdrawalRequest.find({ owner_id: ownerId }).sort({ created_at: -1 }).lean(),

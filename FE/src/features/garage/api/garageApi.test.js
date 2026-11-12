@@ -20,6 +20,6 @@ test('return report uses the handover API and records the renter confirmation', 
   const [creation, confirmation] = global.fetch.mock.calls;
   expect(creation[0]).toBe('/api/garage/handovers');
   expect(JSON.parse(creation[1].body)).toMatchObject({ bookingId: 'booking', type: 'return' });
-  expect(JSON.parse(creation[1].body).condition.accessories).toBeUndefined();
+  expect(JSON.parse(creation[1].body).condition.accessories).toEqual(['vehicle_key']);
   expect(JSON.parse(confirmation[1].body)).toEqual({ version: 4, renterConfirmed: true });
 });

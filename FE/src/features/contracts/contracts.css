@@ -128,15 +128,20 @@
 .contract-signature span, .contract-signature small { overflow-wrap: anywhere; color: var(--contract-muted); font-size: 10px; }
 .contract-signature b { margin-left: auto; color: #65758b; font-size: 10px; white-space: nowrap; }
 .contract-signing-note { margin: 14px 0 0; padding: 11px 13px; border-radius: 10px; color: #65758b; background: #edf1f6; font-size: 11px; }
-.contract-sign-form { display: grid; gap: 14px; margin: 0 24px 24px; padding: 17px; border: 1px solid #d6e2f4; border-radius: 13px; background: #fff; }
-.contract-sign-intro { display: flex; align-items: center; gap: 11px; }
-.contract-sign-intro-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; color: var(--contract-blue); background: #edf3ff; }
-.contract-sign-intro strong { font-size: 13px; }
-.contract-sign-intro p { margin: 2px 0 0; color: var(--contract-muted); font-size: 11px; }
-.contract-sign-form label input:not([type=checkbox]) { width: 100%; }
-.contract-sign-form .contract-accept { display: flex; align-items: flex-start; gap: 9px; color: #45566c; font-size: 12px; font-weight: 550; line-height: 1.5; }
-.contract-accept input { width: 17px; height: 17px; flex: 0 0 17px; margin: 1px 0 0; accent-color: var(--contract-blue); }
-.contract-sign-form > button { justify-self: start; }
+.contract-sign-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) auto;
+  align-items: end;
+  gap: 8px 14px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--contract-line);
+  background: #fff;
+}
+.contract-sign-form > label { gap: 3px; font-size: 11px; }
+.contract-sign-form label input:not([type=checkbox]) { width: 100%; min-height: 34px; padding: 5px 9px; }
+.contract-sign-form .contract-accept { display: flex; align-items: center; align-self: center; gap: 7px; font-weight: 550; line-height: 1.4; }
+.contract-sign-form .contract-accept input { width: 16px; height: 16px; min-height: 0; flex: 0 0 16px; margin: 0; padding: 0; accent-color: var(--contract-blue); }
+.contract-sign-form > button { min-height: 34px; padding: 6px 10px; }
 
 @media print {
   body * { visibility: hidden; }
@@ -179,6 +184,8 @@
   .contract-signatures h3 { grid-column: auto; }
   .contract-dialog-header { padding: 14px 15px; }
   .contract-dialog-header .contract-button { display: none; }
-  .contract-sign-form { margin: 0 15px 15px; padding: 14px; }
+  .contract-sign-form { grid-template-columns: minmax(0, 1fr) auto; padding: 8px 12px; }
+  .contract-sign-form > label:first-child { grid-column: 1 / -1; }
+
   .contract-signature b { font-size: 9px; }
 }

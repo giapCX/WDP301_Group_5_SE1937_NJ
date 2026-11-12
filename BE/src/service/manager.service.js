@@ -1,3 +1,4 @@
+import { vehicleDocumentContentType } from '../utils/image-content.js';
 import { findPageRows } from "../utils/pagination.js";
 import { createManagerGarageService } from './manager-garage.service.js';
 import { Types } from 'mongoose';
@@ -716,6 +717,7 @@ export function createManagerService(repository) {
             id: inspectionMap.get(item._id.toString())._id,
             version: inspectionMap.get(item._id.toString()).version ?? 0,
             staffId: inspectionMap.get(item._id.toString()).garage_staff_id,
+            ownerReview: inspectionMap.get(item._id.toString()).owner_review,
             conditionReport: inspectionMap.get(item._id.toString()).condition_report || {},
             decisionReason: inspectionMap.get(item._id.toString()).decision_reason || '',
             status: inspectionMap.get(item._id.toString()).approval_status,
@@ -739,7 +741,7 @@ export function createManagerService(repository) {
       const key = vehicle?.documents?.[kind]?.file_key;
       if (!key) throw httpError(404, 'Không tìm thấy tài liệu xe.');
       const bytes = await repository.readPrivateFile(key);
-      const contentType = key.endsWith('.pdf') ? 'application/pdf' : key.endsWith('.png') ? 'image/png' : key.endsWith('.webp') ? 'image/webp' : 'image/jpeg';
+      const contentType = vehicleDocumentContentType(bytes) || (key.endsWith('.pdf') ? 'application/pdf' : key.endsWith('.png') ? 'image/png' : key.endsWith('.webp') ? 'image/webp' : 'image/jpeg');
       return { bytes, contentType };
     },
     incidents: async input => {
@@ -754,9 +756,29 @@ export function createManagerService(repository) {
           updated_at: -1
         }
       });
+      const returns = await repository.findIncidentHandovers(items.map((item) => item.source_handover_id).filter(Boolean));
+      const pickups = await repository.findIncidentHandovers(returns.map((item) => item.baseline_handover_id).filter(Boolean));
+      const withdrawals = await repository.findWithdrawalHandovers(items.map((item) => item.source_withdrawal_id).filter(Boolean));
+      const intakes = await repository.findIntakeHandovers(withdrawals.map((item) => item.owner_return_handover?.intake_id).filter(Boolean));
+      const intakeById = new Map(intakes.map((item) => [String(item._id), item]));
+      const withdrawalById = new Map(withdrawals.map((item) => [String(item._id), item.owner_return_handover]));
+      const returnById = new Map(returns.map((item) => [String(item._id), item]));
+      const pickupById = new Map(pickups.map((item) => [String(item._id), item]));
       return {
-        data: items.map(item => ({
+        data: items.map(item => {
+          const ownerReturn = withdrawalById.get(String(item.source_withdrawal_id));
+          const intake = intakeById.get(String(ownerReturn?.intake_id));
+          return {
           id: item._id.toString(),
+          ownerConditionComparison: ownerReturn ? {
+            pickup: intake && { _id: intake._id, vehicle_condition: intake.condition_snapshot },
+            returned: { _id: item.source_withdrawal_id, vehicle_condition: ownerReturn.condition, damage_changes: ownerReturn.damage_changes },
+          } : null,
+          conditionComparison: item.source_handover_id ? {
+            returned: returnById.get(String(item.source_handover_id)),
+            pickup: pickupById.get(String(returnById.get(String(item.source_handover_id))?.baseline_handover_id)),
+          } : null,
+          sourceWithdrawalId: item.source_withdrawal_id,
           caseNumber: item.case_number,
           caseType: item.case_type,
           status: item.status,
@@ -769,7 +791,8 @@ export function createManagerService(repository) {
           vehicleId: item.vehicle_id?.toString(),
           createdAt: item.created_at,
           updatedAt: item.updated_at
-        })),
+          };
+        }),
         pagination: items.pagination
       };
     },

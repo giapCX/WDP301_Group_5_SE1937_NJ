@@ -1,3 +1,4 @@
+import { validateInspectionChecklist } from '../validators/garage-inspection.validator.js';
 import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
 
@@ -10,6 +11,7 @@ const vehicleFields = {
   model: 1,
   license_plate: 1,
   manufacture_year: 1,
+  condition_declaration: 1,
   onboarding_status: 1,
   physical_status: 1,
 };
@@ -101,7 +103,7 @@ export function createVehicleInspectionService(repository) {
   function eligibility(data, currentId) {
     const blockers = [];
     if (
-      !['submitted', 'revision_required'].includes(
+      !['submitted', 'pending_review', 'revision_required'].includes(
         data.vehicle.onboarding_status,
       )
     )
@@ -118,6 +120,8 @@ export function createVehicleInspectionService(repository) {
         code: 'INVALID_PHYSICAL_STATUS',
         message: 'Kiểm định đầu vào chỉ áp dụng khi xe đang ở chủ xe.',
       });
+    if (data.vehicle.condition_declaration && !currentId && !data.open)
+      blockers.push({ code: 'INSPECTION_ASSIGNMENT_REQUIRED', message: 'Cần Operation hẹn và phân công kiểm định cho hồ sơ mới.' });
     if (data.open && (!currentId || !data.open._id.equals(currentId)))
       blockers.push({
         code: 'OPEN_INSPECTION_EXISTS',
@@ -337,7 +341,13 @@ export function createVehicleInspectionService(repository) {
             !['pass', 'requires_repair', 'fail'].includes(record.recommendation)
           )
             throw httpError(400, 'Cần chọn đề xuất kiểm định.');
-          if (record.recommendation === 'pass' && abnormal)
+          const hasChecklist = validateInspectionChecklist(report, record.recommendation);
+          if (data.vehicle.condition_declaration && !hasChecklist)
+            throw httpError(400, 'Hồ sơ có khai báo hiện trạng cần checklist kiểm định đầy đủ.');
+          const blockingCondition = ['engine', 'tires'].some((key) => report[key] !== 'good');
+          const unrecordedCosmeticIssue = ['exterior', 'interior'].some((key) =>
+            report[key] !== 'good' && !report.checklist?.some((item) => item.key === key && item.result === 'recorded'));
+          if (record.recommendation === 'pass' && abnormal && (!hasChecklist || blockingCondition || unrecordedCosmeticIssue))
             throw httpError(
               400,
               'Xe có hạng mục bất thường không được đề xuất đạt.',

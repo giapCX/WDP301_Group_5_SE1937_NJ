@@ -5,10 +5,16 @@ const { ObjectId } = Types;
 
 const fields = ['exterior', 'interior', 'engine', 'tires'];
 const vehicleFields = {
+  condition_declaration: 1,
   owner_id: 1,
   brand: 1,
   model: 1,
   license_plate: 1,
+  description: 1,
+  daily_price: 1,
+  mileage_policy: 1,
+  photos: 1,
+  publish_vehicle_photos: 1,
   manufacture_year: 1,
   onboarding_status: 1,
   physical_status: 1,
@@ -21,6 +27,8 @@ const agreementFields = {
   start_date: 1,
   end_date: 1,
   signature_info: 1,
+  inspection_id: 1,
+  inspection_version: 1,
   'authorization_scope.vehicle_custody': 1,
 };
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -67,11 +75,12 @@ export function createVehicleIntakeService(repository) {
         { vehicle_id: vehicleId, inspection_type: 'onboarding' },
         {
           ...options,
-          sort: { inspected_at: -1, _id: -1 },
+          sort: { created_at: -1, _id: -1 },
           projection: {
             approval_status: 1,
             recommendation: 1,
             inspected_at: 1,
+            version: 1,
             'condition_report.odometer_km': 1,
           },
         },
@@ -332,7 +341,7 @@ export function createVehicleIntakeService(repository) {
       };
     const updated = await receipts.findOneAndUpdate(
       { _id: id, status: 'draft', version },
-      { $set: { ...changes, updated_at: new Date() }, $inc: { version: 1 } },
+      { $set: { ...changes, updated_at: new Date() }, $unset: { owner_review: 1 }, $inc: { version: 1 } },
       { returnDocument: 'after' },
     );
     if (!updated)
@@ -374,7 +383,14 @@ export function createVehicleIntakeService(repository) {
             throw httpError(409, 'Xe chưa đủ điều kiện tiếp nhận.', {
               blockers: ready.blockers,
             });
+          if (data.agreement.inspection_id && (!sameId(data.agreement.inspection_id, data.inspection?._id)
+            || data.agreement.inspection_version !== (data.inspection?.version ?? 0)))
+            throw httpError(409, 'Báo cáo kiểm định hiện tại không khớp phiên bản trong hợp đồng.');
+          if (data.vehicle.condition_declaration && item.owner_review?.status !== 'accepted')
+            throw httpError(409, 'Chủ xe cần xác nhận đúng phiên bản biên bản tiếp nhận.');
           const condition = item.condition_snapshot || {};
+          if (condition.defects?.some((defect) => !condition.photo_keys?.includes(defect.photo_key)))
+            throw httpError(400, 'Ảnh của từng lỗi phải còn trong biên bản.');
           if (
             !Number.isSafeInteger(item.odometer_km) ||
             item.odometer_km < data.baselineOdometerKm
@@ -423,7 +439,8 @@ export function createVehicleIntakeService(repository) {
                 status: 'completed',
                 received_by_garage_staff_id: actor._id,
                 received_at: now,
-                owner_confirmed_at: now,
+                owner_confirmed_at: item.owner_review?.reviewed_at || now,
+                inspection_id: data.inspection?._id,
                 'condition_snapshot.owner_signature_recorded': true,
                 confirmed_from_version: version,
                 updated_at: now,
@@ -433,6 +450,21 @@ export function createVehicleIntakeService(repository) {
             { session, returnDocument: 'after' },
           );
           if (!completed) throw httpError(409, 'Biên bản đã thay đổi.');
+          const listing = await repository.listings.findOne({ vehicle_id: item.vehicle_id, status: { $ne: 'archived' } }, { session });
+          if (!listing) {
+            const listingId = new ObjectId();
+            await repository.listings.create({
+              _id: listingId,
+              vehicle_id: item.vehicle_id,
+              title: [data.vehicle.brand, data.vehicle.model, data.vehicle.license_plate].filter(Boolean).join(' · '),
+              description: data.vehicle.description,
+              daily_price: data.vehicle.daily_price,
+              mileage_policy: data.vehicle.mileage_policy,
+              photos: data.vehicle.publish_vehicle_photos === true
+                ? (data.vehicle.photos || []).map((_, index) => `/api/listings/${listingId}/photos/${index}`) : [],
+              status: 'draft', created_at: now, updated_at: now,
+            }, { session });
+          }
           await repository.auditLogs
             .create(
               {

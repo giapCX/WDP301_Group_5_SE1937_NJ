@@ -4,10 +4,10 @@ import { createOperationController } from '../controller/operation.controller.js
 import { createOperationRepository } from '../repositories/operation.repository.js';
 import { createOperationService } from '../service/operation.service.js';
 
-export function createOperationRouter(database) {
+export function createOperationRouter(database, files) {
   const router = Router();
   const repository = createOperationRepository(database);
-  const service = createOperationService(repository);
+  const service = createOperationService(repository, files);
   const controller = createOperationController(service);
 
   router.use(createAuthMiddleware(database), service.authorizeOperationStaff);
@@ -26,6 +26,7 @@ export function createOperationRouter(database) {
   // Vehicle onboarding screening and Garage inspection assignment.
   router.get('/vehicles', controller.vehicles);
   router.get('/vehicles/:id', controller.vehicle);
+  router.get('/vehicles/:id/documents/:kind', controller.vehicleDocument);
   router.patch('/vehicles/:id/screen', controller.screenVehicle);
   router.get('/garage-staff', controller.garageStaff);
 

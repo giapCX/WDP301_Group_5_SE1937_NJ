@@ -6,7 +6,7 @@ export const fuelLabels = { gasoline: 'Xăng', diesel: 'Dầu', electric: 'Đi�
 
 export function listingPhoto(listing, index = 0) {
   const source = listing.photos?.[0];
-  if (source && (/^https?:\/\//i.test(source) || source.startsWith('/uploads/')))
+  if (source && (/^https?:\/\//i.test(source) || source.startsWith('/uploads/') || source.startsWith('/api/listings/')))
     return { src: source, illustration: false };
   const examples = [1, 2, 3, 4, 6, 2];
   const stableIndex = Number.parseInt(listing._id?.slice(-2), 16);

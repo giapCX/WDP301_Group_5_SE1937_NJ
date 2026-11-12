@@ -5,6 +5,7 @@ export function createVehicleIntakeRepository(connection) {
   const models = getModels(connection);
   return {
     intakes: createModelRepository(models.VehicleIntake),
+    listings: createModelRepository(models.VehicleListing),
     vehicles: createModelRepository(models.Vehicle),
     inspections: createModelRepository(models.VehicleInspection),
     agreements: createModelRepository(models.ManagementAgreement),

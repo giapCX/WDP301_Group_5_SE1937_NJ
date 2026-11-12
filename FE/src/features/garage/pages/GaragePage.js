@@ -138,12 +138,15 @@ export default function GaragePage({ user }) {
   async function reportSaved(id, report, draft) {
     await saveReport(id, report, draft);
     setDialog(null);
+    const kind = workspace.tasks.find((task) => task.id === id)?.kind;
     setToast(
       draft
         ? 'Đã lưu bản nháp. Bạn có thể tiếp tục bất cứ lúc nào.'
-        : workspace.tasks.find((task) => task.id === id)?.kind === 'inspection'
-          ? 'Đã gửi đề xuất kiểm định cho Manager.'
-          : 'Đã hoàn tất và lưu biên bản giao nhận.',
+        : kind === 'inspection'
+          ? (report.checklist?.length ? 'Đã gửi báo cáo kiểm định để chủ xe xác nhận hiện trạng.' : 'Đã gửi đề xuất kiểm định cho Manager.')
+          : kind === 'owner-return'
+            ? 'Đã gửi biên bản. Chủ xe xác nhận sau khi nhận lại xe.'
+            : 'Đã hoàn tất và lưu biên bản giao nhận.',
     );
   }
   if (loading || error) return (

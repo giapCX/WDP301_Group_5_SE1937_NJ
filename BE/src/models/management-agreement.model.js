@@ -20,6 +20,8 @@ export const managementAgreementSchema = createSchema({
     owner_confirmation_per_booking: Boolean,
     commission_basis: String,
   }),
+  inspection_id: { type: ObjectId, ref: 'VehicleInspection' },
+  inspection_version: Number,
   signature_info: embedded({
     method: String,
     owner_signed_at: Date,

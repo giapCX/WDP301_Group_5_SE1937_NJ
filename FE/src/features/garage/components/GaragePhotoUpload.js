@@ -8,6 +8,7 @@ export default function GaragePhotoUpload({
   onChange,
   readOnly = false,
   onBusyChange,
+  maxPhotos = 4,
 }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,8 +16,8 @@ export default function GaragePhotoUpload({
     const files = Array.from(event.target.files);
     event.target.value = '';
     if (!files.length) return;
-    if (photos.length + files.length > 4) {
-      setError('Mỗi biên bản được đính kèm tối đa 4 ảnh.');
+    if (photos.length + files.length > maxPhotos) {
+      setError(`Mỗi biên bản được đính kèm tối đa ${maxPhotos} ảnh.`);
       return;
     }
     if (
@@ -65,7 +66,7 @@ export default function GaragePhotoUpload({
           <strong>
             {loading ? 'Đang đọc ảnh...' : 'Chọn ảnh hiện trạng xe'}
           </strong>
-          <small>JPG, PNG, WebP · Tối đa 4 ảnh, 500 KB / ảnh</small>
+          <small>JPG, PNG, WebP · Tối đa {maxPhotos} ảnh, 500 KB / ảnh</small>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"

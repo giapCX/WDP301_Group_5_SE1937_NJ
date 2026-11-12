@@ -13,12 +13,12 @@ function RowActions({ section, item, actions, onOpenDetail }) {
   if (section === 'vehicles') {
     return <>
       <button onClick={() => onOpenDetail(item)}>Chi tiết hồ sơ</button>
-      {!item.inspection && (
+      {!item.inspection && item.onboardingStatus !== 'revision_required' && (
         <button onClick={() => actions.screenVehicleRecord(item, 'schedule_inspection')}>Hẹn kiểm định</button>
       )}
-      <button className="danger" onClick={() => actions.screenVehicleRecord(item, 'request_revision')}>
+      {!item.inspection && <button className="danger" onClick={() => actions.screenVehicleRecord(item, 'request_revision')}>
         Yêu cầu bổ sung
-      </button>
+      </button>}
     </>;
   }
 
@@ -35,7 +35,7 @@ function RowActions({ section, item, actions, onOpenDetail }) {
     return <>
       <button onClick={() => actions.editVehicleListing(item)}>Sửa</button>
       <button onClick={() => actions.reviewVehicleListing(item, reviewAction)}>
-        {item.status === 'published' ? 'Tạm dừng' : needsReview ? 'Duyệt' : 'Kích hoạt'}
+        {item.status === 'published' ? 'Tạm dừng' : needsReview ? 'Xuất bản' : 'Kích hoạt'}
       </button>
       {['draft', 'pending_review', 'published'].includes(item.status) && (
         <button className="danger" onClick={() => actions.reviewVehicleListing(item, 'reject')}>Từ chối</button>

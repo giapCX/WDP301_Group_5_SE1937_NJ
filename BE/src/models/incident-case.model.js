@@ -15,6 +15,7 @@ export const incidentCaseSchema = createSchema({
   location: embedded({ latitude: Number, longitude: Number }),
   odometer_km: Number,
   severity: { type: String, enum: ['low', 'medium', 'high'] },
+  source_withdrawal_id: { type: ObjectId, ref: 'VehicleWithdrawalRequest' },
   source_handover_id: { type: ObjectId, ref: 'RentalHandover' },
   request_key: String,
   request_fingerprint: String,

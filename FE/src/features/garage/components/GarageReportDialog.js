@@ -3,6 +3,8 @@ import Modal from '../../../components/ui/Modal';
 import Icon from '../../../components/ui/Icon';
 import GaragePhotoUpload from './GaragePhotoUpload';
 import GarageStatus from './GarageStatus';
+import GarageInspectionChecklist from './GarageInspectionChecklist';
+import GarageConditionDefects from './GarageConditionDefects';
 import GarageManagerDecision from './GarageManagerDecision';
 import {
   conditionFields,
@@ -14,6 +16,11 @@ import {
   validateGarageReport,
 } from '../data/garage';
 
+function toLocalInput(value) {
+  const date = new Date(value);
+  return new Date(+date - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
 export default function GarageReportDialog({ task, onSave, onClose }) {
   const [report, setReport] = useState(() => ({
     odometer: String(task.odometer),
@@ -24,15 +31,22 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
     tires: '',
     recommendation: '',
     note: '',
-    confirmed: false,
     photos: [],
     accessories: [],
     ...task.report,
+    confirmed: Boolean(task.report?.confirmed || (task.kind === 'intake' && task.ownerReview?.status === 'accepted')),
+    defects: task.report?.defects ?? (!task.recordId ? task.baselineCondition?.defects?.map((defect) => ({ ...defect, photo_key: '' })) : undefined),
+    disputeNote: task.renterDisputeNote || '',
+    occurredAt: task.kind === 'owner-return' && task.occurredAt ? toLocalInput(task.occurredAt) : '',
+
   }));
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [editingAcceptedIntake, setEditingAcceptedIntake] = useState(false);
   const readOnly = task.readOnly || ['completed', 'submitted', 'approved', 'rejected', 'revision_required'].includes(task.status);
+  const ownerIntakeAccepted = task.kind === 'intake' && task.ownerReview?.status === 'accepted' && !editingAcceptedIntake;
+  const needsOwnerIntake = task.kind === 'intake' && Boolean(task.conditionDeclaration);
   const blockers = taskBlockers(task);
   const set = (key, value) =>
     setReport((previous) => ({ ...previous, [key]: value }));
@@ -43,7 +57,7 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
         ? 'Xác nhận tiếp nhận xe'
         : task.kind === 'handover'
           ? 'Xác nhận bàn giao xe'
-          : 'Xác nhận nhận trả xe';
+          : task.kind === 'owner-return' ? 'Gửi chủ xe xác nhận' : 'Xác nhận nhận trả xe';
   const confirmLabel =
     task.kind === 'intake'
       ? 'Đã ghi nhận xác nhận bàn giao của chủ xe'
@@ -62,6 +76,10 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
   }
   function submit(event) {
     event.preventDefault();
+    if (needsOwnerIntake && !ownerIntakeAccepted) {
+      setError('Lưu biên bản và chờ chủ xe xác nhận ở mục Xem hiện trạng trước khi hoàn tất.');
+      return;
+    }
     const message = validateGarageReport(task, report);
     if (message) {
       setError(message);
@@ -81,6 +99,9 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
       onClose={busy || uploading ? () => {} : onClose}
     >
       <GarageManagerDecision task={task} />
+      {needsOwnerIntake && <p className="gs-form-hint">{ownerIntakeAccepted ? 'Chủ xe đã xác nhận phiên bản này.'
+        : task.ownerReview?.status === 'disputed' ? `Chủ xe có bất đồng: ${task.ownerReview.note}`
+          : 'Lưu biên bản để chủ xe xem và xác nhận trong Đội xe của tôi.'}</p>}
       <div className="gs-report-vehicle">
         <span className={`gs-car-tile gs-car-tile--${task.kind}`}>
           <Icon name="car" size={30} />
@@ -99,7 +120,7 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
       <div className="gs-report-facts">
         <div>
           <small>
-            {['intake', 'inspection'].includes(task.kind)
+            {['intake', 'inspection', 'owner-return'].includes(task.kind)
               ? 'CHỦ XE'
               : 'KHÁCH THUÊ'}
           </small>
@@ -120,6 +141,7 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
           <strong>{task.bay}</strong>
         </div>
       </div>
+      {task.scheduleNote && <p className="gs-form-hint">Ghi chú lịch kiểm định: {task.scheduleNote}</p>}
       {blockers.length > 0 && !readOnly && (
         <div className="gs-blocker">
           <Icon name="alert" size={20} />
@@ -150,7 +172,7 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
         </div>
       ) : (
         <form onSubmit={submit} className="gs-report-form">
-          <fieldset disabled={readOnly || busy || uploading}>
+          <fieldset disabled={readOnly || ownerIntakeAccepted || busy || uploading}>
             <legend className="gs-form-section-title">
               01{' '}
               <span>
@@ -188,11 +210,14 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
               </label>
             </div>
           </fieldset>
-          <fieldset disabled={readOnly || busy || uploading}>
+          <fieldset disabled={readOnly || ownerIntakeAccepted || busy || uploading}>
             <legend className="gs-form-section-title">
               02 <span>Tình trạng xe</span>
             </legend>
-            {!readOnly && (
+            {ownerIntakeAccepted && !readOnly && <button type="button" className="gs-button gs-button-secondary" onClick={() => setEditingAcceptedIntake(true)}>
+            Sửa biên bản và xin xác nhận lại
+          </button>}
+          {!readOnly && (
               <button
                 type="button"
                 className="gs-text-link gs-normal-button"
@@ -240,18 +265,33 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
           </fieldset>
           <GaragePhotoUpload
             photos={report.photos}
+            maxPhotos={30}
             onChange={(photos) => set('photos', photos)}
-            readOnly={readOnly || busy}
+            readOnly={readOnly || ownerIntakeAccepted || busy}
             onBusyChange={setUploading}
           />
-          {task.kind === 'intake' && <fieldset disabled={readOnly || busy || uploading}>
-            <legend className="gs-form-section-title">Phụ kiện tiếp nhận</legend>
+          {task.kind === 'inspection' ? <GarageInspectionChecklist
+            declaration={task.conditionDeclaration}
+            items={report.checklist || []}
+            photos={report.photos}
+            onChange={(items) => set('checklist', items)}
+            disabled={readOnly || ownerIntakeAccepted || busy || uploading}
+          /> : <GarageConditionDefects
+            items={report.defects || []}
+            baseline={['return', 'owner-return'].includes(task.kind) ? task.baselineCondition?.defects || [] : []}
+            changes={task.damageChanges}
+            photos={report.photos}
+            onChange={(items) => set('defects', items)}
+            disabled={readOnly || ownerIntakeAccepted || busy || uploading}
+          />}
+          {task.kind !== 'inspection' && <fieldset disabled={readOnly || ownerIntakeAccepted || busy || uploading}>
+            <legend className="gs-form-section-title">Chìa khóa, giấy tờ và phụ kiện</legend>
             {[['vehicle_key', 'Chìa khóa xe'], ['registration_copy', 'Bản sao đăng ký xe'], ['emergency_kit', 'Bộ dụng cụ khẩn cấp']].map(([key, label]) => <label className="gs-confirm-row" key={key}>
               <input type="checkbox" checked={report.accessories.includes(key)} onChange={(event) => set('accessories', event.target.checked ? [...report.accessories, key] : report.accessories.filter((value) => value !== key))} />
               {label}
             </label>)}
           </fieldset>}
-          <fieldset disabled={readOnly || busy || uploading}>
+          <fieldset disabled={readOnly || ownerIntakeAccepted || busy || uploading}>
             <legend className="gs-form-section-title">
               03{' '}
               <span>
@@ -289,10 +329,10 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
                 </div>
                 <p className="gs-form-hint">
                   <Icon name="shield" size={15} />
-                  Đề xuất sẽ được chuyển cho Manager phê duyệt.
+                  Chủ xe xem hiện trạng trước khi Manager duyệt hồ sơ có checklist.
                 </p>
               </>
-            ) : (
+            ) : task.kind === 'owner-return' ? <p>Chủ xe xác nhận đã nhận xe trong Đội xe của tôi.</p> : (
               <label className="gs-confirm-row">
                 <input
                   type="checkbox"
@@ -302,6 +342,15 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
                 {confirmLabel}
               </label>
             )}
+            {['return', 'owner-return'].includes(task.kind) && <div className="gs-form-grid">
+              <label>{task.kind === 'owner-return' ? 'Giờ giao xe thực tế' : 'Giờ xe về thực tế'}
+                {readOnly ? <span>{task.occurredAt ? new Date(task.occurredAt).toLocaleString('vi-VN') : '—'}</span>
+                  : <input type="datetime-local" max={toLocalInput(new Date())} value={report.occurredAt} onChange={(event) => set('occurredAt', event.target.value)} />}
+              </label>
+              {task.kind === 'return' && !report.confirmed && <label>Lý do khách chưa xác nhận / ý kiến bất đồng
+                <textarea value={report.disputeNote} maxLength={1000} onChange={(event) => set('disputeNote', event.target.value)} />
+              </label>}
+            </div>}
             {task.kind === 'return' && (
               <p className="gs-form-hint">
                 Nếu có bất thường, hệ thống sẽ tạo báo cáo để bộ phận vận hành
@@ -316,14 +365,14 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
           )}
           {!readOnly && (
             <div className="gs-dialog-actions">
-              <button
+              {task.kind !== 'owner-return' && <button
                 type="button"
                 className="gs-button gs-button-secondary"
                 onClick={() => save(true)}
-                disabled={busy || uploading}
+                disabled={ownerIntakeAccepted || busy || uploading}
               >
                 Lưu bản nháp
-              </button>
+              </button>}
               <button
                 type="submit"
                 className="gs-button gs-button-primary"

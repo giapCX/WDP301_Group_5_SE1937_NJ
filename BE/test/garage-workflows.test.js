@@ -130,11 +130,17 @@ test('concurrent pickup confirmation commits booking, vehicle and audit once and
 
 test('return compares pickup baseline, creates one incident for new damage and keeps financial decisions untouched', async () => {
   const f = await fixture();
-  assert.equal((await confirm(await draft(f.booking))).status, 200);
-  const returning = await draft(f.booking, 'return', { odometerKm: 10500, fuelLevelPct: 70, condition: { ...condition(), exterior: 'damaged', note: 'New scratch on rear bumper' } });
+  const photo = 'garage-photos/staff/test.jpg';
+  const scratch = { code: 'old-scratch', location: 'Cửa trái', description: 'Xước cũ', severity: 'damaged', photo_key: photo };
+  const dent = { code: 'new-dent', location: 'Cản sau', description: 'Móp mới', severity: 'damaged', photo_key: photo };
+  const pickup = await draft(f.booking, 'pickup', { condition: { ...condition(), exterior: 'damaged', note: 'Có xước cũ', photoKeys: [photo], defects: [scratch] } });
+  assert.equal((await confirm(pickup)).status, 200);
+  const returning = await draft(f.booking, 'return', { odometerKm: 10500, fuelLevelPct: 70, condition: { ...condition(), exterior: 'damaged', note: 'Có vết móp mới', photoKeys: [photo], defects: [scratch, dent] } });
   const result = await confirm(returning);
   assert.equal(result.status, 200, JSON.stringify(result));
   assert.equal((await confirm(returning)).body.replayed, true);
+  assert.equal(result.body.data.baseline_handover_id, pickup._id);
+  assert.deepEqual(result.body.data.damage_changes, [{ code: 'old-scratch', change: 'unchanged' }, { code: 'new-dent', change: 'new' }]);
   assert.equal((await models.Booking.findById(f.booking._id).lean()).status, 'completed');
   assert.equal((await models.Vehicle.findById(f.vehicle._id).lean()).physical_status, 'maintenance');
   const cases = await models.IncidentCase.find({ source_handover_id: returning._id }).lean();
@@ -158,6 +164,49 @@ test('return refuses a decreasing odometer and does not report pre-existing unch
   assert.equal((await confirm(update.body.data)).status, 200);
   assert.equal(await models.IncidentCase.countDocuments({ source_handover_id: returning._id }), 0);
   assert.equal((await models.Vehicle.findById(f.vehicle._id).lean()).physical_status, 'at_garage');
+});
+
+test('return records actual time and an incident when the renter has not agreed', async () => {
+  const { booking } = await fixture();
+  assert.equal((await confirm(await draft(booking))).status, 200);
+  const returning = await draft(booking, 'return', { condition: { ...condition(), photoKeys: ['garage-photos/staff/return.jpg'] } });
+  const occurredAt = new Date().toISOString();
+  const result = await request(`/handovers/${returning._id}/confirm`, 'POST', {
+    version: returning.version, renterConfirmed: false, disputeNote: 'Khách không đồng ý hiện trạng.', occurredAt,
+  });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  assert.equal(result.body.data.renter_confirmed_at, undefined);
+  assert.equal(result.body.data.renter_response, 'not_confirmed');
+  assert.equal(result.body.data.occurred_at, occurredAt);
+  assert.equal((await models.Booking.findById(booking._id).lean()).status, 'completed');
+  assert.equal((await models.IncidentCase.findOne({ source_handover_id: returning._id }).lean()).case_type, 'dispute');
+});
+
+test('owner return uses the intake baseline and preserves a dispute after verified receipt', async () => {
+  const { renter, vehicle, booking, management } = await fixture();
+  const role = await models.Role.findOne({ code: 'OWNER' }).lean();
+  await models.User.updateOne({ _id: renter._id }, { $set: { primary_role_id: role._id } });
+  await models.ManagementAgreement.updateOne({ _id: management._id }, { $set: { status: 'termination_requested' } });
+  const withdrawal = await models.VehicleWithdrawalRequest.create({
+    owner_id: renter._id, vehicle_id: vehicle._id, management_agreement_id: management._id,
+    request_type: 'owner_withdrawal', status: 'requested',
+  });
+  const payload = { version: 0, odometerKm: 10020, fuelLevelPct: 80, occurredAt: new Date().toISOString(),
+    condition: { ...condition(), photoKeys: ['garage-photos/staff/owner-return.jpg'] } };
+  assert.equal((await request(`/owner-returns/${withdrawal._id}`, 'PATCH', payload)).status, 409);
+  await models.Booking.updateOne({ _id: booking._id }, { $set: { status: 'completed' } });
+  const saved = await request(`/owner-returns/${withdrawal._id}`, 'PATCH', payload);
+  assert.equal(saved.status, 200, JSON.stringify(saved));
+  assert.ok(saved.body.data.owner_return_handover.intake_id);
+  assert.equal((await models.Vehicle.findById(vehicle._id).lean()).physical_status, 'at_garage');
+  const ownerToken = jwt.sign({ sub: String(renter._id) }, env.jwtSecret);
+  const response = await fetch(`${base}/api/owner/vehicle-withdrawals/${withdrawal._id}/handover`, {
+    method: 'PATCH', headers: { Authorization: `Bearer ${ownerToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ received: true, status: 'disputed', note: 'Chủ xe có bất đồng về hiện trạng.', version: 1 }),
+  });
+  assert.equal(response.status, 200, JSON.stringify(await response.json()));
+  assert.equal((await models.Vehicle.findById(vehicle._id).lean()).physical_status, 'returned_to_owner');
+  assert.equal((await models.IncidentCase.findOne({ source_withdrawal_id: withdrawal._id }).lean()).status, 'reported');
 });
 
 test('audit failure rolls back confirmed handover, booking and vehicle changes', async (t) => {

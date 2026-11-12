@@ -16,9 +16,12 @@ export const vehicleSchema = createSchema({
   transmission: String,
   vehicle_type: String,
   description: String,
+  condition_declaration: String,
+  owner_contact_address: String,
   daily_price: integer({ min: 0 }),
   mileage_policy: embedded({ included_km_per_day: integer({ min: 0 }), extra_km_fee: integer({ min: 0 }) }),
   photos: arrayOf(String),
+  publish_vehicle_photos: Boolean,
   physical_status: { type: String, enum: ["with_owner", "at_garage", "rented", "returned_to_owner", "maintenance"] },
   onboarding_status: { type: String, enum: ["draft", "submitted", "pending_review", "approved", "revision_required", "rejected"] },
   documents: embedded({

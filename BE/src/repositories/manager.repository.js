@@ -14,6 +14,11 @@ export function createManagerRepository(connection, privateFiles) {
     vehicles: createModelRepository(models.Vehicle),
     listings: createModelRepository(models.VehicleListing),
     incidents: createModelRepository(models.IncidentCase),
+    findWithdrawalHandovers: (ids) => models.VehicleWithdrawalRequest.find({ _id: { $in: ids } })
+      .select('owner_return_handover').lean(),
+    findIntakeHandovers: (ids) => models.VehicleIntake.find({ _id: { $in: ids } }).select('condition_snapshot').lean(),
+    findIncidentHandovers: (ids) => models.RentalHandover.find({ _id: { $in: ids } })
+      .select('baseline_handover_id damage_changes vehicle_condition occurred_at renter_response renter_dispute_note').lean(),
     settlements: createModelRepository(models.OwnerSettlement),
     auditLogs: createModelRepository(models.AuditLog),
     users: createModelRepository(models.User),

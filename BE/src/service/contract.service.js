@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
+import { createManagementContractDocument, parseManagementTerms } from './management-contract-document.js';
 import { findPageRows } from '../utils/pagination.js';
 
 const same = (a, b) => a && b && String(a) === String(b);
@@ -58,6 +59,8 @@ export function createContractService(repository) {
       const latest = await repository.inspections.findOne({ vehicle_id: vehicle._id, inspection_type: 'onboarding' }, { session, sort: { created_at: -1, _id: -1 } });
       fail(latest?.approval_status !== 'approved' || latest?.recommendation !== 'pass', 'Cần biên bản kiểm định đạt đã được Manager duyệt.');
       fail(!(row.start_date instanceof Date) || !(row.end_date instanceof Date) || row.start_date >= row.end_date || row.end_date <= now, 'Thời hạn hợp đồng quản lý không hợp lệ.');
+      fail(row.inspection_id && (!same(row.inspection_id, latest._id) || row.inspection_version !== (latest.version ?? 0)), 'Báo cáo kiểm định gắn với hợp đồng đã thay đổi.');
+      return latest;
     } else {
       fail(!Number.isSafeInteger(booking.rental_fee_amount) || booking.rental_fee_amount < 0 || !Number.isSafeInteger(booking.deposit_amount_snapshot) || booking.deposit_amount_snapshot < 0 || !Number.isSafeInteger(booking.pricing_snapshot?.daily_price) || booking.pricing_snapshot.daily_price <= 0, 'Booking chưa có giá thuê và tiền cọc hợp lệ.');
       fail(booking.status !== 'awaiting_payment' || booking.start_at <= now || booking.end_at <= booking.start_at, 'Chỉ ký cho booking đã duyệt, còn hạn và chưa bắt đầu.');
@@ -161,22 +164,26 @@ export function createContractService(repository) {
         const vehicle = await repository.vehicles.findOne({ _id: booking?.vehicle_id || reference }, { session });
         if (!vehicle) throw httpError(404, 'Không tìm thấy xe.');
         const newId = row?._id || new Types.ObjectId();
-        const start = body.startDate ? new Date(body.startDate) : now;
-        const end = body.endDate ? new Date(body.endDate) : new Date(start.getTime() + 365 * 86400000);
+        const dateField = (value, endOfDay = false) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+          ? new Date(`${value}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}+07:00`) : new Date(value);
+        const start = body.startDate ? dateField(body.startDate) : now;
+        const end = body.endDate ? dateField(body.endDate, true) : new Date(start.getTime() + 365 * 86400000);
         if (type === 'management' && (!Number.isFinite(+start) || !Number.isFinite(+end))) throw httpError(400, 'Ngày hợp đồng không hợp lệ.');
+        const managementTerms = type === 'management' ? parseManagementTerms(body, row) : null;
         row = { ...row, _id: newId, status: 'pending_signatures', created_at: row?.created_at || now, updated_at: now,
-          ...(type === 'management' ? { vehicle_id: vehicle._id, owner_id: vehicle.owner_id, agreement_number: row?.agreement_number || `MGMT-${newId}`, start_date: start, end_date: end, commission_rate_pct: row?.commission_rate_pct ?? 10, authorization_scope: { vehicle_custody: true, rental_contract_signing: true, listing_management: true, booking_management: true, owner_confirmation_per_booking: false, commission_basis: 'rental_fee_excluding_security_deposit' } } : { booking_id: reference, management_agreement_id: booking.management_agreement_id, contract_number: row?.contract_number || `RENT-${newId}`, terms_snapshot: { daily_rate: booking.pricing_snapshot?.daily_price, rental_fee_amount: booking.rental_fee_amount, deposit_amount: booking.deposit_amount_snapshot, start_at: booking.start_at, end_at: booking.end_at, signature_method: 'electronic_acceptance' }, renter_details_snapshot: { renter_id: booking.renter_id, verified_license: true }, lender_details_snapshot: { owner_id: vehicle.owner_id } }) };
+          ...(type === 'management' ? { vehicle_id: vehicle._id, owner_id: vehicle.owner_id, agreement_number: row?.agreement_number || `MGMT-${newId}`, start_date: start, end_date: end, commission_rate_pct: managementTerms.commission, authorization_scope: { vehicle_custody: true, rental_contract_signing: true, listing_management: true, booking_management: true, owner_confirmation_per_booking: false, commission_basis: 'rental_fee_excluding_security_deposit' } } : { booking_id: reference, management_agreement_id: booking.management_agreement_id, contract_number: row?.contract_number || `RENT-${newId}`, terms_snapshot: { daily_rate: booking.pricing_snapshot?.daily_price, rental_fee_amount: booking.rental_fee_amount, deposit_amount: booking.deposit_amount_snapshot, start_at: booking.start_at, end_at: booking.end_at, signature_method: 'electronic_acceptance' }, renter_details_snapshot: { renter_id: booking.renter_id, verified_license: true }, lender_details_snapshot: { owner_id: vehicle.owner_id } }) };
         const ctx = { vehicle, booking, partyId: booking?.renter_id || vehicle.owner_id };
-        await eligible(type, row, ctx, session);
+        const inspection = await eligible(type, row, ctx, session);
+        if (inspection) {
+          row.inspection_id = inspection._id;
+          row.inspection_version = inspection.version ?? 0;
+        }
         const party = await repository.users.findOne({ _id: ctx.partyId }, { session });
         const owner = await repository.users.findOne({ _id: vehicle.owner_id }, { session });
         const common = [['Phương tiện', `${vehicle.brand} ${vehicle.model} · ${vehicle.license_plate}`], ['Chủ xe', owner?.full_name || ''], ['Bên nền tảng', 'XeDi']];
-        row.contract_document = type === 'management' ? document('Hợp đồng quản lý xe', [...common, ['Hoa hồng trên tiền thuê', `${row.commission_rate_pct}%`], ['Bắt đầu', date(start)], ['Kết thúc', date(end)]], [
-          'Chủ xe ủy quyền XeDi giữ xe tại gara, quản lý niêm yết, điều phối booking và ký hợp đồng thuê trong phạm vi ủy quyền.',
-          `Hoa hồng ${row.commission_rate_pct}% tính trên tiền thuê; không bao gồm tiền cọc và bồi thường.`,
-          'Chủ xe chịu trách nhiệm về quyền sở hữu và tính hợp lệ của giấy tờ. Garage ghi nhận hiện trạng khi tiếp nhận và trả xe.',
-          'Chấm dứt bằng yêu cầu rút xe; các bên hoàn tất booking, nghĩa vụ và đối soát liên quan. Mọi sửa đổi cần phụ lục được chấp thuận.',
-        ], now) : document('Hợp đồng thuê xe tự lái', [...common, ['Khách thuê', party?.full_name || ''], ['Mã booking', booking.booking_code], ['Nhận xe', date(booking.start_at)], ['Trả xe', date(booking.end_at)], ['Đơn giá/ngày', money(booking.pricing_snapshot?.daily_price)], ['Tiền thuê', money(booking.rental_fee_amount)], ['Tiền cọc', money(booking.deposit_amount_snapshot)], ['Nơi nhận', booking.pickup_location?.branch || 'Tại gara'], ['Nơi trả', booking.return_location?.branch || 'Tại gara']], [
+        row.contract_document = type === 'management'
+          ? createManagementContractDocument({ row, owner, vehicle, inspection, terms: managementTerms, now })
+          : document('Hợp đồng thuê xe tự lái', [...common, ['Khách thuê', party?.full_name || ''], ['Mã booking', booking.booking_code], ['Nhận xe', date(booking.start_at)], ['Trả xe', date(booking.end_at)], ['Đơn giá/ngày', money(booking.pricing_snapshot?.daily_price)], ['Tiền thuê', money(booking.rental_fee_amount)], ['Tiền cọc', money(booking.deposit_amount_snapshot)], ['Nơi nhận', booking.pickup_location?.branch || 'Tại gara'], ['Nơi trả', booking.return_location?.branch || 'Tại gara']], [
           'XeDi ký trong phạm vi hợp đồng quản lý được chủ xe ủy quyền. Người thuê sử dụng xe đúng mục đích, có GPLX hợp lệ và không giao xe trái thỏa thuận.',
           'Tiền thuê và cọc theo số tiền nêu trên. Hoàn tất ký chưa xác nhận đã thanh toán; chỉ bàn giao khi kiểm tra đủ hợp đồng, tiền và hồ sơ.',
           'Garage lập biên bản giao/nhận với ODO, nhiên liệu và tình trạng xe; người thuê xác nhận hiện trạng thực tế.',

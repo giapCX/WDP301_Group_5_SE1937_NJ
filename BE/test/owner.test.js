@@ -54,6 +54,26 @@ test('owner dashboard is role-protected and only returns the signed-in owner rec
   assert.equal(result.body.data.payoutAccount?.accountMasked, '****1001');
 });
 
+test('owner can respond to their submitted inspection exactly once at the current version', async () => {
+  const vehicle = await models.Vehicle.findOne({ owner_id: ownerId }).lean();
+  const other = await models.Vehicle.findOne({ owner_id: { $ne: ownerId } }).lean();
+  const report = await models.VehicleInspection.create({
+    vehicle_id: vehicle._id, garage_staff_id: ownerId, inspection_type: 'onboarding',
+    approval_status: 'pending', recommendation: 'pass', version: 3, created_at: new Date(),
+  });
+  const path = `/owner/vehicles/${vehicle._id}/inspections/${report._id}`;
+  const payload = { status: 'accepted', version: 3 };
+  assert.equal((await request(path, 'PATCH', payload, renterToken)).status, 403);
+  assert.equal((await request(`/owner/vehicles/${other._id}/inspections/${report._id}`, 'PATCH', payload)).status, 404);
+  assert.equal((await request(path, 'PATCH', { ...payload, version: 2 })).status, 409);
+  assert.equal((await request(path, 'PATCH', { ...payload, status: 'disputed' })).status, 400);
+  assert.equal((await request(path, 'PATCH', payload)).status, 200);
+  assert.equal((await request(path, 'PATCH', { ...payload, version: 4 })).status, 409);
+  const dashboard = await request('/owner/dashboard');
+  assert.equal(dashboard.body.data.vehicles.find((item) => item.id === String(vehicle._id)).inspection.ownerReview.status, 'accepted');
+  await models.VehicleInspection.deleteOne({ _id: report._id });
+});
+
 test('owner cannot sign an unprepared legacy agreement and other roles cannot access owner endpoints', async () => {
   const vehicle = await models.Vehicle.findOne({ owner_id: ownerId }).lean();
   const agreement = await models.ManagementAgreement.create({
@@ -103,6 +123,7 @@ test('owner payout, withdrawal and incident requests are scoped to the owner acc
 test('vehicle registration stores private files and an unsigned draft without impersonating either signer', async () => {
   const licensePlate = `90A-${Date.now().toString().slice(-5)}`;
   const body = {
+    conditionDeclaration: 'Xe chưa phát hiện lỗi.',
     brand: 'Test', model: 'Owner Car', licensePlate, year: 2022, seats: 5,
     vehicleType: 'Sedan', transmission: 'automatic', fuelType: 'gasoline',
     dailyPrice: 500000, mileageLimit: 200, extraMileageFee: 3000,

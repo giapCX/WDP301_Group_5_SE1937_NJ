@@ -43,8 +43,8 @@ export default function VehicleRevisionDialog({ vehicle, onClose, onSuccess }) {
     setError('');
 
     const hasAnyFile = files.registration || files.inspectionCertificate || files.insurance || photos.length > 0;
-    if (!hasAnyFile) {
-      setError('Vui lòng chọn ít nhất một tệp giấy tờ hoặc ảnh xe cần thay thế/bổ sung.');
+    if (!hasAnyFile && (!vehicle.conditionDeclaration || note.trim().length < 5)) {
+      setError('Hãy chọn tài liệu, ảnh xe hoặc mô tả nội dung đã khắc phục.');
       return;
     }
 
@@ -77,7 +77,7 @@ export default function VehicleRevisionDialog({ vehicle, onClose, onSuccess }) {
         note: note.trim(),
       });
 
-      onSuccess(`Đã gửi tài liệu bổ sung cho xe ${vehicle.brand} ${vehicle.model} (${vehicle.licensePlate}). Quản lý sẽ xem xét lại hồ sơ.`);
+      onSuccess(`Đã gửi tài liệu bổ sung cho xe ${vehicle.brand} ${vehicle.model} (${vehicle.licensePlate}). Operation sẽ xem hồ sơ và hẹn kiểm định lại khi đủ điều kiện.`);
       onClose();
     } catch (err) {
       setError(err.message || 'Không thể gửi tài liệu bổ sung.');

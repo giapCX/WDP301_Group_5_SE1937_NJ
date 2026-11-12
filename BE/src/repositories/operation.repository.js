@@ -51,6 +51,22 @@ export function createOperationRepository(connection) {
   // Shared query helpers for paginated queues and atomic status changes.
   return {
     collection,
+    startSession: () => connection.startSession(),
+    command: (command) => connection.db.command(command),
+    listingForPublication: (id, session) => models.VehicleListing.findById(id).session(session).lean(),
+    vehicleForPublication: (id, session) => models.Vehicle.findById(id).session(session).lean(),
+    lockListingVehicle: (id, session) => models.Vehicle.updateOne({ _id: id, onboarding_status: 'approved', physical_status: 'at_garage' },
+      { $inc: { renter_calendar_version: 1 } }, { session }),
+    publicationAgreement: (vehicleId, now, session) => models.ManagementAgreement.findOne({
+      vehicle_id: vehicleId, status: 'active', start_date: { $lte: now }, end_date: { $gt: now },
+      'signature_info.owner_signed_at': { $type: 'date' }, 'signature_info.platform_signed_at': { $type: 'date' },
+      'authorization_scope.rental_contract_signing': true, 'authorization_scope.vehicle_custody': true,
+    }).session(session).lean(),
+    completedIntake: (vehicleId, agreementId, session) => models.VehicleIntake.exists({
+      vehicle_id: vehicleId, management_agreement_id: agreementId, status: 'completed',
+    }).session(session),
+    updateListingStatus: (filter, update, session) => models.VehicleListing.updateOne(filter, update, { session }),
+    recordPublicationAudit: (entry, session) => new models.AuditLog(entry).save({ session }),
     findMany: (name, filter, { page, limit, sortBy }) =>
       modelFor(name).find(filter).sort(sortBy).skip((page - 1) * limit).limit(limit).lean().exec(),
     count: (name, filter) => modelFor(name).countDocuments(filter).exec(),

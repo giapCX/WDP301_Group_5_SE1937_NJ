@@ -98,6 +98,8 @@ Biển số trùng bị chặn; hồ sơ thiếu/không đọc được phải n
 
 ### F04 Kiểm định và duyệt xe
 
+Áp dụng [checklist kiểm định và mẫu biên bản xe XeDi](./VEHICLE_INSPECTION_AND_HANDOVER.md) cho kiểm định, tiếp nhận, giao và nhận trả xe thuê, bàn giao lại xe cho Owner.
+
 Garage mở công việc được giao → đối chiếu xe thực tế → ghi checklist kỹ thuật, ODO, nhiên liệu/pin, ảnh và lỗi → lưu nháp → gửi báo cáo cùng đề xuất. Manager xem hồ sơ và báo cáo → phê duyệt, yêu cầu bổ sung/kiểm định lại hoặc từ chối, luôn kèm lý do cho quyết định bất lợi.
 
 Checklist và ảnh là thành phần của cùng báo cáo, không phải hai nghiệp vụ phê duyệt riêng. Garage không tự phê duyệt xe. Kiểm định là đánh giá xe; chưa phải xác nhận nền tảng nhận giữ xe. Báo cáo đã gửi/duyệt không sửa âm thầm; bổ sung bằng phiên bản có lịch sử. Phát hiện hư hỏng không liên quan booking được lập case theo xe/công việc, không buộc gán một renter.
@@ -110,7 +112,7 @@ Garage kiểm tra phê duyệt và hợp đồng còn hiệu lực → đối ch
 
 ### F06 Listing và lịch khả dụng
 
-Operation tạo listing cho xe đã được duyệt, có hợp đồng quản lý hiệu lực và đã nhập gara → kiểm tra giá, cọc, ảnh, địa điểm, phí và lịch → xuất bản. Xe chỉ đặt được nếu giấy tờ phù hợp thời gian thuê, không bảo trì, không có chặn rút xe và không trùng khoảng đang bị giữ/đã đặt.
+Khi Garage xác nhận tiếp nhận, hệ thống tạo tin nháp nếu xe chưa có tin còn sử dụng. Operation mở mục Tin xe, bổ sung giá thuê, tiền cọc và địa điểm giao rồi xuất bản. Hệ thống kiểm tra xe đã duyệt, đang ở gara và biên bản tiếp nhận thuộc đúng hợp đồng còn hiệu lực. Ảnh Owner cho phép dùng trên tin được phục vụ sau khi xuất bản. Xe chỉ đặt được nếu giấy tờ phù hợp thời gian thuê, không bảo trì, không có chặn rút xe và không trùng khoảng đang bị giữ/đã đặt.
 
 Owner gửi cập nhật giá/mô tả/ảnh trong phạm vi được phép → Operation kiểm tra và xuất bản phiên bản mới. Thay đổi không tác động báo giá/hợp đồng đã chốt. Operation có thể chặn lịch bảo dưỡng hoặc tạm dừng listing nhưng không âm thầm xóa booking đã xác nhận; booking bị ảnh hưởng phải được liên hệ, bố trí hoặc hủy có hoàn tiền. Xe đang thuê vẫn có thể xuất hiện cho ngày tương lai nếu lịch đủ điều kiện.
 

@@ -27,7 +27,7 @@ export default function useVehicleRegistration() {
         year: Number(form.year), seats: Number(form.seats), vehicleType: form.vehicleType,
         transmission: form.transmission, fuelType: form.fuelType,
         dailyPrice: Number(form.dailyPrice), mileageLimit: Number(form.mileageLimit),
-        extraMileageFee: Number(form.extraMileageFee), description: form.description,
+        extraMileageFee: Number(form.extraMileageFee), description: form.description, conditionDeclaration: form.conditionDeclaration, vin: form.vin, ownerContactAddress: form.ownerContactAddress, publishVehiclePhotos: form.publishVehiclePhotos,
         acceptedTerms: form.acceptedTerms,
         documents: { registration, inspectionCertificate, insurance }, photos,
       });

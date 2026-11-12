@@ -31,6 +31,7 @@ export const vehicleListingSchema = createSchema({
     reason: String,
   })),
   status: String,
+  created_at: Date,
   published_at: Date,
   updated_at: Date,
   updated_by_operation_staff_id: { type: ObjectId, ref: 'User' },

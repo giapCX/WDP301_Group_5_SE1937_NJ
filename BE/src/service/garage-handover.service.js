@@ -8,6 +8,24 @@ const same = (a, b) => a && b && String(a) === String(b);
 const complete = (record) => record?.status === 'confirmed';
 const rank = (condition) => condition === 'damaged' ? 2 : condition === 'attention' ? 1 : 0;
 
+function compareDefects(before, after) {
+  const baseline = new Map((before?.defects || []).map((item) => [item.code, item]));
+  const current = after?.defects || [];
+  const currentCodes = new Set(current.map((item) => item.code));
+  return [
+    ...current.map((item) => {
+      const original = baseline.get(item.code);
+      let change = 'unchanged';
+      if (!original) change = 'new';
+      else if (original.location !== item.location) change = 'unverified';
+      else if (rank(item.severity) > rank(original.severity)) change = 'worsened';
+      else if (item.description !== original.description || item.severity !== original.severity) change = 'unverified';
+      return { code: item.code, change };
+    }),
+    ...[...baseline.keys()].filter((code) => !currentCodes.has(code)).map((code) => ({ code, change: 'unverified' })),
+  ];
+}
+
 export function createGarageHandoverService(repository) {
   let indexes;
   async function ensureIndexes() {
@@ -64,10 +82,80 @@ export function createGarageHandoverService(repository) {
     if (!Number.isSafeInteger(record.odometer_km) || record.odometer_km < baseline) throw httpError(400, `Số km phải là số nguyên và không nhỏ hơn ${baseline} km.`);
     if (!Number.isSafeInteger(record.fuel_level_pct) || record.fuel_level_pct < 0 || record.fuel_level_pct > 100) throw httpError(400, 'Mức nhiên liệu/pin phải từ 0 đến 100%.');
     if (fields.some((key) => !['good', 'attention', 'damaged'].includes(record.vehicle_condition?.[key]))) throw httpError(400, 'Cần đánh giá đầy đủ 4 hạng mục tình trạng xe.');
+    if ((record.vehicle_condition.defects || []).some((item) => !record.vehicle_condition.photo_keys?.includes(item.photo_key)))
+      throw httpError(400, 'Ảnh của từng lỗi phải còn trong biên bản.');
     if (fields.some((key) => record.vehicle_condition[key] !== 'good') && !record.vehicle_condition.note?.trim()) throw httpError(400, 'Cần ghi chú hiện trạng bất thường.');
   }
+  async function withdrawalContext(id, session) {
+    const options = { session };
+    const withdrawal = await repository.withdrawals.findOne({ _id: id, request_type: 'owner_withdrawal' }, options);
+    if (!withdrawal) throw httpError(404, 'Không tìm thấy yêu cầu trả xe cho chủ.');
+    const vehicle = await repository.vehicles.findOne({ _id: withdrawal.vehicle_id, owner_id: withdrawal.owner_id }, options);
+    const intake = await repository.intakes.findOne({ vehicle_id: withdrawal.vehicle_id,
+      management_agreement_id: withdrawal.management_agreement_id, status: 'completed' }, options);
+    if (!vehicle || !['at_garage', 'maintenance'].includes(vehicle.physical_status)
+      || !intake || !['requested', 'processing'].includes(withdrawal.status))
+      throw httpError(409, 'Xe chưa đủ điều kiện bàn giao lại cho chủ.');
+    const agreement = await repository.managementAgreements.findOne({ _id: withdrawal.management_agreement_id,
+      vehicle_id: vehicle._id, owner_id: withdrawal.owner_id, status: { $in: ['termination_requested', 'terminated', 'expired'] } }, options);
+    if (!agreement) throw httpError(409, 'Cần hoàn tất yêu cầu chấm dứt quyền cho thuê trước khi trả xe.');
+    const active = await repository.bookings.findOne({ vehicle_id: vehicle._id,
+      status: { $in: ['pending', 'awaiting_payment', 'confirmed', 'ongoing', 'in_progress'] } }, options);
+    if (active) throw httpError(409, 'Xe còn booking cần xử lý trước khi giao lại chủ.');
+    return { withdrawal, vehicle, intake };
+  }
+
   return {
     context,
+    async saveOwnerReturn(id, draft, actor) {
+      const { withdrawal, intake } = await withdrawalContext(id);
+      const previous = withdrawal.owner_return_handover;
+      if (previous?.garage_staff_id && !same(previous.garage_staff_id, actor._id))
+        throw httpError(403, 'Chỉ người lập biên bản được chỉnh sửa.');
+      const { version, condition_snapshot, ...values } = draft;
+      validateReport({ ...values, vehicle_condition: condition_snapshot }, intake.odometer_km || 0);
+      if (!condition_snapshot.photo_keys?.length || (intake.received_at && values.returned_at < intake.received_at))
+        throw httpError(400, 'Cần ảnh xe và giờ bàn giao sau lúc tiếp nhận.');
+      if (!previous && version !== 0) throw httpError(409, 'Biên bản đã thay đổi. Tải lại trước khi lưu.');
+      const versionMatch = previous ? { 'owner_return_handover.version': version } : { owner_return_handover: { $exists: false } };
+      const updated = await repository.withdrawals.findOneAndUpdate({ _id: id, status: withdrawal.status, ...versionMatch }, {
+        $set: { status: 'processing', owner_return_handover: {
+          ...values, condition: condition_snapshot, garage_staff_id: actor._id, intake_id: intake._id, version: version + 1,
+          damage_changes: compareDefects(intake.condition_snapshot, condition_snapshot),
+        } },
+      }, { returnDocument: 'after' });
+      if (!updated) throw httpError(409, 'Biên bản đã thay đổi. Tải lại trước khi lưu.');
+      return updated;
+    },
+    async confirmOwnerReturn(id, { version, review }) {
+      return garageTransaction(repository, async (session) => {
+        const scoped = await repository.withdrawals.findOne({ _id: id, owner_id: review.owner_id }, { session });
+        if (!scoped) throw httpError(404, 'Không tìm thấy yêu cầu thuộc chủ xe.');
+        if (scoped.status === 'withdrawn' && scoped.owner_return_handover?.version === version) return scoped;
+        const { withdrawal, vehicle } = await withdrawalContext(id, session);
+        const report = withdrawal.owner_return_handover;
+        if (!report || report.version !== version) throw httpError(409, 'Biên bản đã thay đổi hoặc Garage chưa lập biên bản.');
+        const now = new Date();
+        const updated = await repository.vehicles.updateOne({ _id: vehicle._id, owner_id: review.owner_id, physical_status: vehicle.physical_status },
+          { $set: { physical_status: 'returned_to_owner', updated_at: now } }, { session });
+        if (updated.modifiedCount !== 1) throw httpError(409, 'Trạng thái xe vừa thay đổi.');
+        await repository.listings.updateMany({ vehicle_id: vehicle._id, status: 'published' }, { $set: { status: 'suspended', updated_at: now } }, { session });
+        const completed = await repository.withdrawals.findOneAndUpdate({ _id: id, status: 'processing', 'owner_return_handover.version': version }, {
+          $set: { status: 'withdrawn', completed_at: now, 'owner_return_handover.owner_confirmed_at': now,
+            'owner_return_handover.owner_response': review.status, 'owner_return_handover.owner_note': review.note },
+        }, { session, returnDocument: 'after' });
+        if (!completed) throw httpError(409, 'Biên bản vừa được xử lý.');
+        if (review.status === 'disputed') await repository.incidents.create({
+          case_number: `SC-RUT-${id}`, vehicle_id: vehicle._id, reported_by_user_id: review.owner_id,
+          case_type: 'dispute', severity: 'medium', status: 'reported', description: review.note,
+          source_withdrawal_id: id,
+          evidence: report.condition.photo_keys.map((file_key) => ({ kind: 'image', file_key })), created_at: now,
+        }, { session });
+        await repository.auditLogs.create({ actor_user_id: review.owner_id, action: 'garage.owner_return.confirmed',
+          entity_type: 'vehicle_withdrawal_request', entity_id: id, created_at: now, sanitized_changes: { owner_response: review.status } }, { session });
+        return completed;
+      });
+    },
     async get(id) {
       const record = await getRecord(id);
       return { ...record, eligibility: await context(record.booking_id, record.handover_type) };
@@ -93,7 +181,7 @@ export function createGarageHandoverService(repository) {
       if (!updated) throw httpError(409, 'Biên bản đã thay đổi. Đóng và mở lại trước khi lưu.');
       return updated;
     },
-    async confirm(id, version, actor) {
+    async confirm(id, { version, renterConfirmed, note, occurredAt }, actor) {
       await ensureIndexes();
       return garageTransaction(repository, async (session) => {
         const record = await getRecord(id, session);
@@ -104,16 +192,30 @@ export function createGarageHandoverService(repository) {
         if (!data.eligible) throw httpError(409, 'Chưa đủ điều kiện giao nhận.', { blockers: data.blockers });
         validateReport(record, data.baselineOdometerKm);
         const returning = record.handover_type === 'return';
-        const abnormal = returning && fields.some((key) => rank(record.vehicle_condition[key]) > rank(data.baselineCondition[key]));
+        if (!returning && !renterConfirmed) throw httpError(400, 'Khách phải xác nhận trước khi giao xe.');
+        if (!renterConfirmed && !record.vehicle_condition.photo_keys?.length)
+          throw httpError(400, 'Cần ảnh hiện trạng khi nhận xe mà chưa có xác nhận của khách.');
         const now = new Date();
-        const bookingChange = await repository.bookings.updateOne({ _id: record.booking_id, status: returning ? 'ongoing' : 'confirmed' }, { $set: { status: returning ? 'completed' : 'ongoing', [returning ? 'actual_end_at' : 'actual_start_at']: now, updated_at: now }, $push: { status_history: { from: data.booking.status, to: returning ? 'completed' : 'ongoing', at: now, actor: String(actor._id) } } }, { session });
+        const actualAt = occurredAt || now;
+        if (returning && data.booking.actual_start_at && actualAt < data.booking.actual_start_at)
+          throw httpError(400, 'Giờ trả thực tế phải sau giờ nhận xe.');
+        const currentDefects = record.vehicle_condition.defects || [];
+        const damageChanges = returning ? compareDefects(data.baselineCondition, record.vehicle_condition) : [];
+        const abnormal = returning && (fields.some((key) => rank(record.vehicle_condition[key]) > rank(data.baselineCondition[key]))
+          || damageChanges.some((item) => item.change !== 'unchanged'));
+        const needsCase = abnormal || !renterConfirmed;
+        const bookingChange = await repository.bookings.updateOne({ _id: record.booking_id, status: returning ? 'ongoing' : 'confirmed' }, { $set: { status: returning ? 'completed' : 'ongoing', [returning ? 'actual_end_at' : 'actual_start_at']: actualAt, updated_at: now }, $push: { status_history: { from: data.booking.status, to: returning ? 'completed' : 'ongoing', at: now, actor: String(actor._id) } } }, { session });
         const vehicleChange = await repository.vehicles.updateOne({ _id: record.vehicle_id, physical_status: returning ? 'rented' : 'at_garage' }, { $set: { physical_status: returning ? (abnormal ? 'maintenance' : 'at_garage') : 'rented', updated_at: now } }, { session });
         if (bookingChange.modifiedCount !== 1 || vehicleChange.modifiedCount !== 1) throw httpError(409, 'Đơn thuê hoặc trạng thái xe đã thay đổi.');
-        const confirmed = await repository.handovers.findOneAndUpdate({ _id: id, status: 'draft', version }, { $set: { status: 'confirmed', occurred_at: now, renter_confirmed_at: now, 'vehicle_condition.renter_signature_recorded': true, confirmed_from_version: version, updated_at: now }, $inc: { version: 1 } }, { session, returnDocument: 'after' });
+        const confirmed = await repository.handovers.findOneAndUpdate({ _id: id, status: 'draft', version }, { $set: { status: 'confirmed', occurred_at: actualAt, renter_response: renterConfirmed ? 'accepted' : 'not_confirmed',
+          ...(renterConfirmed ? { renter_confirmed_at: now } : { renter_dispute_note: note }),
+          'vehicle_condition.renter_signature_recorded': renterConfirmed,
+          ...(returning ? { baseline_handover_id: data.pickup._id, damage_changes: damageChanges } : {}), confirmed_from_version: version, updated_at: now }, $inc: { version: 1 } }, { session, returnDocument: 'after' });
         if (!confirmed) throw httpError(409, 'Biên bản đã thay đổi.');
-        if (abnormal) {
+        if (needsCase) {
           const caseId = new Types.ObjectId();
-          await repository.incidents.create({ _id: caseId, case_number: `SC-${caseId}`, vehicle_id: record.vehicle_id, booking_id: record.booking_id, source_handover_id: id, reported_by_user_id: actor._id, case_type: 'vehicle_damage', severity: 'medium', description: record.vehicle_condition.note, evidence: (record.vehicle_condition.photo_keys || []).map((file_key) => ({ kind: 'image', file_key, uploaded_by_user_id: actor._id })), investigation: { review_status: 'pending' }, status: 'reported', created_at: now, updated_at: now }, { session });
+          await repository.incidents.create({ _id: caseId, case_number: `SC-${caseId}`, vehicle_id: record.vehicle_id, booking_id: record.booking_id, source_handover_id: id, reported_by_user_id: actor._id, case_type: abnormal ? 'vehicle_damage' : 'dispute', severity: 'medium',
+            description: [record.vehicle_condition.note, ...currentDefects.filter((item) => damageChanges.some((change) => change.code === item.code && change.change !== 'unchanged')).map((item) => `${item.location}: ${item.description}`), !renterConfirmed ? note : ''].filter(Boolean).join('\n').slice(0, 3000) || 'Cần xác minh chênh lệch hiện trạng khi nhận xe.', evidence: (record.vehicle_condition.photo_keys || []).map((file_key) => ({ kind: 'image', file_key, uploaded_by_user_id: actor._id })), investigation: { review_status: 'pending' }, status: 'reported', created_at: now, updated_at: now }, { session });
           await repository.auditLogs.create({ actor_user_id: actor._id, action: 'garage.incident.reported', entity_type: 'incident_case', entity_id: caseId, created_at: now, sanitized_changes: { source_handover_id: id } }, { session });
         }
         await repository.auditLogs.create({ actor_user_id: actor._id, action: returning ? 'garage.return.confirmed' : 'garage.pickup.confirmed', entity_type: 'rental_handover', entity_id: id, created_at: now, sanitized_changes: { vehicle_id: record.vehicle_id, booking_id: record.booking_id } }, { session });

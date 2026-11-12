@@ -4,6 +4,8 @@ import { createModelRepository } from './base.repository.js';
 export function createGarageHandoverRepository(connection) {
   const models = getModels(connection);
   return {
+    withdrawals: createModelRepository(models.VehicleWithdrawalRequest),
+    listings: createModelRepository(models.VehicleListing),
     handovers: createModelRepository(models.RentalHandover),
     bookings: createModelRepository(models.Booking), vehicles: createModelRepository(models.Vehicle),
     agreements: createModelRepository(models.RentalAgreement), managementAgreements: createModelRepository(models.ManagementAgreement),

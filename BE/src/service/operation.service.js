@@ -1,3 +1,5 @@
+import { vehicleDocumentContentType } from '../utils/image-content.js';
+import { garageTransaction } from '../utils/garage-transaction.js';
 import { Types } from 'mongoose';
 import { httpError, objectId } from '../utils/http-error.js';
 import {
@@ -42,7 +44,7 @@ function transition(current, next, { dispute = false } = {}) {
   if (!allowed.includes(target)) throw httpError(409, `Không thể chuyển hồ sơ từ ${current} sang ${next}.`);
 }
 
-export function createOperationService(repository) {
+export function createOperationService(repository, files) {
   const actorId = (request) => toId(request.tokenPayload.sub, 'userId');
 
   async function expireStaleBookings(now = new Date()) {
@@ -271,22 +273,32 @@ export function createOperationService(repository) {
       if (!current) throw httpError(404, 'Không tìm thấy tin xe.');
       if (!expected.includes(current.status)) throw httpError(409, 'Trạng thái tin xe không cho phép thao tác này.');
       if (action === 'approve' || action === 'activate') {
-        const vehicle = await repository.findById('vehicles', current.vehicle_id);
-        if (!vehicle || vehicle.onboarding_status !== 'approved')
-          throw httpError(409, 'Chỉ xuất bản xe đã được Manager duyệt.');
-        if (vehicle.physical_status !== 'at_garage')
-          throw httpError(409, 'Chỉ xuất bản xe đã được Garage tiếp nhận.');
-        const [agreement, intake] = await Promise.all([
-          repository.collection('management_agreements').findOne({
-            vehicle_id: vehicle._id,
-            status: 'active',
-            'signature_info.owner_signed_at': { $type: 'date' },
-            'signature_info.platform_signed_at': { $type: 'date' },
-          }),
-          repository.collection('vehicle_intakes').findOne({ vehicle_id: vehicle._id, status: 'completed' }),
-        ]);
-        if (!agreement) throw httpError(409, 'Chỉ xuất bản xe có hợp đồng quản lý đã được hai bên ký và còn hiệu lực.');
-        if (!intake) throw httpError(409, 'Chỉ xuất bản xe đã có biên bản tiếp nhận Gara hoàn tất.');
+        return garageTransaction(repository, async (session) => {
+          const listing = await repository.listingForPublication(id, session);
+          if (!listing || !expected.includes(listing.status)) throw httpError(409, 'Trạng thái tin xe đã thay đổi.');
+          const vehicle = await repository.vehicleForPublication(listing.vehicle_id, session);
+          if (!vehicle || vehicle.onboarding_status !== 'approved' || vehicle.physical_status !== 'at_garage')
+            throw httpError(409, 'Chỉ xuất bản xe đã được duyệt và tiếp nhận vào gara.');
+          if (!Number.isSafeInteger(listing.daily_price) || listing.daily_price <= 0
+            || !Number.isSafeInteger(listing.security_deposit_amount) || listing.security_deposit_amount < 0
+            || !listing.pickup_location?.branch_name?.trim() || !listing.pickup_location?.city?.trim()
+            || !listing.pickup_location?.address_label?.trim()) {
+            throw httpError(409, 'Cần giá thuê, tiền cọc và địa điểm giao xe đầy đủ trước khi xuất bản.');
+          }
+          const now = new Date();
+          const agreement = await repository.publicationAgreement(vehicle._id, now, session);
+          if (!agreement || !await repository.completedIntake(vehicle._id, agreement._id, session))
+            throw httpError(409, 'Cần hợp đồng còn hiệu lực và biên bản tiếp nhận thuộc đúng hợp đồng.');
+          if ((await repository.lockListingVehicle(vehicle._id, session)).modifiedCount !== 1)
+            throw httpError(409, 'Trạng thái xe đã thay đổi.');
+          const result = await repository.updateListingStatus({ _id: id, status: { $in: expected } }, {
+            $set: { status: next, published_at: now, updated_at: now, handled_by: actorId(request), handled_at: now, operation_review_note: reason },
+          }, session);
+          if (result.modifiedCount !== 1) throw httpError(409, 'Trạng thái tin xe đã thay đổi.');
+          await repository.recordPublicationAudit({ actor_user_id: actorId(request), action: `listing.${action}`,
+            entity_type: 'vehicle_listings', entity_id: id, sanitized_changes: { status: next, reason }, created_at: now }, session);
+          return { data: { id: id.toString(), status: next } };
+        });
       }
       const now = new Date();
       const result = await repository.updateOne('vehicle_listings', { _id: id, status: { $in: expected } }, {
@@ -397,14 +409,26 @@ export function createOperationService(repository) {
         physicalStatus: vehicle.physical_status,
         owner: ownerMap.get(vehicle.owner_id?.toString()) || null,
         documents: {
-          registration: vehicle.documents?.registration || null,
-          inspectionCertificate: vehicle.documents?.inspection_certificate || null,
-          insurance: vehicle.documents?.insurance || null,
+          registration: Boolean(vehicle.documents?.registration?.file_key),
+          inspectionCertificate: Boolean(vehicle.documents?.inspection_certificate?.file_key),
+          insurance: Boolean(vehicle.documents?.insurance?.file_key),
         },
-        photos: vehicle.photos || [],
+        conditionDeclaration: vehicle.condition_declaration,
         reviewNote: vehicle.review_note || '',
         registrationHistory: vehicle.registration_history || [],
       } };
+    },
+
+    async getVehicleDocument(idValue, kind) {
+      const kinds = { registration: 'registration', inspectionCertificate: 'inspection_certificate', insurance: 'insurance' };
+      if (!Object.hasOwn(kinds, kind)) throw httpError(404, 'Không tìm thấy tài liệu.');
+      const vehicle = await repository.findById('vehicles', toId(idValue));
+      const key = vehicle?.documents?.[kinds[kind]]?.file_key;
+      if (!key) throw httpError(404, 'Không tìm thấy tài liệu.');
+      const bytes = await files.read(key);
+      const contentType = vehicleDocumentContentType(bytes);
+      if (!contentType) throw httpError(422, 'Tài liệu không phải PDF hoặc ảnh được hỗ trợ.');
+      return { bytes, contentType };
     },
 
     async screenVehicle(request, idValue, body) {
@@ -415,6 +439,10 @@ export function createOperationService(repository) {
         throw httpError(409, 'Hồ sơ xe không còn ở trạng thái Operation cần sàng lọc.');
       const now = new Date();
       if (input.action === 'request_revision') {
+        const open = await repository.collection('vehicle_inspections').findOne({
+          vehicle_id: id, inspection_type: 'onboarding', approval_status: { $in: ['draft', 'pending'] },
+        });
+        if (open) throw httpError(409, 'Xe đang có lượt kiểm định mở. Hãy hoàn tất lượt hiện tại trước khi yêu cầu bổ sung.');
         const result = await repository.updateOne('vehicles', {
           _id: id, onboarding_status: vehicle.onboarding_status,
         }, {
@@ -423,6 +451,10 @@ export function createOperationService(repository) {
         });
         if (!result.modifiedCount) throw httpError(409, 'Hồ sơ xe vừa được cập nhật.');
       } else {
+        if (vehicle.condition_declaration && vehicle.onboarding_status === 'revision_required')
+          throw httpError(409, 'Chờ chủ xe gửi bổ sung trước khi hẹn kiểm định lại.');
+        if (vehicle.condition_declaration && ['registration', 'inspection_certificate', 'insurance'].some((key) => !vehicle.documents?.[key]?.file_key))
+          throw httpError(409, 'Cần đủ đăng ký xe, đăng kiểm và bảo hiểm trước khi hẹn kiểm định.');
         if (!['with_owner', 'returned_to_owner'].includes(vehicle.physical_status))
           throw httpError(409, 'Chỉ lên lịch kiểm định đầu vào khi xe đang ở chủ xe.');
         const staff = await repository.collection('users').findOne({ _id: input.garageStaffId, account_status: 'active' });
