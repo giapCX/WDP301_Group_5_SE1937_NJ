@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import BookingWorkspace from './BookingWorkspace';
+import BookingWorkspace from './components/BookingWorkspace';
 import BookingPanel from './components/BookingPanel';
 import RenterPage from './pages/RenterPage';
 import { Otp } from './components/Controls';
