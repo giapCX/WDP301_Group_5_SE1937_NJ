@@ -1,3 +1,4 @@
+import { bookingHoldExpression, isBookingHoldExpired } from '../utils/booking-hold.js';
 import { createHash } from 'node:crypto';
 import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
@@ -64,7 +65,7 @@ export function createContractService(repository) {
     } else {
       fail(!Number.isSafeInteger(booking.rental_fee_amount) || booking.rental_fee_amount < 0 || !Number.isSafeInteger(booking.deposit_amount_snapshot) || booking.deposit_amount_snapshot < 0 || !Number.isSafeInteger(booking.pricing_snapshot?.daily_price) || booking.pricing_snapshot.daily_price <= 0, 'Booking chưa có giá thuê và tiền cọc hợp lệ.');
       fail(booking.status !== 'awaiting_payment' || booking.start_at <= now || booking.end_at <= booking.start_at, 'Chỉ ký cho booking đã duyệt, còn hạn và chưa bắt đầu.');
-      fail(booking.payment_deadline_at && booking.payment_deadline_at <= now, 'Đã hết hạn ký và thanh toán của booking.');
+      fail(isBookingHoldExpired(booking, now), 'Đã hết hạn ký và thanh toán của booking.');
       fail(same(booking.renter_id, vehicle.owner_id), 'Chủ xe không thể thuê chính xe của mình.');
       fail(vehicle.physical_status !== 'at_garage', 'Xe chưa sẵn sàng tại gara.');
       const management = await repository.agreement('management').findOne({ _id: booking.management_agreement_id }, { session });
@@ -93,6 +94,7 @@ export function createContractService(repository) {
     const platformAt = signature.platform_signed_at;
     const partyDone = Boolean(partyAt || (type === 'rental' && signature.renter_confirmed));
     const platformDone = Boolean(platformAt || (type === 'rental' && signature.platform_signer_user_id));
+    const signingOpen = type !== 'rental' || (ctx.booking.status === 'awaiting_payment' && ctx.booking.start_at > new Date() && !isBookingHoldExpired(ctx.booking));
     return {
       id: String(row._id), type, number: row.agreement_number || row.contract_number, status: row.status,
       vehicle: `${ctx.vehicle.brand || ''} ${ctx.vehicle.model || ''} · ${ctx.vehicle.license_plate}`,
@@ -100,9 +102,9 @@ export function createContractService(repository) {
       signature, document: row.contract_document || null, terms: row.contract_document?.clauses || [],
       partySignedAt: partyAt || null, platformSignedAt: platformAt || null,
       partyName: signature.owner_signature_name || signature.renter_signature_name || '', platformName: signature.platform_signature_name || '',
-      canSign: Boolean(row.contract_document && row.status === 'pending_signatures' && (mode === 'party' ? !partyDone : actor.roles.includes('MANAGER') && !platformDone)),
+      canSign: Boolean(signingOpen && row.contract_document && row.status === 'pending_signatures' && (mode === 'party' ? !partyDone : actor.roles.includes('MANAGER') && !platformDone)),
       canOwnerSign: Boolean(type === 'management' && mode === 'party' && row.contract_document && row.status === 'pending_signatures' && !partyDone),
-      canPrepare: Boolean(!row.contract_document && !partyDone && !platformDone && ['draft', 'pending_signatures', 'pending_signature', 'awaiting_signature'].includes(row.status) && (type === 'rental' || ctx.vehicle.onboarding_status === 'approved')),
+      canPrepare: Boolean(signingOpen && !row.contract_document && !partyDone && !platformDone && ['draft', 'pending_signatures', 'pending_signature', 'awaiting_signature'].includes(row.status) && (type === 'rental' || ctx.vehicle.onboarding_status === 'approved')),
     };
   }
   return {
@@ -135,7 +137,12 @@ export function createContractService(repository) {
       checkType(type); const actor = await actorInfo(rawActor);
       requireRole(actor, type === 'management' ? ['MANAGER'] : ['MANAGER', 'OPERATION_STAFF']);
       const repo = type === 'management' ? repository.vehicles : repository.bookings;
-      const filter = type === 'management' ? { onboarding_status: 'approved', physical_status: { $in: ['with_owner', 'returned_to_owner'] } } : { status: 'awaiting_payment', start_at: { $gt: new Date() } };
+      const now = new Date();
+      const filter = type === 'management'
+        ? { onboarding_status: 'approved', physical_status: { $in: ['with_owner', 'returned_to_owner'] } }
+        : { status: 'awaiting_payment', start_at: { $gt: now },
+          $expr: { $or: [{ $eq: [bookingHoldExpression, null] }, { $gt: [bookingHoldExpression, now] }] } };
+
       if (type === 'management') {
         const existing = await repository.agreement('management').find({
           status: { $nin: ['terminated', 'expired', 'cancelled'] },
@@ -146,6 +153,10 @@ export function createContractService(repository) {
         }, { projection: { vehicle_id: 1 } }).exec();
         const excluded = [...new Map(existing.map((row) => [String(row.vehicle_id), row.vehicle_id])).values()];
         if (excluded.length) filter._id = { $nin: excluded };
+      }
+      if (type === 'rental') {
+        const prepared = await repository.agreement('rental').find({ contract_document: { $exists: true } }, { projection: { booking_id: 1 } }).exec();
+        if (prepared.length) filter._id = { $nin: prepared.map((row) => row.booking_id) };
       }
       const rows = await findPageRows(repo, filter, { ...query, page: query.page ?? '1', limit: query.limit ?? '10' });
       return { data: rows.map((row) => ({ id: String(row._id), label: type === 'management' ? `${row.brand} ${row.model} · ${row.license_plate}` : `${row.booking_code} · ${date(row.start_at)}` })), pagination: rows.pagination };
@@ -171,7 +182,7 @@ export function createContractService(repository) {
         if (type === 'management' && (!Number.isFinite(+start) || !Number.isFinite(+end))) throw httpError(400, 'Ngày hợp đồng không hợp lệ.');
         const managementTerms = type === 'management' ? parseManagementTerms(body, row) : null;
         row = { ...row, _id: newId, status: 'pending_signatures', created_at: row?.created_at || now, updated_at: now,
-          ...(type === 'management' ? { vehicle_id: vehicle._id, owner_id: vehicle.owner_id, agreement_number: row?.agreement_number || `MGMT-${newId}`, start_date: start, end_date: end, commission_rate_pct: managementTerms.commission, authorization_scope: { vehicle_custody: true, rental_contract_signing: true, listing_management: true, booking_management: true, owner_confirmation_per_booking: false, commission_basis: 'rental_fee_excluding_security_deposit' } } : { booking_id: reference, management_agreement_id: booking.management_agreement_id, contract_number: row?.contract_number || `RENT-${newId}`, terms_snapshot: { daily_rate: booking.pricing_snapshot?.daily_price, rental_fee_amount: booking.rental_fee_amount, deposit_amount: booking.deposit_amount_snapshot, start_at: booking.start_at, end_at: booking.end_at, signature_method: 'electronic_acceptance' }, renter_details_snapshot: { renter_id: booking.renter_id, verified_license: true }, lender_details_snapshot: { owner_id: vehicle.owner_id } }) };
+          ...(type === 'management' ? { vehicle_id: vehicle._id, owner_id: vehicle.owner_id, agreement_number: row?.agreement_number || `MGMT-${newId}`, start_date: start, end_date: end, commission_rate_pct: managementTerms.commission, authorization_scope: { vehicle_custody: true, rental_contract_signing: true, listing_management: true, booking_management: true, owner_confirmation_per_booking: false, commission_basis: 'rental_fee_excluding_security_deposit' } } : { booking_id: reference, management_agreement_id: booking.management_agreement_id, contract_number: row?.contract_number || `RENT-${newId}`, terms_snapshot: { ...row?.terms_snapshot, daily_rate: booking.pricing_snapshot?.daily_price, rental_fee_amount: booking.rental_fee_amount, deposit_amount: booking.deposit_amount_snapshot, start_at: booking.start_at, end_at: booking.end_at, signature_method: 'electronic_acceptance' }, renter_details_snapshot: { ...row?.renter_details_snapshot, renter_id: booking.renter_id, verified_license: true }, lender_details_snapshot: { ...row?.lender_details_snapshot, owner_id: vehicle.owner_id } }) };
         const ctx = { vehicle, booking, partyId: booking?.renter_id || vehicle.owner_id };
         const inspection = await eligible(type, row, ctx, session);
         if (inspection) {
@@ -183,7 +194,12 @@ export function createContractService(repository) {
         const common = [['Phương tiện', `${vehicle.brand} ${vehicle.model} · ${vehicle.license_plate}`], ['Chủ xe', owner?.full_name || ''], ['Bên nền tảng', 'XeDi']];
         row.contract_document = type === 'management'
           ? createManagementContractDocument({ row, owner, vehicle, inspection, terms: managementTerms, now })
-          : document('Hợp đồng thuê xe tự lái', [...common, ['Khách thuê', party?.full_name || ''], ['Mã booking', booking.booking_code], ['Nhận xe', date(booking.start_at)], ['Trả xe', date(booking.end_at)], ['Đơn giá/ngày', money(booking.pricing_snapshot?.daily_price)], ['Tiền thuê', money(booking.rental_fee_amount)], ['Tiền cọc', money(booking.deposit_amount_snapshot)], ['Nơi nhận', booking.pickup_location?.branch || 'Tại gara'], ['Nơi trả', booking.return_location?.branch || 'Tại gara']], [
+          : document('Hợp đồng thuê xe tự lái', [...common, ['Khách thuê', party?.full_name || ''], ['Mã booking', booking.booking_code], ['Nhận xe', date(booking.start_at)], ['Trả xe', date(booking.end_at)], ['Đơn giá/ngày', money(booking.pricing_snapshot?.daily_price)], ['Tiền thuê', money(booking.rental_fee_amount)], ['Tiền cọc', money(booking.deposit_amount_snapshot)], ['Nơi nhận', booking.pickup_location?.branch || 'Tại gara'], ['Nơi trả', booking.return_location?.branch || 'Tại gara'],
+            ['Hợp đồng ủy quyền', row.lender_details_snapshot.authority_agreement_number || String(row.management_agreement_id)],
+            ...(row.terms_snapshot.mileage_policy?.included_km_per_day == null ? [] : [['Giới hạn km/ngày', row.terms_snapshot.mileage_policy.included_km_per_day]]),
+            ...(row.terms_snapshot.mileage_policy?.extra_km_fee == null ? [] : [['Phí vượt km', money(row.terms_snapshot.mileage_policy.extra_km_fee)]]),
+            ...(row.terms_snapshot.rental_policy?.late_fee_per_hour == null ? [] : [['Phí trả muộn mỗi giờ', money(row.terms_snapshot.rental_policy.late_fee_per_hour)]]),
+          ], [
           'XeDi ký trong phạm vi hợp đồng quản lý được chủ xe ủy quyền. Người thuê sử dụng xe đúng mục đích, có GPLX hợp lệ và không giao xe trái thỏa thuận.',
           'Tiền thuê và cọc theo số tiền nêu trên. Hoàn tất ký chưa xác nhận đã thanh toán; chỉ bàn giao khi kiểm tra đủ hợp đồng, tiền và hồ sơ.',
           'Garage lập biên bản giao/nhận với ODO, nhiên liệu và tình trạng xe; người thuê xác nhận hiện trạng thực tế.',

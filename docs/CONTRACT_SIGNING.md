@@ -12,13 +12,13 @@
 
 ## Thuê xe: Renter và Manager
 
-1. Booking cần ở `awaiting_payment` do luồng duyệt booking bên ngoài chức năng hợp đồng này cung cấp. Xe đã nhập gara, hợp đồng quản lý có hiệu lực và đủ quyền giữ xe/cho thuê; Renter có danh tính và GPLX hợp lệ tới hết chuyến.
+1. Booking mới chờ Operation duyệt tối đa 2 giờ. Khi duyệt, booking chuyển `awaiting_payment` với hạn giữ xe mới là 15 phút để ký và thanh toán. Xe đã nhập gara, hợp đồng quản lý có hiệu lực và đủ quyền giữ xe/cho thuê. Renter có danh tính và GPLX hợp lệ tới hết chuyến.
 2. Operation vào `/#/contracts`, chọn **Thuê xe**, chọn booking và **Lập / mở hợp đồng**. Manager cũng có quyền lập. Hệ thống chốt tiền thuê/cọc, giá/ngày, lịch, điểm nhận/trả và các bên từ booking; không nhập lại số tiền thủ công.
-3. Renter đăng nhập, mở liên kết **Hợp đồng** trên trang chủ, chọn hợp đồng thuê của mình, đọc nội dung và xác nhận ký.
+3. Renter mở **Chuyến đi & thanh toán**, chọn chuyến rồi bấm **Xem hợp đồng thuê** để đọc và ký đúng bản đang trình ký.
 4. Manager ký riêng phía nền tảng. Operation chỉ lập và xem, không ký phía Manager. Đủ hai bên thì hợp đồng `signed`, có thời điểm hoàn tất.
-5. Ký xong **không tự chuyển booking sang `confirmed`, không tạo giao dịch thanh toán**. Luồng thanh toán phải xác nhận đủ tiền thuê và cọc; Garage kiểm tra riêng trước giao xe.
+5. Sau khi hai bên ký, Renter thanh toán tiền thuê và cọc. Môi trường local có thể bật `RENTER_DEMO_SERVICES=true` trong `BE/.env` để chạy thanh toán mô phỏng. Backend chỉ chuyển booking sang `confirmed` sau khi ghi nhận đủ hai khoản. Garage xác nhận giao và nhận trả xe. Renter xem hai biên bản trong chi tiết chuyến.
 
-Nếu booking có `payment_deadline_at`, quá thời điểm này không được lập/ký. Dự án chưa có đầy đủ API duyệt booking và tích hợp thanh toán; bên triển khai booking cần ghi hạn 15 phút tại thời điểm duyệt, không gia hạn bằng cách mở hợp đồng. Booking cũ thiếu hạn chỉ kiểm tra chưa bắt đầu; không coi đây là đã triển khai đầy đủ cơ chế giữ chỗ.
+Hạn thanh toán được dùng chung khi tìm lịch trống, lập/ký hợp đồng và thanh toán. Mở hợp đồng không gia hạn giữ xe. Với booking cũ thiếu hạn thanh toán, hệ thống dùng hạn giữ xe đã lưu nếu có.
 
 ## Phạm vi triển khai và dữ liệu cũ
 

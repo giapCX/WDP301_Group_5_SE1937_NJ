@@ -1,3 +1,4 @@
+import { bookingHoldExpression } from '../utils/booking-hold.js';
 import { Types } from 'mongoose';
 import { getModels } from '../models/index.js';
 
@@ -64,7 +65,7 @@ export function publicListingPipeline(match, vehicleMatch = {}, rentalPeriod) {
                 { $in: ['$status', ['confirmed', 'ongoing']] },
                 { $and: [
                   { $in: ['$status', ['pending', 'awaiting_payment']] },
-                  { $or: [{ $eq: [{ $type: '$hold_expires_at' }, 'missing'] }, { $gt: ['$hold_expires_at', new Date()] }] }
+                  { $or: [{ $eq: [bookingHoldExpression, null] }, { $gt: [bookingHoldExpression, new Date()] }] }
                 ] }
               ]
             }, {

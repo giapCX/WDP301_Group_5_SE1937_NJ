@@ -104,6 +104,19 @@ test('booking workspace displays stored policy and blocks unconfigured payment',
     name: /Tôi đã đọc đến cuối/
   })).toBeDisabled();
 });
+test('new booking waits for the platform signature before showing payment', async () => {
+  global.fetch.mockResolvedValue(reply({
+    data: { booking, agreement: { ...agreement, _id: 'agreement-1', status: 'pending_signatures',
+      contract_document: { hash: 'prepared' }, signing_info: { renter_confirmed: true } },
+      payments: [], deposit: null },
+  }));
+  render(<BookingWorkspace bookingId={booking._id} config={{ services: { payment: 'demo' } }} />);
+  expect(await screen.findByText('Khách thuê đã ký · XeDi chưa ký')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Xem hợp đồng thuê' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Thanh toán mô phỏng/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Ký hợp đồng bằng OTP/ })).not.toBeInTheDocument();
+});
+
 test('OTP input starts empty and demo is explicitly labelled', async () => {
   const onChange = jest.fn();
   global.fetch.mockResolvedValue(reply({
@@ -174,7 +187,7 @@ test('booking panel reads listing price then posts reservation without client-co
   await screen.findByText(/Gara API/);
   fireEvent.click(screen.getByRole('checkbox'));
   fireEvent.submit(screen.getByRole('button', {
-    name: 'Giữ xe 15 phút'
+    name: 'Gửi yêu cầu thuê xe'
   }).closest('form'));
   await waitFor(() => expect(global.fetch).toHaveBeenCalledWith('/api/renter/bookings', expect.objectContaining({
     method: 'POST'

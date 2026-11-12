@@ -109,6 +109,7 @@ export default function OperationQueue({
           <h2>{operationSectionTitles[section]}</h2>
           <p>{pagination ? `${pagination.total} hồ sơ` : 'Danh sách hồ sơ vận hành'}</p>
         </div>
+        {section === 'bookings' && <a href="/#/contracts">Hợp đồng thuê xe</a>}
         {section === 'incidents' && (
           <button className="operation-primary" onClick={actions.createIncidentCase}>+ Tạo hồ sơ sự cố</button>
         )}

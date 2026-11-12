@@ -2,6 +2,8 @@ import { createGarageHandoverRepository } from '../src/repositories/garage-hando
 import { createGarageHandoverService } from '../src/service/garage-handover.service.js';
 import assert from 'node:assert/strict';
 import { before, after, test } from 'node:test';
+import jwt from 'jsonwebtoken';
+import { env } from '../src/config/env.js';
 import { Types } from 'mongoose';
 import { connectTestDatabase, closeTestDatabase } from '../test-support/seeded-database.js';
 import { createRenterRepository } from '../src/repositories/renter.repository.js';
@@ -9,6 +11,17 @@ import { createRenterService, selectPolicies, rentalDates, cancellationDecision 
 import { createListingRepository } from '../src/repositories/listing.repository.js';
 import { createApp } from '../src/app.js';
 import { once } from 'node:events';
+async function contractRequest(path, account, body, expected = 200) {
+  const response = await fetch(base + '/api' + path, {
+    method: path.startsWith('/operation/') ? 'PATCH' : 'POST',
+    headers: { Authorization: `Bearer ${jwt.sign({ sub: String(account._id) }, env.jwtSecret)}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const result = await response.json();
+  assert.equal(response.status, expected, JSON.stringify(result));
+  return result.data;
+}
+
 const oid = () => new Types.ObjectId();
 let db, repo, service, user, other, listing, vehicle, management, booking, server, base;
 const start = new Date(Date.now() + 10 * 86400000),
@@ -179,7 +192,8 @@ test('concurrent overlapping reservations cannot both succeed; amounts come from
   booking = results.find(r => r.status === 'fulfilled').value.booking;
   assert.equal(booking.rental_fee_amount, 1400000);
   assert.equal(booking.deposit_amount_snapshot, 3000000);
-  assert.equal((booking.hold_expires_at - booking.created_at) / 60000, 15);
+  assert.equal(booking.status, 'pending');
+  assert.equal((booking.hold_expires_at - booking.created_at) / 60000, 120);
   const replay = await service.createBooking(user, payload(booking.request_key));
   assert.equal(String(replay.booking._id), String(booking._id));
 });
@@ -229,7 +243,16 @@ test('expired hold releases schedule and public search does not exclude the vehi
   });
   booking = (await service.createBooking(user, payload('after-expiry'))).booking;
 });
-test('voucher updates persisted contract, signing needs OTP, payment is idempotent', async () => {
+test('Operation approves, both parties sign the same rental contract and payment is idempotent', async () => {
+  const operationRole = await repo.one('roles', { code: 'OPERATION_STAFF' });
+  const managerRole = await repo.one('roles', { code: 'MANAGER' });
+  const operation = await repo.one('users', { primary_role_id: operationRole._id, account_status: 'active' });
+  const manager = await repo.one('users', { primary_role_id: managerRole._id, account_status: 'active' });
+  const decision = await contractRequest(`/operation/bookings/${booking._id}/decision`, operation, { action: 'approve' });
+  const approved = await repo.one('bookings', { _id: booking._id });
+  assert.equal(approved.status, 'awaiting_payment');
+  assert.equal(+approved.hold_expires_at, +approved.payment_deadline_at);
+  assert.equal(+new Date(decision.paymentDeadline) - +approved.review_info.reviewed_at, 900000);
   await repo.insert('discount_codes', {
     _id: oid(),
     code: 'RENTER10',
@@ -249,30 +272,18 @@ test('voucher updates persisted contract, signing needs OTP, payment is idempote
   }), {
     status: 409
   });
-  const otp = await service.challenge(user, {
-    purpose: 'sign',
-    booking_id: String(booking._id)
-  });
-  await assert.rejects(service.sign(user, String(booking._id), {
-    challenge_id: String(otp.challenge_id),
-    otp: otp.demo_code === '000000' ? '000001' : '000000',
-    agreed: true,
-    read_to_end: true
-  }), {
-    status: 400
-  });
-  await service.sign(user, String(booking._id), {
-    challenge_id: String(otp.challenge_id),
-    otp: otp.demo_code,
-    agreed: true,
-    read_to_end: true
-  });
+  const prepared = await contractRequest(`/contracts/rental/prepare/${booking._id}`, operation, {});
+  const sign = { signatureName: 'Người ký kiểm thử', documentHash: prepared.document.hash, acceptedTerms: true };
+  await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, sign);
+  await assert.rejects(service.pay(user, String(booking._id), { agree_deposit: true, payment_method: 'VNPAY_QR' }), { status: 409 });
+  await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, operation, sign, 403);
+  await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign);
   const a = await repo.one('rental_agreements', {
     booking_id: booking._id
   });
   assert.equal(a.status, 'signed');
   assert.equal(a.terms_snapshot.rental_fee_amount, 1260000);
-  assert.equal(String(a.signing_info.platform_signer_user_id), String(management.platform_signer_id));
+  assert.equal(String(a.signing_info.platform_signer_user_id), String(manager._id));
   const payments = await Promise.all([service.pay(user, String(booking._id), {
     agree_deposit: true,
     payment_method: 'VNPAY_QR'
@@ -328,6 +339,40 @@ test('cancellation uses snapshotted policy and never claims an actual refund', a
     agreed: true
   })).status, 'cancelled');
 });
+test('paid renter trip progresses through Garage pickup and return with customer receipts', async () => {
+  const trip = (await service.createBooking(user, payload('full-rental-trip'))).booking;
+  const staff = async (code) => {
+    const role = await repo.one('roles', { code });
+    return repo.one('users', { primary_role_id: role._id, account_status: 'active' });
+  };
+  const operation = await staff('OPERATION_STAFF');
+  const manager = await staff('MANAGER');
+  const garage = await staff('GARAGE_STAFF');
+  await contractRequest(`/operation/bookings/${trip._id}/decision`, operation, { action: 'approve' });
+  const prepared = await contractRequest(`/contracts/rental/prepare/${trip._id}`, operation, {});
+  const sign = { signatureName: 'Người ký kiểm thử', documentHash: prepared.document.hash, acceptedTerms: true };
+  await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, sign);
+  await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign);
+  await service.pay(user, String(trip._id), { agree_deposit: true, payment_method: 'VNPAY_QR' });
+  const handover = createGarageHandoverService(createGarageHandoverRepository(db));
+  const condition = { exterior: 'good', interior: 'good', engine: 'good', tires: 'good' };
+  const pickup = await handover.create({
+    booking_id: trip._id, handover_type: 'pickup', odometer_km: 10000, fuel_level_pct: 80, vehicle_condition: condition,
+  }, garage);
+  await handover.confirm(pickup._id, { version: pickup.version, renterConfirmed: true }, garage);
+  const ongoing = await service.detail(user, String(trip._id));
+  assert.equal(ongoing.booking.status, 'ongoing');
+  assert.equal(ongoing.handovers.pickup.odometer_km, 10000);
+  const returned = await handover.create({
+    booking_id: trip._id, handover_type: 'return', odometer_km: 10150, fuel_level_pct: 80, vehicle_condition: condition,
+  }, garage);
+  await handover.confirm(returned._id, { version: returned.version, renterConfirmed: true }, garage);
+  const finished = await service.detail(user, String(trip._id));
+  assert.equal(finished.booking.status, 'completed');
+  assert.equal(finished.handovers.return.odometer_km, 10150);
+  assert.equal(finished.deposit.refunded_amount, 0);
+});
+
 test('incident requires owned ongoing trip, pickup ODO, GPS and owned evidence', async () => {
   const trip = (await service.createBooking(user, payload('incident-trip'))).booking;
   const a = oid(),

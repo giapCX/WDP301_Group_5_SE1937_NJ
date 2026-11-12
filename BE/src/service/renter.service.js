@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { randomInt, createHash } from 'node:crypto';
 import bcrypt from 'bcryptjs';
+import { BOOKING_REVIEW_WINDOW_MS, bookingHoldExpression, isBookingHoldExpired } from '../utils/booking-hold.js';
 import { httpError } from '../utils/http-error.js';
 const id = value => {
   if (!/^[a-f\d]{24}$/i.test(String(value))) throw httpError(400, 'Mã định danh không hợp lệ.');
@@ -22,15 +23,7 @@ export function activeReservation(now = new Date()) {
       status: {
         $in: ['pending', 'awaiting_payment']
       },
-      $or: [{
-        hold_expires_at: {
-          $gt: now
-        }
-      }, {
-        hold_expires_at: {
-          $exists: false
-        }
-      }]
+      $expr: { $or: [{ $eq: [bookingHoldExpression, null] }, { $gt: [bookingHoldExpression, now] }] }
     }]
   };
 }
@@ -95,7 +88,7 @@ export function createRenterService(repo, {
     return b;
   }
   const held = b => {
-    if (b.status !== 'awaiting_payment' || b.hold_expires_at && b.hold_expires_at <= new Date()) throw httpError(409, 'Đơn chưa được duyệt, hết thời gian giữ xe hoặc không còn chờ thanh toán.');
+    if (b.status !== 'awaiting_payment' || isBookingHoldExpired(b)) throw httpError(409, 'Đơn chưa được duyệt, hết thời gian giữ xe hoặc không còn chờ thanh toán.');
   };
   async function files(user, values, purpose, session) {
     if (!Array.isArray(values)) throw httpError(400, 'Thiếu tệp đính kèm.');
@@ -474,7 +467,6 @@ export function createRenterService(repo, {
           _id = new Types.ObjectId();
         const rental = listing.daily_price * dates.days;
         if (!money(rental)) throw httpError(400, 'Tổng tiền không hợp lệ.');
-        const review = policy_snapshot.booking?.config?.review_required === true;
         const booking = {
           _id,
           booking_code: `BK-${_id}`,
@@ -500,18 +492,18 @@ export function createRenterService(repo, {
             late_fee_per_hour: listing.rental_policy_snapshot?.late_fee_per_hour
           },
           policy_snapshot,
-          hold_expires_at: new Date(+now + 900000),
+          hold_expires_at: new Date(+now + BOOKING_REVIEW_WINDOW_MS),
           review_info: {
-            required: review,
-            decision: review ? 'pending' : 'auto_approved'
+            required: true,
+            decision: 'pending'
           },
-          status: review ? 'pending' : 'awaiting_payment',
+          status: 'pending',
           request_key,
           created_at: now,
           updated_at: now,
           status_history: [{
             from: 'created',
-            to: review ? 'pending' : 'awaiting_payment',
+            to: 'pending',
             at: now,
             actor: String(user._id)
           }]
@@ -536,14 +528,14 @@ export function createRenterService(repo, {
             deposit_amount: listing.security_deposit_amount,
             start_at: dates.start,
             end_at: dates.end,
-            signature_method: 'otp',
+            signature_method: 'electronic_acceptance',
             mileage_policy: listing.mileage_policy,
             rental_policy: listing.rental_policy_snapshot,
             cancellation: policy_snapshot.cancellation,
             deposit_refund: policy_snapshot.deposit_refund
           },
           signing_info: {
-            method: 'otp',
+            method: 'electronic_acceptance',
             renter_confirmed: false
           },
           status: 'pending_signature',
@@ -577,10 +569,10 @@ export function createRenterService(repo, {
                 $in: ['$status', ['pending', 'awaiting_payment']]
               }, {
                 $ne: [{
-                  $ifNull: ['$hold_expires_at', null]
+                  $ifNull: [bookingHoldExpression, null]
                 }, null]
               }, {
-                $lte: ['$hold_expires_at', new Date()]
+                $lte: [bookingHoldExpression, new Date()]
               }]
             }, 'expired', '$status']
           }
@@ -659,8 +651,8 @@ export function createRenterService(repo, {
     },
     async detail(user, bookingId) {
       const booking = await owned(user, bookingId);
-      if (['pending', 'awaiting_payment'].includes(booking.status) && booking.hold_expires_at && booking.hold_expires_at <= new Date()) booking.status = 'expired';
-      const [agreement, payments, deposit, vehicle, pickup] = await Promise.all([repo.one('rental_agreements', {
+      if (['pending', 'awaiting_payment'].includes(booking.status) && isBookingHoldExpired(booking)) booking.status = 'expired';
+      const [agreement, payments, deposit, vehicle, pickup, returned] = await Promise.all([repo.one('rental_agreements', {
         booking_id: booking._id
       }), repo.list('payment_transactions', {
         booking_id: booking._id
@@ -674,7 +666,13 @@ export function createRenterService(repo, {
         booking_id: booking._id,
         handover_type: 'pickup',
         status: 'confirmed'
-      })]);
+      }), repo.one('rental_handovers', { booking_id: booking._id, handover_type: 'return', status: 'confirmed' })]);
+      const receipt = (row) => row ? {
+        occurred_at: row.occurred_at, odometer_km: row.odometer_km, fuel_level_pct: row.fuel_level_pct,
+        renter_response: row.renter_response, condition: Object.fromEntries(
+          ['exterior', 'interior', 'engine', 'tires', 'note'].map((key) => [key, row.vehicle_condition?.[key]]),
+        ),
+      } : null;
       return {
         booking,
         agreement,
@@ -685,6 +683,7 @@ export function createRenterService(repo, {
           model: vehicle.model,
           license_plate: vehicle.license_plate
         } : null,
+        handovers: { pickup: receipt(pickup), return: receipt(returned) },
         pickup_odometer_km: pickup?.odometer_km
       };
     },
@@ -696,7 +695,7 @@ export function createRenterService(repo, {
         const agreement = await repo.one('rental_agreements', {
           booking_id: booking._id
         }, session);
-        if (agreement?.status === 'signed') throw httpError(409, 'Không thay đổi giá sau khi ký hợp đồng.');
+        if (agreement?.status === 'signed' || agreement?.contract_document) throw httpError(409, 'Không thay đổi giá sau khi lập nội dung trình ký.');
         const code = text(body.code, 1, 50, 'Mã ưu đãi').toUpperCase();
         const discount = await repo.one('discount_codes', {
           code,
@@ -766,6 +765,8 @@ export function createRenterService(repo, {
         }, session);
         if (!agreement) throw httpError(409, 'Chưa có hợp đồng thuê.');
         if (agreement.status === 'signed') return agreement;
+        if (agreement.contract_document || agreement.terms_snapshot?.signature_method === 'electronic_acceptance')
+          throw httpError(409, 'Mở hồ sơ hợp đồng để khách thuê và Manager ký riêng.');
         await consume(session);
         const management = await repo.one('management_agreements', {
           _id: b.management_agreement_id
@@ -807,8 +808,27 @@ export function createRenterService(repo, {
           booking_id: b._id,
           status: 'signed'
         }, session);
-        if (!a?.signing_info?.renter_confirmed) throw httpError(409, 'Cần ký hợp đồng trước khi thanh toán.');
+        if (!a?.signed_at || !a.signing_info?.renter_confirmed || !a.signing_info.platform_signer_user_id)
+          throw httpError(409, 'Hợp đồng cần đủ xác nhận của khách thuê và XeDi trước khi thanh toán.');
         const now = new Date();
+        const confirmed = await repo.update('bookings', {
+          _id: b._id,
+          status: 'awaiting_payment'
+        }, {
+          $set: {
+            status: 'confirmed',
+            updated_at: now
+          },
+          $push: {
+            status_history: {
+              from: 'awaiting_payment',
+              to: 'confirmed',
+              at: now,
+              actor: String(user._id)
+            }
+          }
+        }, session);
+        if (confirmed.modifiedCount !== 1) throw httpError(409, 'Booking đã thay đổi trước khi thanh toán.');
         const rental = {
           _id: new Types.ObjectId(),
           booking_id: b._id,
@@ -844,23 +864,6 @@ export function createRenterService(repo, {
           refundable_amount: b.deposit_amount_snapshot,
           status: 'collected',
           updated_at: now
-        }, session);
-        await repo.update('bookings', {
-          _id: b._id,
-          status: 'awaiting_payment'
-        }, {
-          $set: {
-            status: 'confirmed',
-            updated_at: now
-          },
-          $push: {
-            status_history: {
-              from: 'awaiting_payment',
-              to: 'confirmed',
-              at: now,
-              actor: String(user._id)
-            }
-          }
         }, session);
         await audit(user, 'renter.payment.demo', 'booking', b._id, session);
         return {

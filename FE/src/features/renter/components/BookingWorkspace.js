@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getRenter, postRenter, vnd, dateTime, statusName } from '../api/renterApi';
+import { SigningDialog } from '../../contracts/ContractsPage';
+import RentalJourney from './RentalJourney';
 import { Field, Otp, Upload } from './Controls';
 const reasons = {
   CHANGE_OF_PLAN: 'Thay đổi lịch trình',
@@ -32,6 +34,7 @@ export default function BookingWorkspace({
       case_type: 'MECHANICAL_BREAKDOWN',
       evidence: []
     });
+  const [showContract, setShowContract] = useState(false);
   const [now, setNow] = useState(Date.now());
   const load = () => getRenter('/bookings/' + bookingId).then(r => setData(r.data));
   useEffect(() => {
@@ -87,19 +90,31 @@ export default function BookingWorkspace({
     payments,
     deposit
   } = data;
-  const seconds = b.hold_expires_at ? Math.max(0, Math.ceil((new Date(b.hold_expires_at) - now) / 1000)) : null;
+  const deadline = (b.status === 'awaiting_payment' ? b.payment_deadline_at : null) || b.hold_expires_at;
+  const seconds = deadline ? Math.max(0, Math.ceil((new Date(deadline) - now) / 1000)) : null;
+  const platformSigning = Boolean(a?.contract_document || a?.terms_snapshot?.signature_method === 'electronic_acceptance');
   const waiting = b.status === 'awaiting_payment' && (seconds === null || seconds > 0);
   return <div className="renter-booking renter-stack">
+    <RentalJourney data={data} expired={seconds === 0 && ['pending', 'awaiting_payment'].includes(b.status)} />
+    {showContract && a?._id && <SigningDialog item={{ id: a._id, type: 'rental' }} view="party"
+      onClose={() => setShowContract(false)} onSigned={() => { load().catch((failure) => setError(failure.message)); onChanged?.(); }} />}
     {error && <p role="alert" className="renter-error">{error}</p>}{notice && <p role="status" className="renter-notice">{notice}</p>}
-    <section className="renter-card"><div className="renter-row"><h2>{b.booking_code}</h2><strong>{statusName(b.status)}</strong></div><p>{data.vehicle?.brand} {data.vehicle?.model} · {data.vehicle?.license_plate}</p><p>{dateTime(b.start_at)} → {dateTime(b.end_at)}</p><p>Nhận / trả xe: {b.pickup_location?.branch}</p><p>Giá mỗi ngày: {vnd(b.pricing_snapshot?.daily_price)} · {b.pricing_snapshot?.charged_days} ngày</p><p className="renter-price">Tiền thuê: {vnd(b.rental_fee_amount)} · Cọc: {vnd(b.deposit_amount_snapshot)}</p>{['pending', 'awaiting_payment'].includes(b.status) && seconds !== null && <p role="timer">Thời gian giữ xe còn lại: {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</p>}
-      {waiting && a?.status !== 'signed' && <form className="renter-row" onSubmit={e => {
+    <section className="renter-card"><div className="renter-row"><h2>{b.booking_code}</h2><strong>{statusName(b.status)}</strong></div><p>{data.vehicle?.brand} {data.vehicle?.model} · {data.vehicle?.license_plate}</p><p>{dateTime(b.start_at)} → {dateTime(b.end_at)}</p><p>Nhận / trả xe: {b.pickup_location?.branch}</p><p>Giá mỗi ngày: {vnd(b.pricing_snapshot?.daily_price)} · {b.pricing_snapshot?.charged_days} ngày</p><p className="renter-price">Tiền thuê: {vnd(b.rental_fee_amount)} · Cọc: {vnd(b.deposit_amount_snapshot)}</p>{['pending', 'awaiting_payment'].includes(b.status) && seconds !== null && <p role="timer">{b.status === 'pending' ? 'Thời gian chờ duyệt còn lại' : 'Thời gian thanh toán còn lại'}: {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</p>}
+      {waiting && a?.status !== 'signed' && !a?.contract_document && <form className="renter-row" onSubmit={e => {
         e.preventDefault();
         action(() => postRenter(`/bookings/${b._id}/voucher`, {
           code
         }));
       }}><Field label="Mã giảm giá" value={code} onChange={e => setCode(e.target.value)} maxLength={50} /><button disabled={busy || !code || Boolean(b.discount_code)}>Áp dụng mã</button></form>}{b.discount_code && <p>Đã áp dụng {b.discount_code}: giảm {vnd(b.discount_amount)}</p>}
     </section>
-    {a && <section className="renter-card"><h2>Hợp đồng {a.contract_number}</h2><p>Trạng thái: {statusName(a.status)}</p><div className="renter-contract" tabIndex={0} aria-label="Điều khoản hợp đồng" onScroll={e => {
+    {platformSigning && <section className="renter-card">
+      <h2>Hợp đồng thuê xe</h2>
+      {!a.contract_document ? <p>{b.status === 'pending' ? 'Hợp đồng được lập sau khi Operation duyệt chuyến.' : 'Đang chờ XeDi lập nội dung hợp đồng.'}</p> : <>
+        <p>Khách thuê {a.signing_info?.renter_confirmed ? 'đã ký' : 'chưa ký'} · XeDi {a.signing_info?.platform_signer_user_id ? 'đã ký' : 'chưa ký'}</p>
+        <button type="button" onClick={() => setShowContract(true)}>Xem hợp đồng thuê</button>
+      </>}
+    </section>}
+    {!platformSigning && a && <section className="renter-card"><h2>Hợp đồng {a.contract_number}</h2><p>Trạng thái: {statusName(a.status)}</p><div className="renter-contract" tabIndex={0} aria-label="Điều khoản hợp đồng" onScroll={e => {
         if (e.currentTarget.scrollTop + e.currentTarget.clientHeight >= e.currentTarget.scrollHeight - 8) setRead(true);
       }}>
       <h3>Hợp đồng thuê xe tự lái</h3><p>Khách thuê: {a.renter_details_snapshot?.full_name || 'Theo hồ sơ đã xác minh'}</p><p>Hợp đồng ủy quyền: {a.lender_details_snapshot?.authority_agreement_number}</p><p>Nhận xe: {dateTime(a.terms_snapshot?.start_at)}</p><p>Trả xe: {dateTime(a.terms_snapshot?.end_at)}</p><p>Tiền thuê: {vnd(a.terms_snapshot?.rental_fee_amount)}. Tiền cọc: {vnd(a.terms_snapshot?.deposit_amount)}.</p><p>Giới hạn: {a.terms_snapshot?.mileage_policy?.included_km_per_day ?? 'Theo hồ sơ xe'} km/ngày. Phụ trội: {vnd(a.terms_snapshot?.mileage_policy?.extra_km_fee)}/km.</p><p>Trả muộn: {vnd(a.terms_snapshot?.rental_policy?.late_fee_per_hour)}/giờ.</p><p>Hủy miễn phí trước: {a.terms_snapshot?.cancellation?.config?.free_cancel_before_hours ?? 'Chưa quy định'} giờ (chính sách phiên bản {a.terms_snapshot?.cancellation?.version ?? 'chưa có'}).</p><p>Trường hợp chính sách chưa quy định mức hoàn sẽ được vận hành đối soát. Tiền cọc chỉ được khấu trừ khi có căn cứ đã xác minh và phê duyệt.</p><p>Thời hạn hoàn cọc sau khi đủ điều kiện: {a.terms_snapshot?.deposit_refund?.config?.refund_within_business_days ?? 'Theo đối soát'} ngày làm việc.</p><p>Khách thuê có trách nhiệm cung cấp giấy tờ hợp lệ, đối chiếu tình trạng xe lúc nhận/trả và thông báo sự cố trong chuyến. Việc bàn giao được nhân viên gara ghi nhận bằng biên bản.</p><p>Khách thuê xác nhận thông tin về xe, thời gian, tiền thuê, tiền cọc và chính sách được lưu cùng hợp đồng này.</p><p>— Hết điều khoản —</p>
@@ -111,7 +126,7 @@ export default function BookingWorkspace({
           agreed: agree,
           read_to_end: read
         }))}>Ký hợp đồng bằng OTP</button></>}</section>}
-    {waiting && <section className="renter-card"><h2>Thanh toán và tiền cọc</h2>{config?.services.payment === 'demo' ? <p className="renter-notice">Thanh toán mô phỏng. Không thu hoặc giữ tiền thật.</p> : <p className="renter-notice">Chưa cấu hình cổng thanh toán; không thể xác nhận đã thanh toán.</p>}<Field label="Phương thức thanh toán"><select value={method} onChange={e => setMethod(e.target.value)}><option value="VNPAY_QR">VNPAY QR</option><option value="DOMESTIC_ATM">ATM nội địa</option><option value="INTERNATIONAL_CARD">Thẻ quốc tế</option><option value="MOMO_WALLET">Ví MoMo</option></select></Field><label className="renter-check"><input type="checkbox" checked={depositAgree} onChange={e => setDepositAgree(e.target.checked)} />Tôi đồng ý điều kiện giữ tiền cọc {vnd(b.deposit_amount_snapshot)}.</label><button disabled={busy || a?.status !== 'signed' || !depositAgree || config?.services.payment !== 'demo'} onClick={() => action(async () => {
+    {waiting && (!platformSigning || a?.status === 'signed') && <section className="renter-card"><h2>Thanh toán và tiền cọc</h2>{config?.services.payment === 'demo' ? <p className="renter-notice">Thanh toán mô phỏng. Không thu hoặc giữ tiền thật.</p> : <p className="renter-notice">Chưa cấu hình cổng thanh toán; không thể xác nhận đã thanh toán.</p>}<Field label="Phương thức thanh toán"><select value={method} onChange={e => setMethod(e.target.value)}><option value="VNPAY_QR">VNPAY QR</option><option value="DOMESTIC_ATM">ATM nội địa</option><option value="INTERNATIONAL_CARD">Thẻ quốc tế</option><option value="MOMO_WALLET">Ví MoMo</option></select></Field><label className="renter-check"><input type="checkbox" checked={depositAgree} onChange={e => setDepositAgree(e.target.checked)} />Tôi đồng ý điều kiện giữ tiền cọc {vnd(b.deposit_amount_snapshot)}.</label><button disabled={busy || a?.status !== 'signed' || !depositAgree || config?.services.payment !== 'demo'} onClick={() => action(async () => {
         await postRenter(`/bookings/${b._id}/pay`, {
           payment_method: method,
           agree_deposit: depositAgree

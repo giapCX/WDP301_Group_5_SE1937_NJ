@@ -1,5 +1,6 @@
 import { vehicleDocumentContentType } from '../utils/image-content.js';
 import { garageTransaction } from '../utils/garage-transaction.js';
+import { BOOKING_REVIEW_WINDOW_MS, BOOKING_PAYMENT_WINDOW_MS, bookingHoldExpression, isBookingHoldExpired } from '../utils/booking-hold.js';
 import { Types } from 'mongoose';
 import { httpError, objectId } from '../utils/http-error.js';
 import {
@@ -14,8 +15,7 @@ import {
 } from '../validators/operation.validator.js';
 
 const OPEN_CASES = ['reported', 'open', 'investigating', 'in_progress', 'under_review', 'awaiting_response', 'pending_manager', 'pending_review'];
-const BOOKING_REVIEW_WINDOW_MS = 2 * 60 * 60 * 1000;
-const BOOKING_PAYMENT_WINDOW_MS = 15 * 60 * 1000;
+
 const MINIMUM_PICKUP_NOTICE_MS = 2 * 60 * 60 * 1000;
 const OVERDUE_GRACE_PERIOD_MS = 30 * 60 * 1000;
 const OVERDUE_ESCALATION_WINDOW_MS = 4 * 60 * 60 * 1000;
@@ -51,14 +51,14 @@ export function createOperationService(repository, files) {
     const reviewDeadline = new Date(now.getTime() - BOOKING_REVIEW_WINDOW_MS);
     await repository.updateMany('bookings', {
       status: 'pending',
-      created_at: { $lte: reviewDeadline },
+      $or: [{ hold_expires_at: { $lte: now } }, { hold_expires_at: { $exists: false }, created_at: { $lte: reviewDeadline } }],
     }, {
       $set: { status: 'expired', updated_at: now },
       $push: { status_history: { from: 'pending', to: 'expired', at: now, actor: 'system', reason: 'review_timeout' } },
     });
     await repository.updateMany('bookings', {
       status: 'awaiting_payment',
-      payment_deadline_at: { $lte: now },
+      $expr: { $and: [{ $ne: [bookingHoldExpression, null] }, { $lte: [bookingHoldExpression, now] }] },
     }, {
       $set: { status: 'expired', updated_at: now },
       $push: { status_history: { from: 'awaiting_payment', to: 'expired', at: now, actor: 'system', reason: 'payment_timeout' } },
@@ -185,7 +185,7 @@ export function createOperationService(repository, files) {
       const now = new Date();
       await expireStaleBookings(now);
       const current = await repository.findById('bookings', id);
-      if (!current || current.status !== 'pending') throw httpError(409, 'Booking không còn ở trạng thái chờ xử lý.');
+      if (!current || current.status !== 'pending' || isBookingHoldExpired(current, now)) throw httpError(409, 'Booking không còn ở trạng thái chờ xử lý.');
       if (action === 'approve' && (!(current.start_at instanceof Date) || current.start_at.getTime() < now.getTime() + MINIMUM_PICKUP_NOTICE_MS))
         throw httpError(409, 'Thời gian nhận xe phải còn tối thiểu 2 giờ; yêu cầu booking lịch mới.');
       const status = action === 'approve' ? 'awaiting_payment' : 'rejected';
@@ -194,7 +194,7 @@ export function createOperationService(repository, files) {
       const result = await repository.updateOne('bookings', { _id: id, status: 'pending' }, {
         $set: { status, updated_at: now, 'review_info.required': true, 'review_info.decision': decision,
           'review_info.reviewed_by': actorId(request), 'review_info.reviewed_at': now, 'review_info.reason': reason,
-          ...(paymentDeadline ? { payment_deadline_at: paymentDeadline } : {}) },
+          ...(paymentDeadline ? { payment_deadline_at: paymentDeadline, hold_expires_at: paymentDeadline } : {}) },
         $push: { status_history: { from: 'pending', to: status, at: now, actor: actorId(request), reason } },
       });
       if (!result.modifiedCount) throw httpError(409, 'Booking không còn ở trạng thái chờ xử lý.');

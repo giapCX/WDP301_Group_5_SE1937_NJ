@@ -31,7 +31,7 @@ export function ContractContent({ agreement }) {
   </div>;
 }
 
-function SigningDialog({ item, view, onClose, onSigned }) {
+export function SigningDialog({ item, view, onClose, onSigned }) {
   const [agreement, setAgreement] = useState(null), [error, setError] = useState('');
   const [name, setName] = useState(getCurrentUser()?.full_name || '');
   const [accepted, setAccepted] = useState(false), [busy, setBusy] = useState(false);
