@@ -3,6 +3,7 @@ import { getCurrentUser } from '../../auth/session';
 import Icon from '../../../components/Icon';
 import { getOperationDashboard, getOperationDetail, getOperationResource } from '../api/operationApi';
 import OperationDashboard from '../components/OperationDashboard';
+import OperationActionDialog from '../components/OperationActionDialog';
 import OperationDetailDialog from '../components/OperationDetailDialog';
 import OperationQueue from '../components/OperationQueue';
 import { useOperationActions } from '../hooks/useOperationActions';
@@ -259,6 +260,12 @@ export default function OperationPage() {
             perform={perform}
           />
         )}
+        <OperationActionDialog
+          dialog={actions.dialog}
+          busy={busy}
+          onClose={actions.closeDialog}
+          onSubmit={actions.submitDialog}
+        />
         {busy && <div className="operation-saving" role="status">Đang lưu thay đổi…</div>}
       </main>
     </div>

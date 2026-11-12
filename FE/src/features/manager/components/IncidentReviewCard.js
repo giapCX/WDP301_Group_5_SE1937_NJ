@@ -4,15 +4,37 @@ import GaragePhotoPreview from '../../garage/components/GaragePhotoPreview';
 const money = (value) => new Intl.NumberFormat('vi-VN').format(value || 0);
 const responseText = { agreed: 'Khách đồng ý', disputed: 'Khách có bất đồng', not_received: 'Chưa nhận phản hồi' };
 
-export default function IncidentReviewCard({ item, reviewCompensation, reviewIncident, act }) {
+export default function IncidentReviewCard({ item, reviewCompensation, reviewIncident, reviewTrafficViolation, act }) {
   const [busy, setBusy] = useState(false);
   const claims = item.compensationClaims || [];
   const pending = claims.findIndex((claim) => !claim.decision || claim.decision === 'pending');
+  const violation = item.trafficViolation;
   async function run(work, message) {
     if (busy) return;
     setBusy(true);
     try { await act(work(), message); } finally { setBusy(false); }
   }
+  function decideViolation(decision) {
+    let amount;
+    if (decision === 'approve') {
+      const raw = window.prompt('Khoản phạt được duyệt (VND):', String(violation.operation_recommended_penalty_fee ?? 0));
+      if (!raw?.trim()) return;
+      amount = Number(raw);
+      if (!Number.isSafeInteger(amount) || amount < 0) return;
+    }
+    const note = window.prompt('Căn cứ quyết định vi phạm:');
+    if (!note?.trim()) return;
+    run(() => reviewTrafficViolation(item.id, { decision, amount, note: note.trim() }), 'Đã lưu quyết định vi phạm.');
+  }
+  if (item.caseType === 'traffic_violation') return <article className="incident-card">
+    <div className="incident-card-heading"><div><strong>{item.caseNumber} · Vi phạm giao thông</strong><p>{item.description}</p></div><span className="request-status rose">{item.status}</span></div>
+    {violation?.operation_recommendation && <p>Operation đề xuất {violation.operation_recommendation === 'confirm' ? `xác nhận, mức phạt ${money(violation.operation_recommended_penalty_fee)} ₫` : 'bác bỏ'}.</p>}
+    {violation?.operation_review_note && <p>{violation.operation_review_note}</p>}
+    {item.status === 'pending_manager' && violation?.official_confirmation === 'pending_manager_review' && <div className="workspace-actions">
+      <button className="action-approve" disabled={busy} onClick={() => decideViolation('approve')}>Xác nhận vi phạm</button>
+      <button className="action-reject" disabled={busy} onClick={() => decideViolation('reject')}>Bác bỏ vi phạm</button>
+    </div>}
+  </article>;
   return <article className="incident-card">
     <div className="incident-card-heading"><div><strong>{item.caseNumber} · {item.caseType}</strong><p>{item.description}</p></div><span className="request-status rose">{item.status}</span></div>
     <div className="gs-photo-grid">{(item.evidence || []).filter((evidence) => evidence.file_key?.startsWith('garage-photos/')).map((evidence) => <div key={evidence.file_key}><GaragePhotoPreview photo={{ key: evidence.file_key, name: evidence.file_key.split('/').at(-1) }} /></div>)}</div>
