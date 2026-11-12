@@ -29,8 +29,7 @@ const actionLabels = {
   'auth.login.failed': 'Đăng nhập thất bại',
 };
 
-function AdminOverview({ onSelect }) {
-  const { snapshot, loading, error, refresh } = useManagerAdminOverview();
+function AdminOverview({ onSelect, snapshot, loading, error, refresh }) {
 
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải tổng quan quản trị…</p></section>;
   if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div></section>;
@@ -49,6 +48,7 @@ function AdminOverview({ onSelect }) {
 }
 
 export default function AdminPage() {
+  const { snapshot, loading, error, refresh } = useManagerAdminOverview();
   const [active, setActive] = useState('overview');
   const [notice, setNotice] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -71,6 +71,25 @@ export default function AdminPage() {
     setNotice(id === 'overview' ? '' : `Đang xem mục ${adminSections.find((item) => item.id === id)?.label}.`);
   };
 
+  const exportOverview = () => {
+    if (!snapshot) return;
+    const rows = [
+      ['Chỉ số quản trị', 'Giá trị'],
+      ['Tài khoản được liệt kê', snapshot.accounts.length],
+      ['Vai trò', snapshot.roles.length],
+      ['Tài khoản hoạt động', snapshot.accounts.filter((item) => item.status === 'active').length],
+      ['Hoạt động gần đây', snapshot.logs.length],
+    ];
+    const csv = rows.map((row) => row.map((value) => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'xedi-admin-report.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    setNotice('Đã xuất báo cáo quản trị.');
+  };
+
   if (!canAdminister) return <div className="manager-app"><main className="manager-content"><section className="manager-panel"><p className="manager-empty">Đang chuyển đến khu vực phù hợp với tài khoản…</p></section></main></div>;
 
   return <div className="manager-app admin-app">
@@ -87,9 +106,9 @@ export default function AdminPage() {
     <div className="manager-main">
       <header className="manager-topbar"><button className="manager-menu-toggle" aria-label="Mở menu" onClick={() => setMenuOpen(true)}><Icon name="menu" /></button><div className="manager-breadcrumb">Quản trị hệ thống <span>/</span> <strong>{adminSections.find((item) => item.id === active)?.label}</strong></div><div className="manager-top-actions"><span className="manager-live"><i /> Hệ thống hoạt động</span><UserMenu user={user} roleLabel="Quản trị viên hệ thống" /></div></header>
       <main className="manager-content">
-        <section className="manager-page-heading"><div><span className="manager-eyebrow"><span /> {new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date()).toLocaleUpperCase('vi-VN')}</span><h1>{active === 'overview' ? 'Tổng quan quản trị' : adminSections.find((item) => item.id === active)?.label}</h1><p>Quản lý tài khoản, vai trò và hoạt động hệ thống XeDi.</p></div><div className="manager-heading-actions"><button className="manager-primary" onClick={() => window.location.reload()}>↻ <span>Làm mới</span></button></div></section>
+        <section className="manager-page-heading"><div><span className="manager-eyebrow"><span /> {new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date()).toLocaleUpperCase('vi-VN')}</span><h1>{active === 'overview' ? 'Tổng quan quản trị' : adminSections.find((item) => item.id === active)?.label}</h1><p>Quản lý tài khoản, vai trò và hoạt động hệ thống XeDi.</p></div><div className="manager-heading-actions">{active === 'overview' && <button className="manager-export" disabled={!snapshot || loading || Boolean(error)} onClick={exportOverview}>↓ <span>Xuất báo cáo</span></button>}<button className="manager-primary" onClick={() => window.location.reload()}>↻ <span>Làm mới</span></button></div></section>
         {notice && <div className="manager-notice" role="status"><Icon name="info" size={17} />{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo">×</button></div>}
-        {active === 'overview' ? <AdminOverview onSelect={selectSection} />
+        {active === 'overview' ? <AdminOverview onSelect={selectSection} snapshot={snapshot} loading={loading} error={error} refresh={refresh} />
           : active === 'accounts' ? <AccountsWorkspace onNotice={setNotice} />
             : active === 'roles' || active === 'auditLogs' ? <AdminToolsWorkspace key={active} active={active} onNotice={setNotice} />
               : <ReportsWorkspace key={active} active={active} onNotice={setNotice} />}
