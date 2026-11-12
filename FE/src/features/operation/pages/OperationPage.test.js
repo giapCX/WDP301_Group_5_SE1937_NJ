@@ -1,7 +1,7 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import OperationPage from './OperationPage';
 import { getCurrentUser } from '../../auth/session';
-import { getGarageStaff, getOperationDashboard, getOperationResource, screenVehicle } from '../api/operationApi';
+import { decideBooking, getGarageStaff, getOperationDashboard, getOperationResource, screenVehicle } from '../api/operationApi';
 
 jest.mock('../../auth/session', () => ({ getCurrentUser: jest.fn() }));
 jest.mock('../api/operationApi', () => ({
@@ -39,6 +39,22 @@ test('blocks users without an operation role', () => {
   getCurrentUser.mockReturnValue({ roles: ['RENTER'] });
   render(<OperationPage />);
   expect(screen.getByRole('heading', { name: 'Cần đăng nhập bằng tài khoản vận hành' })).toBeInTheDocument();
+});
+
+test('sends the rejection reason entered in the booking dialog', async () => {
+  window.location.hash = '#/operation/bookings';
+  getOperationResource.mockResolvedValue({
+    data: [{ id: 'booking-1', bookingCode: 'BK-001', status: 'pending' }],
+    pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
+  });
+  decideBooking.mockResolvedValue({ data: {} });
+  render(<OperationPage />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Từ chối', exact: true }));
+  const dialog = within(screen.getByRole('dialog', { name: 'Từ chối booking' }));
+  expect(decideBooking).not.toHaveBeenCalled();
+  fireEvent.change(dialog.getByRole('textbox', { name: 'Lý do từ chối' }), { target: { value: '  Lịch thuê không hợp lệ  ' } });
+  fireEvent.click(dialog.getByRole('button', { name: 'Từ chối booking' }));
+  await waitFor(() => expect(decideBooking).toHaveBeenCalledWith('booking-1', { action: 'reject', reason: 'Lịch thuê không hợp lệ' }));
 });
 
 test('assigns an onboarding inspection to an eligible garage staff member', async () => {

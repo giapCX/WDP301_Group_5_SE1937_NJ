@@ -360,6 +360,7 @@ test('incident requires owned ongoing trip, pickup ODO, GPS and owned evidence',
   await repo.insert('rental_handovers', {
     _id: oid(),
     booking_id: trip._id,
+    vehicle_id: trip.vehicle_id,
     handover_type: 'pickup',
     status: 'confirmed',
     odometer_km: 100
