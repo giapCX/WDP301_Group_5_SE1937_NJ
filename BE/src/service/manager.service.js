@@ -13,7 +13,7 @@ const {
 import bcrypt from "bcryptjs";
 const STAFF_ROLES = ["MANAGER", "OPERATION_STAFF", "GARAGE_STAFF", "ADMIN"];
 const MANAGED_STAFF_ROLES = ["OPERATION_STAFF", "GARAGE_STAFF"];
-const OPEN_INCIDENT_STATUSES = ["reported", "open", "investigating", "pending_review", "awaiting_response", "pending_manager", "under_review", "in_progress"];
+const OPEN_INCIDENT_STATUSES = ["reported", "open", "investigating", "pending_review", "awaiting_response", "pending_manager", "need_more_information", "under_review", "in_progress"];
 const MINIMUM_PICKUP_NOTICE_MS = 2 * 60 * 60 * 1000;
 const isValidEmail = value => typeof value === 'string' && value.trim().length <= 254 && /^(?=.{1,64}@)[A-Z0-9.!#$%&'*+/=?^_~-]+@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,63}$/i.test(value.trim()) && !value.trim().includes('..');
 const normalizeVietnamPhone = value => {
@@ -1047,6 +1047,7 @@ export function createManagerService(repository) {
           sourceWithdrawalId: item.source_withdrawal_id,
           caseNumber: item.case_number,
           caseType: item.case_type,
+          vehicleSeized: typeof item.vehicle_seized === 'boolean' ? item.vehicle_seized : null,
           status: item.status,
           description: item.description,
           investigation: item.investigation || {},

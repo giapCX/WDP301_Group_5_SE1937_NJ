@@ -18,9 +18,10 @@ export function createContractRouter(connection) {
   async function requireOperatorRead(request, _response, next) {
     try {
       const roles = await staffRoles(request);
+      const hasReadPermission = roles.some((role) => role.permissions?.includes('operation.contract.read'));
       if (roles.some((role) => role.code === 'OPERATION_STAFF')
         && (!roles.some((role) => role.code === 'MANAGER')
-          && (!roles.find((role) => role.code === 'OPERATION_STAFF').permissions?.includes('operation.contract.read')
+          && (!hasReadPermission
             || request.query.view !== 'staff'))) {
         return next(httpError(403, 'Operator Staff chỉ được xem hợp đồng ở chế độ nền tảng.'));
       }
@@ -40,10 +41,25 @@ export function createContractRouter(connection) {
       next(error);
     }
   }
+  async function requireOperatorIntake(request, _response, next) {
+    try {
+      const roles = await staffRoles(request);
+      const hasOperatorRole = roles.some((role) => role.code === 'OPERATION_STAFF');
+      const hasPermission = roles.some((role) => role.permissions?.includes('operation.contract.intake.confirm'));
+      if (!hasOperatorRole || !hasPermission || request.query.view !== 'staff') {
+        return next(httpError(403, 'Bạn không có quyền tiếp nhận hợp đồng.'));
+      }
+      next();
+    } catch (error) {
+      next(error);
+    }
+  }
   router.get('/:type/candidates', blockOperatorWrite, async (req, res) => res.json(await service.candidates(req.params.type, req.query, actor(req))));
   router.post('/:type/prepare/:referenceId', blockOperatorWrite, async (req, res) => res.json({ data: await service.prepare(req.params.type, req.params.referenceId, req.body || {}, actor(req)) }));
   router.get('/:type', requireOperatorRead, async (req, res) => res.json(await service.list(req.params.type, req.query, actor(req), mode(req))));
   router.get('/:type/:id', requireOperatorRead, async (req, res) => res.json({ data: await service.detail(req.params.type, req.params.id, actor(req), mode(req)) }));
   router.post('/:type/:id/sign', blockOperatorWrite, async (req, res) => res.json({ data: await service.sign(req.params.type, req.params.id, req.body, actor(req), mode(req)) }));
+  router.post('/:type/:id/operator-intake', requireOperatorIntake, async (req, res) => res.json(await service.confirmOperatorIntake(req.params.type, req.params.id, actor(req))));
+  router.post('/:type/:id/manager-review', blockOperatorWrite, async (req, res) => res.json(await service.reviewManagementContract(req.params.id, req.body || {}, actor(req))));
   return router;
 }

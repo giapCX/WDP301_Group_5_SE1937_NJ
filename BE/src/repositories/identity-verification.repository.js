@@ -12,7 +12,7 @@ export function createIdentityVerificationRepository(connection, fileRepository)
     updateUser: (id, update) => users.updateOne({ _id: id }, update),
     findPending: (status) => users.find(
       status === 'all' ? {} : { $or: [{ 'identity_kyc.status': status }, { 'driver_license.verification_status': status }] },
-      { projection: { full_name: 1, email: 1, phone: 1, identity_kyc: 1, driver_license: 1, created_at: 1 }, sort: { 'identity_kyc.submitted_at': 1 } },
+      { projection: { full_name: 1, email: 1, phone: 1, identity_kyc: 1, driver_license: 1, operator_identity_precheck: 1, created_at: 1 }, sort: { 'identity_kyc.submitted_at': 1 } },
     ),
     createAudit: (item) => audits.create(item),
     readFile: (key) => fileRepository.read(key),

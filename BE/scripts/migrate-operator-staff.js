@@ -7,9 +7,13 @@ const operations = {
     permissions: [
       'operation.dashboard.read',
       'operation.contract.read',
+      'operation.contract.intake.confirm',
       'operation.vehicle.read',
       'operation.vehicle.status.update',
       'operation.vehicle.inspection.schedule',
+      'operation.vehicle.inspection.review',
+      'operation.identity_verification.read',
+      'operation.identity_verification.precheck',
       'operation.incident.read',
       'operation.incident.create',
       'operation.incident.update',

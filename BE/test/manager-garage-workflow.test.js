@@ -168,7 +168,7 @@ async function incidentFixture() {
   const deposit = await models.SecurityDeposit.create({ booking_id: booking._id, collected_amount: 100, refundable_amount: 100, deducted_amount: 0, status: 'collected' });
   const incident = ok(await request('/garage/incidents', 'POST', { vehicleId: String(vehicle._id), bookingId: String(booking._id), description: 'New damage found at return', severity: 'medium', photoKeys: [], requestId: randomUUID() }), 201);
   await models.IncidentCase.updateOne({ _id: incident._id }, {
-    $set: { compensation_claims: [{ requested_amount: 80, decision: 'pending', renter_response: 'disputed' }] },
+    $set: { vehicle_seized: false, compensation_claims: [{ requested_amount: 80, decision: 'pending', renter_response: 'disputed' }] },
   });
   return { vehicle, booking, deposit, incident };
 }

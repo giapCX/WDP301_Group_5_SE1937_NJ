@@ -31,3 +31,26 @@ test('Manager can decide a pending claim after Operator submits the factual repo
   expect(screen.getByText('Operator đã gửi thông tin và chứng cứ; Manager tự đánh giá, quyết định khoản bồi thường.')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Duyệt bồi thường' })).toBeEnabled();
 });
+
+test('Manager can request more information only from a submitted incident', async () => {
+  const reviewIncident = jest.fn().mockResolvedValue({});
+  const prompt = jest.spyOn(window, 'prompt').mockReturnValueOnce('Bổ sung ảnh vị trí hư hỏng.');
+  try {
+    render(<IncidentReviewCard
+      item={{ ...item, status: 'pending_manager', investigation: { review_status: 'submitted' } }}
+      reviewIncident={reviewIncident}
+      act={(promise) => promise}
+    />);
+    fireEvent.click(screen.getByRole('button', { name: 'Yêu cầu Operator bổ sung' }));
+    await waitFor(() => expect(reviewIncident).toHaveBeenCalledWith('incident', {
+      action: 'request_information',
+      note: 'Bổ sung ảnh vị trí hư hỏng.',
+    }));
+  } finally { prompt.mockRestore(); }
+});
+
+test('incident waiting for Operator cannot be resolved by Manager', () => {
+  render(<IncidentReviewCard item={{ ...item, status: 'need_more_information' }} act={jest.fn()} />);
+  expect(screen.getByText('Đang chờ Operator bổ sung hồ sơ; Manager chưa thể kết luận.')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Kết luận / đóng hồ sơ' })).not.toBeInTheDocument();
+});

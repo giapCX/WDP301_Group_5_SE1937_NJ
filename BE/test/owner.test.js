@@ -115,7 +115,7 @@ test('owner payout, withdrawal and incident requests are scoped to the owner acc
   const withdrawal = await request('/owner/vehicle-withdrawals', 'POST', { vehicleId: vehicle._id.toString(), reason: 'Cần sử dụng xe cho gia đình.' });
   assert.equal(withdrawal.status, 201, JSON.stringify(withdrawal));
   assert.equal((await models.ManagementAgreement.findById(agreement._id).lean()).status, 'termination_requested');
-  const incident = await request('/owner/incidents', 'POST', { vehicleId: vehicle._id.toString(), caseType: 'vehicle_damage', description: 'Xe có vết xước mới ở cản trước sau khi bàn giao.' });
+  const incident = await request('/owner/incidents', 'POST', { vehicleId: vehicle._id.toString(), caseType: 'vehicle_damage', description: 'Xe có vết xước mới ở cản trước sau khi bàn giao.', vehicleSeized: false });
   assert.equal(incident.status, 201, JSON.stringify(incident));
   assert.equal((await models.IncidentCase.findById(incident.body.data.id).lean()).vehicle_id.toString(), vehicle._id.toString());
 });
