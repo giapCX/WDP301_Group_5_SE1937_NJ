@@ -50,7 +50,7 @@ export const rentalAgreementSchema = createSchema({
   contract_document: contractDocument(),
   signed_document_key: String,
   amendments: arrayOf(embedded({ proposed_terms: Schema.Types.Mixed, reason: String, status: String, created_by_manager_id: ObjectId, created_at: Date })),
-  manager_review: embedded({ note: String, reason: String, reviewed_by_manager_id: ObjectId, reviewed_at: Date }),
+  manager_review: embedded({ status: String, note: String, reason: String, reviewed_by_manager_id: ObjectId, reviewed_at: Date }),
   updated_at: Date,
   status: String,
   signed_at: Date,

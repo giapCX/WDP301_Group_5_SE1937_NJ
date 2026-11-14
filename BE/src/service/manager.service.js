@@ -1010,6 +1010,7 @@ export function createManagerService(repository) {
           sourceWithdrawalId: item.source_withdrawal_id,
           caseNumber: item.case_number,
           caseType: item.case_type,
+          vehicleSeized: typeof item.vehicle_seized === 'boolean' ? item.vehicle_seized : null,
           status: item.status,
           description: item.description,
           investigation: item.investigation || {},

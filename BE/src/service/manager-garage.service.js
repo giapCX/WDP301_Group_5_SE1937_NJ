@@ -35,6 +35,10 @@ export function createManagerGarageService(repository) {
             throw httpError(409, 'Biên bản kiểm định đã thay đổi. Hãy tải lại hồ sơ trước khi quyết định.');
           }
           if (inspection.approval_status === 'draft') throw httpError(409, 'Garage chưa gửi biên bản kiểm định.');
+          if (vehicle.inspection_schedule_request?.status === 'confirmed'
+            && inspection.operator_review?.status !== 'checked') {
+            throw httpError(409, 'Operator cần kiểm tra đầy đủ biên bản Garage trước khi Manager ra quyết định.');
+          }
           // Historical approved reports may support initial approval; a decided failed round cannot be reused.
           if (!['pending', 'approved'].includes(inspection.approval_status)) throw httpError(409, 'Vòng kiểm định đã kết thúc. Cần Garage gửi biên bản mới.');
         } else if (inspectionId || inspectionVersion !== undefined && inspectionVersion !== null) {

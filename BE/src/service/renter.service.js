@@ -3,6 +3,7 @@ import { randomInt, createHash } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { BOOKING_REVIEW_WINDOW_MS, bookingHoldExpression, isBookingHoldExpired } from '../utils/booking-hold.js';
 import { httpError } from '../utils/http-error.js';
+import { createRentalContractDocument } from './rental-contract-document.js';
 const id = value => {
   if (!/^[a-f\d]{24}$/i.test(String(value))) throw httpError(400, 'Mã định danh không hợp lệ.');
   return new Types.ObjectId(String(value));
@@ -702,7 +703,14 @@ export function createRenterService(repo, {
         const agreement = await repo.one('rental_agreements', {
           booking_id: booking._id
         }, session);
-        if (agreement?.status === 'signed' || agreement?.contract_document) throw httpError(409, 'Không thay đổi giá sau khi lập nội dung trình ký.');
+        if (agreement?.status === 'signed' || agreement?.signing_info?.renter_signed_at
+          || agreement?.signing_info?.renter_confirmed || agreement?.signing_info?.platform_signed_at
+          || agreement?.signing_info?.platform_signer_user_id) {
+          throw httpError(409, 'Không thay đổi giá sau khi hợp đồng đã được ký.');
+        }
+        if (agreement?.contract_document && agreement.status !== 'pending_signatures') {
+          throw httpError(409, 'Không thay đổi giá khi hợp đồng không còn chờ ký.');
+        }
         const code = text(body.code, 1, 50, 'Mã ưu đãi').toUpperCase();
         const discount = await repo.one('discount_codes', {
           code,
@@ -727,6 +735,12 @@ export function createRenterService(repo, {
         }, session);
         if (used.modifiedCount !== 1) throw httpError(409, 'Mã ưu đãi vừa hết lượt.');
         const value = booking.rental_fee_amount - amount;
+        const updatedBooking = {
+          ...booking,
+          discount_code: code,
+          discount_amount: amount,
+          rental_fee_amount: value,
+        };
         await repo.update('bookings', {
           _id: booking._id
         }, {
@@ -737,15 +751,50 @@ export function createRenterService(repo, {
             updated_at: new Date()
           }
         }, session);
-        await repo.update('rental_agreements', {
-          booking_id: booking._id
-        }, {
-          $set: {
-            'terms_snapshot.rental_fee_amount': value,
-            'terms_snapshot.discount_code': code,
-            'terms_snapshot.discount_amount': amount
-          }
+        const agreementUpdate = {
+          'terms_snapshot.rental_fee_amount': value,
+          'terms_snapshot.discount_code': code,
+          'terms_snapshot.discount_amount': amount,
+          updated_at: new Date(),
+        };
+        if (agreement?.contract_document) {
+          const vehicle = await repo.one('vehicles', { _id: booking.vehicle_id }, session);
+          if (!vehicle) throw httpError(404, 'Không tìm thấy xe của hợp đồng.');
+          const [owner, renter] = await Promise.all([
+            repo.one('users', { _id: vehicle.owner_id }, session),
+            repo.one('users', { _id: booking.renter_id }, session),
+          ]);
+          if (!renter) throw httpError(409, 'Thông tin người thuê của hợp đồng không còn hợp lệ.');
+          const updatedAgreement = {
+            ...agreement,
+            terms_snapshot: {
+              ...agreement.terms_snapshot,
+              rental_fee_amount: value,
+              discount_code: code,
+              discount_amount: amount,
+            },
+          };
+          agreementUpdate.contract_document = createRentalContractDocument({
+            row: updatedAgreement,
+            booking: updatedBooking,
+            vehicle,
+            owner,
+            renter,
+            now: new Date(),
+          });
+        }
+        const agreementFilter = { booking_id: booking._id };
+        if (agreement?.contract_document) {
+          agreementFilter._id = agreement._id;
+          agreementFilter.status = 'pending_signatures';
+          agreementFilter['contract_document.hash'] = agreement.contract_document.hash;
+        }
+        const updatedAgreementResult = await repo.update('rental_agreements', agreementFilter, {
+          $set: agreementUpdate,
         }, session);
+        if (agreement?.contract_document && updatedAgreementResult.modifiedCount !== 1) {
+          throw httpError(409, 'Hợp đồng vừa được ký hoặc thay đổi; hãy tải lại trước khi áp dụng mã ưu đãi.');
+        }
         return {
           rental_fee_amount: value,
           discount_amount: amount

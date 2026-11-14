@@ -309,6 +309,7 @@ test('Manager approves, both parties sign the same rental contract and payment i
   assert.equal(approved.status, 'awaiting_payment');
   assert.equal(+approved.hold_expires_at, +approved.payment_deadline_at);
   assert.equal(+new Date(decision.paymentDeadline) - +approved.review_info.reviewed_at, 900000);
+  const originalAgreement = await repo.one('rental_agreements', { booking_id: booking._id });
   await repo.insert('discount_codes', {
     _id: oid(),
     code: 'RENTER10',
@@ -322,13 +323,16 @@ test('Manager approves, both parties sign the same rental contract and payment i
   assert.equal((await service.voucher(user, String(booking._id), {
     code: 'RENTER10'
   })).rental_fee_amount, 1260000);
+  const agreement = await repo.one('rental_agreements', { booking_id: booking._id });
+  assert.equal(agreement.terms_snapshot.rental_fee_amount, 1260000);
+  assert.notEqual(agreement.contract_document.hash, originalAgreement.contract_document.hash);
   await assert.rejects(service.pay(user, String(booking._id), {
     agree_deposit: true,
     payment_method: 'VNPAY_QR'
   }), {
     status: 409
   });
-  const prepared = await contractRequest(`/contracts/rental/prepare/${booking._id}`, manager, {});
+  const prepared = { id: String(agreement._id), document: agreement.contract_document };
   const sign = { signatureName: 'Người ký kiểm thử', documentHash: prepared.document.hash, acceptedTerms: true };
   await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign, 409);
   await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, sign);
@@ -409,7 +413,8 @@ test('paid renter trip progresses through Garage pickup and return with customer
   const operator = await staff('OPERATION_STAFF');
   const garage = await staff('GARAGE_STAFF');
   await contractRequest(`/manager/bookings/${trip._id}/decision`, manager, { action: 'approve' });
-  const prepared = await contractRequest(`/contracts/rental/prepare/${trip._id}`, manager, {});
+  const agreement = await repo.one('rental_agreements', { booking_id: trip._id });
+  const prepared = { id: String(agreement._id), document: agreement.contract_document };
   const sign = { signatureName: 'Người ký kiểm thử', documentHash: prepared.document.hash, acceptedTerms: true };
   await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, sign);
   await contractRequest(`/contracts/rental/${prepared.id}/operator-intake?view=staff`, operator, {});

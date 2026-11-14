@@ -85,6 +85,13 @@ export function createOwnerService(repository, contracts, handovers) {
           approvalStatus: vehicle.onboarding_status, reviewNote: vehicle.review_note || '',
           operatingStatus: vehicle.physical_status, updatedAt: vehicle.updated_at || vehicle.created_at,
           conditionDeclaration: vehicle.condition_declaration || '',
+          inspectionScheduleRequest: vehicle.inspection_schedule_request ? {
+            status: vehicle.inspection_schedule_request.status,
+            requestedFor: vehicle.inspection_schedule_request.requested_for || null,
+            scheduledFor: vehicle.inspection_schedule_request.scheduled_for || null,
+            note: vehicle.inspection_schedule_request.note || '',
+            responseNote: vehicle.inspection_schedule_request.response_note || '',
+          } : null,
           listing: listingMap.get(String(vehicle._id)) || null,
           inspection: inspection ? {
             id: inspection._id, version: inspection.version, status: inspection.approval_status,
@@ -126,7 +133,7 @@ export function createOwnerService(repository, contracts, handovers) {
           termsVersion: item.signature_info?.terms_version || '', status: item.status,
         })),
         withdrawals: withdrawals.map((item) => ({ id: item._id.toString(), vehicleId: item.vehicle_id?.toString(), reason: item.reason, requestedReturnAt: item.requested_return_at, status: item.status, requestedAt: item.requested_at || item.created_at })),
-        incidents: incidents.map((item) => ({ id: item._id.toString(), caseNumber: item.case_number, vehicleId: item.vehicle_id?.toString(), bookingId: item.booking_id?.toString(), caseType: item.case_type, description: item.description, status: item.status, createdAt: item.created_at, compensation: (item.compensation_claims || []).reduce((sum, claim) => sum + (Number(claim.approved_amount) || 0), 0) })),
+        incidents: incidents.map((item) => ({ id: item._id.toString(), caseNumber: item.case_number, vehicleId: item.vehicle_id?.toString(), bookingId: item.booking_id?.toString(), caseType: item.case_type, vehicleSeized: typeof item.vehicle_seized === 'boolean' ? item.vehicle_seized : null, description: item.description, status: item.status, createdAt: item.created_at, compensation: (item.compensation_claims || []).reduce((sum, claim) => sum + (Number(claim.approved_amount) || 0), 0) })),
       };
     },
 
@@ -139,6 +146,40 @@ export function createOwnerService(repository, contracts, handovers) {
       const { version, review } = ownerReview(body, ownerId);
       const result = await repository.respondToInspection(vehicleId, new ObjectId(inspectionValue), version, review);
       if (result.modifiedCount !== 1) throw httpError(409, 'Biên bản đã đổi phiên bản hoặc đã được phản hồi. Vui lòng tải lại.');
+    },
+
+    async requestInspectionSchedule(vehicleValue, body, actor) {
+      const ownerId = await actorId(actor);
+      if (!/^[a-f\d]{24}$/i.test(vehicleValue || '')) throw httpError(400, 'Phương tiện không hợp lệ.');
+      if (actor.user?.identity_kyc?.status !== 'verified') throw httpError(409, 'Cần được xác minh danh tính trước khi yêu cầu kiểm định xe.');
+      if (typeof body?.requestedFor !== 'string' || Number.isNaN(Date.parse(body.requestedFor))
+        || new Date(body.requestedFor) <= new Date()) throw httpError(400, 'Thời gian đề xuất phải hợp lệ và ở tương lai.');
+      const note = text(body.note, 'Ghi chú lịch kiểm định', { min: 5, max: 500 });
+      const vehicleId = new ObjectId(vehicleValue);
+      const vehicle = await repository.findVehicle(ownerId, vehicleId);
+      if (!vehicle) throw httpError(404, 'Không tìm thấy xe thuộc tài khoản của bạn.');
+      if (!['submitted', 'pending_review', 'revision_required'].includes(vehicle.onboarding_status)
+        || !['with_owner', 'returned_to_owner'].includes(vehicle.physical_status)) {
+        throw httpError(409, 'Xe hiện không ở trạng thái có thể yêu cầu kiểm định đầu vào.');
+      }
+      if (await repository.findOpenInspection(vehicleId)) throw httpError(409, 'Xe đã có lịch hoặc biên bản kiểm định đang xử lý.');
+      if (vehicle.inspection_schedule_request?.status === 'pending') throw httpError(409, 'Yêu cầu lịch kiểm định đang chờ Operator xác nhận.');
+      const now = new Date();
+      const request = {
+        status: 'pending',
+        requested_for: new Date(body.requestedFor),
+        note,
+        requested_at: now,
+      };
+      const changed = await repository.updateVehicle(vehicleId, ownerId, {
+        $set: { inspection_schedule_request: request, updated_at: now },
+      });
+      if (changed.modifiedCount !== 1) throw httpError(409, 'Hồ sơ xe vừa được cập nhật. Vui lòng tải lại.');
+      await repository.createAudit({
+        actor_user_id: ownerId, action: 'vehicle.inspection_schedule.request', entity_type: 'vehicles',
+        entity_id: vehicleId, sanitized_changes: { requested_for: request.requested_for }, created_at: now,
+      });
+      return { status: request.status, requestedFor: request.requested_for };
     },
 
     async respondToIntake(vehicleValue, intakeValue, body, actor) {
@@ -246,6 +287,7 @@ export function createOwnerService(repository, contracts, handovers) {
       const caseType = ['vehicle_damage', 'traffic_violation', 'theft', 'other'].includes(body.caseType) ? body.caseType : null;
       if (!caseType) throw httpError(400, 'Loại sự cố không hợp lệ.');
       const description = text(body.description, 'Nội dung sự cố', { min: 10, max: 3000 });
+      if (typeof body.vehicleSeized !== 'boolean') throw httpError(400, 'Cần xác nhận xe có bị cơ quan chức năng tạm giữ hay không.');
       const now = new Date();
       const caseNumber = `INC-${now.getFullYear()}-${new ObjectId().toString().slice(-8).toUpperCase()}`;
       const uploads = [];
@@ -264,7 +306,7 @@ export function createOwnerService(repository, contracts, handovers) {
           notice_number: body.noticeNumber ? text(body.noticeNumber, 'Mã biên bản', { max: 80 }) : undefined,
           fine_amount_claimed: body.fineAmountClaimed ? integer(body.fineAmountClaimed, 'Mức phạt giao thông', 1, 1000000000) : undefined,
         } : undefined;
-        const incident = await repository.createIncident({ case_number: caseNumber, reported_by_user_id: ownerId, vehicle_id: vehicleId, booking_id: bookingId, case_type: caseType, description, evidence, traffic_violation_details: trafficViolationDetails, compensation_claims: body.compensationAmount ? [{ requested_amount: integer(body.compensationAmount, 'Số tiền yêu cầu bồi thường', 1, 1000000000), decision: 'pending' }] : [], status: 'reported', created_at: now, updated_at: now });
+        const incident = await repository.createIncident({ case_number: caseNumber, reported_by_user_id: ownerId, vehicle_id: vehicleId, booking_id: bookingId, case_type: caseType, vehicle_seized: body.vehicleSeized, description, evidence, traffic_violation_details: trafficViolationDetails, compensation_claims: body.compensationAmount ? [{ requested_amount: integer(body.compensationAmount, 'Số tiền yêu cầu bồi thường', 1, 1000000000), decision: 'pending' }] : [], status: 'reported', created_at: now, updated_at: now });
         await repository.createAudit({ actor_user_id: ownerId, action: 'incident.create', entity_type: 'incident_case', entity_id: incident._id, sanitized_changes: { case_number: caseNumber, vehicle_id: vehicleId, case_type: caseType }, created_at: now }).catch(() => {});
         return { id: incident._id.toString(), caseNumber, status: incident.status };
       } catch (error) {
@@ -275,6 +317,7 @@ export function createOwnerService(repository, contracts, handovers) {
 
     async registerVehicle(body, actor) {
       const ownerId = await actorId(actor);
+      if (actor.user?.identity_kyc?.status !== 'verified') throw httpError(409, 'Cần được xác minh danh tính trước khi đăng ký xe.');
       if (!body || typeof body !== 'object' || Array.isArray(body)) throw httpError(400, 'Thông tin đăng ký xe không hợp lệ.');
       if (body.acceptedTerms !== true) throw httpError(400, 'Bạn cần xác nhận thông tin hồ sơ và đồng ý quy trình đăng ký xe.');
       const licensePlate = text(body.licensePlate, 'Biển số xe', { max: 16 }).toUpperCase();

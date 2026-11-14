@@ -24,6 +24,7 @@ export const vehicleInspectionSchema = createSchema({
   approval_status: { type: String, enum: ["draft", "pending", "approved", "revision_required", "rejected"], required: true },
   decision_reason: String,
   owner_review: embedded({ status: String, note: String, reviewed_at: Date, owner_id: ObjectId, reviewed_version: Number }),
+  operator_review: embedded({ status: String, note: String, reviewed_at: Date, operator_id: ObjectId, reviewed_version: Number }),
   decided_at: Date,
   created_at: Date,
   version: integer({ min: 0 }),

@@ -85,9 +85,11 @@ test('Operator Staff reads contracts, updates vehicle status and schedules onboa
   assert.deepEqual(Object.keys(dashboard.result.data.metrics).sort(), [
     'activeVehicles',
     'expiringContracts',
+    'identityVerificationsPending',
     'incidentsInProgress',
     'incidentsNeedsOperatorAction',
     'incidentsWaitingManager',
+    'inspectionScheduleRequestsWaiting',
     'inspectionsAwaitingManager',
     'inspectionsOverdue',
     'inspectionsUpcoming',
@@ -103,6 +105,7 @@ test('Operator Staff reads contracts, updates vehicle status and schedules onboa
     status: 'maintenance',
     note: 'Đưa xe đi bảo dưỡng.',
   });
+
   await request(`/operator/vehicles/${vehicle._id}/status`, 'PATCH', {
     status: 'rented',
     note: 'Không được bỏ qua bàn giao booking.',
@@ -135,6 +138,63 @@ test('Operator Staff reads contracts, updates vehicle status and schedules onboa
   await request('/operator/dashboard', 'GET', undefined, 'renter', 403);
 });
 
+test('inspection workflow lists Owner requests and Garage reports for Operator review', async () => {
+  const requestedVehicle = await models.Vehicle.create({
+    owner_id: actors.owner._id,
+    license_plate: `OP-REQUEST-${randomUUID()}`,
+    brand: 'Toyota',
+    model: 'Request queue',
+    physical_status: 'with_owner',
+    onboarding_status: 'submitted',
+    inspection_schedule_request: {
+      status: 'pending',
+      requested_for: new Date(Date.now() + 3600000),
+      note: 'Chủ xe đề xuất kiểm tra tại gara.',
+    },
+    created_at: new Date(),
+  });
+  const reportVehicle = await models.Vehicle.create({
+    owner_id: actors.owner._id,
+    license_plate: `OP-REPORT-${randomUUID()}`,
+    brand: 'Honda',
+    model: 'Report queue',
+    physical_status: 'with_owner',
+    onboarding_status: 'submitted',
+    created_at: new Date(),
+  });
+  const report = await models.VehicleInspection.create({
+    vehicle_id: reportVehicle._id,
+    garage_staff_id: actors.garage._id,
+    inspection_type: 'onboarding',
+    approval_status: 'pending',
+    recommendation: 'pass',
+    version: 2,
+    condition_report: {
+      odometer_km: 12500,
+      fuel_level_pct: 70,
+      checklist: [{ key: 'identity', result: 'pass', note: 'Đã đối chiếu giấy tờ Chủ xe.' }],
+      photo_keys: [],
+    },
+    owner_review: { status: 'accepted', owner_id: actors.owner._id },
+    submitted_at: new Date(),
+    created_at: new Date(),
+    updated_at: new Date(),
+  });
+
+  const queue = await request('/operator/inspection-workflow?page=1&limit=10');
+  assert.ok(queue.result.data.scheduleRequests.some((vehicle) => vehicle.id === requestedVehicle._id.toString()));
+  const queuedReport = queue.result.data.garageReports.find((item) => item.id === report._id.toString());
+  assert.equal(queuedReport.vehicle.licensePlate, reportVehicle.license_plate);
+  assert.equal(queuedReport.conditionReport.checklist[0].key, 'identity');
+
+  const detail = await request(`/operator/vehicles/${reportVehicle._id}`);
+  assert.equal(detail.result.data.inspectionReport.conditionReport.odometer_km, 12500);
+  assert.equal(detail.result.data.inspectionReport.ownerReview.status, 'accepted');
+  await request(`/operator/inspections/${report._id}/precheck`, 'POST', { note: 'Đã đối chiếu biên bản Garage.' });
+  const refreshed = await request('/operator/inspection-workflow?page=1&limit=10');
+  assert.ok(!refreshed.result.data.garageReports.some((item) => item.id === report._id.toString()));
+});
+
 test('Operator schedules an onboarding inspection only for an eligible vehicle and Garage Staff', async () => {
   const vehicle = await models.Vehicle.create({
     owner_id: actors.owner._id,
@@ -145,6 +205,10 @@ test('Operator schedules an onboarding inspection only for an eligible vehicle a
     onboarding_status: 'submitted',
     created_at: new Date(),
   });
+  await request(`/owner/vehicles/${vehicle._id}/inspection-schedule-requests`, 'POST', {
+    requestedFor: new Date(Date.now() + 3600000).toISOString(),
+    note: 'Đề xuất lịch kiểm định xe.',
+  }, 'owner', 201);
   const staff = await request('/operator/vehicles/garage-staff');
   assert.ok(staff.result.data.some((item) => item.id === actors.garage._id.toString()));
 
@@ -207,6 +271,10 @@ test('Operator can only schedule inspection for active Garage Staff with inspect
     onboarding_status: 'revision_required',
     created_at: new Date(),
   });
+  await request(`/owner/vehicles/${vehicle._id}/inspection-schedule-requests`, 'POST', {
+    requestedFor: new Date(Date.now() + 3600000).toISOString(),
+    note: 'Đề xuất lịch kiểm định xe.',
+  }, 'owner', 201);
   const inactive = await models.User.create({
     full_name: 'Inactive Garage',
     email: `inactive-garage-${randomUUID()}@example.com`,
@@ -261,6 +329,7 @@ test('Operator Staff records and submits evidence for Manager review without dec
   const { result: created } = await request('/operator/incidents', 'POST', {
     vehicleId: vehicle._id.toString(),
     caseType: 'traffic_violation',
+    vehicleSeized: false,
     description: 'Ghi nhận thông báo vi phạm để Manager xem xét.',
   }, 'operation', 201);
   assert.equal(created.data.status, 'reported');
@@ -324,6 +393,7 @@ test('Manager can request incident details and Operator can update and resubmit 
     vehicleId: vehicle._id.toString(),
     bookingId: booking._id.toString(),
     caseType: 'vehicle_damage',
+    vehicleSeized: false,
     incidentType: 'Trầy xước thân xe',
     severity: 'medium',
     location: { latitude: 10.77, longitude: 106.69 },
@@ -368,6 +438,7 @@ test('Manager can request incident details and Operator can update and resubmit 
     description: 'Đã bổ sung mô tả và chứng cứ vị trí.',
     incidentType: 'Vết xước cửa bên trái',
     severity: 'high',
+    vehicleSeized: true,
     note: 'Ảnh chụp sau khi nhận xe.',
   }, 'operation');
   await request(`/operator/incidents/${created.data.id}/submit`, 'POST', {});

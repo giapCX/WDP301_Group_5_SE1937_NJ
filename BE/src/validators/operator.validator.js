@@ -72,12 +72,13 @@ export function parseVehicleInspectionReschedule(body) {
 }
 
 export function parseIncidentCreate(body) {
-  objectBody(body, ['caseType', 'description', 'vehicleId', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity']);
+  objectBody(body, ['caseType', 'description', 'vehicleId', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity', 'vehicleSeized']);
   if (!caseTypes.has(body.caseType)) throw httpError(400, 'caseType không hợp lệ.');
   const description = text(body.description, 'description', { required: true, max: 3000 });
   const vehicleId = objectId(body.vehicleId, 'vehicleId');
   const bookingId = body.bookingId === undefined ? null : objectId(body.bookingId, 'bookingId');
   if (body.severity !== undefined && !severities.has(body.severity)) throw httpError(400, 'severity không hợp lệ.');
+  if (body.vehicleSeized !== undefined && typeof body.vehicleSeized !== 'boolean') throw httpError(400, 'vehicleSeized phải là giá trị boolean.');
   if (body.odometerKm !== undefined && (!Number.isSafeInteger(body.odometerKm) || body.odometerKm < 0)) {
     throw httpError(400, 'odometerKm phải là số nguyên không âm.');
   }
@@ -90,11 +91,12 @@ export function parseIncidentCreate(body) {
     ...(body.location !== undefined ? { location: location(body.location) } : {}),
     ...(body.odometerKm !== undefined ? { odometerKm: body.odometerKm } : {}),
     ...(body.severity !== undefined ? { severity: body.severity } : {}),
+    ...(body.vehicleSeized !== undefined ? { vehicleSeized: body.vehicleSeized } : {}),
   };
 }
 
 export function parseIncidentUpdate(body) {
-  objectBody(body, ['description', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity', 'note']);
+  objectBody(body, ['description', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity', 'vehicleSeized', 'note']);
   if (!Object.keys(body).length) throw httpError(400, 'Cần ít nhất một trường để cập nhật hồ sơ.');
   const update = {};
   if (body.description !== undefined) update.description = text(body.description, 'description', { required: true, max: 3000 });
@@ -112,6 +114,10 @@ export function parseIncidentUpdate(body) {
   if (body.severity !== undefined) {
     if (!severities.has(body.severity)) throw httpError(400, 'severity không hợp lệ.');
     update.severity = body.severity;
+  }
+  if (body.vehicleSeized !== undefined) {
+    if (typeof body.vehicleSeized !== 'boolean') throw httpError(400, 'vehicleSeized phải là giá trị boolean.');
+    update.vehicle_seized = body.vehicleSeized;
   }
   if (body.note !== undefined) update.note = text(body.note, 'note', { required: true, max: 2000 });
   return update;

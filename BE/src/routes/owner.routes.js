@@ -27,6 +27,7 @@ export function createOwnerRouter(connection, { useLocalFileStorage = false, fil
   router.use(createAuthMiddleware(connection));
   router.get('/dashboard', controller.dashboard);
   router.post('/vehicles', controller.registerVehicle);
+  router.post('/vehicles/:id/inspection-schedule-requests', controller.requestInspectionSchedule);
   router.patch('/vehicles/:id/documents', controller.resubmitVehicleDocuments);
   router.patch('/vehicles/:id/inspections/:inspectionId', controller.respondToInspection);
   router.patch('/vehicles/:id/intakes/:intakeId', controller.respondToIntake);

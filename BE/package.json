@@ -14,6 +14,7 @@
     "db:setup": "node scripts/setup-db.js",
     "db:seed": "node scripts/seed-db.js",
     "db:grant:operator-contract-access": "node scripts/grant-operator-contract-access.js",
+    "db:grant:operator-workflow-access": "node scripts/grant-operator-workflow-access.js",
     "db:migrate:operator-staff": "node scripts/migrate-operator-staff.js up",
     "db:rollback:operator-staff": "node scripts/migrate-operator-staff.js down",
     "db:demo-cleanup": "node scripts/clean-garage-demo.js",

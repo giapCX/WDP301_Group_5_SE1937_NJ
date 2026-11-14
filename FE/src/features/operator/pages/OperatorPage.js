@@ -12,11 +12,16 @@ import {
   getOperatorEvidence,
   getOperatorIncident,
   getOperatorIncidents,
+  getOperatorIdentityDocument,
+  getOperatorIdentityVerifications,
   getOperatorGarageStaff,
+  getOperatorInspectionWorkflow,
   getOperatorVehicles,
   getOperatorVehicle,
   getOperatorVehicleDocument,
   scheduleOperatorVehicleInspection,
+  precheckOperatorIdentity,
+  precheckOperatorVehicleInspection,
   submitOperatorIncident,
   updateOperatorIncident,
   updateOperatorVehicleInspectionSchedule,
@@ -29,12 +34,16 @@ const sections = [
   { id: 'overview', label: 'Tổng quan', icon: 'gear', permission: 'operation.dashboard.read' },
   { id: 'contracts', label: 'Hợp đồng xe', icon: 'document', permission: 'operation.contract.read' },
   { id: 'vehicles', label: 'Thông tin xe', icon: 'car', permission: 'operation.vehicle.read' },
+  { id: 'inspections', label: 'Lịch kiểm tra xe', icon: 'check', permission: 'operation.vehicle.read' },
+  { id: 'identity', label: 'Xác minh hồ sơ', icon: 'shield', permission: 'operation.identity_verification.read' },
   { id: 'incidents', label: 'Thông tin pháp lý sự cố của xe', icon: 'shield', permission: 'operation.incident.read' },
 ];
 const sectionDescriptions = {
   overview: 'Theo dõi tiến độ vận hành và các công việc cần xử lý.',
   contracts: 'Theo dõi hồ sơ hợp đồng và chuyển Manager ký đúng quy trình.',
   vehicles: 'Tra cứu hồ sơ xe, lịch kiểm định và thông tin phân công Garage.',
+  inspections: 'Xác nhận lịch Owner đề nghị, phân công Garage và kiểm tra biên bản Garage gửi.',
+  identity: 'Kiểm tra trước hồ sơ Chủ xe và Người thuê; Manager là người quyết định xác minh cuối.',
   incidents: 'Ghi nhận sự cố, bổ sung chứng cứ và chuyển hồ sơ cho Manager.',
 };
 const dashboardMetrics = [
@@ -44,9 +53,11 @@ const dashboardMetrics = [
   { key: 'incidentsNeedsOperatorAction', label: 'Sự cố cần Operator xử lý', icon: 'info', tone: 'amber' },
   { key: 'incidentsWaitingManager', label: 'Sự cố chờ Manager', icon: 'shield', tone: 'blue' },
   { key: 'vehiclesAwaitingInspection', label: 'Hồ sơ xe chờ phân công kiểm định', icon: 'car', tone: 'green' },
+  { key: 'inspectionScheduleRequestsWaiting', label: 'Yêu cầu lịch chờ xác nhận', icon: 'check', tone: 'amber' },
   { key: 'inspectionsUpcoming', label: 'Lịch kiểm định sắp đến hạn', icon: 'check', tone: 'green' },
   { key: 'inspectionsOverdue', label: 'Lịch kiểm định quá hạn', icon: 'check', tone: 'rose' },
   { key: 'inspectionsAwaitingManager', label: 'Biên bản chờ Manager duyệt', icon: 'document', tone: 'amber' },
+  { key: 'identityVerificationsPending', label: 'Hồ sơ eKYC chờ Operator kiểm tra', icon: 'shield', tone: 'blue' },
 ];
 
 const vehicleStatuses = {
@@ -77,6 +88,23 @@ const inspectionStatuses = {
   approved: 'Đã được duyệt',
   revision_required: 'Cần kiểm định vòng tiếp theo',
   rejected: 'Không đạt',
+};
+const inspectionRecommendations = {
+  pass: 'Đề xuất đạt',
+  requires_repair: 'Yêu cầu sửa chữa',
+  fail: 'Không đạt',
+};
+const inspectionChecklistLabels = {
+  identity: 'Đối chiếu thông tin chủ xe',
+  odometer: 'Số km',
+  exterior: 'Ngoại thất',
+  interior: 'Nội thất',
+  tires: 'Lốp xe',
+  brakes: 'Phanh',
+  powertrain: 'Động cơ / truyền động',
+  leaks: 'Rò rỉ',
+  lights: 'Đèn',
+  accessories: 'Phụ kiện',
 };
 const incidentStatuses = {
   reported: 'Đã ghi nhận',
@@ -143,6 +171,10 @@ export default function OperatorPage({ initialSection } = {}) {
   const [section, setSection] = useState(() => readInitialSection(initialSection));
   const [dashboard, setDashboard] = useState(null);
   const [rows, setRows] = useState([]);
+  const [inspectionQueue, setInspectionQueue] = useState({ scheduleRequests: [], garageReports: [] });
+  const [inspectionPagination, setInspectionPagination] = useState({});
+  const [identityRows, setIdentityRows] = useState([]);
+  const [identityNotes, setIdentityNotes] = useState({});
   const [pagination, setPagination] = useState(null);
   const [vehiclesForIncident, setVehiclesForIncident] = useState([]);
   const [incidentVehicleSearch, setIncidentVehicleSearch] = useState('');
@@ -228,12 +260,21 @@ export default function OperatorPage({ initialSection } = {}) {
             setRows(result.data || []);
             setPagination(result.pagination || null);
           }
+        } else if (section === 'inspections') {
+          const result = await getOperatorInspectionWorkflow({ page, limit: 10, q: query }, { signal: controller.signal });
+          if (!controller.signal.aborted) {
+            setInspectionQueue(result.data || { scheduleRequests: [], garageReports: [] });
+            setInspectionPagination(result.pagination || {});
+          }
         } else if (section === 'incidents') {
           const result = await getOperatorIncidents({ page, limit: 10, q: query, status }, { signal: controller.signal });
           if (!controller.signal.aborted) {
             setRows(result.data || []);
             setPagination(result.pagination || null);
           }
+        } else if (section === 'identity') {
+          const result = await getOperatorIdentityVerifications({ status: 'pending' }, { signal: controller.signal });
+          if (!controller.signal.aborted) setIdentityRows(result.data || []);
         }
       } catch (reason) {
         if (!controller.signal.aborted) setError(reason.message || 'Không thể tải dữ liệu.');
@@ -316,6 +357,10 @@ export default function OperatorPage({ initialSection } = {}) {
     }
     const form = event.currentTarget;
     const body = Object.fromEntries(new FormData(form).entries());
+    if (!['true', 'false'].includes(body.vehicleSeized)) {
+      setError('Hãy xác nhận xe có bị cơ quan chức năng tạm giữ hay không.');
+      return;
+    }
     const odometerKm = body.odometerKm === '' ? undefined : Number(body.odometerKm);
     if (odometerKm !== undefined && (!Number.isSafeInteger(odometerKm) || odometerKm < 0)) {
       setError('Số km phải là số nguyên không âm.');
@@ -329,6 +374,7 @@ export default function OperatorPage({ initialSection } = {}) {
         ...(body.incidentType.trim() ? { incidentType: body.incidentType.trim() } : {}),
         ...(odometerKm !== undefined ? { odometerKm } : {}),
         ...(body.severity ? { severity: body.severity } : {}),
+        vehicleSeized: body.vehicleSeized === 'true',
       });
       form.reset();
       setIncidentVehicleId('');
@@ -342,6 +388,10 @@ export default function OperatorPage({ initialSection } = {}) {
     if (!selectedIncident || !canEditIncident(selectedIncident)) return;
     const form = event.currentTarget;
     const body = Object.fromEntries(new FormData(form).entries());
+    if (!['true', 'false'].includes(body.vehicleSeized)) {
+      setError('Hãy xác nhận xe có bị cơ quan chức năng tạm giữ hay không.');
+      return;
+    }
     const odometerKm = body.odometerKm === '' ? undefined : Number(body.odometerKm);
     if (odometerKm !== undefined && (!Number.isSafeInteger(odometerKm) || odometerKm < 0)) {
       setError('Số km phải là số nguyên không âm.');
@@ -353,6 +403,7 @@ export default function OperatorPage({ initialSection } = {}) {
         ...(body.incidentType.trim() ? { incidentType: body.incidentType.trim() } : {}),
         ...(odometerKm !== undefined ? { odometerKm } : {}),
         ...(body.severity ? { severity: body.severity } : {}),
+        vehicleSeized: body.vehicleSeized === 'true',
         ...(body.note.trim() ? { note: body.note.trim() } : {}),
       });
       setSelectedIncident(null);
@@ -367,6 +418,60 @@ export default function OperatorPage({ initialSection } = {}) {
       () => updateOperatorVehicleStatus(selectedVehicle.id, { status: body.status, note: body.note.trim() }),
       'Đã cập nhật trạng thái xe và lưu lý do.',
     );
+  }
+
+  async function downloadIdentityDocument(user, kind) {
+    try {
+      const file = await getOperatorIdentityDocument(user.id, kind);
+      saveBlob(file, `${user.id}-${kind}`);
+    } catch (reason) {
+      setError(reason.message || 'Không thể tải giấy tờ eKYC.');
+    }
+  }
+
+  async function reviewIdentity(user, action) {
+    const note = identityNotes[user.id] || '';
+    if (action === 'needs_revision' && note.trim().length < 5) {
+      setError('Ghi rõ lý do cần bổ sung (tối thiểu 5 ký tự).');
+      return;
+    }
+    await runAction(
+      () => precheckOperatorIdentity(user.id, { action, note }),
+      action === 'ready' ? 'Đã chuyển hồ sơ eKYC cho Manager quyết định.' : 'Đã ghi nhận yêu cầu bổ sung để Manager xem xét.',
+    );
+  }
+
+  async function reviewInspection() {
+    const inspection = selectedVehicle?.inspection;
+    if (!inspection) return;
+    await runAction(
+      () => precheckOperatorVehicleInspection(inspection.id, { note: 'Đã kiểm tra thông tin biên bản Garage.' }),
+      'Đã xác nhận biên bản đầy đủ và chuyển Manager xét duyệt xe.',
+    );
+  }
+
+  async function acceptInspectionRequest(vehicle) {
+    try {
+      const result = await getOperatorVehicle(vehicle.id);
+      setSelectedVehicle(result.data);
+      await openInspectionForm();
+    } catch (reason) {
+      setError(reason.message || 'Không thể tải thông tin xe.');
+    }
+  }
+
+  async function reviewGarageReport(report) {
+    const vehicleId = report.vehicle?.id;
+    if (!vehicleId) {
+      setError('Không tìm thấy thông tin xe trong biên bản Garage.');
+      return;
+    }
+    try {
+      const result = await getOperatorVehicle(vehicleId);
+      setSelectedVehicle(result.data);
+    } catch (reason) {
+      setError(reason.message || 'Không thể tải thông tin xe.');
+    }
   }
 
   async function uploadEvidence(event) {
@@ -520,6 +625,96 @@ export default function OperatorPage({ initialSection } = {}) {
             </section>
           ) : section === 'contracts' ? (
             <ContractsPage embedded key={revision} />
+          ) : section === 'identity' ? (
+            <section className="operator-workspace">
+              {loading ? <p role="status">Đang tải hồ sơ eKYC…</p> : identityRows.length ? (
+                <div className="operator-table-wrap">
+                  <table className="operator-table">
+                    <thead><tr><th>Chủ thể</th><th>Danh tính</th><th>Giấy phép lái xe</th><th>Tài liệu</th><th>Kiểm tra trước</th></tr></thead>
+                    <tbody>{identityRows.map((user) => <tr key={user.id}>
+                      <td><strong>{user.name}</strong><span>{user.email}</span><span>{user.phone || '—'}</span></td>
+                      <td>{user.identity.status} · {user.identity.idMasked || '—'}</td>
+                      <td>{user.driverLicense.status} · {user.driverLicense.licenseMasked || '—'}<span>Hết hạn {user.driverLicense.expiresAt ? new Date(user.driverLicense.expiresAt).toLocaleDateString('vi-VN') : '—'}</span></td>
+                      <td><button className="operator-secondary" onClick={() => downloadIdentityDocument(user, 'identity')}>Tài liệu định danh</button><button className="operator-secondary" onClick={() => downloadIdentityDocument(user, 'license')}>Giấy phép lái xe</button></td>
+                      <td>
+                        <label className="operator-identity-note">Ghi chú<input value={identityNotes[user.id] || ''} maxLength={1000} onChange={(event) => setIdentityNotes((current) => ({ ...current, [user.id]: event.target.value }))} /></label>
+                        <div className="operator-section-actions">
+                          <button disabled={busy || Boolean(user.operatorPrecheck?.status)} onClick={() => reviewIdentity(user, 'ready')}>Đủ hồ sơ · chuyển Manager</button>
+                          <button className="operator-secondary" disabled={busy || Boolean(user.operatorPrecheck?.status) || (identityNotes[user.id] || '').trim().length < 5} onClick={() => reviewIdentity(user, 'needs_revision')}>Cần bổ sung</button>
+                        </div>
+                        {user.operatorPrecheck?.status && <span>Đã kiểm tra · {user.operatorPrecheck.status}</span>}
+                      </td>
+                    </tr>)}</tbody>
+                  </table>
+                </div>
+              ) : <p className="operator-empty">Không có hồ sơ eKYC đang chờ kiểm tra.</p>}
+            </section>
+          ) : section === 'inspections' ? (
+            <section className="operator-workspace">
+              <form className="operator-filters" onSubmit={(event) => {
+                event.preventDefault();
+                setQuery(searchText.trim());
+                setPage(1);
+              }}>
+                <label>Tìm hồ sơ xe<input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Biển số, hãng hoặc mẫu xe" /></label>
+                <button type="submit">Tìm kiếm</button>
+              </form>
+              <section className="operator-evidence">
+                <h2>Yêu cầu lịch từ Chủ xe</h2>
+                {loading ? <p role="status">Đang tải yêu cầu lịch…</p> : inspectionQueue.scheduleRequests.length ? (
+                  <div className="operator-table-wrap">
+                    <table className="operator-table">
+                      <thead><tr><th>Xe</th><th>Chủ xe</th><th>Ngày đề xuất</th><th>Ghi chú</th><th>Thao tác</th></tr></thead>
+                      <tbody>{inspectionQueue.scheduleRequests.map((vehicle) => (
+                        <tr key={vehicle.id}>
+                          <td><strong>{vehicle.brand} {vehicle.model}</strong><span>{vehicle.licensePlate}</span></td>
+                          <td>{vehicle.owner?.full_name || '—'}<span>{vehicle.owner?.email || ''}</span></td>
+                          <td>{vehicle.inspectionScheduleRequest?.requested_for ? new Date(vehicle.inspectionScheduleRequest.requested_for).toLocaleString('vi-VN') : '—'}</td>
+                          <td>{vehicle.inspectionScheduleRequest?.note || '—'}</td>
+                          <td><button className="operator-secondary" disabled={busy || !hasPermission('operation.vehicle.inspection.schedule')} onClick={() => acceptInspectionRequest(vehicle)}>Xác nhận lịch & phân công</button></td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </div>
+                ) : <p className="operator-empty">Không có yêu cầu lịch nào đang chờ xác nhận.</p>}
+                <Pagination
+                  page={inspectionPagination.scheduleRequests?.page ?? page}
+                  pageSize={inspectionPagination.scheduleRequests?.limit ?? 10}
+                  total={inspectionPagination.scheduleRequests?.total ?? 0}
+                  disabled={loading}
+                  onPageChange={setPage}
+                  label="Phân trang yêu cầu lịch kiểm định"
+                />
+              </section>
+              <section className="operator-evidence">
+                <h2>Biên bản Garage chờ Operator đối chiếu</h2>
+                {loading ? <p role="status">Đang tải biên bản Garage…</p> : inspectionQueue.garageReports.length ? (
+                  <div className="operator-table-wrap">
+                    <table className="operator-table">
+                      <thead><tr><th>Xe</th><th>Chủ xe</th><th>Kết luận Garage</th><th>Owner xác nhận hiện trạng</th><th>Gửi lúc</th><th>Thao tác</th></tr></thead>
+                      <tbody>{inspectionQueue.garageReports.map((report) => (
+                        <tr key={report.id}>
+                          <td><strong>{report.vehicle?.brand} {report.vehicle?.model}</strong><span>{report.vehicle?.licensePlate || '—'}</span></td>
+                          <td>{report.vehicle?.owner?.full_name || '—'}</td>
+                          <td>{inspectionRecommendations[report.recommendation] || report.recommendation || '—'}</td>
+                          <td>{report.ownerReview?.status === 'accepted' ? 'Đã xác nhận' : report.ownerReview?.status === 'disputed' ? 'Có ý kiến khác' : 'Chưa xác nhận'}</td>
+                          <td>{report.submittedAt ? new Date(report.submittedAt).toLocaleString('vi-VN') : '—'}</td>
+                          <td><button className="operator-secondary" onClick={() => reviewGarageReport(report)}>Xem biên bản</button></td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </div>
+                ) : <p className="operator-empty">Không có biên bản Garage nào chờ đối chiếu.</p>}
+                <Pagination
+                  page={inspectionPagination.garageReports?.page ?? page}
+                  pageSize={inspectionPagination.garageReports?.limit ?? 10}
+                  total={inspectionPagination.garageReports?.total ?? 0}
+                  disabled={loading}
+                  onPageChange={setPage}
+                  label="Phân trang biên bản Garage chờ đối chiếu"
+                />
+              </section>
+            </section>
           ) : section === 'vehicles' ? (
             <section className="operator-workspace">
               <form className="operator-filters" onSubmit={(event) => {
@@ -663,6 +858,14 @@ export default function OperatorPage({ initialSection } = {}) {
                       <option value="high">Cao</option>
                     </select>
                   </label>
+                  <label>
+                    Cơ quan chức năng có tạm giữ xe không?
+                    <select name="vehicleSeized" required defaultValue="">
+                      <option value="" disabled>Chọn tình trạng</option>
+                      <option value="true">Có, xe đang bị tạm giữ</option>
+                      <option value="false">Không bị tạm giữ</option>
+                    </select>
+                  </label>
                   <label>Số km tại thời điểm ghi nhận<input name="odometerKm" type="number" min="0" step="1" /></label>
                   <label className="operator-form-wide">
                     Mô tả sự việc
@@ -729,12 +932,14 @@ export default function OperatorPage({ initialSection } = {}) {
           setSelectedIncident(null);
         }}>×</button></header>
         <p><strong>Loại:</strong> {caseTypes.find(([value]) => value === selectedIncident.caseType)?.[1] || selectedIncident.caseType}</p>
+        <p><strong>Tạm giữ xe:</strong> {selectedIncident.vehicleSeized === true ? 'Có' : selectedIncident.vehicleSeized === false ? 'Không' : 'Chưa ghi nhận'}</p>
         <form className="operator-form operator-form-single" onSubmit={saveIncidentChanges}>
           <label>Mô tả<textarea name="description" required maxLength={3000} rows="4" defaultValue={selectedIncident.description} disabled={!canEditSelectedIncident} /></label>
           {canEditSelectedIncident && <>
             <label>Nhóm sự cố chi tiết<input name="incidentType" maxLength={80} defaultValue={selectedIncident.incidentType || ''} /></label>
             <label>Mức độ<select name="severity" defaultValue={selectedIncident.severity || ''}><option value="">Chưa xác định</option><option value="low">Thấp</option><option value="medium">Trung bình</option><option value="high">Cao</option></select></label>
             <label>Số km tại thời điểm ghi nhận<input name="odometerKm" type="number" min="0" step="1" defaultValue={selectedIncident.odometerKm ?? ''} /></label>
+            <label>Cơ quan chức năng có tạm giữ xe không?<select name="vehicleSeized" required defaultValue={selectedIncident.vehicleSeized === true ? 'true' : selectedIncident.vehicleSeized === false ? 'false' : ''}><option value="" disabled>Chọn tình trạng</option><option value="true">Có, xe đang bị tạm giữ</option><option value="false">Không bị tạm giữ</option></select></label>
             <label>Ghi chú bổ sung<textarea name="note" maxLength={2000} rows="2" /></label>
             <button disabled={busy}>Lưu cập nhật</button>
           </>}
@@ -769,26 +974,54 @@ export default function OperatorPage({ initialSection } = {}) {
         </section>
         <section className="operator-evidence">
           <h3>Kiểm định đầu vào</h3>
+          {selectedVehicle.inspectionScheduleRequest && <p><strong>Yêu cầu Chủ xe:</strong> {selectedVehicle.inspectionScheduleRequest.status === 'pending' ? 'Chờ Operator xác nhận' : 'Đã xác nhận'}
+            {' · '}{new Date(selectedVehicle.inspectionScheduleRequest.requested_for).toLocaleString('vi-VN')}
+            {selectedVehicle.inspectionScheduleRequest.note && <> · {selectedVehicle.inspectionScheduleRequest.note}</>}</p>}
           {selectedVehicle.inspection
             ? <><p><strong>{inspectionStatuses[selectedVehicle.inspection.status] || selectedVehicle.inspection.status}</strong> · {inspectionScheduleStates[selectedVehicle.inspection.scheduleState]} · {selectedVehicle.inspection.scheduledFor ? new Date(selectedVehicle.inspection.scheduledFor).toLocaleString('vi-VN') : 'Chưa có lịch'}</p>
               <p>Garage Staff phụ trách: {selectedVehicle.inspection.garageStaff?.full_name || 'Không rõ'} · {selectedVehicle.inspection.garageStaff?.email || ''}</p>
               {selectedVehicle.inspection.scheduleNote && <p>Ghi chú lịch: {selectedVehicle.inspection.scheduleNote}</p>}
               {selectedVehicle.inspection.status === 'draft' && <button className="operator-secondary" disabled={busy || !hasPermission('operation.vehicle.inspection.schedule')} onClick={openInspectionForm}>Đổi lịch / người phụ trách</button>}
-              {selectedVehicle.inspection.status === 'pending' && <p>Garage đã gửi biên bản; Operator không thể đổi lịch hoặc kết quả.</p>}
+              {selectedVehicle.inspection.status === 'pending' && <>
+                <p>Đối chiếu checklist nhận diện Chủ xe, kết quả kiểm tra xe, số km, ảnh và phản hồi của Chủ xe trước khi chuyển Manager. Operator không quyết định duyệt xe.</p>
+                {selectedVehicle.inspectionReport && <div className="operator-inspection-report">
+                  <h4>Biên bản Garage · {inspectionRecommendations[selectedVehicle.inspectionReport.recommendation] || selectedVehicle.inspectionReport.recommendation}</h4>
+                  <p><strong>ODO:</strong> {selectedVehicle.inspectionReport.conditionReport?.odometer_km ?? '—'} km · <strong>Nhiên liệu/pin:</strong> {selectedVehicle.inspectionReport.conditionReport?.fuel_level_pct ?? '—'}%</p>
+                  <p><strong>Ghi chú Garage:</strong> {selectedVehicle.inspectionReport.conditionReport?.note || '—'}</p>
+                  <p><strong>Chủ xe phản hồi:</strong> {selectedVehicle.inspectionReport.ownerReview?.status === 'accepted' ? 'Đã xác nhận' : selectedVehicle.inspectionReport.ownerReview?.status === 'disputed' ? `Có ý kiến khác${selectedVehicle.inspectionReport.ownerReview.note ? `: ${selectedVehicle.inspectionReport.ownerReview.note}` : ''}` : 'Chưa phản hồi'}</p>
+                  {selectedVehicle.inspectionReport.conditionReport?.checklist?.length > 0 && <ul>
+                    {selectedVehicle.inspectionReport.conditionReport.checklist.map((item) => <li key={item.key}>
+                      <strong>{inspectionChecklistLabels[item.key] || item.key}:</strong> {item.result}{item.note ? ` · ${item.note}` : ''}
+                    </li>)}
+                  </ul>}
+                  {selectedVehicle.inspectionReport.conditionReport?.photo_keys?.length > 0 && <div className="operator-photo-list">
+                    {selectedVehicle.inspectionReport.conditionReport.photo_keys.map((key) => <GaragePhotoPreview key={key} photo={{ key, name: key.split('/').pop() || 'Ảnh kiểm định' }} />)}
+                  </div>}
+                </div>}
+                {selectedVehicle.inspection.operatorReview?.status !== 'checked'
+                  ? <button className="operator-submit" disabled={busy || !hasPermission('operation.vehicle.inspection.review')} onClick={reviewInspection}>Xác nhận biên bản đầy đủ, chuyển Manager</button>
+                  : <p>Operator đã xác nhận biên bản đầy đủ; đang chờ Manager quyết định.</p>}
+              </>}
             </>
             : null}
           {!['draft', 'pending'].includes(selectedVehicle.inspection?.status)
             && ['submitted', 'pending_review', 'revision_required'].includes(selectedVehicle.onboardingStatus)
             && ['with_owner', 'returned_to_owner'].includes(selectedVehicle.physicalStatus)
+            && selectedVehicle.inspectionScheduleRequest?.status === 'pending'
             && <button className="operator-secondary" disabled={busy || !hasPermission('operation.vehicle.inspection.schedule')} onClick={openInspectionForm}>
               {selectedVehicle.inspection ? 'Lên lịch kiểm định vòng tiếp theo' : 'Lên lịch / phân công Garage'}
             </button>}
+          {!['draft', 'pending'].includes(selectedVehicle.inspection?.status)
+            && ['submitted', 'pending_review', 'revision_required'].includes(selectedVehicle.onboardingStatus)
+            && ['with_owner', 'returned_to_owner'].includes(selectedVehicle.physicalStatus)
+            && selectedVehicle.inspectionScheduleRequest?.status !== 'pending'
+            && <p>Đang chờ Chủ xe gửi yêu cầu hoặc đề xuất lại lịch kiểm định.</p>}
           {!selectedVehicle.inspection && !(['submitted', 'pending_review', 'revision_required'].includes(selectedVehicle.onboardingStatus)
             && ['with_owner', 'returned_to_owner'].includes(selectedVehicle.physicalStatus))
             && <p>Xe chưa ở trạng thái chờ kiểm định đầu vào.</p>}
           {showInspectionForm && <form className="operator-form operator-form-single" onSubmit={saveInspectionSchedule}>
             <label>Nhân viên Garage<select name="garageStaffId" required defaultValue={selectedVehicle.inspection?.garageStaffId || ''}><option value="" disabled>Chọn nhân viên</option>{garageStaff.map((staff) => <option value={staff.id} key={staff.id}>{staff.name} · {staff.email}</option>)}</select></label>
-            <label>Thời gian kiểm định<input name="scheduledFor" type="datetime-local" required defaultValue={dateTimeLocalValue(selectedVehicle.inspection?.scheduledFor)} /></label>
+            <label>Thời gian kiểm định<input name="scheduledFor" type="datetime-local" min={dateTimeLocalValue(new Date())} required defaultValue={dateTimeLocalValue(selectedVehicle.inspection?.scheduledFor || (new Date(selectedVehicle.inspectionScheduleRequest?.requested_for) > new Date() ? selectedVehicle.inspectionScheduleRequest.requested_for : null))} /></label>
             <label>Ghi chú<textarea name="note" required maxLength={1000} rows="3" defaultValue={selectedVehicle.inspection?.scheduleNote || ''} /></label>
             <div className="operator-section-actions"><button type="submit" disabled={busy || !garageStaff.length}>{selectedVehicle.inspection?.status === 'draft' ? 'Lưu thay đổi lịch' : 'Lưu lịch kiểm định'}</button><button type="button" className="operator-secondary" disabled={busy} onClick={() => setShowInspectionForm(false)}>Hủy</button></div>
             {!garageStaff.length && <p>Không có Garage Staff đang hoạt động có quyền kiểm định.</p>}

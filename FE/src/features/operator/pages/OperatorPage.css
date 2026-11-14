@@ -755,6 +755,26 @@
   margin-top: 8px;
 }
 
+.operator-inspection-report {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--operator-line);
+  border-radius: 12px;
+  background: #f8faff;
+}
+
+.operator-inspection-report h4 {
+  margin: 0 0 8px;
+  color: #24334d;
+  font-size: 13px;
+}
+
+.operator-photo-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+}
+
 .operator-evidence button {
   margin: 0 8px 8px 0;
 }

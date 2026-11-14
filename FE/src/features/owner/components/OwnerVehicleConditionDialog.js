@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Modal from '../../../components/ui/Modal';
 import GaragePhotoPreview from '../../garage/components/GaragePhotoPreview';
 import InspectionChecklistResults from '../../garage/components/InspectionChecklistResults';
-import { confirmOwnerReturn, respondToOwnerInspection, respondToOwnerIntake } from '../api/ownerApi';
+import { confirmOwnerReturn, requestOwnerInspectionSchedule, respondToOwnerInspection, respondToOwnerIntake } from '../api/ownerApi';
 
 const conclusion = { pass: 'Đạt', requires_repair: 'Cần sửa và kiểm định lại', fail: 'Không đạt' };
 const conditionText = { good: 'Tốt', attention: 'Cần chú ý', damaged: 'Hư hỏng' };
@@ -20,11 +20,36 @@ function ConditionSummary({ report, odometer, fuel }) {
 
 export default function OwnerVehicleConditionDialog({ vehicle, onClose, onSaved }) {
   const [note, setNote] = useState('');
+  const [requestedFor, setRequestedFor] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const { inspection, intake, ownerReturn } = vehicle;
+  const { inspection, intake, ownerReturn, inspectionScheduleRequest } = vehicle;
   const report = inspection?.conditionReport || {};
   const canRespond = inspection?.status === 'pending' && !inspection.ownerReview && report.checklist?.length > 0;
+  const canRequestSchedule = ['submitted', 'pending_review', 'revision_required'].includes(vehicle.approvalStatus)
+    && ['with_owner', 'returned_to_owner'].includes(vehicle.operatingStatus)
+    && !['draft', 'pending'].includes(inspection?.status)
+    && inspectionScheduleRequest?.status !== 'pending';
+
+  async function requestSchedule(event) {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      await requestOwnerInspectionSchedule(vehicle.id, {
+        requestedFor: new Date(requestedFor).toISOString(),
+        note,
+      });
+      setNote('');
+      setRequestedFor('');
+      onSaved();
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function respond(record, status, send) {
     if (busy) return;
@@ -66,6 +91,19 @@ export default function OwnerVehicleConditionDialog({ vehicle, onClose, onSaved 
         </div>
       </div>}
     </section> : <p>Garage chưa gửi báo cáo kiểm định.</p>}
+    {inspectionScheduleRequest && <section>
+      <h3>Đề xuất lịch kiểm định</h3>
+      <p>{inspectionScheduleRequest.status === 'confirmed' ? 'Operator đã xác nhận lịch.' : 'Đang chờ Operator xác nhận lịch.'}
+        {' · '}{new Date(inspectionScheduleRequest.scheduledFor || inspectionScheduleRequest.requestedFor).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>
+      {inspectionScheduleRequest.note && <p>Ghi chú của bạn · {inspectionScheduleRequest.note}</p>}
+      {inspectionScheduleRequest.responseNote && <p>Phản hồi Operator · {inspectionScheduleRequest.responseNote}</p>}
+    </section>}
+    {canRequestSchedule && <form className="owner-form" onSubmit={requestSchedule}>
+      <h3>Yêu cầu Operator xác nhận lịch kiểm định</h3>
+      <label>Thời gian đề xuất<input type="datetime-local" required value={requestedFor} onChange={(event) => setRequestedFor(event.target.value)} disabled={busy} /></label>
+      <label>Ghi chú<textarea required minLength={5} maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} disabled={busy} /></label>
+      <button className="owner-primary" type="submit" disabled={busy || !requestedFor}>{busy ? 'Đang gửi…' : 'Gửi yêu cầu lịch'}</button>
+    </form>}
     {intake && <section>
       <h3>Biên bản tiếp nhận vào gara</h3>
       <p>Mã biên bản {intake.id} · {intake.confirmedAt ? new Date(intake.confirmedAt).toLocaleString('vi-VN') : 'Chưa có giờ xác nhận'}</p>

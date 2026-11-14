@@ -60,5 +60,6 @@ export function createContractRouter(connection) {
   router.get('/:type/:id', requireOperatorRead, async (req, res) => res.json({ data: await service.detail(req.params.type, req.params.id, actor(req), mode(req)) }));
   router.post('/:type/:id/sign', blockOperatorWrite, async (req, res) => res.json({ data: await service.sign(req.params.type, req.params.id, req.body, actor(req), mode(req)) }));
   router.post('/:type/:id/operator-intake', requireOperatorIntake, async (req, res) => res.json(await service.confirmOperatorIntake(req.params.type, req.params.id, actor(req))));
+  router.post('/:type/:id/manager-review', blockOperatorWrite, async (req, res) => res.json(await service.reviewManagementContract(req.params.id, req.body || {}, actor(req))));
   return router;
 }

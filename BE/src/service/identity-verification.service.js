@@ -41,6 +41,7 @@ function serialize(user) {
   return {
     identity: { status: user.identity_kyc?.status || 'unverified', documentType: user.identity_kyc?.document_type || null, idMasked: user.identity_kyc?.id_masked || null, submittedAt: user.identity_kyc?.submitted_at || null, verifiedAt: user.identity_kyc?.verified_at || null, reviewNote: user.identity_kyc?.review_note || '' },
     driverLicense: { status: user.driver_license?.verification_status || 'unverified', class: user.driver_license?.class || null, licenseMasked: user.driver_license?.license_masked || null, expiresAt: user.driver_license?.expires_at || null, submittedAt: user.driver_license?.submitted_at || null, reviewNote: user.driver_license?.review_note || '' },
+    operatorPrecheck: user.operator_identity_precheck || null,
   };
 }
 
@@ -80,6 +81,7 @@ export function createIdentityVerificationService(repository, fileRepository) {
             updated_at: now,
           },
           $push: { verification_history: { action: 'submitted', at: now, by_user_id: userId, identity_evidence_key: identityKey, license_evidence_key: licenseKey } },
+          $unset: { operator_identity_precheck: 1 },
         });
         if (result.modifiedCount !== 1) throw httpError(409, 'Không thể cập nhật hồ sơ eKYC.');
         await repository.createAudit({ actor_user_id: userId, action: 'identity_verification.submit', entity_type: 'users', entity_id: userId, sanitized_changes: { document_type: documentType, license_class: licenseClass, provider: 'manual_review' }, created_at: now });
@@ -94,6 +96,32 @@ export function createIdentityVerificationService(repository, fileRepository) {
       const users = await repository.findPending(status);
       return { data: users.map((user) => ({ id: user._id.toString(), name: user.full_name, email: user.email, phone: user.phone, ...serialize(user) })) };
     },
+    async precheck(id, body, operatorId) {
+      if (!ObjectId.isValid(id)) throw httpError(400, 'Mã hồ sơ eKYC không hợp lệ.');
+      const action = body?.action;
+      const status = { ready: 'ready', needs_revision: 'needs_revision' }[action];
+      const note = typeof body?.note === 'string' ? body.note.trim() : '';
+      if (!status || note.length > 1000 || (action === 'needs_revision' && note.length < 5)) {
+        throw httpError(400, 'Cần chọn kết quả kiểm tra; yêu cầu bổ sung phải có lý do từ 5 đến 1.000 ký tự.');
+      }
+      const userId = new ObjectId(id);
+      const user = await repository.findUser(userId);
+      if (!user || user.identity_kyc?.status !== 'pending' || user.driver_license?.verification_status !== 'pending') {
+        throw httpError(409, 'Hồ sơ eKYC không còn chờ kiểm tra.');
+      }
+      if (user.operator_identity_precheck?.status === 'ready') throw httpError(409, 'Hồ sơ eKYC đã được Operator xác nhận đầy đủ.');
+      const now = new Date();
+      const result = await repository.updateUser(userId, {
+        $set: {
+          operator_identity_precheck: { status, note, checked_at: now, checked_by_user_id: operatorId },
+          updated_at: now,
+        },
+        $push: { verification_history: { action: `operator_precheck_${action}`, at: now, by_user_id: operatorId, note } },
+      });
+      if (result.modifiedCount !== 1) throw httpError(409, 'Hồ sơ eKYC vừa được cập nhật. Hãy tải lại danh sách.');
+      await repository.createAudit({ actor_user_id: operatorId, action: `identity_verification.operator_precheck_${action}`, entity_type: 'users', entity_id: userId, sanitized_changes: { status, note }, created_at: now });
+      return { id, status, checkedAt: now };
+    },
     async review(id, body, reviewerId) {
       if (!ObjectId.isValid(id)) throw httpError(400, 'Mã hồ sơ eKYC không hợp lệ.');
       const action = body?.action;
@@ -103,6 +131,8 @@ export function createIdentityVerificationService(repository, fileRepository) {
       const userId = new ObjectId(id);
       const user = await repository.findUser(userId);
       if (!user || user.identity_kyc?.status !== 'pending' || user.driver_license?.verification_status !== 'pending') throw httpError(409, 'Hồ sơ eKYC không còn chờ xét duyệt.');
+      if (!user.operator_identity_precheck?.status) throw httpError(409, 'Operator cần kiểm tra hồ sơ trước khi Manager quyết định.');
+      if (action === 'approve' && user.operator_identity_precheck.status !== 'ready') throw httpError(409, 'Operator đã yêu cầu bổ sung; cần Operator kiểm tra lại trước khi Manager phê duyệt.');
       const now = new Date();
       const result = await repository.updateUser(userId, {
         $set: {

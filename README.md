@@ -35,9 +35,9 @@ Backend dung kien truc `Routes -> Controller -> Service -> Repository -> Mongoos
 
 ## Operator Staff
 
-Tài khoản `OPERATION_STAFF` đăng nhập vào không gian Operator Staff tại `#/operator`, gồm Tổng quan, Hợp đồng xe, Thông tin xe và Thông tin pháp lý sự cố của xe. Với hợp đồng, Operator tiếp nhận hồ sơ sau khi Owner/Renter ký để Manager ký phía XeDi; Operator không phê duyệt nội dung pháp lý hay ký thay Manager. API kiểm tra quyền riêng cho từng thao tác. Operator có thể lên lịch/phân công kiểm định đầu vào trong mục Thông tin xe; Manager xử lý duyệt booking và quản lý/xuất bản tin xe. API và giao diện Operation cũ đã được gỡ; dữ liệu nghiệp vụ lịch sử được giữ nguyên.
+Tài khoản `OPERATION_STAFF` đăng nhập vào không gian Operator Staff tại `#/operator`, gồm Tổng quan, eKYC, Hợp đồng xe, Thông tin xe và Thông tin pháp lý sự cố. Operator kiểm tra trước hồ sơ Owner/Renter và biên bản Garage; Manager vẫn quyết định cuối cùng về danh tính, xe và hợp đồng. Owner gửi yêu cầu lịch kiểm định, Operator xác nhận/phân công Garage Staff. Với hợp đồng thuê, Operator tiếp nhận sau khi Renter ký để Manager ký phía XeDi; Operator không ký thay Manager. Khi gửi sự cố, Operator ghi nhận xe có bị thu giữ hay không mà không tự đổi trạng thái xe, booking hoặc tiền cọc. API kiểm tra quyền riêng cho từng thao tác. API và giao diện Operation cũ đã được gỡ; dữ liệu nghiệp vụ lịch sử được giữ nguyên.
 
-Quy tắc trạng thái xe, lịch kiểm định, hồ sơ sự cố, tiếp nhận hợp đồng và quyền API xem [nghiệp vụ Operator Staff](BE/docs/operator-staff.md). Metadata tiếp nhận hợp đồng là trường schema tùy chọn, tương thích dữ liệu cũ; không cần migration dữ liệu. Role database hiện có cần cập nhật permission.
+Quy tắc trạng thái xe, yêu cầu lịch kiểm định của Owner, tiền kiểm eKYC/biên bản Garage, hồ sơ sự cố, tiếp nhận hợp đồng và quyền API xem [nghiệp vụ Operator Staff](BE/docs/operator-staff.md). Các trường metadata mới là tùy chọn và tương thích dữ liệu cũ; role database hiện có cần cập nhật permission.
 
 Nếu chỉ cần bổ sung quyền xem và tiếp nhận hợp đồng, giữ nguyên các quyền khác của role Operator. Kiểm tra `BE/.env` để chắc chắn đang trỏ đúng database, rồi chạy từ thư mục gốc:
 
@@ -46,6 +46,14 @@ npm --prefix BE run db:grant:operator-contract-access
 ```
 
 Lệnh trên chỉ thêm `operation.contract.read` và `operation.contract.intake.confirm` vào role `OPERATION_STAFF`; không thay thế các permission khác. Đăng xuất rồi đăng nhập lại để giao diện nạp quyền mới. Để cập nhật toàn bộ role Operator theo quy trình của phiên bản mới, dùng `npm --prefix BE run db:migrate:operator-staff` thay cho lệnh cấp quyền riêng.
+
+Để chỉ bổ sung quyền cho các quy trình Operator mới (eKYC, tiền kiểm định và ghi nhận sự cố), kiểm tra lại `BE/.env` rồi chạy:
+
+```powershell
+npm --prefix BE run db:grant:operator-workflow-access
+```
+
+Lệnh này chỉ thêm các permission nghiệp vụ mới và giữ nguyên quyền khác; đăng xuất rồi đăng nhập lại sau khi chạy.
 
 Tai thu muc goc:
 

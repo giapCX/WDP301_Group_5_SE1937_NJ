@@ -4,6 +4,9 @@ export function createOperatorController(service) {
       permissions: request.currentPermissions,
       isAdmin: request.currentRoles?.includes('ADMIN'),
     })),
+    inspectionWorkflow: async (request, response) => response.json(
+      await service.listInspectionWorkflow(request.query),
+    ),
     vehicles: async (request, response) => response.json(await service.listVehicles(request.query)),
     garageStaff: async (_request, response) => response.json(await service.listGarageStaff()),
     vehicle: async (request, response) => response.json(await service.getVehicle(request.params.id)),
@@ -21,6 +24,8 @@ export function createOperatorController(service) {
       response.status(201).json(await service.scheduleVehicleInspection(request, request.params.id, request.body)),
     updateVehicleInspectionSchedule: async (request, response) =>
       response.json(await service.updateVehicleInspectionSchedule(request, request.params.id, request.body)),
+    precheckVehicleInspection: async (request, response) =>
+      response.json(await service.precheckVehicleInspection(request, request.params.id, request.body)),
     incidents: async (request, response) =>
       response.json(await service.listIncidents(request, request.query)),
     incident: async (request, response) => response.json(await service.getIncident(request.params.id)),

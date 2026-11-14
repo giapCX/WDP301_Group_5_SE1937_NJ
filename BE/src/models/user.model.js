@@ -49,6 +49,12 @@ export const userSchema = createSchema({
     identity_evidence_key: String,
     license_evidence_key: String,
   })),
+  operator_identity_precheck: embedded({
+    status: String,
+    note: String,
+    checked_at: Date,
+    checked_by_user_id: { type: ObjectId, ref: 'User' },
+  }),
   contact_profile: embedded({
     city: String,
     address: String,

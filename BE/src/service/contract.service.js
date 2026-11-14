@@ -96,6 +96,7 @@ export function createContractService(repository) {
     const platformDone = Boolean(platformAt || (type === 'rental' && signature.platform_signer_user_id));
     const operatorIntakeConfirmedAt = row.operator_intake?.confirmed_at || null;
     const signingOpen = type !== 'rental' || (ctx.booking.status === 'awaiting_payment' && ctx.booking.start_at > new Date() && !isBookingHoldExpired(ctx.booking));
+    const managerReviewed = row.manager_review?.status === 'approved';
     return {
       id: String(row._id), type, number: row.agreement_number || row.contract_number, status: row.status,
       vehicle: `${ctx.vehicle.brand || ''} ${ctx.vehicle.model || ''} · ${ctx.vehicle.license_plate}`,
@@ -104,9 +105,11 @@ export function createContractService(repository) {
       partySigned: partyDone, partySignedAt: partyAt || null,
       platformSigned: platformDone, platformSignedAt: platformAt || null,
       operatorIntakeConfirmedAt,
+      managerReviewStatus: row.manager_review?.status || null,
       partyName: signature.owner_signature_name || signature.renter_signature_name || '', platformName: signature.platform_signature_name || '',
       canSign: Boolean(signingOpen && row.contract_document && row.status === 'pending_signatures'
-        && (mode === 'party' ? !partyDone : actor.roles.includes('MANAGER') && partyDone && operatorIntakeConfirmedAt && !platformDone)),
+        && (mode === 'party' ? !partyDone : actor.roles.includes('MANAGER') && partyDone
+          && (type === 'management' && managerReviewed || operatorIntakeConfirmedAt) && !platformDone)),
       canOperatorConfirm: Boolean(
         mode === 'staff'
         && actor.roles.includes('OPERATION_STAFF')
@@ -114,11 +117,14 @@ export function createContractService(repository) {
         && signingOpen
         && row.contract_document
         && row.status === 'pending_signatures'
+        && (type === 'rental' || !managerReviewed)
         && partyDone
         && !platformDone
         && !operatorIntakeConfirmedAt,
       ),
       canOwnerSign: Boolean(type === 'management' && mode === 'party' && row.contract_document && row.status === 'pending_signatures' && !partyDone),
+      canManagerRelease: Boolean(type === 'management' && mode === 'staff' && actor.roles.includes('MANAGER')
+        && row.contract_document && row.status === 'pending_manager_review' && !partyDone && !platformDone),
       canPrepare: Boolean(signingOpen && !row.contract_document && !partyDone && !platformDone && ['draft', 'pending_signatures', 'pending_signature', 'awaiting_signature'].includes(row.status) && (type === 'rental' || ctx.vehicle.onboarding_status === 'approved')),
     };
   }
@@ -174,6 +180,7 @@ export function createContractService(repository) {
         const row = await agreementRepository.findOne({ _id: id }, { session });
         if (!row) throw httpError(404, 'Không tìm thấy hợp đồng.');
         const ctx = await access(type, row, actor, 'staff', session);
+        fail(type === 'management' && row.manager_review?.status, 'Hợp đồng ủy quyền mới không cần Operator tiếp nhận sau khi Manager rà soát.');
         if (same(actor.id, ctx.partyId) || same(actor.id, ctx.vehicle.owner_id)) {
           throw httpError(403, 'Không thể tiếp nhận hợp đồng của chính mình.');
         }
@@ -255,7 +262,8 @@ export function createContractService(repository) {
         const end = body.endDate ? dateField(body.endDate, true) : new Date(start.getTime() + 365 * 86400000);
         if (type === 'management' && (!Number.isFinite(+start) || !Number.isFinite(+end))) throw httpError(400, 'Ngày hợp đồng không hợp lệ.');
         const managementTerms = type === 'management' ? parseManagementTerms(body, row) : null;
-        row = { ...row, _id: newId, status: 'pending_signatures', created_at: row?.created_at || now, updated_at: now,
+        row = { ...row, _id: newId, status: type === 'management' ? 'pending_manager_review' : 'pending_signatures', created_at: row?.created_at || now, updated_at: now,
+          ...(type === 'management' ? { manager_review: { status: 'pending', note: '', reason: '', reviewed_by_manager_id: null, reviewed_at: null } } : {}),
           ...(type === 'management' ? { vehicle_id: vehicle._id, owner_id: vehicle.owner_id, agreement_number: row?.agreement_number || `MGMT-${newId}`, start_date: start, end_date: end, commission_rate_pct: managementTerms.commission, authorization_scope: { vehicle_custody: true, rental_contract_signing: true, listing_management: true, booking_management: true, owner_confirmation_per_booking: false, commission_basis: 'rental_fee_excluding_security_deposit' } } : { booking_id: reference, management_agreement_id: booking.management_agreement_id, contract_number: row?.contract_number || `RENT-${newId}`, terms_snapshot: { ...row?.terms_snapshot, daily_rate: booking.pricing_snapshot?.daily_price, rental_fee_amount: booking.rental_fee_amount, deposit_amount: booking.deposit_amount_snapshot, start_at: booking.start_at, end_at: booking.end_at, signature_method: 'electronic_acceptance' }, renter_details_snapshot: { ...row?.renter_details_snapshot, renter_id: booking.renter_id, verified_license: true }, lender_details_snapshot: { ...row?.lender_details_snapshot, owner_id: vehicle.owner_id } }) };
         const ctx = { vehicle, booking, partyId: booking?.renter_id || vehicle.owner_id };
         const inspection = await eligible(type, row, ctx, session);
@@ -276,6 +284,47 @@ export function createContractService(repository) {
         return serialize(type, row, ctx, 'staff', actor);
       });
     },
+    async reviewManagementContract(idValue, body, rawActor) {
+      const actor = await actorInfo(rawActor);
+      requireRole(actor, ['MANAGER']);
+      const id = oid(idValue);
+      const action = body?.action;
+      const note = typeof body?.note === 'string' ? body.note.trim() : '';
+      if (!['approve', 'revision'].includes(action) || note.length > 1000 || (action === 'revision' && note.length < 5)) {
+        throw httpError(400, 'Cần chọn phê duyệt hoặc yêu cầu chỉnh sửa; yêu cầu chỉnh sửa cần lý do từ 5 đến 1.000 ký tự.');
+      }
+      return transact(async (session) => {
+        const repo = repository.agreement('management');
+        const row = await repo.findOne({ _id: id }, { session });
+        if (!row || row.status !== 'pending_manager_review' || !row.contract_document) throw httpError(409, 'Hợp đồng không còn chờ Manager rà soát.');
+        const ctx = await access('management', row, actor, 'staff', session);
+        await eligible('management', row, ctx, session);
+        const now = new Date();
+        const set = action === 'approve'
+          ? {
+            status: 'pending_signatures',
+            manager_review: { status: 'approved', note, reason: '', reviewed_by_manager_id: actor.id, reviewed_at: now },
+            updated_at: now,
+          }
+          : {
+            status: 'draft',
+            manager_review: { status: 'revision_required', note: '', reason: note, reviewed_by_manager_id: actor.id, reviewed_at: now },
+            updated_at: now,
+          };
+        const update = action === 'approve'
+          ? { $set: set }
+          : { $set: set, $unset: { contract_document: 1 } };
+        const updated = await repo.findOneAndUpdate({
+          _id: id, status: 'pending_manager_review', 'contract_document.hash': row.contract_document.hash,
+        }, update, { session, returnDocument: 'after' });
+        if (!updated) throw httpError(409, 'Hợp đồng vừa được cập nhật. Hãy tải lại trước khi rà soát.');
+        await audit(actor, 'management', id, `contract.manager_pre_review.${action}`, {
+          document_hash: row.contract_document.hash,
+          note,
+        }, session);
+        return { data: serialize('management', updated, ctx, 'staff', actor) };
+      });
+    },
     async sign(type, id, body, rawActor, mode = 'party') {
       checkType(type); const actor = await actorInfo(rawActor);
       if (body?.acceptedTerms !== true || typeof body.signatureName !== 'string' || body.signatureName.trim().length < 2 || body.signatureName.trim().length > 120) throw httpError(400, 'Cần nhập tên người ký và xác nhận đồng ý điều khoản.');
@@ -291,7 +340,9 @@ export function createContractService(repository) {
             ? Boolean(signature.owner_signed_at)
             : Boolean(signature.renter_signed_at || signature.renter_confirmed);
           fail(!partySigned, 'Hợp đồng cần được chủ xe/người thuê xác nhận trước.');
-          fail(!row.operator_intake?.confirmed_at, 'Operator chưa tiếp nhận hợp đồng.');
+          if (type === 'rental' || row.manager_review?.status !== 'approved') {
+            fail(!row.operator_intake?.confirmed_at, 'Operator chưa tiếp nhận hợp đồng.');
+          }
         }
         fail(!row.contract_document || row.status !== 'pending_signatures', 'Hợp đồng chưa sẵn sàng ký hoặc đã ký xong.');
         fail(body.documentHash !== row.contract_document.hash, 'Nội dung hợp đồng đã thay đổi. Vui lòng mở lại trước khi ký.');

@@ -2,6 +2,7 @@ import { getApi, postApi, patchApi } from '../../../services/httpClient';
 
 export const getOwnerDashboard = (options) => getApi('/owner/dashboard', options);
 export const registerOwnerVehicle = (body) => postApi('/owner/vehicles', body);
+export const requestOwnerInspectionSchedule = (id, body) => postApi(`/owner/vehicles/${encodeURIComponent(id)}/inspection-schedule-requests`, body);
 export const resubmitVehicleDocuments = (id, body) => patchApi(`/owner/vehicles/${encodeURIComponent(id)}/documents`, body);
 export const respondToOwnerInspection = (vehicleId, inspectionId, body) => patchApi(
   `/owner/vehicles/${encodeURIComponent(vehicleId)}/inspections/${encodeURIComponent(inspectionId)}`, body,

@@ -82,6 +82,7 @@ export function createOperatorService(repository, files) {
       garageStaffId: inspection.garage_staff_id?.toString() || null,
       garageStaff: garageStaff || null,
       version: inspection.version ?? 0,
+      operatorReview: inspection.operator_review || null,
     };
   }
 
@@ -97,7 +98,31 @@ export function createOperatorService(repository, files) {
       owner: owners.get(vehicle.owner_id?.toString()) || null,
       updatedAt: vehicle.updated_at || null,
       inspection: inspection ? inspectionSummary(inspection, garageStaff) : null,
+      inspectionScheduleRequest: vehicle.inspection_schedule_request || null,
     };
+  }
+
+  async function summarizeVehicles(rows) {
+    const vehicleIds = rows.map((vehicle) => vehicle._id);
+    const inspections = vehicleIds.length
+      ? await repository.vehicleInspections.aggregate([
+        { $match: { vehicle_id: { $in: vehicleIds }, inspection_type: 'onboarding' } },
+        { $sort: { created_at: -1, _id: -1 } },
+        { $group: { _id: '$vehicle_id', inspection: { $first: '$$ROOT' } } },
+        { $replaceRoot: { newRoot: '$inspection' } },
+      ]).exec()
+      : [];
+    const inspectionByVehicle = new Map(
+      inspections.map((inspection) => [inspection.vehicle_id.toString(), inspection]),
+    );
+    const staffIds = [...inspectionByVehicle.values()].map((inspection) => inspection.garage_staff_id);
+    const users = await usersById([...rows.map((vehicle) => vehicle.owner_id), ...staffIds]);
+    return rows.map((vehicle) => vehicleSummary(
+      vehicle,
+      users,
+      inspectionByVehicle.get(vehicle._id.toString()),
+      users.get(inspectionByVehicle.get(vehicle._id.toString())?.garage_staff_id?.toString()) || null,
+    ));
   }
 
   async function assignableGarageStaff(staffId, session) {
@@ -124,6 +149,7 @@ export function createOperatorService(repository, files) {
       id: incident._id.toString(),
       caseNumber: incident.case_number,
       caseType: incident.case_type,
+      vehicleSeized: typeof incident.vehicle_seized === 'boolean' ? incident.vehicle_seized : null,
       status: incident.status,
       description: incident.description,
       severity: incident.severity || null,
@@ -219,13 +245,111 @@ export function createOperatorService(repository, files) {
         const assignedVehicleIds = new Set(openInspections.map((inspection) => inspection.vehicle_id.toString()));
         Object.assign(metrics, {
           vehiclesAwaitingInspection: candidates.filter((vehicle) => !assignedVehicleIds.has(vehicle._id.toString())).length,
+          inspectionScheduleRequestsWaiting: await repository.vehicles.countDocuments({
+            _id: { $in: candidateIds },
+            'inspection_schedule_request.status': 'pending',
+          }),
           inspectionsUpcoming,
           inspectionsOverdue,
           inspectionsAwaitingManager,
         });
       }
+      if (hasPermission('operation.identity_verification.read')) {
+        metrics.identityVerificationsPending = await repository.users.countDocuments({
+          'identity_kyc.status': 'pending',
+          'driver_license.verification_status': 'pending',
+        });
+      }
       return {
         data: { metrics },
+      };
+    },
+
+    async precheckVehicleInspection(request, idValue, body = {}) {
+      const id = new ObjectId(objectId(idValue));
+      const note = typeof body.note === 'string' ? body.note.trim() : '';
+      if (note.length > 1000) throw httpError(400, 'Ghi chú không được vượt quá 1.000 ký tự.');
+      return garageTransaction(repository, async (session) => {
+        const inspection = await repository.vehicleInspections.findOne({ _id: id }, { session });
+        if (!inspection || inspection.inspection_type !== 'onboarding' || inspection.approval_status !== 'pending') {
+          throw httpError(409, 'Chỉ kiểm tra trước biên bản kiểm định đầu vào đang chờ Manager.');
+        }
+        const report = inspection.condition_report || {};
+        if (!['pass', 'requires_repair', 'fail'].includes(inspection.recommendation)
+          || !Number.isSafeInteger(report.odometer_km) || !Number.isSafeInteger(report.fuel_level_pct)
+          || !Array.isArray(report.checklist) || report.checklist.length === 0
+          || report.checklist.some((item) => !item?.key || !item?.result)) {
+          throw httpError(409, 'Biên bản Garage chưa đủ kết luận, ODO, nhiên liệu và checklist để chuyển Manager.');
+        }
+        if (inspection.operator_review?.status === 'checked') throw httpError(409, 'Biên bản đã được Operator xác nhận.');
+        const now = new Date();
+        const review = { status: 'checked', note, reviewed_at: now, operator_id: actorId(request), reviewed_version: inspection.version ?? 0 };
+        const changed = await repository.vehicleInspections.updateOne({
+          _id: id,
+          approval_status: 'pending',
+          version: inspection.version ?? 0,
+          updated_at: inspection.updated_at,
+          'operator_review.status': { $ne: 'checked' },
+        }, { $set: { operator_review: review, updated_at: now } }, { session });
+        if (!changed.modifiedCount) throw httpError(409, 'Biên bản vừa được cập nhật. Hãy tải lại trước khi xác nhận.');
+        await audit(request, 'vehicle.inspection.operator_precheck', 'vehicle_inspections', id, {
+          version: review.reviewed_version,
+        }, session);
+        return { data: { id: id.toString(), status: review.status, reviewedAt: now } };
+      });
+    },
+
+    async listInspectionWorkflow(query) {
+      const parsed = parseOperatorListQuery(query);
+      const vehicleFilter = parsed.q
+        ? { $or: ['brand', 'model', 'license_plate'].map((field) => ({
+          [field]: new RegExp(escapeRegExp(parsed.q), 'i'),
+        })) }
+        : {};
+      const scheduleRequests = await findPageRows(repository.vehicles, {
+        ...vehicleFilter,
+        'inspection_schedule_request.status': 'pending',
+        onboarding_status: { $in: INSPECTION_ELIGIBLE_ONBOARDING_STATUSES },
+        physical_status: { $in: ['with_owner', 'returned_to_owner'] },
+      }, query, { sort: { updated_at: -1 } });
+      const matchingVehicles = parsed.q
+        ? await repository.vehicles.find(vehicleFilter, { projection: { _id: 1 } }).exec()
+        : null;
+      const reportFilter = {
+        inspection_type: 'onboarding',
+        approval_status: 'pending',
+        'operator_review.status': { $ne: 'checked' },
+        ...(matchingVehicles ? { vehicle_id: { $in: matchingVehicles.map((vehicle) => vehicle._id) } } : {}),
+      };
+      const garageReports = await findPageRows(repository.vehicleInspections, reportFilter, query, {
+        sort: { submitted_at: -1, created_at: -1 },
+      });
+      const reportVehicles = garageReports.length
+        ? await repository.vehicles.find({ _id: { $in: garageReports.map((report) => report.vehicle_id) } }).exec()
+        : [];
+      const [requestVehicles, reportVehicleSummaries] = await Promise.all([
+        summarizeVehicles(scheduleRequests),
+        summarizeVehicles(reportVehicles),
+      ]);
+      const vehicleById = new Map(reportVehicleSummaries.map((vehicle) => [vehicle.id, vehicle]));
+      return {
+        data: {
+          scheduleRequests: requestVehicles,
+          garageReports: garageReports.map((report) => ({
+            id: report._id.toString(),
+            version: report.version ?? 0,
+            recommendation: report.recommendation || '',
+            submittedAt: report.submitted_at || null,
+            conditionReport: report.condition_report || {},
+            ownerReview: report.owner_review || null,
+            operatorReview: report.operator_review || null,
+            vehicle: vehicleById.get(report.vehicle_id.toString()) || null,
+          })),
+        },
+        pagination: {
+          scheduleRequests: scheduleRequests.pagination,
+          garageReports: garageReports.pagination,
+        },
       };
     },
 
@@ -238,30 +362,8 @@ export function createOperatorService(repository, files) {
         filter.$or = ['brand', 'model', 'license_plate'].map((field) => ({ [field]: pattern }));
       }
       const rows = await findPageRows(repository.vehicles, filter, query, { sort: { updated_at: -1 } });
-      const vehicleIds = rows.map((vehicle) => vehicle._id);
-      const inspections = vehicleIds.length
-        ? await repository.vehicleInspections.aggregate([
-          { $match: { vehicle_id: { $in: vehicleIds }, inspection_type: 'onboarding' } },
-          { $sort: { created_at: -1, _id: -1 } },
-          { $group: { _id: '$vehicle_id', inspection: { $first: '$$ROOT' } } },
-          { $replaceRoot: { newRoot: '$inspection' } },
-        ]).exec()
-        : [];
-      const inspectionByVehicle = new Map();
-      for (const inspection of inspections) {
-        if (!inspectionByVehicle.has(inspection.vehicle_id.toString())) {
-          inspectionByVehicle.set(inspection.vehicle_id.toString(), inspection);
-        }
-      }
-      const staffIds = [...inspectionByVehicle.values()].map((inspection) => inspection.garage_staff_id);
-      const users = await usersById([...rows.map((vehicle) => vehicle.owner_id), ...staffIds]);
       return {
-        data: rows.map((vehicle) => vehicleSummary(
-          vehicle,
-          users,
-          inspectionByVehicle.get(vehicle._id.toString()),
-          users.get(inspectionByVehicle.get(vehicle._id.toString())?.garage_staff_id?.toString()) || null,
-        )),
+        data: await summarizeVehicles(rows),
         pagination: rows.pagination,
       };
     },
@@ -283,6 +385,13 @@ export function createOperatorService(repository, files) {
             inspection,
             users.get(inspection?.garage_staff_id?.toString()) || null,
           ),
+          inspectionReport: inspection ? {
+            recommendation: inspection.recommendation || '',
+            inspectedAt: inspection.inspected_at || inspection.submitted_at || null,
+            conditionReport: inspection.condition_report || {},
+            ownerReview: inspection.owner_review || null,
+            operatorReview: inspection.operator_review || null,
+          } : null,
           vin: vehicle.vin || '',
           seats: vehicle.seats ?? null,
           fuelType: vehicle.fuel_type || '',
@@ -397,6 +506,9 @@ export function createOperatorService(repository, files) {
           if (!['with_owner', 'returned_to_owner'].includes(vehicle.physical_status)) {
             throw httpError(409, 'Chỉ lên lịch kiểm định đầu vào khi xe đang ở chủ xe.');
           }
+          if (vehicle.inspection_schedule_request?.status !== 'pending') {
+            throw httpError(409, 'Cần có yêu cầu lịch kiểm định từ Chủ xe trước khi xác nhận và phân công.');
+          }
           if (vehicle.condition_declaration && ['registration', 'inspection_certificate', 'insurance'].some((key) => !vehicle.documents?.[key]?.file_key)) {
             throw httpError(409, 'Cần đủ đăng ký xe, đăng kiểm và bảo hiểm trước khi lên lịch kiểm định.');
           }
@@ -423,6 +535,20 @@ export function createOperatorService(repository, files) {
             created_at: now,
             updated_at: now,
           }, options);
+          const requestUpdated = await repository.vehicles.updateOne({
+            _id: id,
+            'inspection_schedule_request.status': 'pending',
+          }, {
+            $set: {
+              'inspection_schedule_request.status': 'confirmed',
+              'inspection_schedule_request.confirmed_at': now,
+              'inspection_schedule_request.confirmed_by_operator_id': actorId(request),
+              'inspection_schedule_request.scheduled_for': input.scheduledFor,
+              'inspection_schedule_request.response_note': input.note,
+              updated_at: now,
+            },
+          }, options);
+          if (!requestUpdated.modifiedCount) throw httpError(409, 'Yêu cầu lịch vừa được xử lý. Hãy tải lại hồ sơ.');
           await audit(request, 'vehicle.inspection.schedule', 'vehicle_inspections', inspection._id, {
             vehicle_id: id.toString(),
             garage_staff_id: input.garageStaffId.toString(),
@@ -477,6 +603,9 @@ export function createOperatorService(repository, files) {
           { session },
         );
         if (!result.modifiedCount) throw httpError(409, 'Lịch kiểm định vừa được cập nhật. Vui lòng tải lại.');
+        await repository.vehicles.updateOne({ _id: vehicleId, 'inspection_schedule_request.status': 'confirmed' }, {
+          $set: { 'inspection_schedule_request.scheduled_for': input.scheduledFor, 'inspection_schedule_request.response_note': input.note, updated_at: now },
+        }, { session });
         await audit(request, 'vehicle.inspection.reschedule', 'vehicle_inspections', current._id, {
           vehicle_id: vehicleId.toString(),
           from: {
@@ -565,6 +694,7 @@ export function createOperatorService(repository, files) {
           ...(input.location ? { location: input.location } : {}),
           ...(input.odometerKm !== undefined ? { odometer_km: input.odometerKm } : {}),
           ...(input.severity ? { severity: input.severity } : {}),
+          ...(input.vehicleSeized !== undefined ? { vehicle_seized: input.vehicleSeized } : {}),
           description: input.description,
           status: 'reported',
           evidence: [],
@@ -591,6 +721,9 @@ export function createOperatorService(repository, files) {
         if (!current) throw httpError(404, 'Không tìm thấy hồ sơ sự cố.');
         if (!['reported', 'need_more_information'].includes(current.status)) {
           throw httpError(403, 'Operator chỉ được cập nhật hồ sơ mới hoặc hồ sơ Manager yêu cầu bổ sung.');
+        }
+        if (changes.vehicle_seized !== undefined && typeof changes.vehicle_seized !== 'boolean') {
+          throw httpError(400, 'Cần xác nhận xe bị tạm giữ hoặc không bị tạm giữ.');
         }
         if (changes.booking_id && !await repository.bookings.findOne({
           _id: changes.booking_id,
@@ -637,6 +770,9 @@ export function createOperatorService(repository, files) {
         if (!current) throw httpError(404, 'Không tìm thấy hồ sơ sự cố.');
         if (!['reported', 'need_more_information'].includes(current.status)) {
           throw httpError(409, 'Chỉ có thể gửi hồ sơ mới hoặc hồ sơ Manager yêu cầu bổ sung.');
+        }
+        if (typeof current.vehicle_seized !== 'boolean') {
+          throw httpError(409, 'Cần ghi nhận xe có bị cơ quan chức năng tạm giữ hay không trước khi gửi Manager.');
         }
         const now = new Date();
         const result = await repository.incidents.updateOne(

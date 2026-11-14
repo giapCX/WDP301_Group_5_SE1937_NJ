@@ -7,8 +7,10 @@ import {
   getOperatorGarageStaff,
   getOperatorIncident,
   getOperatorIncidents,
+  getOperatorInspectionWorkflow,
   getOperatorVehicles,
   getOperatorVehicle,
+  precheckOperatorVehicleInspection,
   scheduleOperatorVehicleInspection,
   updateOperatorIncident,
   updateOperatorVehicleInspectionSchedule,
@@ -25,10 +27,12 @@ jest.mock('../api/operatorApi', () => ({
   getOperatorEvidence: jest.fn(),
   getOperatorIncident: jest.fn(),
   getOperatorIncidents: jest.fn(),
+  getOperatorInspectionWorkflow: jest.fn(),
   getOperatorGarageStaff: jest.fn(),
   getOperatorVehicles: jest.fn(),
   getOperatorVehicle: jest.fn(),
   getOperatorVehicleDocument: jest.fn(),
+  precheckOperatorVehicleInspection: jest.fn(),
   submitOperatorIncident: jest.fn(),
   updateOperatorIncident: jest.fn(),
   scheduleOperatorVehicleInspection: jest.fn(),
@@ -51,6 +55,7 @@ beforeEach(() => {
       'operation.vehicle.read',
       'operation.vehicle.status.update',
       'operation.vehicle.inspection.schedule',
+      'operation.vehicle.inspection.review',
       'operation.incident.read',
       'operation.incident.create',
       'operation.incident.update',
@@ -61,6 +66,13 @@ beforeEach(() => {
   getOperatorDashboard.mockResolvedValue({ data: { metrics: { activeVehicles: 2, expiringContracts: 3, incidentsInProgress: 1, vehiclesAwaitingInspection: 4 } } });
   getOperatorVehicles.mockResolvedValue({ data: [], pagination: { page: 1, limit: 10, total: 0 } });
   getOperatorIncidents.mockResolvedValue({ data: [], pagination: { page: 1, limit: 10, total: 0 } });
+  getOperatorInspectionWorkflow.mockResolvedValue({
+    data: { scheduleRequests: [], garageReports: [] },
+    pagination: {
+      scheduleRequests: { page: 1, limit: 10, total: 0 },
+      garageReports: { page: 1, limit: 10, total: 0 },
+    },
+  });
   getOperatorGarageStaff.mockResolvedValue({ data: [{ id: 'garage-1', name: 'Garage Staff', email: 'garage@example.com' }] });
   getOperatorVehicle.mockResolvedValue({ data: {
     id: 'vehicle-1',
@@ -84,13 +96,14 @@ afterEach(() => {
   sessionStorage.clear();
 });
 
-test('renders the four Operator Staff menus in the required order', async () => {
+test('renders the Operator Staff menus in the required order', async () => {
   render(<OperatorPage />);
   const nav = screen.getByRole('navigation', { name: 'Điều hướng Operator Staff' });
   expect(within(nav).getAllByRole('button').map((button) => button.textContent.trim())).toEqual([
     'Tổng quan',
     'Hợp đồng xe',
     'Thông tin xe',
+    'Lịch kiểm tra xe',
     'Thông tin pháp lý sự cố của xe',
   ]);
   expect(await screen.findByText('Xe đang chạy')).toBeInTheDocument();
@@ -195,6 +208,10 @@ test('incident form searches vehicles by text and omits booking and coordinates'
   fireEvent.change(screen.getByLabelText('Số km tại thời điểm ghi nhận'), { target: { value: '12500' } });
   fireEvent.change(screen.getByLabelText('Mô tả sự việc'), { target: { value: 'Ghi nhận hư hỏng xe.' } });
   fireEvent.click(screen.getByRole('button', { name: 'Lưu hồ sơ' }));
+  expect(createOperatorIncident).not.toHaveBeenCalled();
+  expect(screen.getByText('Hãy xác nhận xe có bị cơ quan chức năng tạm giữ hay không.')).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Cơ quan chức năng có tạm giữ xe không?'), { target: { value: 'false' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Lưu hồ sơ' }));
   await waitFor(() => expect(createOperatorIncident).toHaveBeenCalledWith({
     vehicleId: 'vehicle-1',
     caseType: 'vehicle_damage',
@@ -202,6 +219,7 @@ test('incident form searches vehicles by text and omits booking and coordinates'
     incidentType: 'Trầy xước',
     odometerKm: 12500,
     severity: 'high',
+    vehicleSeized: false,
   }));
 });
 
@@ -218,6 +236,7 @@ test('incident update form hides booking and coordinate details', async () => {
     }],
     pagination: { page: 1, limit: 10, total: 1 },
   });
+
   getOperatorIncident.mockResolvedValue({ data: {
     id: 'incident-1',
     caseNumber: 'CASE-1',
@@ -235,6 +254,99 @@ test('incident update form hides booking and coordinate details', async () => {
   expect(screen.queryByText(/Booking liên quan/)).not.toBeInTheDocument();
   expect(screen.queryByLabelText('Vĩ độ')).not.toBeInTheDocument();
   expect(screen.queryByLabelText('Kinh độ')).not.toBeInTheDocument();
+});
+
+test('inspection navigation shows Owner schedule requests and lets Operator assign Garage Staff', async () => {
+  getOperatorInspectionWorkflow.mockResolvedValue({
+    data: {
+      scheduleRequests: [{
+        id: 'vehicle-1',
+        brand: 'Toyota',
+        model: 'Vios',
+        licensePlate: 'TEST-1',
+        owner: { full_name: 'Chủ xe thử nghiệm', email: 'owner@example.com' },
+        inspectionScheduleRequest: {
+          status: 'pending',
+          requested_for: new Date(Date.now() + 3600000).toISOString(),
+          note: 'Xin kiểm tra xe tại gara.',
+        },
+      }],
+      garageReports: [],
+    },
+    pagination: { scheduleRequests: { page: 1, limit: 10, total: 1 }, garageReports: { page: 1, limit: 10, total: 0 } },
+  });
+  getOperatorVehicle.mockResolvedValue({ data: {
+    id: 'vehicle-1',
+    brand: 'Toyota',
+    model: 'Vios',
+    licensePlate: 'TEST-1',
+    physicalStatus: 'with_owner',
+    onboardingStatus: 'submitted',
+    inspectionScheduleRequest: {
+      status: 'pending',
+      requested_for: new Date(Date.now() + 3600000).toISOString(),
+      note: 'Xin kiểm tra xe tại gara.',
+    },
+    statusHistory: [],
+    documents: {},
+  } });
+  render(<OperatorPage />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Lịch kiểm tra xe' }));
+  expect(await screen.findByText('Yêu cầu lịch từ Chủ xe')).toBeInTheDocument();
+  fireEvent.click(await screen.findByRole('button', { name: 'Xác nhận lịch & phân công' }));
+  const staff = await screen.findByLabelText('Nhân viên Garage');
+  fireEvent.change(staff, { target: { value: 'garage-1' } });
+  fireEvent.change(screen.getByLabelText('Ghi chú'), { target: { value: 'Đã xác nhận lịch với Chủ xe.' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Lưu lịch kiểm định' }));
+  await waitFor(() => expect(scheduleOperatorVehicleInspection).toHaveBeenCalledWith('vehicle-1', expect.objectContaining({
+    garageStaffId: 'garage-1',
+    note: 'Đã xác nhận lịch với Chủ xe.',
+  })));
+});
+
+test('inspection queue exposes Garage report details before Operator precheck', async () => {
+  getOperatorInspectionWorkflow.mockResolvedValue({
+    data: {
+      scheduleRequests: [],
+      garageReports: [{
+        id: 'inspection-1',
+        recommendation: 'pass',
+        submittedAt: new Date().toISOString(),
+        ownerReview: { status: 'accepted' },
+        vehicle: { id: 'vehicle-1', brand: 'Toyota', model: 'Vios', licensePlate: 'TEST-1' },
+      }],
+    },
+    pagination: { scheduleRequests: { page: 1, limit: 10, total: 0 }, garageReports: { page: 1, limit: 10, total: 1 } },
+  });
+  getOperatorVehicle.mockResolvedValue({ data: {
+    id: 'vehicle-1',
+    brand: 'Toyota',
+    model: 'Vios',
+    licensePlate: 'TEST-1',
+    physicalStatus: 'with_owner',
+    onboardingStatus: 'submitted',
+    inspection: { id: 'inspection-1', status: 'pending', operatorReview: null },
+    inspectionReport: {
+      recommendation: 'pass',
+      conditionReport: {
+        odometer_km: 12500,
+        fuel_level_pct: 70,
+        checklist: [{ key: 'identity', result: 'pass', note: 'Đã đối chiếu giấy tờ Chủ xe.' }],
+      },
+      ownerReview: { status: 'accepted' },
+    },
+    statusHistory: [],
+    documents: {},
+  } });
+  precheckOperatorVehicleInspection.mockResolvedValue({});
+  render(<OperatorPage />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Lịch kiểm tra xe' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Xem biên bản' }));
+  expect(await screen.findByText(/Đã đối chiếu giấy tờ Chủ xe\./)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Xác nhận biên bản đầy đủ, chuyển Manager' }));
+  await waitFor(() => expect(precheckOperatorVehicleInspection).toHaveBeenCalledWith('inspection-1', {
+    note: 'Đã kiểm tra thông tin biên bản Garage.',
+  }));
 });
 
 test('empty vehicle search results do not show a no-match message', async () => {

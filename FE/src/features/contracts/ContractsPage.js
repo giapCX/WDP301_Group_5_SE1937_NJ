@@ -6,12 +6,12 @@ import Pagination from '../../components/ui/Pagination';
 import './contracts.css';
 import ManagementContractPaper from './ManagementContractPaper';
 
-export const contractStatus = { draft: 'Chờ lập nội dung', awaiting_signature: 'Chờ lập nội dung ký', pending_signatures: 'Đang trình ký', pending_signature: 'Chờ lập nội dung ký', signed: 'Đã ký đủ', active: 'Có hiệu lực', terminated: 'Đã chấm dứt', expired: 'Hết hạn', cancelled: 'Đã hủy' };
+export const contractStatus = { draft: 'Chờ lập nội dung', awaiting_signature: 'Chờ lập nội dung ký', pending_manager_review: 'Chờ Manager rà soát', pending_signatures: 'Đang trình ký', pending_signature: 'Chờ lập nội dung ký', signed: 'Đã ký đủ', active: 'Có hiệu lực', terminated: 'Đã chấm dứt', expired: 'Hết hạn', cancelled: 'Đã hủy' };
 const time = (value) => value ? new Date(value).toLocaleString('vi-VN') : 'Chưa ký';
 const statusTone = (status) => ['active', 'signed'].includes(status) ? 'success' : ['terminated', 'expired', 'cancelled'].includes(status) ? 'muted' : 'pending';
 const signatureState = (name, signedAt, signed = Boolean(signedAt)) => signed ? { title: 'Đã ký', name: name || 'Đã xác nhận', date: signedAt ? time(signedAt) : 'Đã xác nhận' } : { title: 'Chờ ký', name: 'Chưa ghi nhận chữ ký', date: 'Đang chờ xác nhận' };
 const contractTypes = [
-  { value: 'management', title: 'Hợp đồng ủy quyền quản lý xe', parties: 'Chủ xe ↔ XeDi', flow: 'Chủ xe ký → Operator tiếp nhận → Manager ký' },
+  { value: 'management', title: 'Hợp đồng ủy quyền quản lý xe', parties: 'Chủ xe ↔ XeDi', flow: 'Manager rà soát → Chủ xe ký → Manager ký' },
   { value: 'rental', title: 'Hợp đồng thuê xe', parties: 'XeDi ↔ Người thuê', flow: 'Người thuê ký → Operator tiếp nhận → Manager ký' },
 ];
 const typeTitle = (type) => contractTypes.find((item) => item.value === type)?.title || 'Hợp đồng';
@@ -28,7 +28,9 @@ const contractTemplate = {
   },
 };
 function workflowState(item) {
+  if (item.status === 'pending_manager_review') return 'Chờ Manager rà soát nội dung';
   if (item.platformSigned ?? Boolean(item.platformSignedAt)) return item.status === 'active' ? 'Đang có hiệu lực' : 'Đã hoàn tất chữ ký';
+  if (item.managerReviewStatus === 'approved' && item.partySigned) return 'Chờ Manager ký phía XeDi';
   if (item.operatorIntakeConfirmedAt) return 'Chờ Manager ký phía XeDi';
   if (item.partySigned) return 'Chờ Operator tiếp nhận';
   return item.document ? `Chờ ${item.type === 'management' ? 'Chủ xe' : 'Người thuê'} ký` : 'Chưa có nội dung trình ký';
@@ -118,6 +120,7 @@ export function ContractContent({ agreement }) {
 
 export function SigningDialog({ item, view, onClose, onSigned }) {
   const [agreement, setAgreement] = useState(null), [error, setError] = useState('');
+  const [reviewNote, setReviewNote] = useState('');
   const roles = getCurrentUser()?.roles || [];
   const [name, setName] = useState(getCurrentUser()?.full_name || '');
   const [accepted, setAccepted] = useState(false), [busy, setBusy] = useState(false);
@@ -151,11 +154,32 @@ export function SigningDialog({ item, view, onClose, onSigned }) {
     } catch (reason) { setError(reason.message); }
     finally { setBusy(false); }
   }
+  async function reviewManagement(action) {
+    if (busy) return;
+    if (action === 'revision' && reviewNote.trim().length < 5) {
+      setError('Ghi rõ nội dung cần chỉnh sửa (tối thiểu 5 ký tự).');
+      return;
+    }
+    setBusy(true); setError('');
+    try {
+      const result = await postApi(`/contracts/management/${item.id}/manager-review?view=staff`, { action, note: reviewNote });
+      setAgreement(result.data); setReviewNote(''); onSigned();
+    } catch (reason) { setError(reason.message); }
+    finally { setBusy(false); }
+  }
   return <div className="contract-backdrop"><section role="dialog" aria-modal="true" aria-label="Nội dung và ký hợp đồng" className="contract-dialog">
     <div className="contract-dialog-header"><div><span className="contract-eyebrow">XEDI · KÝ KẾT ĐIỆN TỬ</span><h2>Rà soát hợp đồng</h2><p>Đọc kỹ nội dung trước khi xác nhận.</p></div><div className="contract-toolbar">{agreement?.document && !agreement.document.articles?.length && <button className="contract-button contract-button--secondary" onClick={() => window.print()}>In / lưu PDF</button>}<button className="contract-close" onClick={onClose} disabled={busy} autoFocus aria-label="Đóng cửa sổ">×</button></div></div>
     {error && <p className="contract-alert" role="alert">{error}</p>}
     {!agreement ? <div className="contract-loading" role="status"><span className="contract-spinner" />Đang tải nội dung hợp đồng…</div> : <>
       <ContractContent agreement={agreement} />
+      {agreement.canManagerRelease && <div className="contract-sign-form">
+        <p>Manager rà soát bản hợp đồng đã tự điền sau khi xe được duyệt. Chỉ gửi Chủ xe ký khi nội dung phù hợp.</p>
+        <label>Ghi chú rà soát<input maxLength={1000} value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} disabled={busy} /></label>
+        <div className="contract-toolbar">
+          <button className="contract-button contract-button--secondary" type="button" onClick={() => reviewManagement('revision')} disabled={busy || reviewNote.trim().length < 5}>Yêu cầu chỉnh sửa</button>
+          <button className="contract-button contract-button--primary" type="button" onClick={() => reviewManagement('approve')} disabled={busy}>{busy ? 'Đang ghi nhận…' : 'Duyệt nội dung, gửi Chủ xe ký'}</button>
+        </div>
+      </div>}
       {agreement.canOperatorConfirm && <div className="contract-sign-form">
         <p>Chủ xe/người thuê đã xác nhận. Hãy kiểm tra hồ sơ và xác nhận đã tiếp nhận để chuyển Manager ký phía XeDi. Đây không phải phê duyệt nội dung hoặc chữ ký thay Manager.</p>
         <button className="contract-button contract-button--primary" type="button" onClick={confirmIntake} disabled={busy}>{busy ? 'Đang ghi nhận…' : 'Xác nhận đã tiếp nhận'}</button>
@@ -164,9 +188,11 @@ export function SigningDialog({ item, view, onClose, onSigned }) {
         <label>Họ tên người ký<input required minLength={2} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} disabled={busy} /></label>
         <label className="contract-accept"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} disabled={busy} /><span>Tôi đã đọc và đồng ý ký hợp đồng.</span></label>
         <button className="contract-button contract-button--primary" type="submit" disabled={busy || !accepted}>{busy ? 'Đang ghi nhận…' : 'Xác nhận ký hợp đồng'}</button>
-      </form> : <p className="contract-signing-note" role="status">      {view === 'staff' && agreement.partySigned && agreement.operatorIntakeConfirmedAt && !(agreement.platformSigned ?? Boolean(agreement.platformSignedAt))
+      </form> :       <p className="contract-signing-note" role="status">      {view === 'staff' && agreement.partySigned && agreement.managerReviewStatus === 'approved' && !(agreement.platformSigned ?? Boolean(agreement.platformSignedAt))
+          ? 'Chủ xe/người thuê đã ký sau bước rà soát. Hợp đồng đang chờ Manager ký phía XeDi.'
+          : view === 'staff' && agreement.partySigned && agreement.operatorIntakeConfirmedAt && !(agreement.platformSigned ?? Boolean(agreement.platformSignedAt))
         ? 'Operator đã tiếp nhận hồ sơ. Hợp đồng đang chờ Manager ký phía XeDi.'
-        : view === 'staff' && agreement.partySigned && !agreement.operatorIntakeConfirmedAt && roles.includes('MANAGER')
+        : view === 'staff' && agreement.partySigned && !agreement.operatorIntakeConfirmedAt && !agreement.managerReviewStatus && roles.includes('MANAGER')
         ? 'Bên còn lại đã ký. Hợp đồng đang chờ Operator xác nhận tiếp nhận trước khi Manager có thể ký phía XeDi.'
         : !agreement.document
           ? 'Hồ sơ chưa có nội dung điện tử để ký. Manager cần lập nội dung trước khi các bên có thể xác nhận.'
@@ -238,7 +264,7 @@ export default function ContractsPage({ embedded = false } = {}) {
   };
   const reset = () => { setPage(1); setCandidatePage(1); setReference(''); setSelected(null); setQuery(''); setSearchText(''); };
   if (!getSessionToken()) return <main className="contracts-page"><section className="contract-login-card"><span className="contract-hero-icon">▤</span><span className="contract-eyebrow">XEDI · HỒ SƠ ĐIỆN TỬ</span><h1>Hợp đồng của bạn</h1><p>Đăng nhập để xem nội dung, theo dõi chữ ký và trạng thái hiệu lực.</p><a className="contract-button contract-button--primary" href="/#/login">Đăng nhập</a></section></main>;
-  const pendingCount = rows.filter((item) => ['draft', 'awaiting_signature', 'pending_signature', 'pending_signatures'].includes(item.status)).length;
+  const pendingCount = rows.filter((item) => ['draft', 'awaiting_signature', 'pending_signature', 'pending_signatures', 'pending_manager_review'].includes(item.status)).length;
   const effectiveCount = rows.filter((item) => ['active', 'signed'].includes(item.status)).length;
   const selectedType = contractTypes.find((item) => item.value === type) || contractTypes[0];
   return <main className={`contracts-page${embedded ? ' contracts-page--embedded' : ''}`}>
@@ -260,7 +286,7 @@ export default function ContractsPage({ embedded = false } = {}) {
     </div><span className="contract-access-note">🔒 Chỉ người có quyền mới xem và ký được hợp đồng.</span></section>
     {operator && view === 'staff' && !permissions.includes('operation.contract.intake.confirm') && <p className="contract-permission-warning" role="status">Bạn vẫn có thể xem hợp đồng, nhưng tài khoản chưa được cấp quyền tiếp nhận để chuyển hồ sơ cho Manager.</p>}
     {error && <p className="contract-alert" role="alert">{error}<button className="contract-alert-close" onClick={() => setError('')} aria-label="Đóng thông báo">×</button></p>}
-    {canPrepare && <form onSubmit={prepare} className="contract-prepare"><div className="contract-prepare-heading"><span className="contract-step">01</span><div><span className="contract-eyebrow">TẠO HỒ SƠ</span><h2>Lập nội dung trình ký</h2><p>{type === 'management' ? 'Lập hoặc hoàn thiện nội dung sau khi xe và biên bản kiểm định được duyệt. Hệ thống tự điền dữ liệu hồ sơ.' : 'Chọn booking đã duyệt. Giá thuê, tiền cọc và lịch được lấy từ booking.'}</p></div></div>
+    {canPrepare && <form onSubmit={prepare} className="contract-prepare"><div className="contract-prepare-heading"><span className="contract-step">01</span><div><span className="contract-eyebrow">TẠO HỒ SƠ</span><h2>Lập nội dung trình ký</h2><p>{type === 'management' ? 'Hệ thống tự tạo hợp đồng sau khi Manager duyệt xe; tại đây có thể lập lại nội dung nếu cần.' : 'Hệ thống tự tạo hợp đồng khi Manager duyệt booking; tại đây có thể mở hoặc hoàn thiện hồ sơ còn thiếu.'}</p></div></div>
       <div className="contract-prepare-fields"><label>{type === 'management' ? 'Xe chờ lập nội dung hợp đồng' : 'Booking chờ ký'}<select required value={reference} onChange={(event) => setReference(event.target.value)}><option value="">{!candidateMeta ? 'Đang tải hồ sơ…' : candidates.length ? 'Chọn xe cần lập nội dung' : 'Không có hồ sơ phù hợp'}</option>{candidates.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
       {type === 'management' && <><label>Ngày bắt đầu<input type="date" value={start} onChange={(event) => setStart(event.target.value)} /></label><label>Ngày kết thúc<input type="date" value={end} min={start || undefined} onChange={(event) => setEnd(event.target.value)} /></label>
         <label>Hoa hồng (%)<input name="commissionRatePct" type="number" min="0" max="100" step="0.01" value={terms.commissionRatePct} onChange={changeTerm} placeholder="Theo hồ sơ, mặc định 10" /></label>
@@ -273,7 +299,7 @@ export default function ContractsPage({ embedded = false } = {}) {
       <Pagination page={candidatePage} pageSize={10} total={candidateMeta?.total || 0} onPageChange={setCandidatePage} label="Phân trang hồ sơ lập hợp đồng" />
     </form>}
     <section className="contract-results"><div className="contract-results-heading"><div><span className="contract-eyebrow">DANH SÁCH</span><h2>{selectedType.title}</h2></div><span>{pagination?.total ?? rows.length} hồ sơ</span></div>
-    {loading ? <div className="contract-loading" role="status"><span className="contract-spinner" />Đang tải danh sách hợp đồng…</div> : rows.length ? <div className="contract-list">{rows.map((item) => { const platformSigned = item.platformSigned ?? Boolean(item.platformSignedAt); return <article className="contract-card" key={item.id}><div className="contract-card-main"><div className="contract-card-top"><span className={`contract-status contract-status--${statusTone(item.status)}`}>{contractStatus[item.status] || item.status}</span><span className="contract-card-type">{typeTitle(item.type)}</span><span className="contract-workflow-state">{workflowState(item)}</span></div><h3>{item.number}</h3><p className="contract-card-vehicle">{item.vehicle}</p><div className="contract-card-signatures"><span><i className={item.partySigned ? 'is-signed' : ''}>{item.partySigned ? '✓' : '·'}</i>{item.type === 'management' ? 'Chủ xe' : 'Người thuê'}: {item.partySigned ? 'Đã ký' : 'Chờ ký'}</span><span><i className={platformSigned ? 'is-signed' : ''}>{platformSigned ? '✓' : '·'}</i>XeDi: {platformSigned ? 'Đã ký' : 'Chờ ký'}</span></div></div><button className={`contract-button ${item.canSign ? 'contract-button--primary' : 'contract-button--secondary'}`} onClick={() => setSelected(item)}>{item.canSign ? 'Đọc và ký' : item.canOperatorConfirm ? 'Rà soát tiếp nhận' : 'Xem hợp đồng'} <span aria-hidden="true">→</span></button></article>; })}</div> : <div className="contract-empty"><span className="contract-empty-icon">▤</span><h3>Chưa có hợp đồng trong danh sách này</h3><p>{canPrepare ? 'Chọn hồ sơ phía trên để lập hoặc mở nội dung trình ký.' : 'Chưa có hồ sơ thuộc luồng hợp đồng này.'}</p></div>}
+    {loading ? <div className="contract-loading" role="status"><span className="contract-spinner" />Đang tải danh sách hợp đồng…</div> : rows.length ? <div className="contract-list">{rows.map((item) => { const platformSigned = item.platformSigned ?? Boolean(item.platformSignedAt); return <article className="contract-card" key={item.id}><div className="contract-card-main"><div className="contract-card-top"><span className={`contract-status contract-status--${statusTone(item.status)}`}>{contractStatus[item.status] || item.status}</span><span className="contract-card-type">{typeTitle(item.type)}</span><span className="contract-workflow-state">{workflowState(item)}</span></div><h3>{item.number}</h3><p className="contract-card-vehicle">{item.vehicle}</p><div className="contract-card-signatures"><span><i className={item.partySigned ? 'is-signed' : ''}>{item.partySigned ? '✓' : '·'}</i>{item.type === 'management' ? 'Chủ xe' : 'Người thuê'}: {item.partySigned ? 'Đã ký' : 'Chờ ký'}</span><span><i className={platformSigned ? 'is-signed' : ''}>{platformSigned ? '✓' : '·'}</i>XeDi: {platformSigned ? 'Đã ký' : 'Chờ ký'}</span></div></div><button className={`contract-button ${item.canSign || item.canManagerRelease ? 'contract-button--primary' : 'contract-button--secondary'}`} onClick={() => setSelected(item)}>{item.canManagerRelease ? 'Rà soát nội dung' : item.canSign ? 'Đọc và ký' : item.canOperatorConfirm ? 'Rà soát tiếp nhận' : 'Xem hợp đồng'} <span aria-hidden="true">→</span></button></article>; })}</div> : <div className="contract-empty"><span className="contract-empty-icon">▤</span><h3>Chưa có hợp đồng trong danh sách này</h3><p>{canPrepare ? 'Chọn hồ sơ phía trên để lập hoặc mở nội dung trình ký.' : 'Chưa có hồ sơ thuộc luồng hợp đồng này.'}</p></div>}
     </section>
     <Pagination page={page} pageSize={limit} total={pagination?.total || 0} disabled={loading} onPageChange={setPage} onPageSizeChange={(value) => { setLimit(value); setPage(1); }} />
     {selected && <SigningDialog key={`${selected.type}-${selected.id}-${view}`} item={selected} view={view} onClose={() => setSelected(null)} onSigned={refresh} />}
