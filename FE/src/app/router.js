@@ -6,6 +6,7 @@ import GaragePage from '../features/garage/pages/GaragePage';
 import GarageAccess from '../features/garage/components/GarageAccess';
 import ManagerPage from '../features/manager/pages/ManagerPage';
 import OwnerPage from '../features/owner/pages/OwnerPage';
+import OwnerAccess from '../features/owner/components/OwnerAccess';
 import AdminPage from '../features/admin/pages/AdminPage';
 import ContractsPage from '../features/contracts/ContractsPage';
 import VerificationPage from '../features/verification/pages/VerificationPage';
@@ -68,7 +69,7 @@ export default function AppRouter() {
   if (vehicleId) return <VehicleDetailPage listingId={vehicleId} />;
   if (isContracts) return <ContractsPage />;
   if (isGarage) return <GarageAccess>{(user) => <GaragePage user={user} />}</GarageAccess>;
-  if (isOwner) return <OwnerPage />;
+  if (isOwner) return <OwnerAccess><OwnerPage /></OwnerAccess>;
   if (isAdmin) return <AdminPage />;
   if (isOperator || isOperations || isOperation) return <OperatorPage initialSection={isOperations ? 'incidents' : undefined} />;
   if (isManager) return <ManagerPage />;
