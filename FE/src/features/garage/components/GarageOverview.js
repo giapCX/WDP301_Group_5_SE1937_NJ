@@ -105,6 +105,11 @@ export default function GarageOverview({ workspace, user, onNavigate, onOpen }) 
               <Icon name="arrow" size={14} />
             </button>
           </div>
+          {[['handover', 'Bàn giao hôm nay'], ['return', 'Nhận trả hôm nay']].map(([kind, label]) => <section key={kind}>
+            <h3>{label}</h3>
+            <GarageTaskTable tasks={sortGarageTasks(todayTasks.filter((task) => task.kind === kind))} onOpen={onOpen} />
+          </section>)}
+          <h3>Công việc đang chờ</h3>
           <GarageTaskTable tasks={pending.slice(0, 5)} onOpen={onOpen} />
         </section>
         <aside className="gs-overview-rail">

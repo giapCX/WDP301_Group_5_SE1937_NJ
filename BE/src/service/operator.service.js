@@ -1,3 +1,4 @@
+import { openRentalSigningBookings, operatorRentalContractQueue } from '../utils/booking-hold.js';
 import { Types } from 'mongoose';
 import { httpError, objectId } from '../utils/http-error.js';
 import { vehicleDocumentContentType } from '../utils/image-content.js';
@@ -214,7 +215,15 @@ export function createOperatorService(repository, files) {
         ]);
         metrics.expiringContracts = managementAgreements + rentalAgreements;
       }
+      if (hasPermission('operation.contract.read') && hasPermission('operation.contract.intake.confirm')) {
+        const bookings = await repository.bookings.find(openRentalSigningBookings(now), { projection: { _id: 1 } }).exec();
+        metrics.contractsToReview = await repository.rentalAgreements.countDocuments({
+          ...operatorRentalContractQueue, booking_id: { $in: bookings.map(({ _id }) => _id) },
+        });
+      }
       if (hasPermission('operation.incident.read')) {
+        metrics.newIncidents = await repository.incidents.countDocuments({ status: 'reported' });
+        metrics.returnedIncidents = await repository.incidents.countDocuments({ status: 'need_more_information' });
         const [incidentsInProgress, incidentsNeedsOperatorAction, incidentsWaitingManager] = await Promise.all([
           repository.incidents.countDocuments({ status: { $in: ['open', 'investigating', 'in_progress', 'under_review', 'awaiting_response'] } }),
           repository.incidents.countDocuments({ status: { $in: ['reported', 'need_more_information'] } }),

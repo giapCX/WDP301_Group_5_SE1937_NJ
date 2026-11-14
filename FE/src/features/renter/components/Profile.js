@@ -71,6 +71,7 @@ export default function Profile() {
         })} />
         <p>Đổi email hoặc số điện thoại cần xác thực OTP.</p><Otp target={{purpose:'profile',email:profile.email,phone:profile.phone}} onChange={setOtp} />
         <button disabled={busy}>Lưu hồ sơ</button>
+        {sessionStorage.getItem('renterBookingReturn') && <a href={sessionStorage.getItem('renterBookingReturn')} onClick={() => sessionStorage.removeItem('renterBookingReturn')}>Quay lại đặt xe</a>}
       </form>
     </section>
     <section className="renter-card"><h2>Đổi mật khẩu</h2><form onSubmit={e => {

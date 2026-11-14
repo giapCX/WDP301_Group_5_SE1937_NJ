@@ -229,11 +229,13 @@ export default function OperatorPage({ initialSection } = {}) {
     setShowCreateIncident(shouldOpen);
   }
 
-  function navigate(nextSection) {
+  const [contractQueue, setContractQueue] = useState('');
+  function navigate(nextSection, nextStatus = 'all', queue = '') {
+    setContractQueue(queue);
     setSection(nextSection);
     setMenuOpen(false);
     setPage(1);
-    setStatus('all');
+    setStatus(nextStatus);
     setQuery('');
     setSearchText('');
     setSelectedIncident(null);
@@ -634,6 +636,14 @@ export default function OperatorPage({ initialSection } = {}) {
                 <p className="operator-loading" role="status">Đang tải tổng quan…</p>
               ) : (
                 <div className="operator-metrics">
+                  {[
+                    ['contractsToReview', 'Hợp đồng chờ rà soát', 'contracts', 'all', 'operator'],
+                    ['inspectionScheduleRequestsWaiting', 'Lịch kiểm tra chờ phân công', 'inspections'],
+                    ['newIncidents', 'Sự cố mới', 'incidents', 'reported'],
+                    ['returnedIncidents', 'Hồ sơ Manager trả lại', 'incidents', 'need_more_information'],
+                  ].filter(([key, , target]) => dashboard && Object.hasOwn(dashboard, key) && permittedSections.some(({ id }) => id === target))
+                    .map(([key, label, target, filter, queue]) => <button type="button" className="operator-metric" key={key}
+                      onClick={() => navigate(target, filter, queue)}><span>{label}</span><strong>{dashboard[key]}</strong></button>)}
                   {dashboardMetrics
                     .filter(({ key }) => dashboard && Object.hasOwn(dashboard, key))
                     .map(({ key, label, icon, tone }) => (
@@ -650,7 +660,7 @@ export default function OperatorPage({ initialSection } = {}) {
               )}
             </section>
           ) : section === 'contracts' ? (
-            <ContractsPage embedded key={revision} />
+            <ContractsPage embedded key={revision + contractQueue} initialType={contractQueue ? "rental" : undefined} queue={contractQueue} />
           ) : section === 'identity' ? (
             <section className="operator-workspace">
               {loading ? <p role="status">Đang tải hồ sơ eKYC…</p> : identityRows.length ? (

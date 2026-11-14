@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getContractCandidates, getContracts, prepareContract } from '../api/contractsApi';
 import { getSessionToken } from '../../auth/session';
 
-export default function useContractsWorkspace({ type, view, canPrepare }) {
+export default function useContractsWorkspace({ type, view, canPrepare, queue }) {
   const [rows, setRows] = useState([]), [candidates, setCandidates] = useState([]);
   const [page, setPage] = useState(1), [limit, setLimit] = useState(10), [pagination, setPagination] = useState(null);
   const [query, setQuery] = useState(''), [searchText, setSearchText] = useState(''), [status, setStatus] = useState('all');
@@ -17,13 +17,14 @@ export default function useContractsWorkspace({ type, view, canPrepare }) {
     const controller = new AbortController(); setLoading(true); setError('');
     const params = new URLSearchParams({ view, page: String(page), limit: String(limit) });
     if (query.trim()) params.set('q', query.trim());
+    if (queue && type === 'rental') params.set('queue', queue);
     if (status !== 'all') params.set('status', status);
     getContracts(type, params, { signal: controller.signal })
       .then((result) => { if (!controller.signal.aborted) { setRows(result.data); setPagination(result.pagination); setPage(result.pagination.page); } })
       .catch((reason) => { if (!controller.signal.aborted) setError(reason.message); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [type, view, page, limit, revision, query, status]);
+  }, [type, view, page, limit, revision, query, status, queue]);
   useEffect(() => {
     if (!canPrepare) return;
     const controller = new AbortController(); setReference(''); setCandidates([]); setCandidateMeta(null);

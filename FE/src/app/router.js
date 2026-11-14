@@ -27,7 +27,7 @@ export default function AppRouter() {
   const [isVerification, setIsVerification] = useState(() => window.location.hash.startsWith('#/verification'));
   const [isOperation, setIsOperation] = useState(() => isHashRoute(window.location.hash, 'operation'));
   const [isOperator, setIsOperator] = useState(() => isHashRoute(window.location.hash, 'operator'));
-  const [vehicleId, setVehicleId] = useState(() => window.location.hash.match(/^#\/xe\/([a-f0-9]{24})$/i)?.[1] || '');
+  const [vehicleId, setVehicleId] = useState(() => window.location.hash.match(/^#\/xe\/([a-f0-9]{24})(?:\?.*)?$/i)?.[1] || '');
 
   useEffect(() => {
     const onHashChange = () => {
@@ -42,7 +42,7 @@ export default function AppRouter() {
       setIsVerification(window.location.hash.startsWith('#/verification'));
       setIsOperation(isHashRoute(window.location.hash, 'operation'));
       setIsOperator(isHashRoute(window.location.hash, 'operator'));
-      setVehicleId(window.location.hash.match(/^#\/xe\/([a-f0-9]{24})$/i)?.[1] || '');
+      setVehicleId(window.location.hash.match(/^#\/xe\/([a-f0-9]{24})(?:\?.*)?$/i)?.[1] || '');
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);

@@ -132,6 +132,7 @@ export default function GarageReportDialog({ task, onSave, onClose, onReviewArri
       <GarageManagerDecision task={task} />
       {task.kind === 'handover' && <fieldset disabled={readOnly || busy}>
         <legend>Đối chiếu tại quầy trước khi giao xe</legend>
+        {!readOnly && <p>Còn {['identityMatched', 'licenseChecked', 'fitToDrive'].filter((key) => !report.pickupVerification[key]).length} mục cần xác nhận.</p>}
         {Object.entries({ identityMatched: 'Người nhận đúng với hồ sơ thuê', licenseChecked: 'Đã đối chiếu GPLX phù hợp và còn hiệu lực', fitToDrive: 'Đã kiểm tra điều kiện lái xe tại thời điểm bàn giao' }).map(([key, label]) =>
           <label key={key}><input type="checkbox" checked={Boolean(report.pickupVerification[key])}
             onChange={(event) => set('pickupVerification', { ...report.pickupVerification, [key]: event.target.checked })} /> {label}</label>)}

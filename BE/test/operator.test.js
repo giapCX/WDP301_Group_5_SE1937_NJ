@@ -84,6 +84,7 @@ test('Operator Staff reads contracts, updates vehicle status and schedules onboa
   const dashboard = await request('/operator/dashboard');
   assert.deepEqual(Object.keys(dashboard.result.data.metrics).sort(), [
     'activeVehicles',
+    'contractsToReview',
     'expiringContracts',
     'identityVerificationsPending',
     'incidentsInProgress',
@@ -93,6 +94,8 @@ test('Operator Staff reads contracts, updates vehicle status and schedules onboa
     'inspectionsAwaitingManager',
     'inspectionsOverdue',
     'inspectionsUpcoming',
+    'newIncidents',
+    'returnedIncidents',
     'vehiclesAwaitingInspection',
   ]);
   const vehicleDetails = await request(`/operator/vehicles/${vehicle._id}`);

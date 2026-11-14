@@ -28,7 +28,12 @@ export default function RenterVehicleSearch() {
   }
 
   function openDetails(item) {
-    window.location.hash = `#/xe/${item._id}`;
+    const params = new URLSearchParams({ from: 'renter' });
+    if (search) {
+      params.set('start', search.startAt);
+      params.set('end', search.endAt);
+    }
+    window.location.hash = `#/xe/${item._id}?${params}`;
   }
 
   return <section className="renter-card renter-vehicle-search" aria-labelledby="renter-search-title">

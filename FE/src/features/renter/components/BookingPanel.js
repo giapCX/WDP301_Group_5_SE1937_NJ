@@ -9,7 +9,7 @@ import { Field } from './Controls';
 import { getSessionToken } from '../../auth/session';
 import '../styles/renter.css';
 function localDate(d) {
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  return new Date(d.getTime() + 7 * 3600000).toISOString().slice(0, 16);
 }
 export default function BookingPanel({
   listingId,
@@ -77,8 +77,8 @@ export default function BookingPanel({
     try {
       const result = await postRenter('/bookings', {
         listing_id: listing._id,
-        start_at: new Date(dates.start).toISOString(),
-        end_at: new Date(dates.end).toISOString(),
+        start_at: new Date(dates.start + "+07:00").toISOString(),
+        end_at: new Date(dates.end + "+07:00").toISOString(),
         agreed,
         request_key: key,
       });
@@ -171,7 +171,10 @@ export default function BookingPanel({
             </dl>
             <p className="renter-muted">Giá và lịch xe được xác nhận khi gửi yêu cầu.</p>
             <label className="renter-check"><input type="checkbox" required checked={agreed} onChange={event => setAgreed(event.target.checked)} />Tôi đồng ý điều kiện thuê, tiền cọc và chính sách hủy.</label>
-            {error && <p role="alert" className="renter-error">{error}</p>}
+            {error && <p role="alert" className="renter-error">{error} {error.includes('địa chỉ liên hệ') && <a href="#/renter/profile" onClick={() => {
+              const params = new URLSearchParams({ from: 'renter', start: new Date(dates.start + '+07:00').toISOString(), end: new Date(dates.end + '+07:00').toISOString() });
+              sessionStorage.setItem('renterBookingReturn', '#/xe/' + listingId + '?' + params);
+            }}>Bổ sung địa chỉ</a>}</p>}
             <button className="primary" disabled={busy || !agreed}>{busy ? 'Đang kiểm tra lịch...' : getSessionToken() ? 'Gửi yêu cầu thuê xe' : 'Đăng nhập để đặt xe'}</button>
           </form>
         </section>

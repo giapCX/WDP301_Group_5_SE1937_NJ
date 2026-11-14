@@ -619,8 +619,12 @@ export function createRenterService(repo, {
       });
       const [result] = await repo.aggregate('bookings', pipeline),
         total = result.count[0]?.total || 0;
+      const agreements = await repo.list('rental_agreements', {
+        booking_id: { $in: result.data.map((booking) => booking._id) },
+      }, { limit, projection: { booking_id: 1, status: 1, 'signing_info.renter_confirmed': 1, 'signing_info.renter_signed_at': 1, 'operator_intake.confirmed_at': 1 } });
+      const agreementByBooking = new Map(agreements.map((agreement) => [String(agreement.booking_id), agreement]));
       return {
-        data: result.data,
+        data: result.data.map((booking) => ({ ...booking, agreement: agreementByBooking.get(String(booking._id)) })),
         pagination: {
           page,
           limit,

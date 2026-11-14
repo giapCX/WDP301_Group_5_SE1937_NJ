@@ -1,3 +1,4 @@
+import { openRentalSigningBookings, operatorRentalContractQueue } from '../utils/booking-hold.js';
 import { BOOKING_PAYMENT_WINDOW_MS, bookingHoldExpression, isBookingHoldExpired } from '../utils/booking-hold.js';
 import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
@@ -159,6 +160,35 @@ export function createContractService(repository) {
           const approvedVehicles = await repository.vehicles.find({ onboarding_status: 'approved' }, { projection: { _id: 1 } }).exec();
           filter.$or = [{ vehicle_id: { $in: approvedVehicles.map((vehicle) => vehicle._id) } }, { arrival_confirmed_at: { $exists: true } }];
         }
+      }
+      if (mode === 'staff' && actor.roles.includes('MANAGER')) {
+        const signature = type === 'rental' ? 'signing_info' : 'signature_info';
+        const signedAt = type === 'rental' ? 'renter_signed_at' : 'owner_signed_at';
+        const partySigned = [{ [signature + '.' + signedAt]: { $ne: null } }];
+        if (type === 'rental') partySigned.push({ 'signing_info.renter_confirmed': true });
+        if (query.status === 'waiting_party' || query.status === 'waiting_manager') {
+          filter.status = 'pending_signatures';
+          filter['contract_document.hash'] = { $exists: true };
+          if (query.status === 'waiting_party') filter.$and = [{ $nor: partySigned }];
+          else {
+            filter.$and = [{ $or: partySigned }, { $or: type === 'management'
+              ? [{ 'operator_intake.confirmed_at': { $ne: null } }, { 'manager_review.status': 'approved' }]
+              : [{ 'operator_intake.confirmed_at': { $ne: null } }] }];
+            filter[signature + '.platform_signed_at'] = null;
+            if (type === 'rental') {
+              filter['signing_info.platform_signer_user_id'] = null;
+              const bookings = await repository.bookings.find(openRentalSigningBookings(new Date()), { projection: { _id: 1 } }).exec();
+              filter.booking_id = { $in: bookings.map(({ _id }) => _id) };
+            }
+          }
+        }
+      }
+      if (query.queue === 'operator') {
+        if (type !== 'rental' || mode !== 'staff' || !actor.permissions.includes('operation.contract.intake.confirm')) {
+          throw httpError(403, 'Bạn không có quyền xem hàng chờ rà soát.');
+        }
+        const bookings = await repository.bookings.find(openRentalSigningBookings(new Date()), { projection: { _id: 1 } }).exec();
+        Object.assign(filter, operatorRentalContractQueue, { booking_id: { $in: bookings.map(({ _id }) => _id) } });
       }
       if (query.q !== undefined) {
         if (typeof query.q !== 'string' || query.q.length > 100) throw httpError(400, 'q không hợp lệ.');
