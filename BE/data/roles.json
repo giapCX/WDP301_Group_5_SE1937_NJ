@@ -61,14 +61,18 @@
       "$oid": "010000000000000000000004"
     },
     "code": "OPERATION_STAFF",
-    "display_name": "Operation Staff",
+    "display_name": "Operator Staff",
     "permissions": [
-      "listing.create",
-      "listing.update",
-      "booking.review",
-      "withdrawal.process",
-      "incident.review",
-      "settlement.prepare"
+      "operation.dashboard.read",
+      "operation.contract.read",
+      "operation.vehicle.read",
+      "operation.vehicle.status.update",
+      "operation.vehicle.inspection.schedule",
+      "operation.incident.read",
+      "operation.incident.create",
+      "operation.incident.update",
+      "operation.incident.evidence.attach",
+      "operation.incident.submit"
     ],
     "description": "Primary project role",
     "updated_at": {

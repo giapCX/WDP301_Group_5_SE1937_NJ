@@ -1,13 +1,13 @@
 import {
-  createAccount, createRole, createStaff, getSystemReport, reviewCompensation,
+  createAccount, createRole, createStaff, decideBooking, getSystemReport, reviewCompensation,
   reviewIncident, reviewVehicle, reviewIdentityVerification, reviewTrafficViolation, saveSystemReport, updateAccount, updateContract,
-  updatePolicy, updateRole, updateStaff,
+  reviewListing, updateListing, updatePolicy, updateRole, updateStaff,
 } from '../api/managerApi';
 
 export default function useManagerActions() {
   return {
-    createAccount, createRole, createStaff, getSystemReport, reviewCompensation,
+    createAccount, createRole, createStaff, decideBooking, getSystemReport, reviewCompensation,
     reviewIncident, reviewVehicle, reviewIdentityVerification, reviewTrafficViolation, saveSystemReport, updateAccount, updateContract,
-    updatePolicy, updateRole, updateStaff,
+    reviewListing, updateListing, updatePolicy, updateRole, updateStaff,
   };
 }

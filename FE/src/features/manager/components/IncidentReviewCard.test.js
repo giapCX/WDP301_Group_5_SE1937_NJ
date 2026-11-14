@@ -19,3 +19,15 @@ test('Garage report or uninvestigated claim never enables a compensation approva
   expect(screen.getByRole('button', { name: 'Duyệt bồi thường' })).toBeDisabled();
   expect(screen.queryByRole('button', { name: 'Kết luận / đóng hồ sơ' })).not.toBeInTheDocument();
 });
+
+test('Manager can decide a pending claim after Operator submits the factual report', () => {
+  const submitted = {
+    ...item,
+    status: 'pending_manager',
+    investigation: { review_status: 'submitted' },
+    compensationClaims: [{ requested_amount: 100, decision: 'pending', renter_response: 'not_received' }],
+  };
+  render(<IncidentReviewCard item={submitted} act={jest.fn()} />);
+  expect(screen.getByText('Operator đã gửi thông tin và chứng cứ; Manager tự đánh giá, quyết định khoản bồi thường.')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Duyệt bồi thường' })).toBeEnabled();
+});

@@ -106,6 +106,10 @@ export function createContractService(repository) {
     async list(type, query, rawActor, mode = 'party') {
       checkType(type); const actor = await actorInfo(rawActor);
       let filter = {};
+      if (query.status && query.status !== 'all') {
+        if (typeof query.status !== 'string' || query.status.length > 40) throw httpError(400, 'status không hợp lệ.');
+        filter.status = query.status;
+      }
       if (mode === 'party') {
         requireRole(actor, type === 'management' ? ['OWNER', 'CAR_OWNER'] : ['RENTER']);
         if (type === 'management') filter.owner_id = actor.id;
@@ -115,6 +119,35 @@ export function createContractService(repository) {
         if (type === 'management') {
           const approvedVehicles = await repository.vehicles.find({ onboarding_status: 'approved' }, { projection: { _id: 1 } }).exec();
           filter.vehicle_id = { $in: approvedVehicles.map((vehicle) => vehicle._id) };
+        }
+      }
+      if (query.q !== undefined) {
+        if (typeof query.q !== 'string' || query.q.length > 100) throw httpError(400, 'q không hợp lệ.');
+        const q = query.q.trim();
+        if (q) {
+          const pattern = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          if (type === 'management') {
+            const vehicles = await repository.vehicles.find({ license_plate: pattern }, { projection: { _id: 1 } }).exec();
+            filter.$or = [
+              { agreement_number: pattern },
+              { vehicle_id: { $in: vehicles.map((vehicle) => vehicle._id) } },
+            ];
+          } else {
+            const [vehicles, bookings] = await Promise.all([
+              repository.vehicles.find({ license_plate: pattern }, { projection: { _id: 1 } }).exec(),
+              repository.bookings.find({ booking_code: pattern }, { projection: { _id: 1 } }).exec(),
+            ]);
+            const vehicleIds = vehicles.map((vehicle) => vehicle._id);
+            const bookingIds = bookings.map((booking) => booking._id);
+            if (vehicleIds.length) {
+              const vehicleBookings = await repository.bookings.find({ vehicle_id: { $in: vehicleIds } }, { projection: { _id: 1 } }).exec();
+              bookingIds.push(...vehicleBookings.map((booking) => booking._id));
+            }
+            filter.$or = [
+              { contract_number: pattern },
+              { booking_id: { $in: bookingIds } },
+            ];
+          }
         }
       }
       const rows = await findPageRows(repository.agreement(type), filter, { ...query, page: query.page ?? '1', limit: query.limit ?? '10' }, { sort: { created_at: -1 } });

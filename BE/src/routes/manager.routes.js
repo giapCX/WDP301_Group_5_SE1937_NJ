@@ -21,6 +21,11 @@ export function createManagerRouter(database, { fileRepository } = {}) {
   const requireManager = requireManagerRoles('MANAGER');
   const requireManagerOrAdmin = requireManagerRoles('MANAGER', 'ADMIN');
   const requireAdmin = requireManagerRoles('ADMIN');
+  router.get('/bookings', requireManager, controller.bookings);
+  router.patch('/bookings/:id/decision', requireManager, controller.decideBooking);
+  router.get('/listings', requireManager, controller.listings);
+  router.patch('/listings/:id', requireManager, controller.updateListing);
+  router.patch('/listings/:id/review', requireManager, controller.reviewListing);
   router.get('/accounts', requireAdmin, controller.accounts);
   router.post('/accounts', requireAdmin, controller.createAccount);
   router.patch('/accounts/:id', requireAdmin, controller.updateAccount);

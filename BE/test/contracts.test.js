@@ -40,7 +40,7 @@ async function rentalFixture() {
   const now = Date.now();
   const management = await models.ManagementAgreement.create({ vehicle_id: vehicle._id, owner_id: actors.owner._id, agreement_number: randomUUID(), status: 'active', start_date: new Date(now - 86400000), end_date: new Date(now + 365 * 86400000), signature_info: { owner_signed_at: new Date(now - 86400000), platform_signed_at: new Date(now - 86400000) }, authorization_scope: { vehicle_custody: true, rental_contract_signing: true } });
   const booking = await models.Booking.create({ booking_code: randomUUID(), renter_id: actors.renter._id, vehicle_id: vehicle._id, management_agreement_id: management._id, start_at: new Date(now + 2 * 86400000), end_at: new Date(now + 4 * 86400000), rental_fee_amount: 1000000, deposit_amount_snapshot: 3000000, pricing_snapshot: { daily_price: 500000 }, status: 'awaiting_payment', payment_deadline_at: new Date(now + 900000) });
-  const prepare = () => request(`/contracts/rental/prepare/${booking._id}`, 'POST', {}, 'operation');
+  const prepare = () => request(`/contracts/rental/prepare/${booking._id}`, 'POST', {}, 'manager');
   return { vehicle, booking, prepare };
 }
 
@@ -79,17 +79,18 @@ test('new owner vehicle moves through scheduling, approval, paper signing and pu
   }, 'owner', 201);
   const vehicleId = submitted.id;
   assert.ok(vehicleId);
-  const documentPath = `${base}/operation/vehicles/${vehicleId}/documents/registration`;
+  const documentPath = `${base}/operator/vehicles/${vehicleId}/documents/registration`;
   const inspectionFile = await fetch(documentPath, { headers: { Authorization: `Bearer ${tokens.operation}` } });
   assert.equal(inspectionFile.status, 200);
   assert.equal(inspectionFile.headers.get('content-type'), 'application/pdf');
   assert.equal((await fetch(documentPath, { headers: { Authorization: `Bearer ${tokens.owner}` } })).status, 403);
   const condition = { exterior: 'good', interior: 'good', engine: 'good', tires: 'good' };
   await request('/garage/inspections', 'POST', { vehicleId }, 'garage', 409);
-  await request(`/operation/vehicles/${vehicleId}/screen`, 'PATCH', {
-    action: 'schedule_inspection', garageStaffId: String(actors.garage._id),
-    scheduledFor: new Date(Date.now() + 3600000).toISOString(), note: 'Kiểm định tại gara thử nghiệm.',
-  }, 'operation');
+  await request(`/operator/vehicles/${vehicleId}/inspection-schedule`, 'POST', {
+    garageStaffId: String(actors.garage._id),
+    scheduledFor: new Date(Date.now() + 3600000).toISOString(),
+    note: 'Kiểm định tại gara thử nghiệm.',
+  }, 'operation', 201);
   const inspection = await models.VehicleInspection.findOne({ vehicle_id: vehicleId, approval_status: 'draft' }).lean();
   const inspectionPath = `/garage/inspections/${inspection._id}`;
   const keys = ['identity', 'odometer', 'exterior', 'interior', 'tires', 'brakes', 'powertrain', 'leaks', 'lights', 'accessories'];
@@ -124,17 +125,17 @@ test('new owner vehicle moves through scheduling, approval, paper signing and pu
   await request(`/listings/${listing._id}`, 'GET', undefined, 'owner', 404);
   const photoPath = base.slice(0, -4) + listing.photos[0];
   assert.equal((await fetch(photoPath)).status, 404);
-  const listingPath = `/operation/listings/${listing._id}`;
-  await request(`${listingPath}/review`, 'PATCH', { action: 'approve' }, 'operation', 409);
+  const listingPath = `/manager/listings/${listing._id}`;
+  await request(`${listingPath}/review`, 'PATCH', { action: 'approve' }, 'manager', 409);
   await request(listingPath, 'PATCH', {
     securityDepositAmount: 3000000, pickupLocation: { branchName: 'Gara XeDi', city: 'Hà Nội', addressLabel: 'Gara thử nghiệm' },
-  }, 'operation');
-  await request(`${listingPath}/review`, 'PATCH', { action: 'approve' }, 'operation');
+  }, 'manager');
+  await request(`${listingPath}/review`, 'PATCH', { action: 'approve' }, 'manager');
   assert.equal((await request(`/listings/${listing._id}`, 'GET', undefined, 'owner')).data.daily_price, 700000);
   const image = await fetch(photoPath);
   assert.equal(image.status, 200);
   assert.equal(image.headers.get('content-type'), 'image/png');
-  await request(`${listingPath}/review`, 'PATCH', { action: 'deactivate' }, 'operation');
+  await request(`${listingPath}/review`, 'PATCH', { action: 'deactivate' }, 'manager');
   assert.equal((await fetch(photoPath)).status, 404);
 });
 
@@ -175,7 +176,7 @@ test('audit failure rolls back signature and contract status', async () => {
   assert.equal(stored.signature_info?.owner_signed_at, undefined);
 });
 
-test('Operation prepares rental snapshot, renter and Manager sign independently without marking money paid', async () => {
+test('Manager prepares rental snapshot, renter and Manager sign independently without marking money paid', async () => {
   const fixture = await rentalFixture(), row = (await fixture.prepare()).data;
   assert.equal(row.document.version, 'xedi-rental-paper-v1');
   assert.equal(row.document.parties.length, 2);
@@ -209,7 +210,7 @@ test('rental cannot sign changed, cancelled or expired bookings; management cann
   await sign(row, 'renter', 'party', signature(row), 409);
   const second = await rentalFixture();
   await models.Booking.updateOne({ _id: second.booking._id }, { $set: { payment_deadline_at: new Date(0) } });
-  await request(`/contracts/rental/prepare/${second.booking._id}`, 'POST', {}, 'operation', 409);
+  await request(`/contracts/rental/prepare/${second.booking._id}`, 'POST', {}, 'manager', 409);
   const fixture = await managementFixture(), management = (await fixture.prepare()).data;
   await sign(management, 'owner');
   const again = (await request(`/contracts/management/prepare/${fixture.vehicle._id}`, 'POST', { endDate: '2040-01-01' })).data;

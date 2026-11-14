@@ -78,24 +78,28 @@ export default function ContractsPage({ embedded = false } = {}) {
   const [type, setType] = useState(owner || roles.includes('MANAGER') ? 'management' : 'rental');
   const [rows, setRows] = useState([]), [candidates, setCandidates] = useState([]);
   const [page, setPage] = useState(1), [limit, setLimit] = useState(10), [pagination, setPagination] = useState(null);
+  const [query, setQuery] = useState(''), [status, setStatus] = useState('all');
   const [candidatePage, setCandidatePage] = useState(1), [candidateMeta, setCandidateMeta] = useState(null);
   const [reference, setReference] = useState(''), [start, setStart] = useState(''), [end, setEnd] = useState('');
   const [terms, setTerms] = useState({ commissionRatePct: '', place: '', garage: '', platformName: '' });
   const changeTerm = (event) => setTerms((previous) => ({ ...previous, [event.target.name]: event.target.value }));
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [selected, setSelected] = useState(null), [revision, setRevision] = useState(0);
-  const canPrepare = view === 'staff' && (type === 'rental' || roles.includes('MANAGER'));
-  const typesFor = (scope) => scope === 'staff' ? (roles.includes('MANAGER') ? ['management', 'rental'] : ['rental']) : [...(owner ? ['management'] : []), ...(roles.includes('RENTER') ? ['rental'] : [])];
+  const canPrepare = view === 'staff' && roles.includes('MANAGER') && (type === 'rental' || roles.includes('MANAGER'));
+  const typesFor = (scope) => scope === 'staff' ? (roles.includes('MANAGER') || roles.includes('OPERATION_STAFF') ? ['management', 'rental'] : ['rental']) : [...(owner ? ['management'] : []), ...(roles.includes('RENTER') ? ['rental'] : [])];
   const refresh = () => setRevision((value) => value + 1);
   useEffect(() => {
     if (!getSessionToken()) { setLoading(false); return; }
     const controller = new AbortController(); setLoading(true); setError('');
-    getApi(`/contracts/${type}?view=${view}&page=${page}&limit=${limit}`, { signal: controller.signal })
+    const params = new URLSearchParams({ view, page: String(page), limit: String(limit) });
+    if (query.trim()) params.set('q', query.trim());
+    if (status !== 'all') params.set('status', status);
+    getApi(`/contracts/${type}?${params}`, { signal: controller.signal })
       .then((result) => { if (!controller.signal.aborted) { setRows(result.data); setPagination(result.pagination); setPage(result.pagination.page); } })
       .catch((reason) => { if (!controller.signal.aborted) setError(reason.message); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [type, view, page, limit, revision]);
+  }, [type, view, page, limit, revision, query, status]);
   useEffect(() => {
     if (!canPrepare) return;
     const controller = new AbortController(); setReference(''); setCandidates([]); setCandidateMeta(null);
@@ -123,11 +127,13 @@ export default function ContractsPage({ embedded = false } = {}) {
   const pendingCount = rows.filter((item) => ['draft', 'awaiting_signature', 'pending_signature', 'pending_signatures'].includes(item.status)).length;
   const effectiveCount = rows.filter((item) => ['active', 'signed'].includes(item.status)).length;
   return <main className={`contracts-page${embedded ? ' contracts-page--embedded' : ''}`}>
-    {!embedded && <header className="contracts-header"><div className="contracts-brand"><span className="contract-hero-icon">▤</span><div><span className="contract-eyebrow">XEDI · HỒ SƠ ĐIỆN TỬ</span><h1>Hợp đồng</h1><p>Rà soát nội dung, hoàn tất chữ ký và theo dõi hiệu lực.</p></div></div><nav><a href="/#trang-chu">Trang chủ</a>{staff && <a href={roles.includes('MANAGER') ? '/#/manager' : '/#/operations'}>Không gian làm việc</a>}{owner && <a href="/owner">Chủ xe</a>}<button className="contract-button contract-button--secondary" onClick={refresh} aria-label="Tải lại danh sách">↻ <span>Tải lại</span></button></nav></header>}
+    {!embedded && <header className="contracts-header"><div className="contracts-brand"><span className="contract-hero-icon">▤</span><div><span className="contract-eyebrow">XEDI · HỒ SƠ ĐIỆN TỬ</span><h1>Hợp đồng</h1><p>Rà soát nội dung, hoàn tất chữ ký và theo dõi hiệu lực.</p></div></div><nav><a href="/#trang-chu">Trang chủ</a>{staff && <a href={roles.includes('MANAGER') ? '/#/manager' : '/#/operator'}>Không gian làm việc</a>}{owner && <a href="/owner">Chủ xe</a>}<button className="contract-button contract-button--secondary" onClick={refresh} aria-label="Tải lại danh sách">↻ <span>Tải lại</span></button></nav></header>}
     <section className="contract-welcome"><div><span className="contract-eyebrow">{view === 'staff' ? 'KHÔNG GIAN NỀN TẢNG' : 'KHÔNG GIAN CỦA BẠN'}</span><h2>{type === 'management' ? 'Quản lý xe' : 'Thuê xe'}</h2><p>{type === 'management' ? 'Theo dõi thỏa thuận giữa chủ xe và XeDi, từ khâu trình ký đến khi có hiệu lực.' : 'Theo dõi hợp đồng thuê xe và chữ ký của khách hàng cùng XeDi.'}</p></div><div className="contract-summary"><div><strong>{pagination?.total ?? rows.length}</strong><span>Tổng hồ sơ</span></div><div><strong>{pendingCount}</strong><span>Chờ ký · trang này</span></div><div><strong>{effectiveCount}</strong><span>Hiệu lực · trang này</span></div></div></section>
     <section className="contract-controls"><div className="contract-filters">
       {staff && <label>Phạm vi<select value={view} onChange={(event) => { setView(event.target.value); setType(typesFor(event.target.value)[0]); reset(); }}><option value="staff">Nền tảng</option>{(owner || roles.includes('RENTER')) && <option value="party">Hợp đồng của tôi</option>}</select></label>}
       <label>Loại hợp đồng<select value={type} onChange={(event) => { setType(event.target.value); reset(); }}>{typesFor(view).map((value) => <option value={value} key={value}>{value === 'management' ? 'Quản lý xe' : 'Thuê xe'}</option>)}</select></label>
+      <label>Tìm hợp đồng<input value={query} maxLength={100} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Mã hợp đồng, booking hoặc biển số" /></label>
+      <label>Trạng thái<select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="all">Tất cả</option>{Object.entries(contractStatus).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
     </div><span className="contract-access-note">🔒 Chỉ người có quyền mới xem và ký được hợp đồng.</span></section>
     {error && <p className="contract-alert" role="alert">{error}<button className="contract-alert-close" onClick={() => setError('')} aria-label="Đóng thông báo">×</button></p>}
     {canPrepare && <form onSubmit={prepare} className="contract-prepare"><div className="contract-prepare-heading"><span className="contract-step">01</span><div><span className="contract-eyebrow">TẠO HỒ SƠ</span><h2>Lập nội dung trình ký</h2><p>{type === 'management' ? 'Chỉ lập sau khi xe và biên bản kiểm định được duyệt. Thời hạn mặc định một năm.' : 'Chọn booking đã duyệt. Giá thuê, tiền cọc và lịch được lấy từ booking.'}</p></div></div>

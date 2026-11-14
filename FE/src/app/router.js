@@ -7,10 +7,11 @@ import GarageAccess from '../features/garage/components/GarageAccess';
 import ManagerPage from '../features/manager/pages/ManagerPage';
 import OwnerPage from '../features/owner/pages/OwnerPage';
 import AdminPage from '../features/manager/pages/AdminPage';
-import OperationIncidentsPage from '../features/operations/pages/OperationIncidentsPage';
 import ContractsPage from '../features/contracts/ContractsPage';
 import VerificationPage from '../features/verification/pages/VerificationPage';
-import OperationPage from '../features/operation/pages/OperationPage';
+import OperatorPage from '../features/operator/pages/OperatorPage';
+
+const isHashRoute = (hash, route) => new RegExp(`^#/${route}(?:/|$)`).test(hash);
 
 export default function AppRouter() {
   const [isRenter,setIsRenter]=useState(()=>window.location.hash.startsWith('#/renter'));
@@ -19,10 +20,11 @@ export default function AppRouter() {
   const [isOwner, setIsOwner] = useState(() => window.location.pathname.startsWith('/owner') || window.location.hash.startsWith('#/owner'));
   const [isManager, setIsManager] = useState(() => window.location.hash.startsWith('#/manager'));
   const [isAdmin, setIsAdmin] = useState(() => window.location.hash.startsWith('#/admin'));
-  const [isOperations, setIsOperations] = useState(() => window.location.hash.startsWith('#/operations'));
+  const [isOperations, setIsOperations] = useState(() => isHashRoute(window.location.hash, 'operations'));
   const [isContracts, setIsContracts] = useState(() => window.location.hash.startsWith('#/contracts'));
   const [isVerification, setIsVerification] = useState(() => window.location.hash.startsWith('#/verification'));
-  const [isOperation, setIsOperation] = useState(() => window.location.hash.startsWith('#/operation'));
+  const [isOperation, setIsOperation] = useState(() => isHashRoute(window.location.hash, 'operation'));
+  const [isOperator, setIsOperator] = useState(() => isHashRoute(window.location.hash, 'operator'));
 
   useEffect(() => {
     const onHashChange = () => {
@@ -32,17 +34,18 @@ export default function AppRouter() {
       setIsGarage(window.location.hash.startsWith('#/garage'));
       setIsOwner(window.location.hash.startsWith('#/owner'));
       setIsAdmin(window.location.hash.startsWith('#/admin'));
-      setIsOperations(window.location.hash.startsWith('#/operations'));
+      setIsOperations(isHashRoute(window.location.hash, 'operations'));
       setIsContracts(window.location.hash.startsWith('#/contracts'));
       setIsVerification(window.location.hash.startsWith('#/verification'));
-      setIsOperation(window.location.hash.startsWith('#/operation'));
+      setIsOperation(isHashRoute(window.location.hash, 'operation'));
+      setIsOperator(isHashRoute(window.location.hash, 'operator'));
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   useEffect(() => {
-    document.title = isRenter ? 'Khách thuê — XeDi' : isContracts ? 'Hợp đồng — XeDi' : isOperations ? 'Xác minh sự cố — XeDi' : isGarage
+    document.title = isRenter ? 'Khách thuê — XeDi' : isContracts ? 'Hợp đồng — XeDi' : isOperator || isOperations || isOperation ? 'Nhân viên vận hành — XeDi' : isGarage
       ? 'Garage Staff — XeDi'
       : isOwner
       ? 'Cổng chủ xe — XeDi'
@@ -52,22 +55,19 @@ export default function AppRouter() {
       ? 'Đăng nhập & Đăng ký — XeDi'
       : isAdmin
         ? 'Quản trị hệ thống — XeDi'
-        : isOperation
-          ? 'Operation Management — XeDi'
-          : isManager
-            ? 'Quản lý vận hành — XeDi'
-            : 'XeDi — Thuê xe tự lái, vi vu mọi nẻo đường';
+        : isManager
+          ? 'Quản lý vận hành — XeDi'
+          : 'XeDi — Thuê xe tự lái, vi vu mọi nẻo đường';
     window.scrollTo(0, 0);
-  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isContracts, isVerification, isOperation, isRenter]);
+  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isOperator, isContracts, isVerification, isOperation, isRenter]);
 
   if (isRenter) return <RenterPage />;
   if (isContracts) return <ContractsPage />;
   if (isGarage) return <GarageAccess>{(user) => <GaragePage user={user} />}</GarageAccess>;
   if (isOwner) return <OwnerPage />;
   if (isAdmin) return <AdminPage />;
-  if (isOperation) return <OperationPage />;
+  if (isOperator || isOperations || isOperation) return <OperatorPage initialSection={isOperations ? 'incidents' : undefined} />;
   if (isManager) return <ManagerPage />;
-  if (isOperations) return <OperationIncidentsPage />;
   if (isVerification) return <VerificationPage />;
 
   return isLogin ? (

@@ -45,18 +45,12 @@ test('failed signing remains visible and cannot show a successful signature', as
   expect(within(dialog).getByRole('button', { name: 'Xác nhận ký hợp đồng' })).toBeInTheDocument();
 });
 
-test('Operation prepares an approved booking and sees no platform signing permission', async () => {
+test('Operator Staff can only read platform contracts', async () => {
   saveSession('operation-token', { full_name: 'Operation', roles: ['OPERATION_STAFF'] }, false);
-  const rental = { ...row, type: 'rental', canSign: false };
-  getApi.mockImplementation(async (path) => path.includes('/candidates') ? { data: [{ id: 'booking-1', label: 'BK-0001' }], pagination: { page: 1, total: 1 } }
-    : path.includes('agreement-1?') ? { data: rental } : { data: [], pagination: { page: 1, total: 0 } });
-  postApi.mockResolvedValue({ data: rental });
+  getApi.mockResolvedValue({ data: [], pagination: { page: 1, limit: 10, total: 0 } });
   render(<ContractsPage />);
-  await screen.findByText('BK-0001');
-  fireEvent.change(screen.getByLabelText('Booking chờ ký'), { target: { value: 'booking-1' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Lập / mở hợp đồng' }));
-  await waitFor(() => expect(postApi).toHaveBeenCalledWith('/contracts/rental/prepare/booking-1', {}));
-  const dialog = await screen.findByRole('dialog');
-  await within(dialog).findByText('Điều khoản đã chốt.');
-  expect(within(dialog).queryByRole('button', { name: 'Xác nhận ký hợp đồng' })).not.toBeInTheDocument();
+  expect(await screen.findByText('Chưa có hợp đồng trong danh sách này')).toBeInTheDocument();
+  await waitFor(() => expect(getApi).toHaveBeenCalledWith('/contracts/rental?view=staff&page=1&limit=10', expect.anything()));
+  expect(screen.queryByRole('button', { name: 'Lập / mở hợp đồng' })).not.toBeInTheDocument();
+  expect(postApi).not.toHaveBeenCalled();
 });

@@ -23,6 +23,8 @@ export const incidentCaseSchema = createSchema({
   evidence: arrayOf(embedded({
     kind: String,
     file_key: String,
+    file_name: String,
+    content_type: String,
     uploaded_by_user_id: { type: ObjectId, ref: 'User' },
     uploaded_at: Date,
   })),
@@ -30,6 +32,8 @@ export const incidentCaseSchema = createSchema({
     review_status: String,
     renter_response: String,
   }),
+  submitted_to_manager_by_user_id: { type: ObjectId, ref: 'User' },
+  submitted_to_manager_at: Date,
   traffic_violation_details: embedded({
     reported_at: Date,
     notice_number: String,

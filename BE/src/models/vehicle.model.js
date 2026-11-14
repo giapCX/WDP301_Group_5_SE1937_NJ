@@ -49,6 +49,13 @@ export const vehicleSchema = createSchema({
     at: Date,
     note: String,
   })),
+  operational_status_history: arrayOf(embedded({
+    from: String,
+    to: String,
+    note: String,
+    changed_by_user_id: { type: ObjectId, ref: 'User' },
+    changed_at: Date,
+  })),
   created_at: Date,
   updated_at: Date,
   inspection_workflow_version: integer({ min: 0 }),

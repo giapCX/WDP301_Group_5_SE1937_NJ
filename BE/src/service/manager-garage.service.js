@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
 import { garageTransaction } from '../utils/garage-transaction.js';
 
-const OPEN_CASES = ['reported', 'open', 'investigating', 'pending_review', 'awaiting_response'];
+const OPEN_CASES = ['reported', 'open', 'investigating', 'pending_review', 'pending_manager', 'awaiting_response'];
 const decisions = { approve: 'approved', revision: 'revision_required', reject: 'rejected' };
 const objectId = (value) => typeof value === 'string' && /^[a-f\d]{24}$/i.test(value) ? new Types.ObjectId(value) : null;
 const same = (a, b) => a && b && String(a) === String(b);
@@ -16,33 +16,6 @@ export function createManagerGarageService(repository) {
   }, { session });
 
   return {
-    async proposeCompensation({ id: value, body = {}, actorId }) {
-      const id = objectId(value);
-      const { amount, evidenceBasis, renterResponse } = body;
-      if (!id || !Number.isSafeInteger(amount) || amount <= 0 || typeof evidenceBasis !== 'string' || evidenceBasis.trim().length < 10 || evidenceBasis.length > 3000 || !['agreed', 'disputed', 'not_received'].includes(renterResponse)) {
-        throw httpError(400, 'Đề xuất cần số tiền, căn cứ tối thiểu 10 ký tự và trạng thái phản hồi thực tế của khách.');
-      }
-      return garageTransaction(repository, async (session) => {
-        const incident = await collection('incident_cases').findOne({ _id: id, status: { $in: OPEN_CASES } }, { session });
-        if (!incident) throw httpError(404, 'Không tìm thấy sự cố đang mở.');
-        if (!incident.booking_id || !await collection('bookings').findOne({ _id: incident.booking_id, vehicle_id: incident.vehicle_id }, { session })) {
-          throw httpError(409, 'Chưa xác định được chuyến thuê phù hợp; không lập đề xuất khấu trừ cọc khách.');
-        }
-        const pendingIndex = (incident.compensation_claims || []).findIndex((claim) => !claim.decision || claim.decision === 'pending');
-        if (pendingIndex >= 0 && (body.claimIndex !== pendingIndex || incident.investigation?.review_status === 'proposed')) throw httpError(409, 'Cần chỉ rõ yêu cầu đang điều tra; đề xuất đã gửi Manager không được sửa.');
-        const previousClaim = pendingIndex >= 0 ? incident.compensation_claims[pendingIndex] : null;
-        if (previousClaim && amount > previousClaim.requested_amount) throw httpError(400, 'Đề xuất không được vượt số tiền yêu cầu.');
-        const proposal = { ...(previousClaim || {}), requested_amount: previousClaim?.requested_amount ?? amount, proposed_amount: amount, decision: 'pending', evidence_basis: evidenceBasis.trim(), renter_response: renterResponse };
-        const now = new Date();
-        const changed = await collection('incident_cases').updateOne({ _id: id, status: incident.status }, {
-          ...(pendingIndex < 0 ? { $push: { compensation_claims: proposal } } : {}),
-          $set: { ...(pendingIndex >= 0 ? { [`compensation_claims.${pendingIndex}`]: proposal } : {}), status: 'pending_review', assigned_operation_staff_id: actorId, 'investigation.review_status': 'proposed', 'investigation.renter_response': renterResponse, updated_at: now },
-        }, { session });
-        if (changed.modifiedCount !== 1) throw httpError(409, 'Hồ sơ sự cố vừa thay đổi.');
-        await audit(actorId, 'incident.compensation_proposed', 'incident_cases', id, { amount, renter_response: renterResponse }, session);
-        return { data: { id: String(id), status: 'pending_review' } };
-      });
-    },
     async reviewVehicle({ id: value, body = {}, actorId }) {
       const id = objectId(value);
       const { action, note = '', inspectionId, inspectionVersion } = body;
@@ -113,13 +86,20 @@ export function createManagerGarageService(repository) {
         const options = { session };
         const incident = await collection('incident_cases').findOne({ _id: id, status: { $in: OPEN_CASES } }, options);
         if (!incident) throw httpError(404, 'Không tìm thấy sự cố đang mở.');
+        if (incident.case_type === 'traffic_violation') throw httpError(409, 'Vi phạm giao thông cần xử lý qua quyết định riêng của Manager.');
         const claims = incident.compensation_claims || [];
         const index = claims.findIndex((claim) => !claim.decision || claim.decision === 'pending');
         if (index < 0) throw httpError(409, 'Chưa có đề xuất bồi thường. Cần điều tra và lập đề xuất trước khi duyệt tiền.');
         const claim = claims[index];
         if (body.claimIndex !== index) throw httpError(409, 'Đề xuất đã thay đổi. Hãy tải lại hồ sơ.');
         if (decision === 'approve' && (!Number.isSafeInteger(claim.requested_amount) || amount > Math.min(claim.requested_amount, claim.proposed_amount ?? claim.requested_amount))) throw httpError(400, 'Số tiền duyệt không được vượt đề xuất hợp lệ.');
-        if (decision === 'approve' && (incident.investigation?.review_status !== 'proposed' || !claim.evidence_basis?.trim())) throw httpError(409, 'Cần Operation xác minh và lập đề xuất có căn cứ trước khi duyệt bồi thường.');
+        const operatorProposal = incident.investigation?.review_status === 'proposed' && Boolean(claim.evidence_basis?.trim());
+        const managerReview = incident.status === 'pending_manager'
+          && incident.investigation?.review_status === 'submitted'
+          && Boolean(incident.submitted_to_manager_by_user_id);
+        if (decision === 'approve' && !operatorProposal && !managerReview) {
+          throw httpError(409, 'Hồ sơ cần được Operator chuyển Manager trước khi duyệt bồi thường.');
+        }
         if (decision === 'approve' && same(incident.assigned_operation_staff_id, actorId)) throw httpError(409, 'Người lập đề xuất không được tự phê duyệt bồi thường.');
         const now = new Date();
         const approved = decision === 'approve' ? amount : 0;
@@ -160,7 +140,15 @@ export function createManagerGarageService(repository) {
       const { action, note = '' } = body;
       if (!id || action !== 'resolve' || typeof note !== 'string' || !note.trim() || note.length > 1000) throw httpError(400, 'Cần lý do kết luận sự cố.');
       return garageTransaction(repository, async (session) => {
-        const changed = await collection('incident_cases').updateOne({ _id: id, status: { $in: OPEN_CASES }, compensation_claims: { $not: { $elemMatch: { decision: { $in: [null, 'pending'] } } } } }, {
+        const changed = await collection('incident_cases').updateOne({
+          _id: id,
+          case_type: { $ne: 'traffic_violation' },
+          $or: [
+            { status: { $in: OPEN_CASES.filter((status) => status !== 'pending_manager') } },
+            { status: 'pending_manager', submitted_to_manager_by_user_id: { $exists: true }, 'investigation.review_status': 'submitted' },
+          ],
+          compensation_claims: { $not: { $elemMatch: { decision: { $in: [null, 'pending'] } } } },
+        }, {
           $set: { status: 'resolved', reviewed_by_manager_id: actorId, updated_at: new Date(), resolution: { outcome: 'manager_resolved', note: note.trim(), resolved_at: new Date() } },
         }, { session });
         if (changed.modifiedCount !== 1) throw httpError(409, 'Sự cố đã đóng hoặc còn đề xuất bồi thường chờ duyệt.');
