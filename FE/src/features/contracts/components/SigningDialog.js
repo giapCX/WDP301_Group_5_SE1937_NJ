@@ -3,7 +3,7 @@ import { getCurrentUser } from '../../auth/session';
 import ContractContent from './ContractContent';
 import { confirmContractIntake, getContract, reviewManagementContract, signContract } from '../api/contractsApi';
 
-export default function SigningDialog({ item, view, onClose, onSigned }) {
+export default function SigningDialog({ item, view, onClose, onSigned, readOnly = false }) {
   const [agreement, setAgreement] = useState(null), [error, setError] = useState('');
   const [reviewNote, setReviewNote] = useState('');
   const roles = getCurrentUser()?.roles || [];
@@ -57,6 +57,7 @@ export default function SigningDialog({ item, view, onClose, onSigned }) {
     {error && <p className="contract-alert" role="alert">{error}</p>}
     {!agreement ? <div className="contract-loading" role="status"><span className="contract-spinner" />Đang tải nội dung hợp đồng…</div> : <>
       <ContractContent agreement={agreement} />
+      {!readOnly && <>
       {agreement.canManagerRelease && <div className="contract-sign-form">
         <p>Kiểm tra nội dung hợp đồng trước khi mở quyền ký cho chủ xe.</p>
         <label>Ghi chú rà soát<input maxLength={1000} value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} disabled={busy} /></label>
@@ -84,6 +85,7 @@ export default function SigningDialog({ item, view, onClose, onSigned }) {
         : agreement.status === 'pending_signatures'
           ? 'Bạn không cần ký phía này hoặc chữ ký của bạn đã được ghi nhận. Hợp đồng đang chờ bước tiếp theo.'
           : 'Hợp đồng hiện không cần chữ ký của bạn.'}</p>}
+      </>}
     </>}
   </section></div>;
 }

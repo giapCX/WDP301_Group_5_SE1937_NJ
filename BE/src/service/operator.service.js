@@ -156,6 +156,7 @@ export function createOperatorService(repository, files) {
       caseNumber: incident.case_number,
       reportSource: incident.report_source,
       operatorReceivedAt: incident.operator_received_at,
+      responseChecklist: incident.response_checklist,
       caseType: incident.case_type,
       vehicleSeized: typeof incident.vehicle_seized === 'boolean' ? incident.vehicle_seized : null,
       status: incident.status,
@@ -704,7 +705,7 @@ export function createOperatorService(repository, files) {
       };
     },
 
-    async getIncident(idValue) {
+    async getIncident(idValue, permissions = []) {
       const id = new ObjectId(objectId(idValue));
       const incident = await repository.incidents.findOne({ _id: id });
       if (!incident) throw httpError(404, 'Không tìm thấy hồ sơ sự cố.');
@@ -712,7 +713,34 @@ export function createOperatorService(repository, files) {
         { _id: incident.vehicle_id },
         { projection: { brand: 1, model: 1, license_plate: 1 } },
       ) : null;
-      return { data: incidentSummary(incident, new Map(vehicle ? [[vehicle._id.toString(), vehicle]] : [])) };
+      const data = incidentSummary(incident, new Map(vehicle ? [[vehicle._id.toString(), vehicle]] : []));
+      const booking = incident.booking_id && await repository.bookings.findOne({
+        _id: incident.booking_id, vehicle_id: incident.vehicle_id,
+      });
+      if (booking) {
+        const handovers = await repository.rentalHandovers.find({
+          booking_id: booking._id, vehicle_id: booking.vehicle_id, status: 'confirmed',
+        }).sort({ occurred_at: -1 }).exec();
+        data.rentalContext = {
+          bookingCode: booking.booking_code, startAt: booking.start_at, endAt: booking.end_at,
+          handovers: handovers.map((row) => ({
+            id: String(row._id), type: row.handover_type, occurredAt: row.occurred_at,
+            odometerKm: row.odometer_km, fuelLevelPct: row.fuel_level_pct,
+            note: row.vehicle_condition?.note,
+          })),
+        };
+        if (permissions.includes('operation.contract.read')) {
+          const [rental, management] = await Promise.all([
+            repository.rentalAgreements.findOne({ booking_id: booking._id, management_agreement_id: booking.management_agreement_id }),
+            booking.management_agreement_id && repository.managementAgreements.findOne({ _id: booking.management_agreement_id, vehicle_id: booking.vehicle_id }),
+          ]);
+          data.rentalContext.contracts = [
+            ...(management ? [{ id: String(management._id), number: management.agreement_number, type: 'management' }] : []),
+            ...(rental ? [{ id: String(rental._id), number: rental.contract_number, type: 'rental' }] : []),
+          ];
+        }
+      }
+      return { data };
     },
 
     async createIncident(request, body) {

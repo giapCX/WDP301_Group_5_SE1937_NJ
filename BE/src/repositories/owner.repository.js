@@ -39,7 +39,10 @@ export function createOwnerRepository(connection, fileRepository) {
     findAgreement: (ownerId, agreementId) => models.ManagementAgreement.findOne({ _id: agreementId, owner_id: ownerId }).lean(),
     requestAgreementTermination: (ownerId, agreementId, at, reason) => models.ManagementAgreement.updateOne({ _id: agreementId, owner_id: ownerId, status: 'active' }, { $set: { status: 'termination_requested', termination_info: { reason, notice_method: 'owner_portal', legal_effective_at: at }, updated_at: at } }),
     findVehicle: (ownerId, vehicleId) => models.Vehicle.findOne({ _id: vehicleId, owner_id: ownerId }).lean(),
-    findBooking: (vehicleId, bookingId) => models.Booking.findOne({ _id: bookingId, vehicle_id: vehicleId }).select({ _id: 1 }).lean(),
+    findBooking: (vehicleId, reference) => models.Booking.findOne({
+      vehicle_id: vehicleId,
+      ...(/^[a-f\d]{24}$/i.test(reference) ? { _id: reference } : { booking_code: reference }),
+    }).select({ _id: 1 }).lean(),
     findOpenWithdrawal: (vehicleId) => models.VehicleWithdrawalRequest.findOne({ vehicle_id: vehicleId, status: { $in: ['requested', 'coordinating_bookings', 'pending_review', 'processing'] } }).lean(),
     findActiveBookings: (vehicleId) => models.Booking.find({ vehicle_id: vehicleId, status: { $in: ['confirmed', 'ongoing', 'in_progress'] } }).select({ _id: 1 }).lean(),
     findPayableSettlements: (ownerId) => models.OwnerSettlement.find({ owner_id: ownerId, payout_status: 'payable' }).sort({ period_start: 1, _id: 1 }).lean(),

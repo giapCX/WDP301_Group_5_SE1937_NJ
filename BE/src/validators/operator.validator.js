@@ -96,7 +96,7 @@ export function parseIncidentCreate(body) {
 }
 
 export function parseIncidentUpdate(body) {
-  objectBody(body, ['description', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity', 'vehicleSeized', 'note']);
+  objectBody(body, ['description', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity', 'vehicleSeized', 'note', 'responseChecklist']);
   if (!Object.keys(body).length) throw httpError(400, 'Cần ít nhất một trường để cập nhật hồ sơ.');
   const update = {};
   if (body.description !== undefined) update.description = text(body.description, 'description', { required: true, max: 3000 });
@@ -120,6 +120,27 @@ export function parseIncidentUpdate(body) {
     update.vehicle_seized = body.vehicleSeized;
   }
   if (body.note !== undefined) update.note = text(body.note, 'note', { required: true, max: 2000 });
+  if (body.responseChecklist !== undefined) {
+    const checklist = body.responseChecklist;
+    const limits = { driverName: 120, policeReference: 120, insurerReference: 120, missingDocuments: 1000 };
+    const dates = ['ownerNotifiedAt', 'insurerNotifiedAt'];
+    objectBody(checklist, [...Object.keys(limits), ...dates, 'injuryStatus']);
+    for (const [key, max] of Object.entries(limits)) {
+      if (checklist[key] !== undefined) update[`response_checklist.${key}`] = text(checklist[key], key, { max });
+    }
+    for (const key of dates) {
+      if (checklist[key] === undefined) continue;
+      const value = checklist[key];
+      if (value !== null && (typeof value !== 'string' || !Number.isFinite(Date.parse(value)) || Date.parse(value) > Date.now())) {
+        throw httpError(400, 'Thời điểm thông báo phải hợp lệ và không ở tương lai.');
+      }
+      update[`response_checklist.${key}`] = value === null ? null : new Date(value);
+    }
+    if (checklist.injuryStatus !== undefined) {
+      if (!['unknown', 'none', 'reported'].includes(checklist.injuryStatus)) throw httpError(400, 'Tình trạng thương tích không hợp lệ.');
+      update['response_checklist.injuryStatus'] = checklist.injuryStatus;
+    }
+  }
   return update;
 }
 

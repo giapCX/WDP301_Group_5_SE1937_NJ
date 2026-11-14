@@ -286,9 +286,10 @@ export function createOwnerService(repository, contracts, handovers) {
       if (!vehicle) throw httpError(404, 'Không tìm thấy xe thuộc tài khoản của bạn.');
       let bookingId;
       if (body.bookingId) {
-        if (!/^[a-f\d]{24}$/i.test(body.bookingId)) throw httpError(400, 'Mã chuyến thuê không hợp lệ.');
-        bookingId = new ObjectId(body.bookingId);
-        if (!(await repository.findBooking(vehicleId, bookingId))) throw httpError(404, 'Không tìm thấy chuyến thuê của phương tiện này.');
+        const reference = text(body.bookingId, 'Mã chuyến thuê', { min: 1, max: 80 });
+        const booking = await repository.findBooking(vehicleId, reference);
+        if (!booking) throw httpError(404, 'Không tìm thấy chuyến thuê của phương tiện này.');
+        bookingId = booking._id;
       }
       const caseType = ['vehicle_damage', 'traffic_violation', 'theft', 'other'].includes(body.caseType) ? body.caseType : null;
       if (!caseType) throw httpError(400, 'Loại sự cố không hợp lệ.');

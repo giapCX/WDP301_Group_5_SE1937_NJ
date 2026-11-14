@@ -14,6 +14,7 @@ export function createOperatorRepository(connection) {
     bookings: createModelRepository(models.Booking),
     managementAgreements: createModelRepository(models.ManagementAgreement),
     rentalAgreements: createModelRepository(models.RentalAgreement),
+    rentalHandovers: createModelRepository(models.RentalHandover),
     incidents: createModelRepository(models.IncidentCase),
     auditLogs: createModelRepository(models.AuditLog),
   };

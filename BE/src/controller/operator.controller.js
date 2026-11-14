@@ -35,7 +35,7 @@ export function createOperatorController(service, contracts) {
       response.json(await service.precheckVehicleInspection(request, request.params.id, request.body)),
     incidents: async (request, response) =>
       response.json(await service.listIncidents(request, request.query)),
-    incident: async (request, response) => response.json(await service.getIncident(request.params.id)),
+    incident: async (request, response) => response.json(await service.getIncident(request.params.id, request.currentPermissions)),
     createIncident: async (request, response) =>
       response.status(201).json(await service.createIncident(request, request.body)),
     updateIncident: async (request, response) =>

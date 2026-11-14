@@ -55,9 +55,24 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
       'Đã chuyển hồ sơ lại cho Operator bổ sung.',
     );
   }
+  const checklist = item.responseChecklist;
+  const notificationTime = (value) => new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+  const responseDetails = checklist && <details>
+    <summary>Checklist xử lý sự cố</summary>
+    <dl>
+      <dt>Người lái thực tế</dt><dd>{checklist.driverName || 'Chưa ghi nhận'}</dd>
+      <dt>Thương tích</dt><dd>{{ none: 'Không ghi nhận', reported: 'Có báo cáo thương tích' }[checklist.injuryStatus] || 'Chưa rõ'}</dd>
+      <dt>Thông báo chủ xe</dt><dd>{checklist.ownerNotifiedAt ? notificationTime(checklist.ownerNotifiedAt) : 'Chưa ghi nhận'}</dd>
+      <dt>Thông báo bảo hiểm</dt><dd>{checklist.insurerNotifiedAt ? notificationTime(checklist.insurerNotifiedAt) : 'Chưa ghi nhận'}</dd>
+      <dt>Mã hồ sơ công an</dt><dd>{checklist.policeReference || '—'}</dd>
+      <dt>Mã hồ sơ bảo hiểm</dt><dd>{checklist.insurerReference || '—'}</dd>
+      <dt>Tài liệu còn thiếu</dt><dd>{checklist.missingDocuments || 'Chưa ghi nhận'}</dd>
+    </dl>
+  </details>;
   if (item.caseType === 'traffic_violation') return <article className="incident-card">
     <div className="incident-card-heading"><div><strong>{item.caseNumber} · Vi phạm giao thông</strong><p>{item.description}</p></div><span className="request-status rose">{item.status}</span></div>
     <p><strong>Xe bị tạm giữ:</strong> {item.vehicleSeized === true ? 'Có' : item.vehicleSeized === false ? 'Không' : 'Chưa ghi nhận'}</p>
+    {responseDetails}
     {(item.evidence || []).map((evidence, index) => evidence.file_key?.startsWith('owner-files/') || /^[a-f\d]{24}$/i.test(evidence.file_key || '')
       ? <button className="action-review" key={`${item.id}-evidence-${index}`} disabled={busy} onClick={() => downloadEvidence(index, evidence.file_name)}>Tải biên bản: {evidence.file_name || `Tệp ${index + 1}`}</button>
       : null)}
@@ -75,6 +90,7 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
     <div className="incident-card-heading"><div><strong>{item.caseNumber} · {item.caseType}</strong><p>{item.description}</p></div><span className="request-status rose">{item.status}</span></div>
     <p><strong>Xe bị tạm giữ:</strong> {item.vehicleSeized === true ? 'Có' : item.vehicleSeized === false ? 'Không' : 'Chưa ghi nhận'} · Operator ghi nhận thông tin, không tự đổi trạng thái xe, booking hoặc cọc.</p>
     {item.sourceWithdrawalId && <p>Tranh chấp biên bản trả xe cho chủ · {item.sourceWithdrawalId}</p>}
+    {responseDetails}
     <IncidentConditionComparison comparison={item.conditionComparison} />
     <IncidentConditionComparison comparison={item.ownerConditionComparison} ownerReturn />
     <div className="gs-photo-grid">{(item.evidence || []).filter((evidence) => evidence.file_key?.startsWith('garage-photos/')).map((evidence) => <div key={evidence.file_key}><GaragePhotoPreview photo={{ key: evidence.file_key, name: evidence.file_key.split('/').at(-1) }} /></div>)}</div>
