@@ -63,27 +63,20 @@ export default function SiteHeader({ onLogin }) {
             <Icon name="shield" size={16} /> Thuê xe minh bạch
           </span>
           {currentUser ? (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <div className="header-account">
               <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  maxWidth: '160px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
+                className="header-account-name"
                 title={currentUser.full_name || currentUser.email}
               >
                 👤 {currentUser.full_name || currentUser.email}
               </span>
               <button
-                className="login-button"
-                style={{ color: '#ef4444', cursor: 'pointer', padding: '6px 4px' }}
+                className="login-button header-logout"
+                type="button"
                 onClick={handleLogout}
                 title="Đăng xuất khỏi tài khoản"
               >
-                (Đăng xuất)
+                Đăng xuất
               </button>
             </div>
           ) : (
