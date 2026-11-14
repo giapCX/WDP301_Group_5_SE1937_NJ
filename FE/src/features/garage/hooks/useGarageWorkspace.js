@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { clearSession } from '../../auth/session';
-import { getGarageWorkspace, reportGarageIncident, saveGarageTask } from '../api/garageApi';
+import { getGarageWorkspace, reportGarageIncident, reviewGarageArrival, saveGarageTask } from '../api/garageApi';
 
 const empty = { tasks: [], incidents: [], history: [], vehicles: [], permissions: [] };
 export default function useGarageWorkspace() {
@@ -49,5 +49,9 @@ export default function useGarageWorkspace() {
     await reportGarageIncident(incident, requestId);
     await reload();
   }
-  return { workspace, loading, error, reload, saveReport, addIncident };
+  async function reviewArrival(task, status, note) {
+    await reviewGarageArrival(task.recordId, { version: task.version, status, note });
+    await reload();
+  }
+  return { workspace, loading, error, reload, saveReport, addIncident, reviewArrival };
 }

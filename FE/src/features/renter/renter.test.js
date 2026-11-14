@@ -71,7 +71,7 @@ test('renter homepage shows live trip totals and links to the public catalog wit
   await screen.findByText('Chào Khách Thuê!');
   expect(screen.getByText('4')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Tìm xe thuê' })).toHaveAttribute('href', '/#xe-noi-bat');
-  expect(screen.getByRole('link', { name: 'Hồ sơ & xác minh' })).toHaveAttribute('href', '#/renter/profile');
+  expect(screen.getByRole('link', { name: 'Hồ sơ cá nhân' })).toHaveAttribute('href', '#/renter/profile');
   expect(screen.getByRole('link', { name: 'Chuyến đi & thanh toán' })).toHaveAttribute('href', '#/renter/bookings');
   expect(screen.getByRole('link', { name: 'Sự cố đã báo cáo' })).toHaveAttribute('href', '#/renter/incidents');
   expect(screen.queryByRole('button', { name: 'Tìm xe phù hợp' })).not.toBeInTheDocument();
@@ -182,7 +182,7 @@ test('booking panel reads listing price then posts reservation without client-co
     start: '2026-12-01T09:00',
     end: '2026-12-03T09:00'
   }} />);
-  await screen.findByText(/Gara API/);
+  await screen.findByText(/Gara API/, { selector: "strong" });
   fireEvent.click(screen.getByRole('checkbox'));
   fireEvent.submit(screen.getByRole('button', {
     name: 'Gửi yêu cầu thuê xe'

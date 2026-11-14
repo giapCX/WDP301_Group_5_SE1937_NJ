@@ -305,14 +305,10 @@ test('expired hold releases schedule and public search does not exclude the vehi
   });
   booking = (await service.createBooking(user, payload('after-expiry'))).booking;
 });
-test('Manager approves, both parties sign the same rental contract and payment is idempotent', async () => {
+test('Booking creates the contract before review and payment opens after both signatures', async () => {
   const managerRole = await repo.one('roles', { code: 'MANAGER' });
   const manager = await repo.one('users', { primary_role_id: managerRole._id, account_status: 'active' });
-  const decision = await contractRequest(`/manager/bookings/${booking._id}/decision`, manager, { action: 'approve' });
-  const approved = await repo.one('bookings', { _id: booking._id });
-  assert.equal(approved.status, 'awaiting_payment');
-  assert.equal(+approved.hold_expires_at, +approved.payment_deadline_at);
-  assert.equal(+new Date(decision.paymentDeadline) - +approved.review_info.reviewed_at, 900000);
+  await contractRequest(`/manager/bookings/${booking._id}/decision`, manager, { action: 'approve' }, 409);
   const originalAgreement = await repo.one('rental_agreements', { booking_id: booking._id });
   await repo.insert('discount_codes', {
     _id: oid(),
@@ -419,7 +415,6 @@ test('paid renter trip progresses through Garage pickup and return with customer
   const manager = await staff('MANAGER');
   const operator = await staff('OPERATION_STAFF');
   const garage = await staff('GARAGE_STAFF');
-  await contractRequest(`/manager/bookings/${trip._id}/decision`, manager, { action: 'approve' });
   const agreement = await repo.one('rental_agreements', { booking_id: trip._id });
   const prepared = { id: String(agreement._id), document: agreement.contract_document };
   const sign = { signatureName: 'Người ký kiểm thử', documentHash: prepared.document.hash, acceptedTerms: true };
@@ -536,7 +531,7 @@ test('private uploads stay owned, registration uses one-use OTP and strong passw
   });
   const created = await service.register(body);
   assert.equal(created.password_hash, undefined);
-  assert.equal(created.identity_kyc.status, 'unverified');
+  assert.equal(created.identity_kyc, undefined);
   await assert.rejects(service.register(body), {
     status: 400
   });

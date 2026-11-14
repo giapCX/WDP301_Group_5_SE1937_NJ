@@ -4,6 +4,8 @@ import { createAuthMiddleware } from '../middleware/auth.middleware.js';
 import { createOperatorPermissionMiddleware } from '../middleware/operator-auth.middleware.js';
 import { createOperatorRepository } from '../repositories/operator.repository.js';
 import { createOperatorService } from '../service/operator.service.js';
+import { createContractRepository } from '../repositories/contract.repository.js';
+import { createContractService } from '../service/contract.service.js';
 import { createIdentityVerificationRepository } from '../repositories/identity-verification.repository.js';
 import { createIdentityVerificationService } from '../service/identity-verification.service.js';
 import { createIdentityVerificationController } from '../controller/identity-verification.controller.js';
@@ -12,7 +14,7 @@ export function createOperatorRouter(connection, files) {
   const router = Router();
   const repository = createOperatorRepository(connection);
   const service = createOperatorService(repository, files);
-  const controller = createOperatorController(service);
+  const controller = createOperatorController(service, createContractService(createContractRepository(connection)));
   const identityController = createIdentityVerificationController(
     createIdentityVerificationService(createIdentityVerificationRepository(connection, files), files),
   );
@@ -26,6 +28,8 @@ export function createOperatorRouter(connection, files) {
   router.get('/vehicles/:id', requirePermission('operation.vehicle.read'), controller.vehicle);
   router.get('/vehicles/:id/documents/:kind', requirePermission('operation.vehicle.read'), controller.vehicleDocument);
   router.patch('/vehicles/:id/status', requirePermission('operation.vehicle.status.update'), controller.updateVehicleStatus);
+  router.post('/vehicles/:id/document-review', requirePermission('operation.vehicle.inspection.review'), controller.reviewVehicleDocuments);
+  router.post('/vehicles/:id/arrival-confirmation', requirePermission('operation.vehicle.inspection.review'), controller.confirmVehicleArrival);
   router.post('/vehicles/:id/inspection-schedule', requirePermission('operation.vehicle.inspection.schedule'), controller.scheduleVehicleInspection);
   router.patch('/vehicles/:id/inspection-schedule', requirePermission('operation.vehicle.inspection.schedule'), controller.updateVehicleInspectionSchedule);
   router.post('/inspections/:id/precheck', requirePermission('operation.vehicle.inspection.review'), controller.precheckVehicleInspection);

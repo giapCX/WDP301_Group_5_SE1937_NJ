@@ -32,6 +32,7 @@ function decisionReadiness(vehicle) {
     && inspection.ownerReview.reviewed_version === inspection.version - 1;
   const checklistReady = checklist.length > 0 && !missing.length && !unsafe.length && !invalid.length && !weakEvidence.length;
   const blockers = [];
+  if (inspection?.operatorReviewRequired && inspection.operatorReview?.status !== 'checked') blockers.push('Chờ Operator kiểm tra biên bản Garage.');
   if (inspection?.recommendation !== 'pass') blockers.push('Garage chưa kết luận đạt.');
   if (vehicle.conditionDeclaration && !checklist.length) blockers.push('Thiếu checklist đối chiếu bản khai của chủ xe.');
   if (checklist.length && missing.length) blockers.push(`Thiếu ${missing.length} mục checklist.`);

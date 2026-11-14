@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
 
 const { ObjectId } = Types;
-const ALLOWED_EKYC_ROLES = new Set(['RENTER', 'OWNER', 'CAR_OWNER']);
+const ALLOWED_EKYC_ROLES = new Set(['OWNER', 'CAR_OWNER']);
 const allowedFiles = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
 const statuses = new Set(['pending', 'verified', 'revision_required', 'rejected']);
 const mask = (value) => `***${value.replace(/\s/g, '').slice(-4)}`;

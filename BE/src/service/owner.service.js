@@ -83,6 +83,7 @@ export function createOwnerService(repository, contracts, handovers) {
           id: vehicle._id.toString(), brand: vehicle.brand, model: vehicle.model,
           year: vehicle.manufacture_year, licensePlate: vehicle.license_plate,
           approvalStatus: vehicle.onboarding_status, reviewNote: vehicle.review_note || '',
+          documentReview: vehicle.operator_document_review || null,
           operatingStatus: vehicle.physical_status, updatedAt: vehicle.updated_at || vehicle.created_at,
           conditionDeclaration: vehicle.condition_declaration || '',
           inspectionScheduleRequest: vehicle.inspection_schedule_request ? {
@@ -96,6 +97,8 @@ export function createOwnerService(repository, contracts, handovers) {
           inspection: inspection ? {
             id: inspection._id, version: inspection.version, status: inspection.approval_status,
             scheduledFor: inspection.scheduled_for, scheduleNote: inspection.schedule_note,
+            arrivalReview: inspection.arrival_review,
+            operatorReview: inspection.operator_review,
             ...(inspection.approval_status !== 'draft' && { recommendation: inspection.recommendation, conditionReport: inspection.condition_report }),
             ownerReview: inspection.owner_review, decisionReason: inspection.decision_reason,
           } : null,
@@ -122,7 +125,7 @@ export function createOwnerService(repository, contracts, handovers) {
           net: Number(item.net_owner_payout) || 0, payoutStatus: item.payout_status,
           settledAt: item.settled_at,
         })),
-        agreements: agreements.map((item) => ({
+        agreements: agreements.filter((item) => !item.arrival_confirmed_at || !['draft', 'pending_manager_review'].includes(item.status)).map((item) => ({
           id: item._id.toString(), number: item.agreement_number,
           vehicle: vehiclesById.get(item.vehicle_id?.toString())
             ? `${vehiclesById.get(item.vehicle_id.toString()).brand} ${vehiclesById.get(item.vehicle_id.toString()).model}`
@@ -158,6 +161,9 @@ export function createOwnerService(repository, contracts, handovers) {
       const vehicleId = new ObjectId(vehicleValue);
       const vehicle = await repository.findVehicle(ownerId, vehicleId);
       if (!vehicle) throw httpError(404, 'Không tìm thấy xe thuộc tài khoản của bạn.');
+      if (vehicle.operator_document_review?.status !== 'verified' && (vehicle.operator_document_review || vehicle.condition_declaration)) {
+        throw httpError(409, 'Operator cần xác thực hồ sơ xe trước khi bạn đặt lịch.');
+      }
       if (!['submitted', 'pending_review', 'revision_required'].includes(vehicle.onboarding_status)
         || !['with_owner', 'returned_to_owner'].includes(vehicle.physical_status)) {
         throw httpError(409, 'Xe hiện không ở trạng thái có thể yêu cầu kiểm định đầu vào.');
@@ -173,7 +179,7 @@ export function createOwnerService(repository, contracts, handovers) {
       };
       const changed = await repository.updateVehicle(vehicleId, ownerId, {
         $set: { inspection_schedule_request: request, updated_at: now },
-      });
+      }, { updated_at: vehicle.updated_at });
       if (changed.modifiedCount !== 1) throw httpError(409, 'Hồ sơ xe vừa được cập nhật. Vui lòng tải lại.');
       await repository.createAudit({
         actor_user_id: ownerId, action: 'vehicle.inspection_schedule.request', entity_type: 'vehicles',
@@ -370,6 +376,7 @@ export function createOwnerService(repository, contracts, handovers) {
           description, vin, owner_contact_address: ownerContactAddress, condition_declaration: conditionDeclaration, daily_price: dailyPrice,
           mileage_policy: { included_km_per_day: mileageLimit, extra_km_fee: extraMileageFee },
           photos: photoKeys, publish_vehicle_photos: body.publishVehiclePhotos === true, physical_status: 'with_owner', onboarding_status: 'submitted',
+          operator_document_review: { status: 'pending' },
           documents: {
             registration: { file_key: registrationKey, verified: false },
             inspection_certificate: { file_key: inspectionKey, verified: false },
@@ -442,6 +449,7 @@ export function createOwnerService(repository, contracts, handovers) {
         const now = new Date();
         const updates = {
           onboarding_status: 'pending_review',
+          operator_document_review: { status: 'pending' },
           updated_at: now,
         };
 
@@ -489,6 +497,7 @@ export function createOwnerService(repository, contracts, handovers) {
 
         const result = await repository.updateVehicle(vehicleId, ownerId, {
           $set: updates,
+          $unset: { inspection_schedule_request: 1 },
           $push: {
             registration_history: {
               action: 'revision_submitted',
@@ -497,7 +506,7 @@ export function createOwnerService(repository, contracts, handovers) {
               note: note || 'Chủ xe đã gửi hồ sơ bổ sung',
             },
           },
-        });
+        }, { onboarding_status: 'revision_required', updated_at: vehicle.updated_at });
 
         if (result.modifiedCount !== 1) {
           throw httpError(409, 'Không thể cập nhật hồ sơ xe.');

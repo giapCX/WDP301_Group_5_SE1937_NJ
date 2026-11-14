@@ -11,7 +11,6 @@ export function createRenterController(service) {
     profile: data(req => service.profile(req.user)),
     updateProfile: data(req => service.updateProfile(req.user, req.body)),
     password: data(req => service.password(req.user, req.body)),
-    ekyc: data(req => service.ekyc(req.user, req.body)),
     upload: data(req => service.upload(req.user, req.body)),
     download: async (req, res) => {
       const {

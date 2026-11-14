@@ -22,6 +22,8 @@ export const managementAgreementSchema = createSchema({
   }),
   inspection_id: { type: ObjectId, ref: 'VehicleInspection' },
   inspection_version: Number,
+  arrival_confirmed_at: Date,
+  arrival_confirmed_by: ObjectId,
   signature_info: embedded({
     method: String,
     owner_signed_at: Date,

@@ -61,11 +61,19 @@ function onboardingStep(vehicle, agreement) {
     return 'Chờ Manager lập hợp đồng ủy quyền';
   }
   if (vehicle.inspection?.status === 'pending') {
+    if (vehicle.inspection.arrivalReview && vehicle.inspection.operatorReview?.status !== 'checked') return 'Chờ Operator kiểm tra biên bản Garage';
     if (vehicle.inspection.ownerReview?.status === 'disputed') return 'Manager đang xem bất đồng về hiện trạng';
     return vehicle.inspection.ownerReview || !vehicle.inspection.conditionReport?.checklist ? 'Chờ Manager duyệt' : 'Xem và xác nhận báo cáo kiểm định';
   }
+  if (vehicle.inspection?.arrivalReview?.status === 'mismatch') return 'Chờ Operator cập nhật lịch kiểm định';
+  if (vehicle.inspection?.arrivalReview?.status === 'accepted' && agreement?.status === 'pending_signatures') {
+    return agreement.signedAt ? 'Chờ Manager xác nhận hợp đồng ủy quyền' : 'Có hợp đồng ủy quyền chờ bạn ký';
+  }
+  if (vehicle.inspection?.arrivalReview?.status === 'accepted' && !agreement?.signedAt) return 'Chờ xử lý hợp đồng ủy quyền';
   if (vehicle.inspection?.status === 'draft') return 'Đã mở lượt kiểm định';
-  return 'Chờ Manager xét duyệt và Operator phân công kiểm định';
+  if (vehicle.inspectionScheduleRequest?.status === 'pending') return 'Chờ Operator xác nhận lịch';
+  if (vehicle.documentReview?.status === 'verified') return 'Hồ sơ đã xác thực · có thể đề xuất lịch kiểm định';
+  return 'Chờ Operator xác thực hồ sơ xe';
 }
 
 const statusTone = status => ['approved', 'available', 'paid'].includes(status) ? 'green' : ['rejected', 'maintenance'].includes(status) ? 'red' : 'amber';
@@ -112,7 +120,7 @@ export default function OwnerPage() {
                 month: 'long',
                 year: 'numeric'
               }).format(new Date()).toLocaleUpperCase('vi-VN')}</span><h1>{view === 'overview' ? 'Chào mừng trở lại, ' + (user?.full_name?.split(' ').slice(-1)[0] || 'Chủ xe') : items.find(x => x[0] === view)?.[1]}</h1><p>Theo dõi đội xe, trạng thái hồ sơ và thu nhập của bạn trên XeDi.</p></div><button className="owner-primary owner-heading-cta" onClick={() => setRegisterOpen(true)}>＋ <span>Đăng ký xe mới</span></button></div>
-        {data?.vehicles?.some(vehicle => vehicle.approvalStatus === 'revision_required') && <div className="owner-revision-alert-banner"><div className="owner-alert-content"><span className="owner-alert-badge">!</span><div><strong>Có hồ sơ xe cần bổ sung tài liệu</strong><p>Quản lý xét duyệt đã phản hồi yêu cầu bổ sung/sửa đổi giấy tờ cho xe của bạn.</p></div></div><button className="owner-primary owner-alert-btn" onClick={() => setRevisionVehicle(data.vehicles.find(vehicle => vehicle.approvalStatus === 'revision_required'))}>Bổ sung tài liệu ngay</button></div>}
+        {data?.vehicles?.some(vehicle => vehicle.approvalStatus === 'revision_required') && <div className="owner-revision-alert-banner"><div className="owner-alert-content"><span className="owner-alert-badge">!</span><div><strong>Có hồ sơ xe cần bổ sung tài liệu</strong><p>Mở hồ sơ để xem lý do và gửi lại giấy tờ hoặc ảnh xe.</p></div></div><button className="owner-primary owner-alert-btn" onClick={() => setRevisionVehicle(data.vehicles.find(vehicle => vehicle.approvalStatus === 'revision_required'))}>Bổ sung tài liệu ngay</button></div>}
         {notice && <div className="owner-notice" role="status">✓ {notice}<button onClick={() => setNotice('')}>×</button></div>}
         {error && <div className="owner-error" role="alert"><span>{error}</span><button className="owner-retry" onClick={refresh}>Thử lại</button></div>}
         {loading ? <div className="owner-panel owner-loading">Đang tải dữ liệu chủ xe…</div> : data && <>

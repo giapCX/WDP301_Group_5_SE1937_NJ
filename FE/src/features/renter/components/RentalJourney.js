@@ -1,6 +1,6 @@
 import { dateTime } from '../api/renterApi';
 
-const steps = ['Chờ duyệt', 'Ký và thanh toán', 'Chờ nhận xe', 'Đang thuê', 'Đã trả xe'];
+const steps = ['Hợp đồng', 'Thanh toán', 'Chờ nhận xe', 'Đang thuê', 'Đã trả xe'];
 const phases = { pending: 0, awaiting_payment: 1, confirmed: 2, ongoing: 3, completed: 4 };
 const conditionNames = { exterior: 'Ngoại thất', interior: 'Nội thất', engine: 'Động cơ', tires: 'Lốp xe' };
 const conditionLabels = { good: 'Tốt', attention: 'Cần chú ý', damaged: 'Hư hỏng' };
@@ -22,7 +22,10 @@ export default function RentalJourney({ data, expired }) {
   const { booking, agreement, handovers } = data;
   const phase = expired ? undefined : phases[booking.status];
   const message = {
-    pending: 'Manager đang kiểm tra lịch và yêu cầu thuê.',
+    pending: booking.review_info?.required !== false ? 'Manager đang kiểm tra yêu cầu thuê.'
+      : !agreement?.signing_info?.renter_signed_at ? 'Hợp đồng đã được lập. Bạn có thể mở và ký ngay.'
+      : !agreement?.operator_intake?.confirmed_at ? 'Đang chờ Operator rà soát hợp đồng.'
+      : 'Đang chờ Manager ký đại diện XeDi.',
     awaiting_payment: agreement?.status === 'signed' ? 'Hợp đồng đã đủ xác nhận. Hoàn tất tiền thuê và cọc trong thời hạn giữ xe.'
       : 'Khách thuê và XeDi xác nhận hợp đồng trước khi thanh toán.',
     confirmed: 'Đến gara theo giờ hẹn để đối chiếu giấy tờ, xem hiện trạng và nhận xe.',

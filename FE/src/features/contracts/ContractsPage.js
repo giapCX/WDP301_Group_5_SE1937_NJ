@@ -162,7 +162,7 @@ export function SigningDialog({ item, view, onClose, onSigned }) {
     }
     setBusy(true); setError('');
     try {
-      const result = await postApi(`/contracts/management/${item.id}/manager-review?view=staff`, { action, note: reviewNote });
+      const result = await postApi(`/contracts/management/${item.id}/manager-review?view=staff`, { action, note: reviewNote, documentHash: agreement.document.hash });
       setAgreement(result.data); setReviewNote(''); onSigned();
     } catch (reason) { setError(reason.message); }
     finally { setBusy(false); }
@@ -173,11 +173,11 @@ export function SigningDialog({ item, view, onClose, onSigned }) {
     {!agreement ? <div className="contract-loading" role="status"><span className="contract-spinner" />Đang tải nội dung hợp đồng…</div> : <>
       <ContractContent agreement={agreement} />
       {agreement.canManagerRelease && <div className="contract-sign-form">
-        <p>Manager rà soát bản hợp đồng đã tự điền sau khi xe được duyệt. Chỉ gửi Chủ xe ký khi nội dung phù hợp.</p>
+        <p>Kiểm tra nội dung hợp đồng trước khi mở quyền ký cho chủ xe.</p>
         <label>Ghi chú rà soát<input maxLength={1000} value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} disabled={busy} /></label>
         <div className="contract-toolbar">
           <button className="contract-button contract-button--secondary" type="button" onClick={() => reviewManagement('revision')} disabled={busy || reviewNote.trim().length < 5}>Yêu cầu chỉnh sửa</button>
-          <button className="contract-button contract-button--primary" type="button" onClick={() => reviewManagement('approve')} disabled={busy}>{busy ? 'Đang ghi nhận…' : 'Duyệt nội dung, gửi Chủ xe ký'}</button>
+          <button className="contract-button contract-button--primary" type="button" onClick={() => reviewManagement('approve')} disabled={busy}>{busy ? 'Đang ghi nhận…' : 'Duyệt bản nháp và gửi chủ xe ký'}</button>
         </div>
       </div>}
       {agreement.canOperatorConfirm && <div className="contract-sign-form">
@@ -187,7 +187,7 @@ export function SigningDialog({ item, view, onClose, onSigned }) {
       {agreement.canSign ? <form onSubmit={sign} className="contract-sign-form">
         <label>Họ tên người ký<input required minLength={2} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} disabled={busy} /></label>
         <label className="contract-accept"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} disabled={busy} /><span>Tôi đã đọc và đồng ý ký hợp đồng.</span></label>
-        <button className="contract-button contract-button--primary" type="submit" disabled={busy || !accepted}>{busy ? 'Đang ghi nhận…' : 'Xác nhận ký hợp đồng'}</button>
+        <button className="contract-button contract-button--primary" type="submit" disabled={busy || !accepted}>{busy ? 'Đang ghi nhận…' : view === 'staff' && agreement.type === 'management' ? 'Xác nhận hợp đồng phía XeDi' : 'Xác nhận ký hợp đồng'}</button>
       </form> :       <p className="contract-signing-note" role="status">      {view === 'staff' && agreement.partySigned && agreement.managerReviewStatus === 'approved' && !(agreement.platformSigned ?? Boolean(agreement.platformSignedAt))
           ? 'Chủ xe/người thuê đã ký sau bước rà soát. Hợp đồng đang chờ Manager ký phía XeDi.'
           : view === 'staff' && agreement.partySigned && agreement.operatorIntakeConfirmedAt && !(agreement.platformSigned ?? Boolean(agreement.platformSignedAt))

@@ -25,8 +25,10 @@ export default function OwnerVehicleConditionDialog({ vehicle, onClose, onSaved 
   const [error, setError] = useState('');
   const { inspection, intake, ownerReturn, inspectionScheduleRequest } = vehicle;
   const report = inspection?.conditionReport || {};
-  const canRespond = inspection?.status === 'pending' && !inspection.ownerReview && report.checklist?.length > 0;
+  const canRespond = inspection?.status === 'pending' && !inspection.ownerReview && report.checklist?.length > 0
+    && (!inspection.arrivalReview || inspection.operatorReview?.status === 'checked');
   const canRequestSchedule = ['submitted', 'pending_review', 'revision_required'].includes(vehicle.approvalStatus)
+    && (vehicle.documentReview?.status === 'verified' || (!vehicle.documentReview && !vehicle.conditionDeclaration))
     && ['with_owner', 'returned_to_owner'].includes(vehicle.operatingStatus)
     && !['draft', 'pending'].includes(inspection?.status)
     && inspectionScheduleRequest?.status !== 'pending';
@@ -91,6 +93,10 @@ export default function OwnerVehicleConditionDialog({ vehicle, onClose, onSaved 
         </div>
       </div>}
     </section> : <p>Garage chưa gửi báo cáo kiểm định.</p>}
+    {['pending', 'revision_required'].includes(vehicle.documentReview?.status) && <p>
+      {vehicle.documentReview.status === 'pending' ? 'Đang chờ Operator xác thực hồ sơ xe.' : vehicle.documentReview.note}
+    </p>}
+    {inspection?.arrivalReview?.status === 'mismatch' && <p>Garage chưa tiếp nhận xe. {inspection.arrivalReview.note} Đang chờ Operator cập nhật lịch.</p>}
     {inspectionScheduleRequest && <section>
       <h3>Đề xuất lịch kiểm định</h3>
       <p>{inspectionScheduleRequest.status === 'confirmed' ? 'Operator đã xác nhận lịch.' : 'Đang chờ Operator xác nhận lịch.'}

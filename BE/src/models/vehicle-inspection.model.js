@@ -32,6 +32,7 @@ export const vehicleInspectionSchema = createSchema({
   submitted_at: Date,
   updated_at: Date,
   scheduled_for: Date,
+  arrival_review: embedded({ status: String, note: String, reviewed_at: Date }),
   schedule_note: String,
   assigned_by_operation_staff_id: { type: ObjectId, ref: 'User' },
   assigned_by_operator_staff_id: { type: ObjectId, ref: 'User' },

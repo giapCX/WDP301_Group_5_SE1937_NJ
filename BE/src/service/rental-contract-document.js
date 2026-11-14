@@ -1,4 +1,7 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+
+const rentalArticles = JSON.parse(readFileSync(new URL('./rental-contract-articles.json', import.meta.url), 'utf8'));
 
 const localTime = (value) => new Date(value).toLocaleString('vi-VN', {
   timeZone: 'Asia/Ho_Chi_Minh',
@@ -30,7 +33,19 @@ export function createRentalContractDocument({
   const dropoff = booking.return_location?.branch || pickup;
   const cancellationHours = terms.cancellation?.config?.free_cancel_before_hours;
   const refundDays = terms.deposit_refund?.config?.refund_within_business_days;
-  const articles = [
+  const articles = booking.review_info?.required === false ? rentalArticles.map((entry, index) => {
+    const paragraphs = [...entry.paragraphs];
+    if (index === 1) {
+      paragraphs[0] = `1. Thời hạn thuê từ ${localTime(terms.start_at)} đến ${localTime(terms.end_at)}.`;
+      paragraphs[1] = `2. Địa điểm giao xe: ${pickup}. Địa điểm trả xe: ${dropoff}.`;
+    }
+    if (index === 3) {
+      paragraphs[0] = `1. Đơn giá ${money(terms.daily_rate)}/ngày. Tổng tiền thuê ${money(terms.rental_fee_amount)}.`;
+      if (terms.mileage_policy?.included_km_per_day != null) paragraphs[1] = `2. Giới hạn ${terms.mileage_policy.included_km_per_day} km/ngày. Phí vượt km ${money(terms.mileage_policy.extra_km_fee)}/km.`;
+      paragraphs[2] = `3. Bên B nộp tiền cọc ${money(terms.deposit_amount)} cho XeDi giữ hộ trước khi nhận xe để bảo đảm nghĩa vụ thanh toán và bồi thường.`;
+    }
+    return { ...entry, paragraphs };
+  }) : [
     article(
       'Đặc điểm và thỏa thuận thuê xe',
       'Bên A đồng ý giao xe cho Bên B thuê tự lái theo booking và thông tin phương tiện ghi tại điều này.',
@@ -86,7 +101,7 @@ export function createRentalContractDocument({
   ];
 
   const content = {
-    version: 'xedi-rental-paper-v2',
+    version: booking.review_info?.required === false ? 'xedi-rental-template-v1' : 'xedi-rental-paper-v2',
     title: 'HỢP ĐỒNG THUÊ XE Ô TÔ TỰ LÁI',
     place: pickup,
     parties: [
@@ -107,14 +122,8 @@ export function createRentalContractDocument({
         facts: facts([
           ['Họ và tên', renter?.full_name],
           ['Địa chỉ liên hệ', renter?.contact_profile?.address],
-          ['Giấy tờ định danh', renter?.identity_kyc?.id_masked],
-          ['Hạng GPLX', renter?.driver_license?.class],
-          ['Số GPLX', renter?.driver_license?.license_masked],
-          [
-            'Hạn GPLX',
-            renter?.driver_license?.expires_at
-              && localTime(renter.driver_license.expires_at),
-          ],
+          ['Email', renter?.email],
+          ['Điện thoại', renter?.phone],
         ]),
       },
     ],

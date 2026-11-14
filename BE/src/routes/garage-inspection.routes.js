@@ -19,6 +19,7 @@ export function createGarageInspectionsRouter(database) {
   router.post('/inspections', controller.create);
   router.get('/inspections/:id', controller.get);
   router.patch('/inspections/:id', controller.update);
+  router.post('/inspections/:id/arrival', controller.reviewArrival);
   router.post('/inspections/:id/submit', controller.submit);
   return router;
 }

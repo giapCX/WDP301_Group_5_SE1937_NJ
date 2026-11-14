@@ -21,7 +21,7 @@ function toLocalInput(value) {
   return new Date(+date - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
-export default function GarageReportDialog({ task, onSave, onClose }) {
+export default function GarageReportDialog({ task, onSave, onClose, onReviewArrival }) {
   const [report, setReport] = useState(() => ({
     odometer: String(task.odometer),
     fuel: String(task.fuel),
@@ -41,6 +41,8 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
 
   }));
   const [error, setError] = useState('');
+  const [arrivalNote, setArrivalNote] = useState('');
+  const [matched, setMatched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [editingAcceptedIntake, setEditingAcceptedIntake] = useState(false);
@@ -87,6 +89,30 @@ export default function GarageReportDialog({ task, onSave, onClose }) {
     }
     save(false);
   }
+  async function reviewArrival(status) {
+    setBusy(true);
+    setError('');
+    try {
+      await onReviewArrival(task, status, arrivalNote);
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (task.arrivalReview && task.arrivalReview.status !== 'accepted') return <Modal title="Đối chiếu khi tiếp nhận xe" className="gs-dialog" onClose={busy ? () => {} : onClose}>
+    <p>{task.vehicle} · {task.plate}{task.vin && ` · VIN ${task.vin}`}</p>
+    <p>Chủ xe: {task.contact} · {displayDate(task.schedule)} {displayTime(task.schedule)}</p>
+    {task.scheduleNote && <p>{task.scheduleNote}</p>}
+    {task.arrivalReview.status === 'mismatch' ? <p>Thông tin không khớp. {task.arrivalReview.note} Đang chờ Operator cập nhật lịch.</p>
+      : !readOnly && <>
+        <label><input type="checkbox" checked={matched} onChange={(event) => setMatched(event.target.checked)} /> Đã đối chiếu người giao, giấy tờ, biển số và VIN của xe thực tế</label>
+        <label>Ghi chú đối chiếu <textarea maxLength={500} value={arrivalNote} onChange={(event) => setArrivalNote(event.target.value)} /></label>
+        <button type="button" disabled={busy || !matched} onClick={() => reviewArrival('accepted')}>Tiếp nhận xe</button>
+        <button type="button" disabled={busy || arrivalNote.trim().length < 5} onClick={() => reviewArrival('mismatch')}>Báo thông tin không khớp</button>
+      </>}
+    {error && <p role="alert">{error}</p>}
+  </Modal>;
   if (readOnly && !task.recordId && task.vehicleReviewStatus === 'rejected') return <Modal title={`Hồ sơ xe · ${task.plate}`} className="gs-dialog" onClose={onClose}>
     <h3>{task.vehicle}</h3>
     <GarageManagerDecision task={task} />

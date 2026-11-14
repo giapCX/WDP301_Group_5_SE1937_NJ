@@ -4,6 +4,8 @@ export const getGarageWorkspace = (options) => getApi('/garage/workspace', optio
 export const uploadGaragePhoto = (body) => postApi('/garage/photos', body).then(({ data }) => data);
 export const getGaragePhoto = (key, options) => getBlobApi(`/garage/photos/${key.replace(/^garage-photos\//, '').split('/').map(encodeURIComponent).join('/')}`, options);
 
+export const reviewGarageArrival = (id, body) => postApi(`/garage/inspections/${encodeURIComponent(id)}/arrival`, body);
+
 export async function saveGarageTask(task, report, draft, checkpoint) {
   const condition = {
     ...Object.fromEntries(['exterior', 'interior', 'engine', 'tires'].filter((key) => report[key]).map((key) => [key, report[key]])),

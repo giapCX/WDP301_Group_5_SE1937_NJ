@@ -35,7 +35,7 @@ async function managementFixture() {
 const signature = (row) => ({ acceptedTerms: true, signatureName: 'Người ký thử nghiệm', documentHash: row.document.hash });
 const sign = (row, role, mode = 'party', body = signature(row), status = 200) => request(`/contracts/${row.type}/${row.id}/sign?view=${mode}`, 'POST', body, role, status);
 const confirmOperatorIntake = (row, role = 'operation', status = 200) => request(`/contracts/${row.type}/${row.id}/operator-intake?view=staff`, 'POST', {}, role, status);
-const releaseManagementContract = (row, action = 'approve', note = '') => request(`/contracts/management/${row.id}/manager-review?view=staff`, 'POST', { action, note }, 'manager');
+const releaseManagementContract = (row, action = 'approve', note = '') => request(`/contracts/management/${row.id}/manager-review?view=staff`, 'POST', { action, note, documentHash: row.document.hash }, 'manager');
 async function rentalFixture() {
   const { vehicle } = await managementFixture();
   await models.Vehicle.updateOne({ _id: vehicle._id }, { $set: { physical_status: 'at_garage' } });
@@ -136,10 +136,27 @@ test('new owner vehicle moves through scheduling, approval, paper signing and pu
   assert.ok(vehicleId);
   const draftAgreement = await models.ManagementAgreement.findOne({ vehicle_id: vehicleId });
   await models.ManagementAgreement.updateOne({ _id: draftAgreement._id }, { $set: { commission_rate_pct: 12.5 } });
-  await request(`/owner/vehicles/${vehicleId}/inspection-schedule-requests`, 'POST', {
+  const schedulePath = `/owner/vehicles/${vehicleId}/inspection-schedule-requests`;
+  const schedule = {
     requestedFor: new Date(Date.now() + 3600000).toISOString(),
     note: 'Đề xuất lịch kiểm định tại gara.',
-  }, 'owner', 201);
+  };
+  await request(schedulePath, 'POST', schedule, 'owner', 409);
+  const operatorVehiclePath = `/operator/vehicles/${vehicleId}`;
+  const { data: beforeReview } = await request(operatorVehiclePath, 'GET', undefined, 'operation');
+  await request(`${operatorVehiclePath}/document-review`, 'POST', {
+    status: 'revision_required', note: 'Vui lòng bổ sung bản đăng ký xe rõ hơn.', version: beforeReview.reviewVersion,
+  }, 'operation');
+  await request(schedulePath, 'POST', schedule, 'owner', 409);
+  await request(`/owner/vehicles/${vehicleId}/documents`, 'PATCH', { documents: { registration: doc } }, 'owner');
+  const { data: afterRevision } = await request(operatorVehiclePath, 'GET', undefined, 'operation');
+  await request(`${operatorVehiclePath}/document-review`, 'POST', {
+    status: 'verified', version: beforeReview.reviewVersion,
+  }, 'operation', 409);
+  await request(`${operatorVehiclePath}/document-review`, 'POST', {
+    status: 'verified', version: afterRevision.reviewVersion,
+  }, 'operation');
+  await request(schedulePath, 'POST', schedule, 'owner', 201);
   const documentPath = `${base}/operator/vehicles/${vehicleId}/documents/registration`;
   const inspectionFile = await fetch(documentPath, { headers: { Authorization: `Bearer ${tokens.operation}` } });
   assert.equal(inspectionFile.status, 200);
@@ -154,12 +171,43 @@ test('new owner vehicle moves through scheduling, approval, paper signing and pu
   }, 'operation', 201);
   const inspection = await models.VehicleInspection.findOne({ vehicle_id: vehicleId, approval_status: 'draft' }).lean();
   const inspectionPath = `/garage/inspections/${inspection._id}`;
+  await request(`${inspectionPath}/arrival`, 'POST', { version: 0, status: 'accepted' }, 'owner', 403);
+  await request(inspectionPath, 'PATCH', { version: 0, odometerKm: 10000 }, 'garage', 409);
+  await request(`${inspectionPath}/arrival`, 'POST', {
+    version: 0, status: 'mismatch', note: 'Biển số thực tế không khớp.',
+  }, 'garage');
+  await request(`${inspectionPath}/arrival`, 'POST', { version: 1, status: 'accepted' }, 'garage', 409);
+  await request(`${operatorVehiclePath}/inspection-schedule`, 'PATCH', {
+    version: 1, garageStaffId: String(actors.garage._id), scheduledFor: schedule.requestedFor,
+    note: 'Xác nhận lịch mới với chủ xe.',
+  }, 'operation');
+  await request(`${inspectionPath}/arrival`, 'POST', { version: 2, status: 'accepted' }, 'garage');
+  const arrivalPath = `${operatorVehiclePath}/arrival-confirmation`;
+  const arrival = { inspectionId: String(inspection._id), version: 3 };
+  await request(arrivalPath, 'POST', { ...arrival, version: 2 }, 'operation', 409);
+  const { data: contract } = await request(arrivalPath, 'POST', arrival, 'operation');
+  assert.equal((await request(arrivalPath, 'POST', arrival, 'operation')).data.id, contract.id);
+  assert.equal(contract.status, 'pending_manager_review');
+  assert.equal(contract.document.version, 'xedi-authorization-v1');
+  assert.equal(contract.document.articles.length, 13);
+  assert.ok(contract.document.parties[0].facts.some(({ value }) => value === 'Địa chỉ chủ xe thử nghiệm'));
+  assert.ok(contract.document.facts.some(({ value }) => value === '12.5%'));
+  const managerQueue = await request('/contracts/management?view=staff&status=pending_manager_review', 'GET', undefined, 'manager');
+  assert.ok(managerQueue.data.some(({ id }) => id === contract.id));
+  await request(`/contracts/management/${contract.id}`, 'GET', undefined, 'owner', 404);
+  await sign(contract, 'owner', 'party', signature(contract), 404);
+  await releaseManagementContract(contract);
+  await sign(contract, 'manager', 'staff', signature(contract), 409);
+  await sign(contract, 'owner');
+  await sign(contract, 'manager', 'staff');
+  assert.equal((await models.Vehicle.findById(vehicleId)).onboarding_status, 'pending_review');
   const keys = ['identity', 'odometer', 'exterior', 'interior', 'tires', 'brakes', 'powertrain', 'leaks', 'lights', 'accessories'];
   await request(inspectionPath, 'PATCH', {
-    version: 0, odometerKm: 10000, fuelLevelPct: 70, recommendation: 'pass',
+    version: 3, odometerKm: 10000, fuelLevelPct: 70, recommendation: 'pass',
     condition: { ...condition, checklist: keys.map((key) => ({ key, result: 'pass' })) },
   }, 'garage');
-  const { data: report } = await request(`${inspectionPath}/submit`, 'POST', { version: 1 }, 'garage');
+  const { data: report } = await request(`${inspectionPath}/submit`, 'POST', { version: 4 }, 'garage');
+  await request(`/owner/vehicles/${vehicleId}/inspections/${inspection._id}`, 'PATCH', { status: 'accepted', version: report.version }, 'owner', 409);
   await request(`/operator/inspections/${inspection._id}/precheck`, 'POST', {
     note: 'Đã kiểm tra biên bản Garage.',
   }, 'operation');
@@ -168,16 +216,6 @@ test('new owner vehicle moves through scheduling, approval, paper signing and pu
   await request(reviewPath, 'PATCH', approval, 'manager', 409);
   await request(`/owner/vehicles/${vehicleId}/inspections/${inspection._id}`, 'PATCH', { status: 'accepted', version: report.version }, 'owner');
   await request(reviewPath, 'PATCH', { ...approval, inspectionVersion: report.version + 1 });
-  const agreement = await models.ManagementAgreement.findOne({ vehicle_id: vehicleId }).lean();
-  const { data: contract } = await request(`/contracts/management/${agreement._id}?view=staff`, 'GET');
-  assert.equal(contract.document.version, 'xedi-management-paper-v1');
-  assert.ok(contract.document.articles.length >= 6);
-  assert.ok(contract.document.parties[0].facts.some(({ value }) => value === 'Địa chỉ chủ xe thử nghiệm'));
-  assert.ok(contract.document.facts.some(({ value }) => value === '12.5%'));
-  await releaseManagementContract(contract);
-  await sign(contract, 'owner');
-  await confirmOperatorIntake(contract, 'operation', 409);
-  await sign(contract, 'manager', 'staff');
   const { data: intake } = await request('/garage/intakes', 'POST', {
     vehicleId, managementAgreementId: contract.id, odometerKm: 10020, fuelLevelPct: 70, condition,
   }, 'garage', 201);

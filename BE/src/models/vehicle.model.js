@@ -59,6 +59,7 @@ export const vehicleSchema = createSchema({
   created_at: Date,
   updated_at: Date,
   inspection_workflow_version: integer({ min: 0 }),
+  operator_document_review: embedded({ status: String, note: String, reviewed_at: Date, operator_id: ObjectId }),
   inspection_schedule_request: embedded({
     status: { type: String, enum: ['pending', 'confirmed'] },
     requested_for: Date,

@@ -6,7 +6,7 @@ import '../../owner/pages/owner.css';
 const items = [
   ['home', 'Trang chủ', 'calendar'],
   ['bookings', 'Chuyến đi & thanh toán', 'document'],
-  ['profile', 'Hồ sơ & xác minh', 'people'],
+  ['profile', 'Hồ sơ cá nhân', 'people'],
   ['incidents', 'Sự cố đã báo cáo', 'shield'],
 ];
 const titles = { home: 'Trang chủ khách thuê', profile: 'Hồ sơ cá nhân', bookings: 'Chuyến đi của bạn', incidents: 'Sự cố và hỗ trợ' };

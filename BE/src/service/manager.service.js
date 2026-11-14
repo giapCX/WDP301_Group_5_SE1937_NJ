@@ -137,7 +137,7 @@ export function createManagerService(repository) {
       const { q = '', status = 'pending' } = input.query;
       if (typeof q !== 'string' || q.length > 100 || !['pending', 'all'].includes(status)) throw httpError(400, 'Bộ lọc booking không hợp lệ.');
       await expireStaleBookings();
-      const filter = status === 'all' ? {} : { status: 'pending' };
+      const filter = status === 'all' ? {} : { status: 'pending', 'review_info.required': { $ne: false } };
       if (q.trim()) {
         const pattern = new RegExp(escapeRegExp(q.trim()), 'i');
         filter.$or = [{ booking_code: pattern }, { status: pattern }];
@@ -174,6 +174,7 @@ export function createManagerService(repository) {
       await expireStaleBookings(now);
       const booking = await repository.collection('bookings').findOne({ _id: id });
       if (!booking || booking.status !== 'pending' || isBookingHoldExpired(booking, now)) throw httpError(409, 'Booking không còn ở trạng thái chờ xử lý.');
+      if (booking.review_info?.required === false) throw httpError(409, 'Yêu cầu này chuyển sang thanh toán sau khi hợp đồng đủ chữ ký.');
       if (action === 'approve' && (!(booking.start_at instanceof Date) || booking.start_at.getTime() < now.getTime() + MINIMUM_PICKUP_NOTICE_MS)) {
         throw httpError(409, 'Thời gian nhận xe phải còn tối thiểu 2 giờ; yêu cầu booking lịch mới.');
       }
@@ -984,6 +985,8 @@ export function createManagerService(repository) {
             version: inspectionMap.get(item._id.toString()).version ?? 0,
             staffId: inspectionMap.get(item._id.toString()).garage_staff_id,
             ownerReview: inspectionMap.get(item._id.toString()).owner_review,
+            operatorReviewRequired: Boolean(inspectionMap.get(item._id.toString()).arrival_review || item.inspection_schedule_request?.status === 'confirmed'),
+            operatorReview: inspectionMap.get(item._id.toString()).operator_review,
             conditionReport: inspectionMap.get(item._id.toString()).condition_report || {},
             decisionReason: inspectionMap.get(item._id.toString()).decision_reason || '',
             status: inspectionMap.get(item._id.toString()).approval_status,

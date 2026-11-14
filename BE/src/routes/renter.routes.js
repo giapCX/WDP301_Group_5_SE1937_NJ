@@ -26,7 +26,6 @@ export function createRenterRouter(database, options = {}) {
   router.get('/profile', c.profile);
   router.put('/profile', c.updateProfile);
   router.put('/password', c.password);
-  router.post('/kyc', c.ekyc);
   router.post('/files', c.upload);
   router.get('/files/:id', c.download);
   router.get('/bookings', c.bookings);

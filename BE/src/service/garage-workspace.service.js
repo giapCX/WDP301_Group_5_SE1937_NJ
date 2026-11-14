@@ -30,6 +30,8 @@ export function createGarageWorkspaceService(repository, inspectionService, inta
           vehicleReviewNote: vehicle.review_note || '',
           vehicleReviewStatus: vehicle.onboarding_status,
           scheduleNote: record?.schedule_note,
+          arrivalReview: record?.arrival_review,
+          vin: kind === 'inspection' && same(staffId, actor._id) ? vehicle.vin : undefined,
           conditionDeclaration: vehicle.condition_declaration || '',
           baselineCondition: context.baselineCondition,
           occurredAt: record?.occurred_at,

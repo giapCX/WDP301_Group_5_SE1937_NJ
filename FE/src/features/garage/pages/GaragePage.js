@@ -70,7 +70,7 @@ function downloadCsv(tasks, section) {
 }
 
 export default function GaragePage({ user }) {
-  const { workspace, loading, error, reload, saveReport, addIncident } =
+  const { workspace, loading, error, reload, saveReport, addIncident, reviewArrival } =
     useGarageWorkspace();
   const [section, setSection] = useState(currentSection);
   const [query, setQuery] = useState('');
@@ -360,6 +360,10 @@ export default function GaragePage({ user }) {
           key={dialog.task.id}
           task={dialog.task}
           onSave={reportSaved}
+          onReviewArrival={async (task, status, note) => {
+            await reviewArrival(task, status, note);
+            setDialog(null);
+          }}
           onClose={() => setDialog(null)}
         />
       )}

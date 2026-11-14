@@ -14,6 +14,8 @@ export const getOperatorGarageStaff = (options) => getApi('/operator/vehicles/ga
 export const getOperatorVehicle = (id, options) => getApi(`/operator/vehicles/${encodeURIComponent(id)}`, options);
 export const getOperatorVehicleDocument = (id, kind, options) => getBlobApi(`/operator/vehicles/${encodeURIComponent(id)}/documents/${encodeURIComponent(kind)}`, options);
 export const updateOperatorVehicleStatus = (id, body) => patchApi(`/operator/vehicles/${encodeURIComponent(id)}/status`, body);
+export const reviewOperatorVehicleDocuments = (id, body) => postApi(`/operator/vehicles/${encodeURIComponent(id)}/document-review`, body);
+export const confirmOperatorVehicleArrival = (id, body) => postApi(`/operator/vehicles/${encodeURIComponent(id)}/arrival-confirmation`, body);
 export const scheduleOperatorVehicleInspection = (id, body) => postApi(`/operator/vehicles/${encodeURIComponent(id)}/inspection-schedule`, body);
 export const updateOperatorVehicleInspectionSchedule = (id, body) => patchApi(`/operator/vehicles/${encodeURIComponent(id)}/inspection-schedule`, body);
 export const precheckOperatorVehicleInspection = (id, body) => postApi(`/operator/inspections/${encodeURIComponent(id)}/precheck`, body);

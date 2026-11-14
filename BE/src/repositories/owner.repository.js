@@ -30,6 +30,7 @@ export function createOwnerRepository(connection, fileRepository) {
     }, { $set: { owner_review: ownerReview }, $inc: { version: 1 } }),
     respondToInspection: (vehicleId, inspectionId, version, ownerReview) => models.VehicleInspection.updateOne({
       _id: inspectionId, vehicle_id: vehicleId, version, approval_status: 'pending', 'owner_review.status': { $exists: false },
+      $or: [{ 'arrival_review.status': { $exists: false } }, { 'operator_review.status': 'checked' }],
     }, { $set: { owner_review: ownerReview }, $inc: { version: 1 } }),
     findSettlements: (ownerId) => settlements.find({ owner_id: ownerId }, { sort: { period_start: -1 } }),
     findAgreements: (ownerId) => agreements.find({ owner_id: ownerId }, { sort: { created_at: -1 } }),

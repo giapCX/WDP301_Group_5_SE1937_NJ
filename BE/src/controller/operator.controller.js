@@ -1,4 +1,4 @@
-export function createOperatorController(service) {
+export function createOperatorController(service, contracts) {
   return {
     dashboard: async (request, response) => response.json(await service.dashboard({
       permissions: request.currentPermissions,
@@ -20,6 +20,13 @@ export function createOperatorController(service) {
     },
     updateVehicleStatus: async (request, response) =>
       response.json(await service.updateVehicleStatus(request, request.params.id, request.body)),
+    reviewVehicleDocuments: async (request, response) =>
+      response.json(await service.reviewVehicleDocuments(request, request.params.id, request.body)),
+    confirmVehicleArrival: async (request, response) => response.json({
+      data: await contracts.prepare('management', request.params.id, {}, request, {
+        id: request.body?.inspectionId, version: request.body?.version,
+      }),
+    }),
     scheduleVehicleInspection: async (request, response) =>
       response.status(201).json(await service.scheduleVehicleInspection(request, request.params.id, request.body)),
     updateVehicleInspectionSchedule: async (request, response) =>

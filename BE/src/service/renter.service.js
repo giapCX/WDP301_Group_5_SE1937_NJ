@@ -176,7 +176,6 @@ export function createRenterService(repo, {
         policies: await policies(),
         services: {
           otp: demo ? 'demo' : 'unconfigured',
-          ekyc: demo ? 'demo' : 'unconfigured',
           payment: demo ? 'demo' : 'unconfigured'
         }
       };
@@ -230,12 +229,6 @@ export function createRenterService(repo, {
           primary_role_id: role._id,
           additional_role_ids: [],
           account_status: 'active',
-          identity_kyc: {
-            status: 'unverified'
-          },
-          driver_license: {
-            verification_status: 'unverified'
-          },
           created_at: new Date(),
           updated_at: new Date()
         }, session);
@@ -321,13 +314,12 @@ export function createRenterService(repo, {
     },
     async upload(user, body) {
       await ensure();
-      if (!['avatar', 'identity', 'incident'].includes(body.purpose) || !['image/jpeg', 'image/png', 'image/webp', 'video/mp4'].includes(body.content_type)) throw httpError(400, 'Loại tệp không hỗ trợ.');
+      if (!['avatar', 'incident'].includes(body.purpose) || !['image/jpeg', 'image/png', 'image/webp', 'video/mp4'].includes(body.content_type)) throw httpError(400, 'Loại tệp không hỗ trợ.');
       if (body.purpose !== 'incident' && body.content_type === 'video/mp4') throw httpError(400, 'Giấy tờ/ảnh đại diện phải là ảnh.');
-      if (body.purpose === 'identity' && body.content_type === 'image/webp') throw httpError(400, 'Giấy tờ cần JPEG hoặc PNG.');
       if (typeof body.data !== 'string' || !/^[A-Za-z0-9+/]*={0,2}$/.test(body.data)) throw httpError(400, 'Dữ liệu tệp không hợp lệ.');
       const bytes = Buffer.from(body.data, 'base64');
-      const max = body.purpose === 'avatar' ? 5 : body.purpose === 'identity' ? 10 : 20;
-      if (!bytes.length || bytes.length > max * 1024 * 1024 || body.purpose === 'identity' && bytes.length < 100 * 1024) throw httpError(400, `Tệp vượt giới hạn ${max} MB hoặc ảnh giấy tờ nhỏ hơn 100 KB.`);
+      const max = body.purpose === 'avatar' ? 5 : 20;
+      if (!bytes.length || bytes.length > max * 1024 * 1024) throw httpError(400, `Tệp vượt giới hạn ${max} MB.`);
       const valid = body.content_type === 'image/png' ? bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) : body.content_type === 'image/jpeg' ? bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 : body.content_type === 'image/webp' ? bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP' : bytes.toString('ascii', 4, 8) === 'ftyp';
       if (!valid) throw httpError(400, 'Nội dung tệp không khớp loại khai báo.');
       const doc = {
@@ -369,55 +361,13 @@ export function createRenterService(repo, {
         bytes: Buffer.concat(chunks.map(c => Buffer.isBuffer(c.data) ? c.data : Buffer.from(c.data.buffer)))
       };
     },
-    async ekyc(user, body) {
-      if (user.identity_kyc?.status === 'verified' && user.driver_license?.verification_status === 'verified') throw httpError(409, 'Hồ sơ đã xác minh. Liên hệ hỗ trợ để thay đổi.');
-      if (!['Citizen_ID', 'Passport'].includes(body.document_type) || !(body.document_type === 'Citizen_ID' ? /^\d{12}$/ : /^[A-Za-z0-9]{8,9}$/).test(String(body.document_number)) || !/^\d{12}$/.test(String(body.license_number)) || !['B1', 'B2', 'C', 'D', 'E'].includes(body.license_class)) throw httpError(400, 'CCCD/Passport hoặc GPLX không đúng định dạng.');
-      const expires = new Date(body.expires_at);
-      if (!Number.isFinite(+expires) || expires <= new Date()) throw httpError(400, 'GPLX phải còn hạn.');
-      const keys = [body.id_front, ...(body.document_type === 'Citizen_ID' ? [body.id_back] : []), body.license_front, body.license_back];
-      if (new Set(keys).size !== keys.length) throw httpError(400, 'Mỗi mặt giấy tờ cần một ảnh riêng.');
-      await files(user, keys, 'identity');
-      const status = demo ? 'verified' : 'pending';
-      await repo.transaction(async session => {
-        await repo.update('users', {
-          _id: user._id
-        }, {
-          $set: {
-            identity_kyc: {
-              status,
-              id_masked: '********' + String(body.document_number).slice(-4),
-              document_type: body.document_type,
-              evidence_keys: keys.slice(0, body.document_type === 'Citizen_ID' ? 2 : 1),
-              verification_environment: demo ? 'demo' : 'pending_provider',
-              ...(demo ? {
-                verified_at: new Date()
-              } : {})
-            },
-            driver_license: {
-              class: body.license_class,
-              license_masked: '********' + String(body.license_number).slice(-4),
-              expires_at: expires,
-              verification_status: status,
-              evidence_keys: [body.license_front, body.license_back]
-            },
-            updated_at: new Date()
-          }
-        }, session);
-        await audit(user, 'renter.kyc.submit', 'user', user._id, session);
-      });
-      return {
-        status,
-        demo,
-        message: demo ? 'Xác minh mô phỏng, chỉ dùng dữ liệu thử nghiệm.' : 'Đã nhận hồ sơ. Chờ dịch vụ xác minh hoặc người có thẩm quyền xử lý.'
-      };
-    },
     async createBooking(user, body) {
       await ensure();
       const dates = rentalDates(body),
         listingId = id(body.listing_id);
       const request_key = text(body.request_key, 8, 100, 'Mã yêu cầu');
       if (body.agreed !== true) throw httpError(400, 'Cần đồng ý điều khoản thuê.');
-      if (user.identity_kyc?.verification_environment === 'demo' && !demo || user.identity_kyc?.status !== 'verified' || user.driver_license?.verification_status !== 'verified' || !(new Date(user.driver_license.expires_at) >= dates.end) || !user.contact_profile?.address) throw httpError(409, 'Cần xác minh CCCD/GPLX còn hạn hết chuyến và bổ sung địa chỉ trong hồ sơ.');
+      if (!user.contact_profile?.address) throw httpError(409, 'Cần bổ sung địa chỉ liên hệ trong hồ sơ.');
       return repo.transaction(async session => {
         const replay = await repo.one('bookings', {
           renter_id: user._id,
@@ -427,6 +377,7 @@ export function createRenterService(repo, {
           if (String(replay.listing_id) !== String(listingId) || +replay.start_at !== +dates.start || +replay.end_at !== +dates.end) throw httpError(409, 'Mã yêu cầu đã dùng cho nội dung đặt xe khác.');
           return {
             booking: replay,
+            agreement: await repo.one('rental_agreements', { booking_id: replay._id }, session),
             replayed: true
           };
         }
@@ -505,7 +456,7 @@ export function createRenterService(repo, {
           policy_snapshot,
           hold_expires_at: new Date(+now + BOOKING_REVIEW_WINDOW_MS),
           review_info: {
-            required: true,
+            required: false,
             decision: 'pending'
           },
           status: 'pending',
@@ -530,7 +481,7 @@ export function createRenterService(repo, {
           },
           renter_details_snapshot: {
             renter_id: user._id,
-            verified_license: true,
+
             full_name: user.full_name
           },
           terms_snapshot: {
@@ -549,9 +500,11 @@ export function createRenterService(repo, {
             method: 'electronic_acceptance',
             renter_confirmed: false
           },
-          status: 'pending_signature',
+          status: 'pending_signatures',
           created_at: now
         };
+        const owner = await repo.one('users', { _id: vehicle.owner_id }, session);
+        agreement.contract_document = createRentalContractDocument({ row: agreement, booking, vehicle, owner, renter: user, now });
         await repo.insert('bookings', booking, session);
         await repo.insert('rental_agreements', agreement, session);
         await audit(user, 'renter.booking.create', 'booking', _id, session);
@@ -701,7 +654,7 @@ export function createRenterService(repo, {
     async voucher(user, bookingId, body) {
       return repo.transaction(async session => {
         const booking = await owned(user, bookingId, session);
-        held(booking);
+        if (!(booking.status === 'pending' && booking.review_info?.required === false && !isBookingHoldExpired(booking))) held(booking);
         if (booking.discount_code) throw httpError(409, 'Đơn đã áp dụng một mã giảm giá.');
         const agreement = await repo.one('rental_agreements', {
           booking_id: booking._id

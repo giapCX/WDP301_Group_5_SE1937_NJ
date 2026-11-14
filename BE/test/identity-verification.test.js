@@ -19,7 +19,7 @@ before(async () => {
   server = createApp(connection).listen(0, '127.0.0.1');
   await once(server, 'listening');
   baseUrl = `http://127.0.0.1:${server.address().port}`;
-  const renterRole = await models.Role.findOne({ code: 'RENTER' }).lean();
+  const renterRole = await models.Role.findOne({ code: 'OWNER' }).lean();
   const renter = await models.User.create({ full_name: 'KYC Test Renter', email: 'kyc-renter@example.com', account_status: 'active', primary_role_id: renterRole._id, created_at: new Date(), updated_at: new Date() });
   renterId = renter._id;
   renterToken = (await request('/auth/login', 'POST', { account: renter.email, password: '123456' }, null)).body.data.token;
@@ -32,7 +32,7 @@ before(async () => {
 });
 after(async () => { if (server) await new Promise((resolve) => server.close(resolve)); await closeTestDatabase(); });
 
-test('renter submits private identity and driving-license evidence for manual eKYC review', async () => {
+test('owner submits private identity and driving-license evidence for manual eKYC review', async () => {
   assert.equal((await request('/identity-verifications/me')).status, 200);
   const result = await request('/identity-verifications', 'POST', submission());
   assert.equal(result.status, 201, JSON.stringify(result));
@@ -44,7 +44,7 @@ test('renter submits private identity and driving-license evidence for manual eK
   assert.ok(await models.AuditLog.findOne({ entity_id: renterId, action: 'identity_verification.submit' }).lean());
 });
 
-test('manager reviews the whole eKYC package and renter cannot access review endpoints', async () => {
+test('manager reviews the whole eKYC package and owner cannot access review endpoints', async () => {
   assert.equal((await request('/manager/identity-verifications')).status, 403);
   const queue = await request('/manager/identity-verifications?status=pending', 'GET', undefined, managerToken);
   assert.equal(queue.status, 200, JSON.stringify(queue));

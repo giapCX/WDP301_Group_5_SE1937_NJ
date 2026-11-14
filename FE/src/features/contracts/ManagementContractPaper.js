@@ -76,6 +76,11 @@ export default function ManagementContractPaper({ agreement }) {
         {index === 0 && <Facts values={contract.facts} />}
         {article.paragraphs.map((text) => <p key={text}>{text}</p>)}
       </section>)}
+      {contract.appendices?.map((appendix) => <section key={appendix.title} className="management-paper-article">
+        <h3>{appendix.title}</h3>
+        <Facts values={appendix.facts} />
+        {appendix.paragraphs.map((text) => <p key={text}>{text}</p>)}
+      </section>)}
       <footer className="management-paper-signatures">
         {rental ? <>
           <Signature heading="BÊN CHO THUÊ · ĐẠI DIỆN XEDI" name={agreement.platformName} signedAt={agreement.platformSignedAt} signed={agreement.platformSigned} />
