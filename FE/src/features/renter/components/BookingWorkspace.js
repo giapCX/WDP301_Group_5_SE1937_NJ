@@ -34,7 +34,7 @@ export default function BookingWorkspace({
       case_type: 'MECHANICAL_BREAKDOWN',
       evidence: []
     });
-  const [showContract, setShowContract] = useState(false);
+  const [showContract, setShowContract] = useState(() => new URLSearchParams(window.location.hash.split('?')[1] || '').get('contract') === '1');
   const [now, setNow] = useState(Date.now());
   const load = () => getRenter('/bookings/' + bookingId).then(r => setData(r.data));
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function BookingWorkspace({
   return <div className="renter-booking renter-stack">
     <RentalJourney data={data} expired={seconds === 0 && ['pending', 'awaiting_payment'].includes(b.status)} />
     {showContract && a?._id && <SigningDialog item={{ id: a._id, type: 'rental' }} view="party"
-      onClose={() => setShowContract(false)} onSigned={() => { load().catch((failure) => setError(failure.message)); onChanged?.(); }} />}
+      onClose={() => { setShowContract(false); if (window.location.hash.includes('?contract=1')) window.location.hash = `#/renter/bookings/${bookingId}`; }} onSigned={() => { load().catch((failure) => setError(failure.message)); onChanged?.(); }} />}
     {error && <p role="alert" className="renter-error">{error}</p>}{notice && <p role="status" className="renter-notice">{notice}</p>}
     <section className="renter-card"><div className="renter-row"><h2>{b.booking_code}</h2><strong>{statusName(b.status)}</strong></div><p>{data.vehicle?.brand} {data.vehicle?.model} · {data.vehicle?.license_plate}</p><p>{dateTime(b.start_at)} → {dateTime(b.end_at)}</p><p>Nhận / trả xe: {b.pickup_location?.branch}</p><p>Giá mỗi ngày: {vnd(b.pricing_snapshot?.daily_price)} · {b.pricing_snapshot?.charged_days} ngày</p><p className="renter-price">Tiền thuê: {vnd(b.rental_fee_amount)} · Cọc: {vnd(b.deposit_amount_snapshot)}</p>{['pending', 'awaiting_payment'].includes(b.status) && seconds !== null && <p role="timer">{b.status === 'pending' ? 'Thời gian chờ duyệt còn lại' : 'Thời gian thanh toán còn lại'}: {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</p>}
       {waiting && a?.status !== 'signed' && !a?.contract_document && <form className="renter-row" onSubmit={e => {
@@ -109,7 +109,7 @@ export default function BookingWorkspace({
     </section>
     {platformSigning && <section className="renter-card">
       <h2>Hợp đồng thuê xe</h2>
-      {!a.contract_document ? <p>{b.status === 'pending' ? 'Hợp đồng được lập sau khi Operation duyệt chuyến.' : 'Đang chờ XeDi lập nội dung hợp đồng.'}</p> : <>
+      {!a.contract_document ? <><p>{b.status === 'pending' ? 'Hồ sơ thuê xe đã được tạo. XeDi duyệt chuyến và lập nội dung trình ký, sau đó bạn đọc và ký như quy trình hợp đồng của chủ xe.' : 'Đang chờ XeDi lập nội dung hợp đồng.'}</p><button type="button" onClick={() => setShowContract(true)}>Xem hồ sơ hợp đồng</button></> : <>
         <p>Khách thuê {a.signing_info?.renter_confirmed ? 'đã ký' : 'chưa ký'} · XeDi {a.signing_info?.platform_signer_user_id ? 'đã ký' : 'chưa ký'}</p>
         <button type="button" onClick={() => setShowContract(true)}>Xem hợp đồng thuê</button>
       </>}

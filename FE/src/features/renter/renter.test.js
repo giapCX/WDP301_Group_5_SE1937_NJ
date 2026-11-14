@@ -187,7 +187,7 @@ test('booking panel reads listing price then posts reservation without client-co
   await screen.findByText(/Gara API/);
   fireEvent.click(screen.getByRole('checkbox'));
   fireEvent.submit(screen.getByRole('button', {
-    name: 'Gửi yêu cầu thuê xe'
+    name: 'Thuê xe'
   }).closest('form'));
   await waitFor(() => expect(global.fetch).toHaveBeenCalledWith('/api/renter/bookings', expect.objectContaining({
     method: 'POST'
@@ -197,4 +197,16 @@ test('booking panel reads listing price then posts reservation without client-co
   expect(body.listing_id).toBe('070000000000000000000001');
   expect(body.rental_fee_amount).toBeUndefined();
   expect(body.agreed).toBe(true);
+  await waitFor(() => expect(window.location.hash).toBe('#/renter/bookings/' + booking._id + '?contract=1'));
+});
+
+test('renting opens the contract dossier immediately and waits for the prepared version before signing', async () => {
+  window.history.replaceState(null, '', `/#/renter/bookings/${booking._id}?contract=1`);
+  const preview = { id: 'agreement-1', type: 'rental', number: 'RENT-NEW', bookingStatus: 'pending', status: 'pending_signature', canSign: false, document: null, previewFacts: [{ label: 'Tiền thuê', value: '1.400.000 VND' }] };
+  global.fetch.mockImplementation(async url => url.startsWith('/api/contracts/') ? reply({ data: preview }) : reply({ data: { booking: { ...booking, status: 'pending' }, agreement: { ...agreement, _id: 'agreement-1', terms_snapshot: { ...agreement.terms_snapshot, signature_method: 'electronic_acceptance' } }, payments: [], deposit: null } }));
+  render(<BookingWorkspace bookingId={booking._id} config={{ services: {} }} />);
+  expect(await screen.findByRole('dialog', { name: 'Nội dung và ký hợp đồng' })).toBeInTheDocument();
+  expect(await screen.findByText('1.400.000 VND')).toBeInTheDocument();
+  expect(screen.getByText('Đã tạo hồ sơ. Đang chờ XeDi duyệt chuyến và lập nội dung trình ký.')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Xác nhận ký hợp đồng' })).not.toBeInTheDocument();
 });

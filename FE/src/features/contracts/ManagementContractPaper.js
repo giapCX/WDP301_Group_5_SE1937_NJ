@@ -5,7 +5,7 @@ function date(value) {
   return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'long', timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(value));
 }
 
-function Signature({ heading, name, signedAt }) {
+export function Signature({ heading, name, signedAt }) {
   return <div className="management-paper-signature">
     <strong>{heading}</strong>
     <em>{signedAt ? 'Đã xác nhận điện tử' : 'Chờ xác nhận'}</em>
@@ -13,13 +13,13 @@ function Signature({ heading, name, signedAt }) {
   </div>;
 }
 
-function Facts({ values }) {
+export function Facts({ values }) {
   return <dl className="management-paper-facts">{(values || []).map(({ label, value }) => <div key={label}>
     <dt>{label}</dt><dd>{value}</dd>
   </div>)}</dl>;
 }
 
-function printPaper(paper, number) {
+export function printPaper(paper, number) {
   const frame = document.createElement('iframe');
   frame.title = 'Bản in hợp đồng';
   frame.setAttribute('aria-hidden', 'true');

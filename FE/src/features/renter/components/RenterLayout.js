@@ -7,11 +7,13 @@ const items = [
   ['home', 'Trang chủ', 'calendar'],
   ['cars', 'Tìm & đặt xe', 'car'],
   ['bookings', 'Chuyến đi & thanh toán', 'document'],
+  ['contracts', 'Hợp đồng thuê xe', 'document'],
   ['profile', 'Hồ sơ & xác minh', 'people'],
   ['incidents', 'Sự cố đã báo cáo', 'shield'],
 ];
-const titles = { home: 'Trang chủ khách thuê', cars: 'Tìm và đặt xe', profile: 'Hồ sơ cá nhân', bookings: 'Chuyến đi của bạn', incidents: 'Sự cố và hỗ trợ' };
+const titles = { contracts: 'Hợp đồng thuê xe của bạn', home: 'Trang chủ khách thuê', cars: 'Tìm và đặt xe', profile: 'Hồ sơ cá nhân', bookings: 'Chuyến đi của bạn', incidents: 'Sự cố và hỗ trợ' };
 const descriptions = {
+  contracts: 'Rà soát hợp đồng thuê xe, ký xác nhận và theo dõi chữ ký của các bên.',
   home: 'Theo dõi chuyến đi, hoàn thiện hồ sơ và tìm chiếc xe cho hành trình tiếp theo.',
   cars: 'Tìm xe theo lịch trình, xem chi phí và đặt xe trực tuyến.',
   bookings: 'Quản lý lịch thuê, hợp đồng, thanh toán và yêu cầu hủy chuyến.',
@@ -47,7 +49,7 @@ export default function RenterLayout({ tab, token, connected, error, children })
     <div className="owner-main">
       <header className="owner-topbar"><div className="owner-breadcrumb">Cổng khách thuê <span>/</span><strong>{items.find(([key]) => key === tab)?.[1]}</strong></div><div className="owner-top-actions"><span className={`owner-live ${error ? 'renter-offline' : ''}`}><i />{error ? 'Chưa kết nối dữ liệu' : connected ? 'Đã kết nối dữ liệu' : 'Đang kết nối'}</span>{token && <button onClick={signOut}>Đăng xuất</button>}</div></header>
       <main className="owner-content renter-content">
-        <div className="owner-heading"><div><span className="owner-eyebrow">{date.toLocaleUpperCase('vi-VN')}</span><h1>{titles[tab]}</h1><p>{descriptions[tab]}</p></div>{token && <a className="owner-primary renter-heading-action" href="#/renter/cars"><Icon name="search" size={15} /><span>Tìm xe thuê</span></a>}</div>
+        <div className="owner-heading"><div><span className="owner-eyebrow">{date.toLocaleUpperCase('vi-VN')}</span><h1>{titles[tab]}</h1><p>{descriptions[tab]}</p></div>{token && ['home', 'cars'].includes(tab) && <a className="owner-primary renter-heading-action" href="#/renter/cars"><Icon name="search" size={15} /><span>Tìm xe thuê</span></a>}</div>
         {children}
         <footer className="owner-footer">© {new Date().getFullYear()} XeDi · Cổng thông tin dành cho khách thuê<span><i />Dữ liệu tài khoản được bảo vệ</span></footer>
       </main>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getListing } from '../../listings/api/listingApi';
 import { getRenter, postRenter, vnd } from '../api/renterApi';
 import { Field } from './Controls';
@@ -17,6 +17,13 @@ export default function BookingPanel({
     [busy, setBusy] = useState(false),
     [agreed, setAgreed] = useState(false);
   const [key] = useState(() => crypto.randomUUID());
+  const errorRef = useRef(null);
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.focus();
+      errorRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [error]);
   const [dates, setDates] = useState(() => {
     const start = new Date(Date.now() + 86400000);
     return {
@@ -40,14 +47,20 @@ export default function BookingPanel({
   }, [listingId]);
   if (!listing) return <p role={error ? 'alert' : 'status'}>{error || 'Đang tải thông tin xe...'}</p>;
   const days = Math.max(0, Math.ceil((new Date(dates.end) - new Date(dates.start)) / 86400000));
-  return <div className="renter-booking">{error && <p role="alert" className="renter-error">{error}</p>}<p>{listing.description}</p><div className="renter-gallery">{(listing.photos || []).filter(src => /^https?:\/\//.test(src) || src.startsWith('/uploads/') || src.startsWith('/api/listings/')).map((src, i) => <img src={src} alt={`${listing.title} · ảnh ${i + 1}`} key={src} />)}</div><p>{listing.vehicle?.brand} {listing.vehicle?.model} · {listing.vehicle?.seats} chỗ · {listing.vehicle?.transmission === 'automatic' ? 'Số tự động' : 'Số sàn'}</p><p>{listing.pickup_location?.branch_name} · {listing.pickup_location?.address_label}</p><p>Giá: {vnd(listing.daily_price)}/ngày · Cọc: {vnd(listing.security_deposit_amount)}</p><p>Quãng đường: {listing.mileage_policy?.included_km_per_day ?? 'Chưa cấu hình'} km/ngày · Phụ trội: {vnd(listing.mileage_policy?.extra_km_fee)}/km.</p><p>Hủy miễn phí trước {config?.policies.cancellation?.config.free_cancel_before_hours ?? 'chưa quy định'} giờ. Hoàn cọc trong {config?.policies.deposit_refund?.config.refund_within_business_days ?? 'thời hạn đối soát'} ngày làm việc sau khi đủ điều kiện.</p><h3>Đánh giá khách hàng</h3>{listing.reviews?.length ? listing.reviews.map(review => <p key={review._id}>{review.rating}/5 · {review.comment}</p>) : <p>Chưa có đánh giá được công khai cho xe này.</p>}
-    <form onSubmit={async e => {
+  return <div className="renter-booking"><p>{listing.description}</p><div className="renter-gallery">{(listing.photos || []).filter(src => /^https?:\/\//.test(src) || src.startsWith('/uploads/') || src.startsWith('/api/listings/')).map((src, i) => <img src={src} alt={`${listing.title} · ảnh ${i + 1}`} key={src} />)}</div><p>{listing.vehicle?.brand} {listing.vehicle?.model} · {listing.vehicle?.seats} chỗ · {listing.vehicle?.transmission === 'automatic' ? 'Số tự động' : 'Số sàn'}</p><p>{listing.pickup_location?.branch_name} · {listing.pickup_location?.address_label}</p><p>Giá: {vnd(listing.daily_price)}/ngày · Cọc: {vnd(listing.security_deposit_amount)}</p><p>Quãng đường: {listing.mileage_policy?.included_km_per_day ?? 'Chưa cấu hình'} km/ngày · Phụ trội: {vnd(listing.mileage_policy?.extra_km_fee)}/km.</p><p>Hủy miễn phí trước {config?.policies.cancellation?.config.free_cancel_before_hours ?? 'chưa quy định'} giờ. Hoàn cọc trong {config?.policies.deposit_refund?.config.refund_within_business_days ?? 'thời hạn đối soát'} ngày làm việc sau khi đủ điều kiện.</p><h3>Đánh giá khách hàng</h3>{listing.reviews?.length ? listing.reviews.map(review => <p key={review._id}>{review.rating}/5 · {review.comment}</p>) : <p>Chưa có đánh giá được công khai cho xe này.</p>}
+    <p className="renter-notice">Thuê xe → XeDi duyệt và lập hợp đồng → Bạn đọc, ký → XeDi ký → Thanh toán và nhận xe.</p>
+    <form noValidate onSubmit={async e => {
       e.preventDefault();
       if (busy) return;
       if (!getSessionToken()) {
         window.location.hash = '#/login';
         return;
       }
+      if (!agreed) { setError('Vui lòng tích đồng ý điều kiện thuê, tiền cọc và chính sách hủy trước khi thuê xe.'); return; }
+      const start = new Date(dates.start), end = new Date(dates.end);
+      if (!Number.isFinite(+start) || !Number.isFinite(+end)) { setError('Vui lòng chọn đầy đủ ngày giờ nhận và trả xe.'); return; }
+      if (+start < Date.now() + 2 * 3600000) { setError('Vui lòng chọn giờ nhận xe cách hiện tại ít nhất 2 giờ.'); return; }
+      if (+end - +start < 86400000) { setError('Thời gian thuê tối thiểu là 24 giờ. Vui lòng chọn lại giờ trả xe.'); return; }
       setBusy(true);
       setError('');
       try {
@@ -58,7 +71,9 @@ export default function BookingPanel({
           agreed,
           request_key: key
         });
-        window.location.hash = '#/renter/bookings/' + result.data.booking._id;
+        const bookingId = result.data?.booking?._id;
+        if (!bookingId) throw new Error('Backend chưa trả về mã chuyến thuê. Vui lòng tải lại và thử lại.');
+        window.location.hash = '#/renter/bookings/' + bookingId + '?contract=1';
       } catch (reason) {
         setError(reason.message);
       } finally {
@@ -71,7 +86,9 @@ export default function BookingPanel({
         })} /><Field label="Trả xe" type="datetime-local" required value={dates.end} onChange={e => setDates({
           ...dates,
           end: e.target.value
-        })} /></div><p>Nhận tại gara · tối thiểu 24 giờ thuê. Chưa áp dụng giao tận nơi và gói bảo hiểm trả thêm.</p><p className="renter-price">Ước tính {days} ngày: {vnd(Number.isFinite(days) ? days * listing.daily_price : 0)} + cọc {vnd(listing.security_deposit_amount)}</p><p>Giá cuối cùng và lịch xe được kiểm tra lại khi đặt. Cần xác minh giấy tờ và bổ sung địa chỉ tại <a href="#/renter/profile">hồ sơ cá nhân</a>.</p><label className="renter-check"><input type="checkbox" required checked={agreed} onChange={e => setAgreed(e.target.checked)} />Tôi đồng ý điều kiện thuê, tiền cọc và chính sách hủy.</label><button className="primary" disabled={busy || !agreed}>{busy ? 'Đang kiểm tra lịch...' : getSessionToken() ? 'Gửi yêu cầu thuê xe' : 'Đăng nhập để đặt xe'}</button>
+        })} /></div><p>Nhận tại gara · tối thiểu 24 giờ thuê. Chưa áp dụng giao tận nơi và gói bảo hiểm trả thêm.</p><p className="renter-price">Ước tính {days} ngày: {vnd(Number.isFinite(days) ? days * listing.daily_price : 0)} + cọc {vnd(listing.security_deposit_amount)}</p><p>Giá cuối cùng và lịch xe được kiểm tra lại khi đặt. Cần xác minh giấy tờ và bổ sung địa chỉ tại <a href="#/renter/profile">hồ sơ cá nhân</a>.</p><label className="renter-check"><input type="checkbox" required checked={agreed} onChange={e => setAgreed(e.target.checked)} />Tôi đồng ý điều kiện thuê, tiền cọc và chính sách hủy.</label><button type="submit" className="primary" disabled={busy}>{busy ? 'Đang kiểm tra lịch...' : getSessionToken() ? 'Thuê xe' : 'Đăng nhập để đặt xe'}</button>
+      {busy && <p role="status">Đang kiểm tra lịch xe và tạo hồ sơ hợp đồng...</p>}
+      {error && <div ref={errorRef} tabIndex={-1} role="alert" className="renter-error">{error}{/CCCD|GPLX|địa chỉ|hồ sơ/i.test(error) && <p><a href="#/renter/profile">Mở hồ sơ để hoàn thiện thông tin →</a></p>}</div>}
     </form>
   </div>;
 }

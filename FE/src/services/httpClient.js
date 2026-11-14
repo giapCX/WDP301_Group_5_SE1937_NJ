@@ -27,16 +27,26 @@ export async function postApi(path, body, { signal } = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`/api${path}`, {
+  let response;
+  try {
+    response = await fetch(`/api${path}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
     signal,
-  });
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') throw error;
+    throw new Error('Không kết nối được backend. Vui lòng kiểm tra backend đang chạy ở cổng 5000.');
+  }
 
-  const data = await response.json().catch(() => ({}));
+  let invalidJson = false;
+  const data = await response.json().catch(() => { invalidJson = true; return {}; });
   if (!response.ok) {
-    const message = data.error?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+    const proxyFailed = invalidJson && response.status >= 500;
+    const message = data.error?.message || (proxyFailed
+      ? 'Không kết nối được backend. Vui lòng kiểm tra backend đang chạy ở cổng 5000.'
+      : `API trả về lỗi HTTP ${response.status}. Vui lòng kiểm tra backend.`);
     const error = new Error(message);
     error.status = response.status;
     error.data = data;

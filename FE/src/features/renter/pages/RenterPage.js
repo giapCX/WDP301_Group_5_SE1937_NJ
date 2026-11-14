@@ -1,3 +1,4 @@
+import RenterContracts from '../components/RenterContracts';
 import RenterLayout from '../components/RenterLayout';
 import RenterHome from './RenterHome';
 import { useState, useEffect } from 'react';
@@ -21,13 +22,13 @@ export default function RenterPage() {
     window.addEventListener('hashchange', change);
     return () => window.removeEventListener('hashchange', change);
   }, []);
-  const tab = route.includes('/profile') ? 'profile' : route.includes('/incidents') ? 'incidents' : route.includes('/bookings') ? 'bookings' : route.includes('/cars') ? 'cars' : 'home';
+  const tab = route.includes('/contracts') ? 'contracts' : route.includes('/profile') ? 'profile' : route.includes('/incidents') ? 'incidents' : route.includes('/bookings') ? 'bookings' : route.includes('/cars') ? 'cars' : 'home';
   const bookingId = route.match(/bookings\/([a-f0-9]{24})/i)?.[1];
   const { token, config, error, bookings, incidents, pagination, loading } = useRenterWorkspace({ page, filter, search, retry });
   const visible = bookings;
   return <RenterLayout tab={tab} token={token} connected={Boolean(config)} error={error}>
     {!token ? <section className="renter-card"><p>Đăng nhập để xem dữ liệu của bạn.</p><a href="#/login">Đăng nhập</a></section> : <>{config?.services.payment === 'demo' && <p className="renter-notice">Môi trường mô phỏng OTP, eKYC và thanh toán. Không xác minh danh tính hoặc thu tiền thật.</p>}{error && <div role="alert" className="renter-error">{error} <button onClick={() => setRetry(retry + 1)}>Thử lại</button> <a href="#/login">Đăng nhập lại</a></div>}
-      {tab === 'home' || tab === 'cars' ? <RenterHome key={tab} overview={tab === 'home'} /> : tab === 'profile' ? <Profile config={config} /> : tab === 'incidents' ? <section className="renter-card"><h2>Sự cố đã báo cáo</h2><p>Báo cáo mới từ chi tiết chuyến đang thuê.</p>{loading ? <p role="status">Đang tải...</p> : incidents.length ? incidents.map(i => <article key={i._id}><h3>{i.case_number} · {statusName(i.status)}</h3><p>{dateTime(i.created_at)} · {i.description}</p>{i.resolution && <p>Kết quả xử lý: {i.resolution.note || i.resolution.outcome}</p>}</article>) : <p>Chưa có báo cáo sự cố.</p>}</section> : bookingId ? <BookingWorkspace key={bookingId} bookingId={bookingId} config={config} onChanged={() => setRetry(v => v + 1)} /> : <section className="renter-card"><h2>Lịch sử chuyến đi</h2><div className="renter-grid"><label className="renter-field">Trạng thái<select value={filter} onChange={e => {
+      {tab === 'home' || tab === 'cars' ? <RenterHome key={tab} overview={tab === 'home'} /> : tab === 'contracts' ? <RenterContracts /> : tab === 'profile' ? <Profile config={config} /> : tab === 'incidents' ? <section className="renter-card"><h2>Sự cố đã báo cáo</h2><p>Báo cáo mới từ chi tiết chuyến đang thuê.</p>{loading ? <p role="status">Đang tải...</p> : incidents.length ? incidents.map(i => <article key={i._id}><h3>{i.case_number} · {statusName(i.status)}</h3><p>{dateTime(i.created_at)} · {i.description}</p>{i.resolution && <p>Kết quả xử lý: {i.resolution.note || i.resolution.outcome}</p>}</article>) : <p>Chưa có báo cáo sự cố.</p>}</section> : bookingId ? <BookingWorkspace key={bookingId} bookingId={bookingId} config={config} onChanged={() => setRetry(v => v + 1)} /> : <section className="renter-card"><h2>Lịch sử chuyến đi</h2><div className="renter-grid"><label className="renter-field">Trạng thái<select value={filter} onChange={e => {
                 setFilter(e.target.value);
                 setPage(1);
               }}>{[['all', 'Tất cả'], ['active', 'Đã xác nhận / Đang thuê'], ['awaiting_payment', 'Chờ thanh toán'], ['completed', 'Hoàn tất'], ['cancelled', 'Đã hủy'], ['expired', 'Hết hạn']].map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><label className="renter-field">Mã chuyến / biển số<input maxLength={50} value={search} onChange={e => {
