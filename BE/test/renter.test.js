@@ -10,6 +10,7 @@ import { createRenterRepository } from '../src/repositories/renter.repository.js
 import { createRenterService, selectPolicies, rentalDates, cancellationDecision } from '../src/service/renter.service.js';
 import { createListingRepository } from '../src/repositories/listing.repository.js';
 import { createApp } from '../src/app.js';
+import { createEmailOtpService } from '../src/service/email-otp.service.js';
 import { once } from 'node:events';
 async function contractRequest(path, account, body, expected = 200) {
   const response = await fetch(base + '/api' + path, {
@@ -24,6 +25,7 @@ async function contractRequest(path, account, body, expected = 200) {
 
 const oid = () => new Types.ObjectId();
 let db, repo, service, user, other, listing, vehicle, management, booking, server, base;
+let emailOtp, sentCode;
 const start = new Date(Date.now() + 10 * 86400000),
   end = new Date(+start + 2 * 86400000);
 const payload = key => ({
@@ -36,7 +38,9 @@ const payload = key => ({
 before(async () => {
   db = await connectTestDatabase();
   repo = createRenterRepository(db);
+  emailOtp = createEmailOtpService(db, { sendEmail: async ({ code }) => { sentCode = code; } });
   service = createRenterService(repo, {
+    emailOtp,
     demo: true
   });
   const role = await db.db.collection('roles').findOne({
@@ -330,7 +334,11 @@ test('Manager approves, both parties sign the same rental contract and payment i
   });
   const prepared = await contractRequest(`/contracts/rental/prepare/${booking._id}`, manager, {});
   const sign = { signatureName: 'Người ký kiểm thử', documentHash: prepared.document.hash, acceptedTerms: true };
+  await contractRequest(`/contracts/rental/${prepared.id}/sign`, other, sign, 404);
+  await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, { ...sign, acceptedTerms: false }, 400);
+  await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, { ...sign, documentHash: 'changed-document' }, 409);
   await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, sign);
+  await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, sign, 409);
   await assert.rejects(service.pay(user, String(booking._id), { agree_deposit: true, payment_method: 'VNPAY_QR' }), { status: 409 });
   await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, user, sign, 403);
   await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign);
@@ -496,10 +504,10 @@ test('private uploads stay owned, registration uses one-use OTP and strong passw
       email: 'new-renter@example.com',
       phone: '0933333333'
     },
-    otp = await service.challenge(null, {
+    otp = await emailOtp.send({
       ...c,
       purpose: 'register'
-    });
+    }, 'register');
   const body = {
     ...c,
     full_name: 'Khách Mới',
@@ -507,7 +515,7 @@ test('private uploads stay owned, registration uses one-use OTP and strong passw
     confirm_password: 'Renter123!',
     agree_terms: true,
     challenge_id: String(otp.challenge_id),
-    otp: otp.demo_code
+    otp: sentCode
   };
   await assert.rejects(service.register({
     ...body,

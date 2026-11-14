@@ -6,11 +6,13 @@ const { ObjectId } = Schema.Types;
 export const userSchema = createSchema({
   full_name: String,
   email: { type: String, required: true },
+  email_verified_at: Date,
   phone: String,
   department: String,
   job_title: String,
   work_scope: String,
   password_hash: String,
+  google_only: Boolean,
   primary_role_id: { type: ObjectId, ref: 'Role' },
   additional_role_ids: arrayOf({ type: ObjectId, ref: 'Role' }),
   account_status: { type: String, enum: ["active", "suspended", "pending", "inactive", "locked"], required: true },
