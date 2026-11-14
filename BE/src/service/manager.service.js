@@ -15,6 +15,15 @@ const STAFF_ROLES = ["MANAGER", "OPERATION_STAFF", "GARAGE_STAFF", "ADMIN"];
 const MANAGED_STAFF_ROLES = ["OPERATION_STAFF", "GARAGE_STAFF"];
 const OPEN_INCIDENT_STATUSES = ["reported", "open", "investigating", "pending_review", "awaiting_response", "pending_manager", "under_review", "in_progress"];
 const MINIMUM_PICKUP_NOTICE_MS = 2 * 60 * 60 * 1000;
+const isValidEmail = value => typeof value === 'string' && value.trim().length <= 254 && /^(?=.{1,64}@)[A-Z0-9.!#$%&'*+/=?^_~-]+@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,63}$/i.test(value.trim()) && !value.trim().includes('..');
+const normalizeVietnamPhone = value => {
+  if (typeof value !== 'string') return null;
+  const raw = value.trim();
+  if (!raw) return '';
+  const compact = raw.replace(/[\s().-]/g, '');
+  const national = compact.startsWith('+84') ? `0${compact.slice(3)}` : compact;
+  return /^0[35789]\d{8}$/.test(national) ? national : null;
+};
 const dayStart = date => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const toId = value => ObjectId.isValid(value) ? new ObjectId(value) : null;
 async function buildOperationsReport(repository, from, to) {

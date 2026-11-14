@@ -6,7 +6,7 @@ import GaragePage from '../features/garage/pages/GaragePage';
 import GarageAccess from '../features/garage/components/GarageAccess';
 import ManagerPage from '../features/manager/pages/ManagerPage';
 import OwnerPage from '../features/owner/pages/OwnerPage';
-import AdminPage from '../features/manager/pages/AdminPage';
+import AdminPage from '../features/admin/pages/AdminPage';
 import ContractsPage from '../features/contracts/ContractsPage';
 import VerificationPage from '../features/verification/pages/VerificationPage';
 import OperatorPage from '../features/operator/pages/OperatorPage';

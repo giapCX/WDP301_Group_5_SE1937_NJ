@@ -26,6 +26,7 @@ export function createManagerRouter(database, { fileRepository } = {}) {
   router.get('/listings', requireManager, controller.listings);
   router.patch('/listings/:id', requireManager, controller.updateListing);
   router.patch('/listings/:id/review', requireManager, controller.reviewListing);
+  router.get('/admin/overview', requireAdmin, controller.adminOverview);
   router.get('/accounts', requireAdmin, controller.accounts);
   router.post('/accounts', requireAdmin, controller.createAccount);
   router.patch('/accounts/:id', requireAdmin, controller.updateAccount);
