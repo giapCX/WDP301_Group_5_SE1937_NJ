@@ -2,7 +2,7 @@ import Pagination from "../../../components/ui/Pagination";
 import { useState } from 'react';
 import useManagerActions from '../hooks/useManagerActions';
 import useManagerCollection from '../hooks/useManagerCollection';
-import { ChangeSummary, PermissionPills, humanizeField } from './dataDisplay';
+import { ChangeSummary, humanizeField } from './dataDisplay';
 function WorkspaceHeader({
   title,
   subtitle,
@@ -22,6 +22,13 @@ const auditActionLabels = {
   'report.generated': 'Tạo báo cáo'
 };
 const dateInput = value => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+const permissionLabels = {
+  'vehicle.register': 'Đăng ký phương tiện', 'vehicle.inspect': 'Kiểm định phương tiện',
+  'vehicle.intake': 'Tiếp nhận phương tiện', 'handover.record': 'Ghi nhận bàn giao',
+  'case.report': 'Báo cáo sự cố', 'incident.review': 'Điều tra sự cố',
+  'report.view': 'Xem báo cáo', 'booking.review': 'Duyệt đặt xe',
+  'listing.review': 'Duyệt tin đăng', 'contract.manage': 'Quản lý hợp đồng'
+};
 export default function AdminToolsWorkspace({
   active,
   onNotice
@@ -37,10 +44,7 @@ export default function AdminToolsWorkspace({
     to,
     limit: 100
   } : {});
-  const {
-    createRole,
-    updateRole
-  } = useManagerActions();
+  const { updateRole } = useManagerActions();
   const [actionError, setActionError] = useState('');
   const data = request.data;
   const {
@@ -62,37 +66,19 @@ export default function AdminToolsWorkspace({
   };
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải dữ liệu…</p><Pagination {...request.paging} /></section>;
   if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div><Pagination {...request.paging} /></section>;
-  if (active === 'roles') return <section className="manager-panel workspace-panel">
-    <WorkspaceHeader title="Vai trò & quyền" subtitle="Tạo vai trò và cập nhật quyền truy cập của vai trò hiện có." count={request.paging?.total ?? data.length} />
-    <button className="action-approve" onClick={() => {
-      const code = window.prompt('Mã vai trò viết hoa (ví dụ: REPORT_VIEWER):');
-      if (!code) return;
-      const name = window.prompt('Tên hiển thị:');
-      if (!name) return;
-      const description = window.prompt('Mô tả vai trò:', '') ?? '';
-      const permissions = window.prompt('Mã quyền, cách nhau bằng dấu phẩy:', 'report.view');
-      if (permissions === null) return;
-      act(createRole({
-        code: code.trim().toUpperCase(),
-        name,
-        description,
-        permissions: permissions.split(',').map(value => value.trim()).filter(Boolean)
-      }), 'Đã tạo vai trò.');
-    }}>Tạo vai trò</button>
-    <div className="policy-grid">{data.map(item => <article className="policy-card role-card" key={item.id}><div><span className="policy-type">{item.name}</span><span className="policy-version">{item.code}</span></div><p>{item.description || 'Chưa có mô tả vai trò.'}</p><strong className="role-permission-heading">Quyền được cấp · {(item.permissions || []).length}</strong><PermissionPills permissions={item.permissions || []} /><button className="action-review" onClick={() => {
-          const name = window.prompt('Tên vai trò:', item.name);
-          if (name === null) return;
-          const description = window.prompt('Mô tả:', item.description || '');
-          if (description === null) return;
-          const permissions = window.prompt('Mã quyền, cách nhau bằng dấu phẩy:', item.permissions.join(', '));
-          if (permissions === null) return;
-          act(updateRole(item.id, {
-            name,
-            description,
-            permissions: permissions.split(',').map(value => value.trim()).filter(Boolean)
-          }), 'Đã cập nhật vai trò và quyền.');
-        }}>Chỉnh sửa vai trò</button></article>)}</div>
+  if (active === 'roles') {
+    const editableRoles = data.filter(role => role.code !== 'ADMIN' && !/(viewer|lead|profile|audit|finance)/i.test(`${role.code} ${role.name}`));
+    const permissionCodes = [...new Set(editableRoles.flatMap(role => role.permissions || []))].sort();
+    const togglePermission = (role, permission) => {
+      const permissions = role.permissions || [];
+      const next = permissions.includes(permission) ? permissions.filter(value => value !== permission) : [...permissions, permission];
+      act(updateRole(role.id, { permissions: next }), `Đã cập nhật quyền ${role.name}.`);
+    };
+    return <section className="manager-panel workspace-panel">
+    <WorkspaceHeader title="Ma trận phân quyền" subtitle="Đánh dấu X cho quyền của từng vai trò. Chọn ô để cập nhật quyền." count={editableRoles.length} />
+    <div className="requests-table-wrap permission-matrix-wrap"><table className="requests-table permission-matrix"><thead><tr><th>CHỨC NĂNG</th>{editableRoles.map(role => <th key={role.id} title={role.code}>{role.name}</th>)}</tr></thead><tbody>{permissionCodes.map(permission => <tr key={permission}><th scope="row">{permissionLabels[permission] || humanizeField(permission)}<span>{permission}</span></th>{editableRoles.map(role => <td key={role.id}><button type="button" className={`permission-toggle ${(role.permissions || []).includes(permission) ? 'is-enabled' : ''}`} aria-label={`${(role.permissions || []).includes(permission) ? 'Tắt' : 'Bật'} ${permission} cho ${role.name}`} aria-pressed={(role.permissions || []).includes(permission)} onClick={() => togglePermission(role, permission)}>{(role.permissions || []).includes(permission) ? 'X' : ''}</button></td>)}</tr>)}</tbody></table>{!permissionCodes.length && <p className="manager-empty">Chưa có quyền nào được cấu hình.</p>}</div>
   <Pagination {...request.paging} /></section>;
+  }
   if (active === 'auditLogs') return <section className="manager-panel workspace-panel">
     <WorkspaceHeader title="Nhật ký audit" subtitle="Tra cứu các hành động quản trị; bản ghi chỉ đọc." count={request.paging?.total ?? data.length} />
     <div className="report-filters"><label>Từ ngày<input type="date" value={from} max={to || undefined} onChange={event => setFrom(event.target.value)} /></label><label>Đến ngày<input type="date" value={to} min={from || undefined} onChange={event => setTo(event.target.value)} /></label><button onClick={() => {

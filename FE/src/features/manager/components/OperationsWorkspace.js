@@ -4,6 +4,7 @@ import { useState } from 'react';
 import useManagerActions from '../hooks/useManagerActions';
 import useManagerCollection from '../hooks/useManagerCollection';
 import { DataFields, humanizeField } from './dataDisplay';
+import { isValidEmail, normalizeVietnamPhone } from '../utils/contacts';
 
 export default function OperationsWorkspace({ active, onNotice }) {
   const request = useManagerCollection(active);
@@ -65,6 +66,8 @@ export default function OperationsWorkspace({ active, onNotice }) {
       const role = window.prompt('Vai trò: OPERATION_STAFF hoặc GARAGE_STAFF', 'OPERATION_STAFF');
       if (!role) return;
       const phone = window.prompt('Số điện thoại:', '') ?? '';
+      if (!isValidEmail(email)) return setActionError('Email nhân viên không hợp lệ.');
+      if (normalizeVietnamPhone(phone) === null) return setActionError('Số điện thoại phải là số di động Việt Nam hợp lệ, gồm 10 số (có thể nhập +84).');
       const department = window.prompt('Bộ phận:', '') ?? '';
       const jobTitle = window.prompt('Chức danh:', '') ?? '';
       const workScope = window.prompt('Phạm vi công việc:', '') ?? '';
@@ -88,6 +91,7 @@ export default function OperationsWorkspace({ active, onNotice }) {
                 if (name === null) return;
                 const phone = window.prompt('Số điện thoại:', item.phone || '');
                 if (phone === null) return;
+                if (normalizeVietnamPhone(phone) === null) return setActionError('Số điện thoại phải là số di động Việt Nam hợp lệ, gồm 10 số (có thể nhập +84).');
                 const department = window.prompt('Bộ phận:', item.department || '');
                 if (department === null) return;
                 const jobTitle = window.prompt('Chức danh:', item.jobTitle || '');
