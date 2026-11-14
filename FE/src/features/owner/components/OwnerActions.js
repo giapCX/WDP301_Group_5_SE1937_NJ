@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import useOwnerActions from '../hooks/useOwnerActions';
 import { getCurrentUser } from '../../auth/session';
-import { ContractContent } from '../../contracts/ContractsPage';
+import ContractContent from '../../contracts/components/ContractContent';
 
 const readEvidence = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve({ name: file.name, contentType: file.type, data: reader.result }); reader.onerror = () => reject(new Error(`Không đọc được tệp ${file.name}.`)); reader.readAsDataURL(file); });
 const vehicleSeizedValue = (form) => {

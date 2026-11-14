@@ -41,6 +41,7 @@ export function createOperatorRouter(connection, files) {
   router.get('/incidents/:id/evidence/:index', requirePermission('operation.incident.read', { allowManager: true }), controller.evidence);
   router.post('/incidents', requirePermission('operation.incident.create'), controller.createIncident);
   router.patch('/incidents/:id', requirePermission('operation.incident.update'), controller.updateIncident);
+  router.post('/incidents/:id/receive', requirePermission('operation.incident.update'), controller.receiveIncident);
   router.post('/incidents/:id/evidence', requirePermission('operation.incident.evidence.attach'), controller.attachEvidence);
   router.post('/incidents/:id/submit', requirePermission('operation.incident.submit'), controller.submitIncident);
   return router;

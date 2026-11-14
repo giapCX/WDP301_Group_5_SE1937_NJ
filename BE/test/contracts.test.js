@@ -308,9 +308,10 @@ test('rental operator intake audit failure rolls back the handoff', async () => 
 
 test('Manager prepares rental snapshot, renter signs before Operator intake and Manager signing', async () => {
   const fixture = await rentalFixture(), row = (await fixture.prepare()).data;
-  assert.equal(row.document.version, 'xedi-rental-paper-v2');
+  assert.equal(row.document.version, 'xedi-rental-representation-v1');
+  assert.equal(row.document.parties[0].heading, 'BÊN A · CHỦ XE, BÊN CHO THUÊ');
+  assert.ok(row.document.parties[0].facts.some(({ label, value }) => label === 'Đại diện ký theo ủy quyền' && value === 'XeDi'));
   assert.equal(row.document.parties.length, 2);
-  assert.equal(row.document.parties[0].heading, 'BÊN A · XEDI, ĐẠI DIỆN THEO ỦY QUYỀN');
   assert.equal(row.document.articles.length, 9);
   assert.ok(row.document.facts.some(({ label }) => label === 'Biển số'));
   assert.match(row.document.articles[3].paragraphs[0], /Tiền cọc/);

@@ -7,16 +7,10 @@ import { createEmailOtpService } from '../service/email-otp.service.js';
 export function createAuthRouter(database, options = {}) {
   const emailOtp = createEmailOtpService(database, options);
   const service = createAuthService(createAuthRepository(database));
-  const controller = createAuthController(service);
+  const controller = createAuthController(service, emailOtp);
   const router = Router();
-  router.post('/forgot-password/otp', async (req, res, next) => {
-    try { res.json({ data: await emailOtp.send(req.body || {}, 'reset') }); }
-    catch (error) { next(error); }
-  });
-  router.post('/reset-password', async (req, res, next) => {
-    try { res.json({ data: await emailOtp.reset(req.body || {}) }); }
-    catch (error) { next(error); }
-  });
+  router.post('/forgot-password/otp', controller.requestPasswordReset);
+  router.post('/reset-password', controller.resetPassword);
   router.post('/login', controller.login);
   router.get('/me', controller.me);
   router.post('/logout', controller.logout);

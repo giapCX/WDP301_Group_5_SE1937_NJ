@@ -160,6 +160,10 @@ export function createRenterService(repo, {
     const {
       password_hash,
       payout_profile,
+      identity_kyc,
+      driver_license,
+      operator_identity_precheck,
+      verification_history,
       ...publicUser
     } = user;
     return {
@@ -477,7 +481,8 @@ export function createRenterService(repo, {
           contract_number: `RENT-${_id}`,
           lender_details_snapshot: {
             owner_id: vehicle.owner_id,
-            authority_agreement_number: management.agreement_number
+            authority_agreement_number: management.agreement_number,
+            authority_signed_at: management.signature_info.platform_signed_at
           },
           renter_details_snapshot: {
             renter_id: user._id,

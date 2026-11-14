@@ -3,7 +3,7 @@ export const getRenter = (path, options) => getApi('/renter' + path, options);
 export const postRenter = (path, body) => postApi('/renter' + path, body);
 export const putRenter = (path, body) => putApi('/renter' + path, body);
 export async function uploadRenterFile(file, purpose) {
-  const maximum = purpose === 'avatar' ? 5 : purpose === 'identity' ? 10 : 20;
+  const maximum = purpose === 'avatar' ? 5 : 20;
   if (file.size > maximum * 1024 * 1024) throw new Error(`Tệp tối đa ${maximum} MB.`);
   const data = await new Promise((resolve, reject) => {
     const reader = new FileReader();

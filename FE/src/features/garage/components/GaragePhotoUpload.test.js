@@ -18,7 +18,11 @@ test('uploads an image and stores its server key instead of a base64 report atta
 });
 
 test('failed upload keeps the report attachment list unchanged and offers an error', async () => {
-  global.fetch.mockRejectedValue(new Error('Không tải ảnh lên được'));
+  global.fetch.mockResolvedValue({
+    ok: false,
+    status: 400,
+    json: async () => ({ error: { message: 'Không tải ảnh lên được' } }),
+  });
   const change = jest.fn();
   render(<GaragePhotoUpload photos={[]} onChange={change} />);
   fireEvent.change(screen.getByLabelText('Chọn ảnh hiện trạng xe'), { target: { files: [new File(['image'], 'car.png', { type: 'image/png' })] } });

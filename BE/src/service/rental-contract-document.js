@@ -101,15 +101,16 @@ export function createRentalContractDocument({
   ];
 
   const content = {
-    version: booking.review_info?.required === false ? 'xedi-rental-template-v1' : 'xedi-rental-paper-v2',
+    version: 'xedi-rental-representation-v1',
     title: 'HỢP ĐỒNG THUÊ XE Ô TÔ TỰ LÁI',
     place: pickup,
     parties: [
       {
-        heading: 'BÊN A · XEDI, ĐẠI DIỆN THEO ỦY QUYỀN',
+        heading: 'BÊN A · CHỦ XE, BÊN CHO THUÊ',
         facts: facts([
-          ['Đơn vị cho thuê', 'XeDi'],
-          ['Chủ xe ủy quyền', owner?.full_name],
+          ['Chủ xe', owner?.full_name],
+          ['Đại diện ký theo ủy quyền', 'XeDi'],
+          ['Ngày ký phía XeDi trên hợp đồng ủy quyền', row.lender_details_snapshot?.authority_signed_at && localTime(row.lender_details_snapshot.authority_signed_at)],
           [
             'Hợp đồng ủy quyền',
             row.lender_details_snapshot?.authority_agreement_number
@@ -134,6 +135,11 @@ export function createRentalContractDocument({
       ['Loại xe', vehicle.vehicle_type],
       ['Số chỗ ngồi', vehicle.seats],
       ['Biển số', vehicle.license_plate],
+      ['Số khung (VIN)', vehicle.vin],
+      ['Màu xe', vehicle.color],
+      ['Giờ nhận xe (giờ Việt Nam)', localTime(terms.start_at)],
+      ['Giờ trả xe (giờ Việt Nam)', localTime(terms.end_at)],
+      ['Số ngày tính tiền', booking.pricing_snapshot?.charged_days],
       ['Số đăng ký xe', vehicle.documents?.registration?.number_masked],
     ]),
     articles,

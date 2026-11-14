@@ -34,7 +34,7 @@ const statusLabels = {
   processing: 'Đang xử lý',
   withdrawn: 'Đã rút xe',
   reported: 'Đã ghi nhận',
-  investigating: 'Đang xác minh',
+  investigating: 'Operator đang xác minh',
   resolved: 'Đã xử lý',
   closed: 'Đã đóng',
   pending_signatures: 'Chờ hoàn tất chữ ký',

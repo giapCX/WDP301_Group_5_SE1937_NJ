@@ -1,5 +1,6 @@
-export function createManagerController(service) {
+export function createManagerController(service, approvals) {
   const input = request => ({ query: request.query, body: request.body, id: request.params.id, type: request.params.type, actorId: request.user._id, currentRoles: request.currentRoles });
+  const actor = (request) => ({ user: request.user, tokenPayload: request.tokenPayload });
   return {
     accounts: async (request, response) => response.status(200).json(await service.accounts(input(request))),
     createAccount: async (request, response) => response.status(201).json(await service.createAccount(input(request))),
@@ -14,12 +15,12 @@ export function createManagerController(service) {
     saveSystemReport: async (request, response) => response.status(201).json(await service.saveSystemReport(input(request))),
     dashboard: async (request, response) => response.status(200).json(await service.dashboard(input(request))),
     bookings: async (request, response) => response.status(200).json(await service.bookings(input(request))),
-    decideBooking: async (request, response) => response.status(200).json(await service.decideBooking(input(request))),
+    decideBooking: async (request, response) => response.json(await approvals.decideBooking(input(request), actor(request))),
     listings: async (request, response) => response.status(200).json(await service.listings(input(request))),
     updateListing: async (request, response) => response.status(200).json(await service.updateListing(input(request))),
     reviewListing: async (request, response) => response.status(200).json(await service.reviewListing(input(request))),
     vehicles: async (request, response) => response.status(200).json(await service.vehicles(input(request))),
-    reviewVehicle: async (request, response) => response.status(200).json(await service.reviewVehicle(input(request))),
+    reviewVehicle: async (request, response) => response.json(await approvals.reviewVehicle(input(request), actor(request))),
     vehicleDocument: async (request, response) => {
       const file = await service.vehicleDocument({ ...input(request), kind: request.params.kind });
       response.set({ 'Content-Type': file.contentType, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store' }).send(file.bytes);

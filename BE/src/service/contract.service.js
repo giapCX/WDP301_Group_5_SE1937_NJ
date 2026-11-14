@@ -221,6 +221,12 @@ export function createContractService(repository) {
           },
         }, { session, returnDocument: 'after' });
         if (!updated) throw httpError(409, 'Hợp đồng vừa được thay đổi; hãy tải lại trước khi tiếp nhận.');
+        if (ctx.booking) {
+          const booking = await repository.bookings.updateOne({ _id: ctx.booking._id, status: ctx.booking.status }, {
+            $inc: { contract_workflow_version: 1 },
+          }, { session });
+          fail(!booking.matchedCount, 'Yêu cầu thuê đã thay đổi. Hãy tải lại hợp đồng.');
+        }
         await audit(actor, type, id, 'contract.operator_intake.confirm', {
           document_hash: row.contract_document.hash,
         }, session);
@@ -302,6 +308,11 @@ export function createContractService(repository) {
         }
         const ctx = { vehicle, booking, partyId: booking?.renter_id || vehicle.owner_id };
         const inspection = await eligible(type, row, ctx, session);
+        if (type === 'rental') {
+          const authority = await repository.agreement('management').findOne({ _id: booking.management_agreement_id }, { session });
+          row.lender_details_snapshot.authority_agreement_number = authority.agreement_number;
+          row.lender_details_snapshot.authority_signed_at = authority.signature_info.platform_signed_at;
+        }
         if (inspection) {
           row.inspection_id = inspection._id;
           row.inspection_version = row.arrival_confirmed_at && !arrival ? row.inspection_version : inspection.version ?? 0;

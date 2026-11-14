@@ -16,6 +16,9 @@ import {
 
 const { ObjectId } = Types;
 const OPEN_CASES = ['reported', 'open', 'investigating', 'in_progress', 'under_review', 'awaiting_response', 'pending_manager', 'pending_review', 'need_more_information', 'escalated'];
+const canProcessIncident = (incident) => incident.status === 'need_more_information'
+  || (incident.status === 'reported' && incident.report_source !== 'owner')
+  || (incident.status === 'investigating' && Boolean(incident.operator_received_at));
 const INCIDENT_FILTER_STATUSES = [...OPEN_CASES, 'resolved', 'closed'];
 const PHYSICAL_STATUSES = ['with_owner', 'at_garage', 'rented', 'returned_to_owner', 'maintenance'];
 const EXPIRY_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
@@ -151,6 +154,8 @@ export function createOperatorService(repository, files) {
     return {
       id: incident._id.toString(),
       caseNumber: incident.case_number,
+      reportSource: incident.report_source,
+      operatorReceivedAt: incident.operator_received_at,
       caseType: incident.case_type,
       vehicleSeized: typeof incident.vehicle_seized === 'boolean' ? incident.vehicle_seized : null,
       status: incident.status,
@@ -764,7 +769,7 @@ export function createOperatorService(repository, files) {
       return garageTransaction(repository, async (session) => {
         const current = await repository.incidents.findOne({ _id: id }, { session });
         if (!current) throw httpError(404, 'Không tìm thấy hồ sơ sự cố.');
-        if (!['reported', 'need_more_information'].includes(current.status)) {
+        if (!canProcessIncident(current)) {
           throw httpError(403, 'Operator chỉ được cập nhật hồ sơ mới hoặc hồ sơ Manager yêu cầu bổ sung.');
         }
         if (changes.vehicle_seized !== undefined && typeof changes.vehicle_seized !== 'boolean') {
@@ -808,12 +813,33 @@ export function createOperatorService(repository, files) {
       });
     },
 
+    async receiveIncident(request, idValue) {
+      const id = new ObjectId(objectId(idValue));
+      return garageTransaction(repository, async (session) => {
+        const current = await repository.incidents.findOne({ _id: id }, { session });
+        if (!current || current.report_source !== 'owner') throw httpError(404, 'Không tìm thấy báo cáo của chủ xe.');
+        const staffId = actorId(request);
+        if (current.operator_received_at && String(current.assigned_operation_staff_id) === String(staffId)) {
+          return { data: { id: String(id), status: current.status, operatorReceivedAt: current.operator_received_at } };
+        }
+        if (current.status !== 'reported' || current.operator_received_at) throw httpError(409, 'Báo cáo đã được tiếp nhận hoặc đã chuyển trạng thái.');
+        const now = new Date();
+        const result = await repository.incidents.updateOne(optimisticFilter(current, 'status'), {
+          $set: { status: 'investigating', assigned_operation_staff_id: staffId, operator_received_at: now, updated_at: now },
+          $push: { operation_timeline: { action: 'incident.operator_received', actor_user_id: staffId, at: now } },
+        }, { session });
+        if (!result.modifiedCount) throw httpError(409, 'Báo cáo vừa được cập nhật. Vui lòng tải lại.');
+        await audit(request, 'incident.operator_receive', 'incident_cases', id, { status: 'investigating' }, session);
+        return { data: { id: String(id), status: 'investigating', operatorReceivedAt: now } };
+      });
+    },
+
     async submitIncident(request, idValue) {
       const id = new ObjectId(objectId(idValue));
       return garageTransaction(repository, async (session) => {
         const current = await repository.incidents.findOne({ _id: id }, { session });
         if (!current) throw httpError(404, 'Không tìm thấy hồ sơ sự cố.');
-        if (!['reported', 'need_more_information'].includes(current.status)) {
+        if (!canProcessIncident(current)) {
           throw httpError(409, 'Chỉ có thể gửi hồ sơ mới hoặc hồ sơ Manager yêu cầu bổ sung.');
         }
         if (typeof current.vehicle_seized !== 'boolean') {
@@ -850,7 +876,7 @@ export function createOperatorService(repository, files) {
       }
       const incident = await repository.incidents.findOne({ _id: id });
       if (!incident) throw httpError(404, 'Không tìm thấy hồ sơ sự cố.');
-      if (!['reported', 'need_more_information'].includes(incident.status)) {
+      if (!canProcessIncident(incident)) {
         throw httpError(403, 'Operator chỉ được đính kèm biên bản cho hồ sơ mới hoặc hồ sơ Manager yêu cầu bổ sung.');
       }
       if ((incident.evidence || []).length >= 3) throw httpError(409, 'Mỗi hồ sơ đính kèm tối đa 3 biên bản.');
@@ -869,7 +895,7 @@ export function createOperatorService(repository, files) {
         };
         const index = await garageTransaction(repository, async (session) => {
           const current = await repository.incidents.findOne({ _id: id }, { session });
-          if (!current || !['reported', 'need_more_information'].includes(current.status)) {
+          if (!current || !canProcessIncident(current)) {
             throw httpError(409, 'Hồ sơ vừa được gửi Manager hoặc đã kết thúc.');
           }
           if ((current.evidence || []).length >= 3) throw httpError(409, 'Mỗi hồ sơ đính kèm tối đa 3 biên bản.');

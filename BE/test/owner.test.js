@@ -118,6 +118,21 @@ test('owner payout, withdrawal and incident requests are scoped to the owner acc
   const incident = await request('/owner/incidents', 'POST', { vehicleId: vehicle._id.toString(), caseType: 'vehicle_damage', description: 'Xe có vết xước mới ở cản trước sau khi bàn giao.', vehicleSeized: false });
   assert.equal(incident.status, 201, JSON.stringify(incident));
   assert.equal((await models.IncidentCase.findById(incident.body.data.id).lean()).vehicle_id.toString(), vehicle._id.toString());
+  const role = await models.Role.findOne({ code: 'OPERATION_STAFF' }).lean();
+  const operator = await models.User.findOne({ primary_role_id: role._id }).lean();
+  const login = await request('/auth/login', 'POST', { account: operator.email, password: '123456' }, null);
+  assert.equal(login.status, 200);
+  const operatorToken = login.body.data.token;
+  const path = `/operator/incidents/${incident.body.data.id}`;
+  assert.equal((await request(`${path}/receive`, 'POST', {}, ownerToken)).status, 403);
+  assert.equal((await request(`${path}/submit`, 'POST', {}, operatorToken)).status, 409);
+  const received = await request(`${path}/receive`, 'POST', {}, operatorToken);
+  assert.equal(received.status, 200, JSON.stringify(received));
+  assert.equal(received.body.data.status, 'investigating');
+  assert.equal((await request(`${path}/receive`, 'POST', {}, operatorToken)).body.data.operatorReceivedAt, received.body.data.operatorReceivedAt);
+  const dashboard = await request('/owner/dashboard');
+  assert.equal(dashboard.body.data.incidents.find((item) => item.id === incident.body.data.id).status, 'investigating');
+  assert.equal(await models.AuditLog.countDocuments({ entity_id: incident.body.data.id, action: 'incident.operator_receive' }), 1);
 });
 
 test('vehicle registration stores private files and an unsigned draft without impersonating either signer', async () => {

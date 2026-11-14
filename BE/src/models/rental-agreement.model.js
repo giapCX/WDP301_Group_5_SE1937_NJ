@@ -12,6 +12,7 @@ export const rentalAgreementSchema = createSchema({
     owner_id: { type: ObjectId, ref: 'User' },
     platform_representative_user_id: ObjectId,
     authority_agreement_number: String,
+    authority_signed_at: Date,
   }),
   renter_details_snapshot: embedded({
     renter_id: { type: ObjectId, ref: 'User' },

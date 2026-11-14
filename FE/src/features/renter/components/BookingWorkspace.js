@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getRenter, postRenter, vnd, dateTime, statusName } from '../api/renterApi';
-import { SigningDialog } from '../../contracts/ContractsPage';
+import SigningDialog from '../../contracts/components/SigningDialog';
 import RentalJourney from './RentalJourney';
 import { Field, Otp, Upload } from './Controls';
 const reasons = {
@@ -109,7 +109,7 @@ export default function BookingWorkspace({
     </section>
     {platformSigning && <section className="renter-card">
       <h2>Hợp đồng thuê xe</h2>
-      {!a.contract_document ? <p>{b.status === 'pending' ? 'Hợp đồng được lập sau khi Manager duyệt chuyến.' : 'Đang chờ XeDi lập nội dung hợp đồng.'}</p> : <>
+      {!a.contract_document ? <p>Đang chờ XeDi lập nội dung hợp đồng.</p> : <>
         <p>Khách thuê {a.signing_info?.renter_confirmed ? 'đã ký' : 'chưa ký'} · XeDi {a.signing_info?.platform_signer_user_id ? 'đã ký' : 'chưa ký'}</p>
         <button type="button" onClick={() => setShowContract(true)}>Xem hợp đồng thuê</button>
       </>}

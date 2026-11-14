@@ -12,7 +12,7 @@
       "Bảo hiểm vật chất xe/gói bảo hiểm chuyến đi (nếu có): ………………",
       "Số km (odometer) khi giao: …………… km; Mức nhiên liệu/pin khi giao: ……………",
       "2. Tình trạng Xe khi giao được ghi nhận tại Biên bản giao nhận xe (Phụ lục 01), kèm hình ảnh/video do hai bên (hoặc qua ứng dụng Xedi) chụp tại thời điểm giao.",
-      "3. Bên A cam đoan Xe thuộc quyền sở hữu của chủ xe (Ông/Bà ……………, CCCD ……………) và Bên A có quyền cho thuê hợp pháp theo Hợp đồng ủy quyền, không có tranh chấp, không bị kê biên, không bị ràng buộc bởi hợp đồng thuê xe khác đang có hiệu lực trong cùng thời gian thuê."
+      "3. Bên A cam đoan Xe thuộc quyền sở hữu của Bên A và XeDi có quyền đại diện ký theo hợp đồng ủy quyền, không có tranh chấp, không bị kê biên, không bị ràng buộc bởi hợp đồng thuê xe khác đang có hiệu lực trong cùng thời gian thuê."
     ]
   },
   {
@@ -105,10 +105,10 @@
     ]
   },
   {
-    "title": "Vai trò của Bên A và quan hệ với chủ xe",
+    "title": "Phạm vi đại diện của XeDi",
     "paragraphs": [
-      "1. Bên A (Xedi) là bên cho thuê theo Hợp đồng này, thực hiện trên cơ sở Hợp đồng ủy quyền với chủ sở hữu Xe; Bên A không phải chủ sở hữu Xe. Xedi cung cấp nền tảng kết nối, xác minh thông tin, thu hộ tiền và hỗ trợ giải quyết sự cố.",
-      "2. Bên A cam kết thực hiện công việc được ủy quyền một cách trung thực, đúng quy trình; trách nhiệm của Bên A đối với Bên B giới hạn ở những nghĩa vụ nêu rõ trong Hợp đồng, Điều khoản sử dụng và pháp luật; Bên A không chịu trách nhiệm đối với thiệt hại do Bên B vi phạm Hợp đồng gây ra, và có quyền truy đòi chủ xe theo Hợp đồng ủy quyền nếu thiệt hại do lỗi của chủ xe."
+      "1. Chủ xe là Bên A và là bên cho thuê. XeDi nhân danh Bên A ký hợp đồng và thực hiện các công việc trong phạm vi và thời hạn của hợp đồng ủy quyền được dẫn chiếu.",
+      "2. XeDi điều phối giao nhận, thu hộ và hỗ trợ xử lý sự cố trong phạm vi được ủy quyền. Quyền và nghĩa vụ của mỗi bên được xác định theo hợp đồng và hồ sơ vụ việc."
     ]
   },
   {

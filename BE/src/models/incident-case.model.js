@@ -7,6 +7,8 @@ export const incidentCaseSchema = createSchema({
   case_number: { type: String, required: true },
   reported_by_user_id: { type: ObjectId, ref: 'User' },
   assigned_operation_staff_id: { type: ObjectId, ref: 'User' },
+  report_source: String,
+  operator_received_at: Date,
   reviewed_by_manager_id: { type: ObjectId, ref: 'User' },
   vehicle_id: { type: ObjectId, ref: 'Vehicle', required: true },
   booking_id: { type: ObjectId, ref: 'Booking' },

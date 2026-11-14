@@ -9,16 +9,13 @@ import { createEmailOtpService } from '../service/email-otp.service.js';
 export function createRenterRouter(database, options = {}) {
   const emailOtp = createEmailOtpService(database, options);
   const router = Router(),
-    c = createRenterController(createRenterService(createRenterRepository(database), { emailOtp }));
+    c = createRenterController(createRenterService(createRenterRepository(database), { emailOtp }), emailOtp);
   router.use((req, res, next) => {
     if (['POST', 'PUT'].includes(req.method) && (!req.body || typeof req.body !== 'object' || Array.isArray(req.body))) return next(httpError(400, 'Dữ liệu yêu cầu phải là đối tượng JSON.'));
     next();
   });
   router.get('/config', c.config);
-  router.post('/register/otp', async (req, res, next) => {
-    try { res.json({ data: await emailOtp.send(req.body, 'register') }); }
-    catch (error) { next(error); }
-  });
+  router.post('/register/otp', c.requestRegistrationOtp);
   router.post('/register', c.register);
   router.use(createAuthMiddleware(database));
   router.use(createRenterRoleMiddleware(database));

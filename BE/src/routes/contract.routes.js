@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createContractController } from '../controller/contract.controller.js';
 import { createAuthMiddleware } from '../middleware/auth.middleware.js';
 import { createContractRepository } from '../repositories/contract.repository.js';
 import { createContractService } from '../service/contract.service.js';
@@ -7,9 +8,8 @@ import { httpError } from '../utils/http-error.js';
 
 export function createContractRouter(connection) {
   const router = Router(), service = createContractService(createContractRepository(connection));
+  const controller = createContractController(service);
   const { Role } = getModels(connection);
-  const actor = (request) => ({ user: request.user, tokenPayload: request.tokenPayload });
-  const mode = (request) => request.query.view === 'staff' ? 'staff' : 'party';
   router.use(createAuthMiddleware(connection));
   async function staffRoles(request) {
     const ids = [request.user.primary_role_id, ...(request.user.additional_role_ids || [])].filter(Boolean);
@@ -54,12 +54,12 @@ export function createContractRouter(connection) {
       next(error);
     }
   }
-  router.get('/:type/candidates', blockOperatorWrite, async (req, res) => res.json(await service.candidates(req.params.type, req.query, actor(req))));
-  router.post('/:type/prepare/:referenceId', blockOperatorWrite, async (req, res) => res.json({ data: await service.prepare(req.params.type, req.params.referenceId, req.body || {}, actor(req)) }));
-  router.get('/:type', requireOperatorRead, async (req, res) => res.json(await service.list(req.params.type, req.query, actor(req), mode(req))));
-  router.get('/:type/:id', requireOperatorRead, async (req, res) => res.json({ data: await service.detail(req.params.type, req.params.id, actor(req), mode(req)) }));
-  router.post('/:type/:id/sign', blockOperatorWrite, async (req, res) => res.json({ data: await service.sign(req.params.type, req.params.id, req.body, actor(req), mode(req)) }));
-  router.post('/:type/:id/operator-intake', requireOperatorIntake, async (req, res) => res.json(await service.confirmOperatorIntake(req.params.type, req.params.id, actor(req))));
-  router.post('/:type/:id/manager-review', blockOperatorWrite, async (req, res) => res.json(await service.reviewManagementContract(req.params.id, req.body || {}, actor(req))));
+  router.get('/:type/candidates', blockOperatorWrite, controller.candidates);
+  router.post('/:type/prepare/:referenceId', blockOperatorWrite, controller.prepare);
+  router.get('/:type', requireOperatorRead, controller.list);
+  router.get('/:type/:id', requireOperatorRead, controller.detail);
+  router.post('/:type/:id/sign', blockOperatorWrite, controller.sign);
+  router.post('/:type/:id/operator-intake', requireOperatorIntake, controller.confirmOperatorIntake);
+  router.post('/:type/:id/manager-review', blockOperatorWrite, controller.reviewManagementContract);
   return router;
 }

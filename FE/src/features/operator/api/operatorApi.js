@@ -27,5 +27,6 @@ export const getOperatorIncident = (id, options) => getApi(`/operator/incidents/
 export const createOperatorIncident = (body) => postApi('/operator/incidents', body);
 export const updateOperatorIncident = (id, body) => patchApi(`/operator/incidents/${encodeURIComponent(id)}`, body);
 export const submitOperatorIncident = (id) => postApi(`/operator/incidents/${encodeURIComponent(id)}/submit`, {});
+export const receiveOperatorIncident = (id) => postApi(`/operator/incidents/${encodeURIComponent(id)}/receive`, {});
 export const attachOperatorEvidence = (id, file) => postApi(`/operator/incidents/${encodeURIComponent(id)}/evidence`, { file });
 export const getOperatorEvidence = (id, index, options) => getBlobApi(`/operator/incidents/${encodeURIComponent(id)}/evidence/${index}`, options);

@@ -24,6 +24,7 @@ import {
   scheduleOperatorVehicleInspection,
   precheckOperatorIdentity,
   precheckOperatorVehicleInspection,
+  receiveOperatorIncident,
   submitOperatorIncident,
   updateOperatorIncident,
   updateOperatorVehicleInspectionSchedule,
@@ -131,7 +132,9 @@ const caseTypes = [
   ['overdue', 'Quá hạn'],
   ['other', 'Khác'],
 ];
-const canEditIncident = (incident) => incident && ['reported', 'need_more_information'].includes(incident.status);
+const awaitsReceipt = (incident) => incident?.reportSource === 'owner' && incident.status === 'reported';
+const canEditIncident = (incident) => incident && !awaitsReceipt(incident)
+  && (['reported', 'need_more_information'].includes(incident.status) || (incident.status === 'investigating' && incident.operatorReceivedAt));
 
 function dateTimeLocalValue(value) {
   if (!value) return '';
@@ -946,6 +949,10 @@ export default function OperatorPage({ initialSection } = {}) {
           setSelectedIncident(null);
         }}>×</button></header>
         <p><strong>Loại:</strong> {caseTypes.find(([value]) => value === selectedIncident.caseType)?.[1] || selectedIncident.caseType}</p>
+        {selectedIncident.reportSource === 'owner' && <p>Chủ xe gửi báo cáo{selectedIncident.operatorReceivedAt ? ' · Đã tiếp nhận' : ' · Chờ tiếp nhận'}</p>}
+        {awaitsReceipt(selectedIncident) && hasPermission('operation.incident.update') && <button type="button" disabled={busy} onClick={() => runAction(
+          () => receiveOperatorIncident(selectedIncident.id), 'Đã tiếp nhận báo cáo của chủ xe.',
+        )}>Tiếp nhận sự cố</button>}
         <p><strong>Tạm giữ xe:</strong> {selectedIncident.vehicleSeized === true ? 'Có' : selectedIncident.vehicleSeized === false ? 'Không' : 'Chưa ghi nhận'}</p>
         <form className="operator-form operator-form-single" onSubmit={saveIncidentChanges}>
           <label>Mô tả<textarea name="description" required maxLength={3000} rows="4" defaultValue={selectedIncident.description} disabled={!canEditSelectedIncident} /></label>

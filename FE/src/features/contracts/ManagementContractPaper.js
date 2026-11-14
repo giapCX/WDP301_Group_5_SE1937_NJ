@@ -83,7 +83,7 @@ export default function ManagementContractPaper({ agreement }) {
       </section>)}
       <footer className="management-paper-signatures">
         {rental ? <>
-          <Signature heading="BÊN CHO THUÊ · ĐẠI DIỆN XEDI" name={agreement.platformName} signedAt={agreement.platformSignedAt} signed={agreement.platformSigned} />
+          <Signature heading={contract.version === 'xedi-rental-representation-v1' ? 'XEDI KÝ ĐẠI DIỆN THEO ỦY QUYỀN CỦA BÊN CHO THUÊ' : 'BÊN CHO THUÊ · ĐẠI DIỆN XEDI'} name={agreement.platformName} signedAt={agreement.platformSignedAt} signed={agreement.platformSigned} />
           <Signature heading="BÊN THUÊ" name={agreement.partyName} signedAt={agreement.partySignedAt} signed={agreement.partySigned} />
         </> : <>
           <Signature heading="BÊN A · CHỦ XE" name={agreement.partyName} signedAt={agreement.partySignedAt} signed={agreement.partySigned} />

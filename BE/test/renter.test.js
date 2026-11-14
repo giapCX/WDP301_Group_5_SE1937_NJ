@@ -57,14 +57,6 @@ before(async () => {
     contact_profile: {
       address: 'Địa chỉ khách thuê',
       city: 'Hà Nội'
-    },
-    identity_kyc: {
-      status: 'verified'
-    },
-    driver_license: {
-      class: 'B2',
-      verification_status: 'verified',
-      expires_at: new Date(+end + 86400000)
     }
   };
   other = {
@@ -310,6 +302,7 @@ test('Booking creates the contract before review and payment opens after both si
   const manager = await repo.one('users', { primary_role_id: managerRole._id, account_status: 'active' });
   await contractRequest(`/manager/bookings/${booking._id}/decision`, manager, { action: 'approve' }, 409);
   const originalAgreement = await repo.one('rental_agreements', { booking_id: booking._id });
+  assert.equal(originalAgreement.contract_document.articles.length, 17);
   await repo.insert('discount_codes', {
     _id: oid(),
     code: 'RENTER10',
@@ -343,8 +336,12 @@ test('Booking creates the contract before review and payment opens after both si
   await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, user, sign, 403);
   const operatorRole = await repo.one('roles', { code: 'OPERATION_STAFF' });
   const operator = await repo.one('users', { primary_role_id: operatorRole._id, account_status: 'active' });
+  await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign, 409);
   await contractRequest(`/contracts/rental/${prepared.id}/operator-intake?view=staff`, operator, {});
   await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign);
+  const payable = await repo.one('bookings', { _id: booking._id });
+  assert.equal(payable.status, 'awaiting_payment');
+  assert.equal(+payable.hold_expires_at, +payable.payment_deadline_at);
   const a = await repo.one('rental_agreements', {
     booking_id: booking._id
   });
@@ -496,7 +493,7 @@ test('private uploads stay owned, registration uses one-use OTP and strong passw
   const bytes = Buffer.alloc(100 * 1024, 1);
   Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]).copy(bytes);
   const file = await service.upload(user, {
-    purpose: 'identity',
+    purpose: 'avatar',
     name: 'test.png',
     content_type: 'image/png',
     data: bytes.toString('base64')

@@ -40,6 +40,8 @@ export function createOperatorController(service, contracts) {
       response.status(201).json(await service.createIncident(request, request.body)),
     updateIncident: async (request, response) =>
       response.json(await service.updateIncident(request, request.params.id, request.body)),
+    receiveIncident: async (request, response) =>
+      response.json(await service.receiveIncident(request, request.params.id)),
     evidence: async (request, response) => {
       const file = await service.readEvidence(request.params.id, request.params.index);
       const safeName = file.fileName.replace(/[\r\n"]/g, '_');
