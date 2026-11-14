@@ -684,6 +684,16 @@
   font-size: 7px;
   color: #a0a9b7;
 }
+.permission-matrix-wrap { margin-top: 18px; }
+.permission-matrix { min-width: 760px; white-space: normal; }
+.permission-matrix thead th { text-align: center; min-width: 105px; font-size: 9px; }
+.permission-matrix thead th:first-child { min-width: 220px; text-align: left; }
+.permission-matrix tbody th { border-top: 1px solid #eff1f5; padding: 12px; text-align: left; color: #38465e; font-size: 11px; font-weight: 650; }
+.permission-matrix tbody th span { display: block; margin-top: 4px; color: #a0a9b7; font-size: 9px; font-weight: 400; }
+.permission-matrix td { min-width: 70px; text-align: center; }
+.permission-toggle { display: inline-grid; place-items: center; width: 30px; height: 30px; border: 1px solid #dce2ec; border-radius: 6px; background: #fff; color: #fff; font-weight: 800; cursor: pointer; }
+.permission-toggle.is-enabled { border-color: #2e9b69; background: #2e9b69; }
+.permission-toggle:focus-visible { outline: 2px solid #4975e8; outline-offset: 2px; }
 .request-status {
   display: inline-flex;
   align-items: center;

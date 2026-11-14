@@ -18,6 +18,7 @@ const resourcePaths = {
   accounts: "/accounts",
   roles: "/roles",
   auditLogs: "/audit-logs",
+  adminOverview: "/admin/overview",
   savedReports: "/reports/system",
   identityVerifications: "/identity-verifications?status=pending",
 };

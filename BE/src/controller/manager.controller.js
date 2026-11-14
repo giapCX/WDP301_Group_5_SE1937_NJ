@@ -8,6 +8,7 @@ export function createManagerController(service) {
     createRole: async (request, response) => response.status(201).json(await service.createRole(input(request))),
     updateRole: async (request, response) => response.status(200).json(await service.updateRole(input(request))),
     auditLogs: async (request, response) => response.status(200).json(await service.auditLogs(input(request))),
+    adminOverview: async (_request, response) => response.status(200).json(await service.adminOverview()),
     systemReports: async (request, response) => response.status(200).json(await service.systemReports(input(request))),
     systemReport: async (request, response) => response.status(200).json(await service.systemReport(input(request))),
     saveSystemReport: async (request, response) => response.status(201).json(await service.saveSystemReport(input(request))),

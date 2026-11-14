@@ -398,7 +398,8 @@ export function createManagerService(repository) {
         roles: roleCodes = [],
         status = "active"
       } = input.body || {};
-      if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 120 || typeof email !== "string" || email.trim().length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || typeof phone !== "string" || phone.trim().length > 40 || typeof password !== "string" || password.length < 8 || password.length > 128 || !Array.isArray(roleCodes) || !roleCodes.length || roleCodes.some(code => typeof code !== "string" || !code.trim()) || !["active", "suspended"].includes(status)) {
+      const normalizedPhone = normalizeVietnamPhone(phone);
+      if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 120 || !isValidEmail(email) || normalizedPhone === null || typeof password !== "string" || password.length < 8 || password.length > 128 || !Array.isArray(roleCodes) || !roleCodes.length || roleCodes.some(code => typeof code !== "string" || !code.trim()) || !["active", "suspended"].includes(status)) {
         throw httpError(400, "Thông tin tài khoản không hợp lệ; mật khẩu phải có ít nhất 8 ký tự.");
       }
       const normalizedRoleCodes = [...new Set(roleCodes.map(code => code.trim().toUpperCase()))];
@@ -423,7 +424,7 @@ export function createManagerService(repository) {
       const inserted = await users.create({
         full_name: name.trim(),
         email: normalizedEmail,
-        phone: phone.trim(),
+        phone: normalizedPhone,
         password_hash: await bcrypt.hash(password, 12),
         primary_role_id: roleRows[0]._id,
         additional_role_ids: roleRows.slice(1).map(item => item._id),
@@ -630,6 +631,31 @@ export function createManagerService(repository) {
         })),
         pagination: rows.pagination
       };
+    },
+    adminOverview: async () => {
+      const users = repository.collection("users");
+      const roles = repository.collection("roles");
+      const logs = repository.collection("audit_logs");
+      const [accountCount, activeAccountCount, allRoles, latestLogs] = await Promise.all([
+        users.countDocuments({}),
+        users.countDocuments({ account_status: "active" }),
+        roles.find({}).select({ code: 1, display_name: 1 }).exec(),
+        logs.find({}).sort({ created_at: -1 }).limit(5).exec()
+      ]);
+      const mainRoles = allRoles.filter(role => role.code !== "ADMIN" && !/(viewer|lead|profile|audit|finance)/i.test(`${role.code} ${role.display_name || ''}`));
+      const actorIds = [...new Map(latestLogs.map(log => log.actor_user_id).filter(Boolean).map(id => [id.toString(), id])).values()];
+      const actors = actorIds.length ? await users.find({ _id: { $in: actorIds } }).select({ full_name: 1, email: 1 }).exec() : [];
+      const actorMap = new Map(actors.map(actor => [actor._id.toString(), actor]));
+      return { data: {
+        accountCount,
+        activeAccountCount,
+        roleCount: mainRoles.length,
+        roles: mainRoles.map(role => ({ code: role.code, name: role.display_name })),
+        recentLogs: latestLogs.map(log => {
+          const actor = actorMap.get(log.actor_user_id?.toString());
+          return { id: log._id.toString(), action: log.action, entityType: log.entity_type, entityId: log.entity_id?.toString() || null, actor: actor?.full_name || "Hệ thống", actorEmail: actor?.email || null, changes: log.sanitized_changes || {}, createdAt: log.created_at || null };
+        })
+      } };
     },
     systemReports: async input => {
       const filter = input.currentRoles?.includes("MANAGER") ? {} : {
@@ -1201,7 +1227,8 @@ export function createManagerService(repository) {
         jobTitle = "",
         workScope = ""
       } = input.body || {};
-      if (typeof name !== "string" || name.trim().length < 2 || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || typeof phone !== "string" || phone.length > 40 || typeof password !== "string" || password.length < 8 || password.length > 128 || !MANAGED_STAFF_ROLES.includes(role) || [department, jobTitle, workScope].some(value => typeof value !== "string" || value.length > 1000)) {
+      const normalizedPhone = normalizeVietnamPhone(phone);
+      if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 120 || !isValidEmail(email) || normalizedPhone === null || typeof password !== "string" || password.length < 8 || password.length > 128 || !MANAGED_STAFF_ROLES.includes(role) || [department, jobTitle, workScope].some(value => typeof value !== "string" || value.length > 1000)) {
         throw httpError(400, "Thông tin nhân viên không hợp lệ; mật khẩu phải có ít nhất 8 ký tự.");
       }
       const normalizedEmail = email.trim().toLowerCase();
@@ -1217,7 +1244,7 @@ export function createManagerService(repository) {
       const inserted = await users.create({
         full_name: name.trim(),
         email: normalizedEmail,
-        phone: phone.trim(),
+        phone: normalizedPhone,
         password_hash: await bcrypt.hash(password, 12),
         primary_role_id: roleDoc._id,
         additional_role_ids: [],
@@ -1274,8 +1301,8 @@ export function createManagerService(repository) {
       for (const [input, field] of Object.entries(profileFields)) {
         if (input.body?.[input] === undefined) continue;
         const value = input.body[input];
-        if (typeof value !== "string" || value.trim().length > (input === "workScope" ? 1000 : 120)) throw httpError(400, "Thông tin hồ sơ nhân viên không hợp lệ.");
-        set[field] = value.trim();
+        if (typeof value !== "string" || value.trim().length > (input === "workScope" ? 1000 : 120) || input === 'phone' && normalizeVietnamPhone(value) === null) throw httpError(400, "Thông tin hồ sơ nhân viên hoặc số điện thoại không hợp lệ.");
+        set[field] = input === 'phone' ? normalizeVietnamPhone(value) : value.trim();
       }
       if (!id || Object.keys(set).length === 1) throw httpError(400, "Vui lòng cung cấp thông tin cần cập nhật.");
       const managedRoleRows = await repository.collection("roles").find({
