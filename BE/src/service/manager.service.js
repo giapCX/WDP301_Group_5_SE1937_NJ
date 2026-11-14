@@ -1051,6 +1051,8 @@ export function createManagerService(repository) {
           sourceWithdrawalId: item.source_withdrawal_id,
           caseNumber: item.case_number,
           responseChecklist: item.response_checklist,
+          timeline: (item.operation_timeline || []).map(({ action, at, note }) => ({ action, at, note })),
+          resolution: item.resolution?.note ? { note: item.resolution.note } : null,
           caseType: item.case_type,
           vehicleSeized: typeof item.vehicle_seized === 'boolean' ? item.vehicle_seized : null,
           status: item.status,

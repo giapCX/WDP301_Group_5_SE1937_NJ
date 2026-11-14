@@ -1,3 +1,4 @@
+import { saveErrorMessage } from '../../../services/saveErrorMessage';
 import { useCallback, useEffect, useState } from 'react';
 import ContractsPage from '../../contracts/ContractsPage';
 import IncidentRentalContext from '../components/IncidentRentalContext';
@@ -111,6 +112,12 @@ const inspectionChecklistLabels = {
   leaks: 'Rò rỉ',
   lights: 'Đèn',
   accessories: 'Phụ kiện',
+};
+const incidentTimelineLabels = {
+  'incident.recorded': 'Ghi nhận sự cố',
+  'incident.operator_received': 'Operator tiếp nhận',
+  'incident.submitted_to_manager': 'Gửi Manager xem xét',
+  'incident.details.update': 'Cập nhật hồ sơ',
 };
 const incidentStatuses = {
   reported: 'Đã ghi nhận',
@@ -355,7 +362,7 @@ export default function OperatorPage({ initialSection } = {}) {
       setNotice(message);
       refresh();
     } catch (reason) {
-      setError(reason.message || 'Không thể cập nhật dữ liệu.');
+      setError(saveErrorMessage(reason));
     } finally {
       setBusy(false);
     }
@@ -623,7 +630,7 @@ export default function OperatorPage({ initialSection } = {}) {
             </div>
             <button className="operator-refresh" type="button" onClick={refresh} disabled={loading}>↻ <span>Làm mới</span></button>
           </section>
-          {error && <div className="operator-alert" role="alert">{error}<button onClick={() => setError('')}>Đóng</button></div>}
+          {error && !selectedIncident && <div className="operator-alert" role="alert">{error}<button onClick={() => setError('')}>Đóng</button></div>}
           {notice && <div className="operator-notice" role="status">{notice}<button onClick={() => setNotice('')}>Đóng</button></div>}
           {!authorized ? (
             <section className="operator-empty">
@@ -664,7 +671,7 @@ export default function OperatorPage({ initialSection } = {}) {
           ) : section === 'identity' ? (
             <section className="operator-workspace">
               {loading ? <p role="status">Đang tải hồ sơ eKYC…</p> : identityRows.length ? (
-                <div className="operator-table-wrap">
+                <div className="operator-table-wrap" tabIndex={0} role="region" aria-label="Bảng dữ liệu vận hành">
                   <table className="operator-table">
                     <thead><tr><th>Chủ thể</th><th>Danh tính</th><th>Giấy phép lái xe</th><th>Tài liệu</th><th>Kiểm tra trước</th></tr></thead>
                     <tbody>{identityRows.map((user) => <tr key={user.id}>
@@ -698,7 +705,7 @@ export default function OperatorPage({ initialSection } = {}) {
               <section className="operator-evidence">
                 <h2>Yêu cầu lịch từ Chủ xe</h2>
                 {loading ? <p role="status">Đang tải yêu cầu lịch…</p> : inspectionQueue.scheduleRequests.length ? (
-                  <div className="operator-table-wrap">
+                  <div className="operator-table-wrap" tabIndex={0} role="region" aria-label="Bảng dữ liệu vận hành">
                     <table className="operator-table">
                       <thead><tr><th>Xe</th><th>Chủ xe</th><th>Ngày đề xuất</th><th>Ghi chú</th><th>Thao tác</th></tr></thead>
                       <tbody>{inspectionQueue.scheduleRequests.map((vehicle) => (
@@ -725,7 +732,7 @@ export default function OperatorPage({ initialSection } = {}) {
               <section className="operator-evidence">
                 <h2>Biên bản Garage chờ Operator đối chiếu</h2>
                 {loading ? <p role="status">Đang tải biên bản Garage…</p> : inspectionQueue.garageReports.length ? (
-                  <div className="operator-table-wrap">
+                  <div className="operator-table-wrap" tabIndex={0} role="region" aria-label="Bảng dữ liệu vận hành">
                     <table className="operator-table">
                       <thead><tr><th>Xe</th><th>Chủ xe</th><th>Kết luận Garage</th><th>Owner xác nhận hiện trạng</th><th>Gửi lúc</th><th>Thao tác</th></tr></thead>
                       <tbody>{inspectionQueue.garageReports.map((report) => (
@@ -774,7 +781,7 @@ export default function OperatorPage({ initialSection } = {}) {
               {loading ? (
                 <p role="status">Đang tải danh sách xe…</p>
               ) : rows.length ? (
-                <div className="operator-table-wrap">
+                <div className="operator-table-wrap" tabIndex={0} role="region" aria-label="Bảng dữ liệu vận hành">
                   <table className="operator-table">
                     <thead>
                       <tr><th>Xe</th><th>Chủ xe</th><th>Trạng thái vận hành</th><th>Kiểm định đầu vào</th><th>Cập nhật</th></tr>
@@ -931,7 +938,7 @@ export default function OperatorPage({ initialSection } = {}) {
               {loading ? (
                 <p role="status">Đang tải danh sách sự cố…</p>
               ) : rows.length ? (
-                <div className="operator-table-wrap">
+                <div className="operator-table-wrap" tabIndex={0} role="region" aria-label="Bảng dữ liệu vận hành">
                   <table className="operator-table">
                     <thead>
                       <tr><th>Mã hồ sơ</th><th>Xe</th><th>Mô tả</th><th>Trạng thái</th><th /></tr>
@@ -966,13 +973,22 @@ export default function OperatorPage({ initialSection } = {}) {
       {selectedIncident && <div className="operator-modal-backdrop"><section className="operator-modal" role="dialog" aria-modal="true" aria-labelledby="operator-incident-title">
         <header><div><h2 id="operator-incident-title">{selectedIncident.caseNumber}</h2><p>{selectedIncident.vehicle?.licensePlate} · {incidentStatuses[selectedIncident.status] || selectedIncident.status}</p></div><button aria-label="Đóng" onClick={() => {
           setSelectedIncident(null);
+          setError('');
         }}>×</button></header>
-        <p><strong>Loại:</strong> {caseTypes.find(([value]) => value === selectedIncident.caseType)?.[1] || selectedIncident.caseType}</p>
-        {selectedIncident.reportSource === 'owner' && <p>Chủ xe gửi báo cáo{selectedIncident.operatorReceivedAt ? ' · Đã tiếp nhận' : ' · Chờ tiếp nhận'}</p>}
-        {awaitsReceipt(selectedIncident) && hasPermission('operation.incident.update') && <button type="button" disabled={busy} onClick={() => runAction(
-          () => receiveOperatorIncident(selectedIncident.id), 'Đã tiếp nhận báo cáo của chủ xe.',
-        )}>Tiếp nhận sự cố</button>}
-        <p><strong>Tạm giữ xe:</strong> {selectedIncident.vehicleSeized === true ? 'Có' : selectedIncident.vehicleSeized === false ? 'Không' : 'Chưa ghi nhận'}</p>
+        {error && <div className="operator-alert" role="alert">{error}<button type="button" onClick={() => setError('')}>Đóng thông báo</button></div>}
+        <section className="operator-incident-section">
+          <h3>Việc cần làm</h3>
+          <p>{awaitsReceipt(selectedIncident) ? 'Tiếp nhận báo cáo của chủ xe.'
+            : canEditSelectedIncident ? 'Cập nhật hồ sơ và đính kèm chứng cứ trước khi gửi Manager.'
+              : selectedIncident.status === 'pending_manager' ? 'Đang chờ Manager xem xét.'
+                : 'Theo dõi kết quả trong hồ sơ.'}</p>
+          <p><strong>Loại:</strong> {caseTypes.find(([value]) => value === selectedIncident.caseType)?.[1] || selectedIncident.caseType}</p>
+          {selectedIncident.reportSource === 'owner' && <p>Chủ xe gửi báo cáo{selectedIncident.operatorReceivedAt ? ' · Đã tiếp nhận' : ' · Chờ tiếp nhận'}</p>}
+          {awaitsReceipt(selectedIncident) && hasPermission('operation.incident.update') && <button type="button" disabled={busy} onClick={() => runAction(
+            () => receiveOperatorIncident(selectedIncident.id), 'Đã tiếp nhận báo cáo của chủ xe.',
+          )}>Tiếp nhận sự cố</button>}
+          <p><strong>Tạm giữ xe:</strong> {selectedIncident.vehicleSeized === true ? 'Có' : selectedIncident.vehicleSeized === false ? 'Không' : 'Chưa ghi nhận'}</p>
+        </section>
         <IncidentRentalContext key={selectedIncident.id} context={selectedIncident.rentalContext} />
         <IncidentPrintSummary incident={selectedIncident} />
         <form className="operator-form operator-form-single" onSubmit={saveIncidentChanges}>
@@ -983,28 +999,35 @@ export default function OperatorPage({ initialSection } = {}) {
             <label>Số km tại thời điểm ghi nhận<input name="odometerKm" type="number" min="0" step="1" defaultValue={selectedIncident.odometerKm ?? ''} /></label>
             <label>Cơ quan chức năng có tạm giữ xe không?<select name="vehicleSeized" required defaultValue={selectedIncident.vehicleSeized === true ? 'true' : selectedIncident.vehicleSeized === false ? 'false' : ''}><option value="" disabled>Chọn tình trạng</option><option value="true">Có, xe đang bị tạm giữ</option><option value="false">Không bị tạm giữ</option></select></label>
             <label>Ghi chú bổ sung<textarea name="note" maxLength={2000} rows="2" /></label>
-            <IncidentResponseFields checklist={selectedIncident.responseChecklist} />
-            {selectedIncident.caseType !== 'traffic_violation' && <fieldset>
-              <legend>Thêm khoản chi đề xuất</legend>
-              <label>Khoản đối soát<select name="settlementParty" defaultValue=""><option value="">Chưa xác định</option><option value="owner_payable">Đề xuất trả chủ xe</option><option value="renter_receivable">Đề xuất thu từ người thuê</option><option value="third_party_payable">Đề xuất trả bên thứ ba</option></select></label>
-              <label>Loại chi phí<select name="expenseCategory" defaultValue=""><option value="">Không thêm khoản chi</option><option value="assessment">Giám định</option><option value="repair">Sửa chữa</option><option value="deductible">Miễn thường</option><option value="towing">Cứu hộ</option><option value="other">Khác</option></select></label>
-              <label>Tổng chi phí (₫)<input name="expenseAmount" type="number" min="1" max="1000000000" /></label>
-              <label>Bảo hiểm đã chấp nhận (₫)<input name="expenseInsurance" type="number" min="0" defaultValue="0" /></label>
-              <label>Mã hoặc tên chứng từ<input name="expenseEvidence" maxLength={500} /></label>
-            </fieldset>}
+            <details className="operator-incident-section">
+              <summary>Hiện trường, công an và bảo hiểm</summary>
+              <IncidentResponseFields checklist={selectedIncident.responseChecklist} />
+            </details>
+            {selectedIncident.caseType !== 'traffic_violation' && <details className="operator-incident-section">
+              <summary>Chi phí và bồi thường</summary>
+              <fieldset><legend>Thêm khoản chi đề xuất</legend>
+                <label>Khoản đối soát<select name="settlementParty" defaultValue=""><option value="">Chưa xác định</option><option value="owner_payable">Đề xuất trả chủ xe</option><option value="renter_receivable">Đề xuất thu từ người thuê</option><option value="third_party_payable">Đề xuất trả bên thứ ba</option></select></label>
+                <label>Loại chi phí<select name="expenseCategory" defaultValue=""><option value="">Không thêm khoản chi</option><option value="assessment">Giám định</option><option value="repair">Sửa chữa</option><option value="deductible">Miễn thường</option><option value="towing">Cứu hộ</option><option value="other">Khác</option></select></label>
+                <label>Tổng chi phí (₫)<input name="expenseAmount" type="number" min="1" max="1000000000" /></label>
+                <label>Bảo hiểm đã chấp nhận (₫)<input name="expenseInsurance" type="number" min="0" defaultValue="0" /></label>
+                <label>Mã hoặc tên chứng từ<input name="expenseEvidence" maxLength={500} /></label>
+              </fieldset>
+              {selectedIncident.compensationClaims?.length > 0 && <ul>{selectedIncident.compensationClaims.map((claim, index) =>
+                <li key={index}>{claim.evidence_basis || 'Khoản chủ xe đề nghị'} · {Number(claim.requested_amount).toLocaleString('vi-VN')} ₫</li>)}</ul>}
+            </details>}
             <button disabled={busy}>Lưu cập nhật</button>
           </>}
         </form>
         {!canEditSelectedIncident && canEditIncident(selectedIncident) && <p>Chỉ người có quyền cập nhật sự cố mới có thể sửa hồ sơ.</p>}
-        {selectedIncident.compensationClaims?.length > 0 && <ul>{selectedIncident.compensationClaims.map((claim, index) =>
+        {!canEditSelectedIncident && selectedIncident.compensationClaims?.length > 0 && <ul>{selectedIncident.compensationClaims.map((claim, index) =>
           <li key={index}>{claim.evidence_basis || 'Khoản chủ xe đề nghị'} · {Number(claim.requested_amount).toLocaleString('vi-VN')} ₫</li>)}</ul>}
-        {selectedIncident.timeline?.length > 0 && <section className="operator-evidence"><h3>Lịch sử xử lý</h3><ul>{[...selectedIncident.timeline].reverse().map((entry, index) => <li key={`${entry.action}-${entry.at}-${index}`}><strong>{entry.action}</strong>{entry.at && <> · {new Date(entry.at).toLocaleString('vi-VN')}</>}{entry.note && <p>{entry.note}</p>}</li>)}</ul></section>}
-        <section className="operator-evidence"><h3>Biên bản và chứng cứ</h3>
+        {selectedIncident.timeline?.length > 0 && <details className="operator-evidence operator-incident-section"><summary>Lịch sử xử lý</summary><ul>{[...selectedIncident.timeline].reverse().map((entry, index) => <li key={`${entry.action}-${entry.at}-${index}`}><strong>{incidentTimelineLabels[entry.action] || entry.action}</strong>{entry.at && <> · {new Date(entry.at).toLocaleString('vi-VN')}</>}{entry.note && <p>{entry.note}</p>}</li>)}</ul></details>}
+        <details className="operator-evidence operator-incident-section"><summary>Biên bản và chứng cứ</summary>
           {selectedIncident.evidence?.length ? selectedIncident.evidence.map((evidence) => evidence.isGaragePhoto
             ? <GaragePhotoPreview key={evidence.index} photo={{ key: evidence.fileKey, name: evidence.name }} />
             : <button className="operator-secondary" key={evidence.index} onClick={() => downloadEvidence(evidence)}>{evidence.name} · Tải xuống</button>) : <p>Chưa có biên bản đính kèm.</p>}
           {canEditIncident(selectedIncident) && <label className="operator-upload">Đính kèm biên bản (PDF/JPEG/PNG/WebP, tối đa 4 MB)<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" disabled={busy || selectedIncident.evidence?.length >= 3 || !hasPermission('operation.incident.evidence.attach')} onChange={uploadEvidence} /></label>}
-        </section>
+        </details>
         {selectedIncident.resolution?.note && <section className="operator-manager-outcome"><h3>Kết luận của Manager</h3><p>{selectedIncident.resolution.note}</p></section>}
         {canEditIncident(selectedIncident)
           && <button className="operator-submit" disabled={busy || !hasPermission('operation.incident.submit')} onClick={() => runAction(() => submitOperatorIncident(selectedIncident.id), 'Đã gửi hồ sơ cho Manager xem xét.')}>Gửi Manager xem xét</button>}

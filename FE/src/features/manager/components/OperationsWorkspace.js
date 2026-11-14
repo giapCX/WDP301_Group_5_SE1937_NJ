@@ -1,3 +1,4 @@
+import ManagerActionForm from './ManagerActionForm';
 import Pagination from "../../../components/ui/Pagination";
 import IncidentReviewCard from './IncidentReviewCard';
 import { useState } from 'react';
@@ -16,6 +17,7 @@ export default function OperationsWorkspace({ active, onNotice }) {
     updatePolicy,
     updateStaff
   } = useManagerActions();
+  const [dialog, setDialog] = useState(null);
   const [actionError, setActionError] = useState('');
   const data = [request.data];
   const {
@@ -26,12 +28,13 @@ export default function OperationsWorkspace({ active, onNotice }) {
     setActionError('');
     request.refresh();
   };
-  const act = async (promise, successText) => {
+  const act = async (promise, successText, { inlineError = false } = {}) => {
     try {
       await promise;
       onNotice(successText);
       refresh();
     } catch (reason) {
+      if (inlineError) throw reason;
       setActionError(reason.message || 'Không thể cập nhật dữ liệu.');
     }
   };
@@ -41,72 +44,49 @@ export default function OperationsWorkspace({ active, onNotice }) {
   if (active === 'incidents') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Khiếu nại & sự cố" subtitle="Garage/Operator ghi nhận; Operator chuyển hồ sơ; Manager quyết định." count={request.paging?.total ?? primary?.length ?? 0} />
     <div className="incident-list">{(primary || []).map(item => <IncidentReviewCard key={item.id} item={item} act={act} reviewCompensation={reviewCompensation} reviewIncident={reviewIncident} reviewTrafficViolation={reviewTrafficViolation} />)}{!primary?.length && <p className="manager-empty">Không có sự cố đang mở.</p>}</div>
   <Pagination {...request.paging} /></section>;
+  const staffFields = (item = {}) => [
+    { name: 'name', label: 'Họ tên', value: item.name },
+    { name: 'phone', label: 'Số điện thoại', type: 'tel', value: item.phone, required: false },
+    { name: 'department', label: 'Bộ phận', value: item.department, required: false },
+    { name: 'jobTitle', label: 'Chức danh', value: item.jobTitle, required: false },
+    { name: 'workScope', label: 'Phạm vi công việc', type: 'textarea', value: item.workScope, required: false },
+  ];
+  const openStaff = (item) => setDialog({
+    title: item ? 'Sửa hồ sơ nhân sự' : 'Thêm nhân viên',
+    fields: item ? staffFields(item) : [
+      ...staffFields(),
+      { name: 'email', label: 'Email', type: 'email' },
+      { name: 'password', label: 'Mật khẩu ban đầu', type: 'password', minLength: 8 },
+      { name: 'role', label: 'Vai trò', value: 'OPERATION_STAFF', options: [['OPERATION_STAFF', 'Nhân viên vận hành'], ['GARAGE_STAFF', 'Nhân viên gara']] },
+    ],
+    onSubmit: (values) => {
+      if (!item && !isValidEmail(values.email)) throw new Error('Email nhân viên không hợp lệ.');
+      if (normalizeVietnamPhone(values.phone) === null) throw new Error('Hãy nhập số di động Việt Nam hợp lệ.');
+      return act(item ? updateStaff(item.id, values) : createStaff(values),
+        item ? 'Đã cập nhật hồ sơ nhân sự.' : 'Đã tạo nhân viên.', { inlineError: true });
+    },
+  });
   if (active === 'policies') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Chính sách nền tảng" subtitle="Cập nhật chính sách sẽ tạo phiên bản mới và lưu lịch sử thay đổi." count={request.paging?.total ?? primary?.length ?? 0} />
-    <div className="policy-grid">{(primary || []).map(item => <article className="policy-card" key={item.id}><div><span className="policy-type">{humanizeField(item.type)}</span><span className="policy-version">Đang áp dụng · phiên bản {item.version}</span></div><DataFields data={item.config} /><button className="action-review" onClick={() => {
-          const raw = window.prompt('Cấu hình chính sách dạng JSON:', JSON.stringify(item.config, null, 2));
-          if (!raw) return;
-          try {
-            const config = JSON.parse(raw);
-            act(updatePolicy(item.type, {
-              config
-            }), 'Đã tạo phiên bản chính sách mới.');
-          } catch {
-            setActionError('Cấu hình phải là JSON hợp lệ.');
-          }
-        }}>Chỉnh sửa chính sách</button></article>)}</div>
+    <div className="policy-grid">{(primary || []).map(item => <article className="policy-card" key={item.id}><div><span className="policy-type">{humanizeField(item.type)}</span><span className="policy-version">Đang áp dụng · phiên bản {item.version}</span></div><DataFields data={item.config} /><button className="action-review" onClick={() => setDialog({
+          title: 'Chỉnh sửa chính sách',
+          context: humanizeField(item.type),
+          fields: [{ name: 'config', label: 'Cấu hình chính sách (JSON)', type: 'textarea', value: JSON.stringify(item.config, null, 2) }],
+          onSubmit: ({ config }) => {
+            let parsed;
+            try { parsed = JSON.parse(config); } catch { throw new Error('Hãy sửa cú pháp JSON trước khi lưu.'); }
+            return act(updatePolicy(item.type, { config: parsed }), 'Đã tạo phiên bản chính sách mới.', { inlineError: true });
+          },
+        })}>Chỉnh sửa chính sách</button></article>)}</div>
+  {dialog && <ManagerActionForm {...dialog} onClose={() => setDialog(null)} />}
   <Pagination {...request.paging} /></section>;
   if (active === 'staff') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Quản lý nhân sự" subtitle="Quản lý hồ sơ, phạm vi công việc, vai trò và trạng thái nhân viên vận hành/gara." count={request.paging?.total ?? primary?.length ?? 0} />
-    <button className="action-approve" onClick={() => {
-      const name = window.prompt('Họ tên nhân viên:');
-      if (!name) return;
-      const email = window.prompt('Email:');
-      if (!email) return;
-      const password = window.prompt('Mật khẩu ban đầu (ít nhất 8 ký tự):');
-      if (!password) return;
-      const role = window.prompt('Vai trò: OPERATION_STAFF hoặc GARAGE_STAFF', 'OPERATION_STAFF');
-      if (!role) return;
-      const phone = window.prompt('Số điện thoại:', '') ?? '';
-      if (!isValidEmail(email)) return setActionError('Email nhân viên không hợp lệ.');
-      if (normalizeVietnamPhone(phone) === null) return setActionError('Số điện thoại phải là số di động Việt Nam hợp lệ, gồm 10 số (có thể nhập +84).');
-      const department = window.prompt('Bộ phận:', '') ?? '';
-      const jobTitle = window.prompt('Chức danh:', '') ?? '';
-      const workScope = window.prompt('Phạm vi công việc:', '') ?? '';
-      act(createStaff({
-        name,
-        email,
-        password,
-        role,
-        phone,
-        department,
-        jobTitle,
-        workScope
-      }), 'Đã tạo nhân viên.');
-    }}>Thêm nhân viên</button>
+    <button className="action-approve" onClick={() => openStaff()}>Thêm nhân viên</button>
     <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>NHÂN SỰ</th><th>LIÊN HỆ / HỒ SƠ</th><th>VAI TRÒ</th><th>TRẠNG THÁI</th><th>HỒ SƠ</th></tr></thead><tbody>{(primary || []).map(item => <tr key={item.id}><td><strong>{item.name}</strong><span>{item.email}</span></td><td>{item.phone || '—'}<span>{item.department} · {item.jobTitle}</span><span>{item.workScope}</span></td><td><select className="workspace-select" value={item.role} onChange={event => act(updateStaff(item.id, {
                 role: event.target.value
               }), 'Đã cập nhật vai trò nhân sự.')}><option value="OPERATION_STAFF">Nhân viên vận hành</option><option value="GARAGE_STAFF">Nhân viên gara</option></select></td><td><select className="workspace-select" value={item.status === 'active' ? 'active' : 'suspended'} onChange={event => act(updateStaff(item.id, {
                 status: event.target.value
-              }), 'Đã cập nhật trạng thái tài khoản.')}><option value="active">Đang hoạt động</option><option value="suspended">Tạm khóa</option></select></td><td><button className="action-review" onClick={() => {
-                const name = window.prompt('Họ tên:', item.name);
-                if (name === null) return;
-                const phone = window.prompt('Số điện thoại:', item.phone || '');
-                if (phone === null) return;
-                if (normalizeVietnamPhone(phone) === null) return setActionError('Số điện thoại phải là số di động Việt Nam hợp lệ, gồm 10 số (có thể nhập +84).');
-                const department = window.prompt('Bộ phận:', item.department || '');
-                if (department === null) return;
-                const jobTitle = window.prompt('Chức danh:', item.jobTitle || '');
-                if (jobTitle === null) return;
-                const workScope = window.prompt('Phạm vi công việc:', item.workScope || '');
-                if (workScope === null) return;
-                act(updateStaff(item.id, {
-                  name,
-                  phone,
-                  department,
-                  jobTitle,
-                  workScope
-                }), 'Đã cập nhật hồ sơ nhân sự.');
-              }}>Sửa hồ sơ</button></td></tr>)}</tbody></table>{!primary?.length && <p className="manager-empty">Chưa có hồ sơ nhân sự.</p>}</div>
-  <Pagination {...request.paging} /></section>;
+              }), 'Đã cập nhật trạng thái tài khoản.')}><option value="active">Đang hoạt động</option><option value="suspended">Tạm khóa</option></select></td><td><button className="action-review" onClick={() => openStaff(item)}>Sửa hồ sơ</button></td></tr>)}</tbody></table>{!primary?.length && <p className="manager-empty">Chưa có hồ sơ nhân sự.</p>}</div>
+  <Pagination {...request.paging} />{dialog && <ManagerActionForm {...dialog} onClose={() => setDialog(null)} />}</section>;
   return null;
 }
 function WorkspaceHeader({

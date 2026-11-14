@@ -1,3 +1,5 @@
+import { saveErrorMessage } from '../../../services/saveErrorMessage';
+import CopyCode from '../../../components/ui/CopyCode';
 import { bookingProgress } from '../api/bookingProgress';
 import { useState, useEffect } from 'react';
 import { getRenter, postRenter, vnd, dateTime, statusName } from '../api/renterApi';
@@ -86,7 +88,7 @@ export default function BookingWorkspace({
       await load();
       if (onChanged) onChanged();
     } catch (e) {
-      setError(e.message);
+      setError(saveErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -107,7 +109,7 @@ export default function BookingWorkspace({
     {showContract && a?._id && <SigningDialog item={{ id: a._id, type: 'rental' }} view="party"
       onClose={() => setShowContract(false)} onSigned={() => { load().catch((failure) => setError(failure.message)); onChanged?.(); }} />}
     {error && <p role="alert" className="renter-error">{error}</p>}{notice && <p role="status" className="renter-notice">{notice}</p>}
-    <section className="renter-card"><div className="renter-row"><h2>{b.booking_code}</h2><strong>{bookingProgress(b, a).label}</strong></div><p>{data.vehicle?.brand} {data.vehicle?.model} · {data.vehicle?.license_plate}</p><p>{dateTime(b.start_at)} → {dateTime(b.end_at)}</p><p>Nhận / trả xe: {b.pickup_location?.branch}</p><p>Giá mỗi ngày: {vnd(b.pricing_snapshot?.daily_price)} · {b.pricing_snapshot?.charged_days} ngày</p><p className="renter-price">Tiền thuê: {vnd(b.rental_fee_amount)} · Cọc: {vnd(b.deposit_amount_snapshot)}</p>{['pending', 'awaiting_payment'].includes(b.status) && seconds !== null && <p role="timer">{b.status === 'pending' ? 'Thời gian giữ xe còn lại' : 'Thời gian thanh toán còn lại'}: {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</p>}
+    <section className="renter-card"><div className="renter-row"><h2><CopyCode value={b.booking_code} label="mã chuyến thuê" /></h2><strong>{bookingProgress(b, a).label}</strong></div><p>{data.vehicle?.brand} {data.vehicle?.model} · {data.vehicle?.license_plate}</p><p>{dateTime(b.start_at)} → {dateTime(b.end_at)}</p><p>Nhận / trả xe: {b.pickup_location?.branch}</p><p>Giá mỗi ngày: {vnd(b.pricing_snapshot?.daily_price)} · {b.pricing_snapshot?.charged_days} ngày</p><p className="renter-price">Tiền thuê: {vnd(b.rental_fee_amount)} · Cọc: {vnd(b.deposit_amount_snapshot)}</p>{['pending', 'awaiting_payment'].includes(b.status) && seconds !== null && <p role="timer">{b.status === 'pending' ? 'Thời gian giữ xe còn lại' : 'Thời gian thanh toán còn lại'}: {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</p>}
       {(waiting || (b.status === 'pending' && b.review_info?.required === false && seconds !== 0)) && a?.status !== 'signed' && !a?.signing_info?.renter_confirmed && <form className="renter-row" onSubmit={e => {
         e.preventDefault();
         action(() => postRenter(`/bookings/${b._id}/voucher`, {
@@ -122,7 +124,7 @@ export default function BookingWorkspace({
         <button type="button" onClick={() => setShowContract(true)}>{bookingProgress(b, a).step === "contract" ? bookingProgress(b, a).action : "Xem hợp đồng thuê"}</button>
       </>}
     </section>}
-    {!platformSigning && a && <section className="renter-card"><h2>Hợp đồng {a.contract_number}</h2><p>Trạng thái: {statusName(a.status)}</p><div className="renter-contract" tabIndex={0} aria-label="Điều khoản hợp đồng" onScroll={e => {
+    {!platformSigning && a && <section className="renter-card"><h2>Hợp đồng <CopyCode value={a.contract_number} label="mã hợp đồng" /></h2><p>Trạng thái: {statusName(a.status)}</p><div className="renter-contract" tabIndex={0} aria-label="Điều khoản hợp đồng" onScroll={e => {
         if (e.currentTarget.scrollTop + e.currentTarget.clientHeight >= e.currentTarget.scrollHeight - 8) setRead(true);
       }}>
       <h3>Hợp đồng thuê xe tự lái</h3><p>Khách thuê: {a.renter_details_snapshot?.full_name || 'Theo hồ sơ cá nhân'}</p><p>Hợp đồng ủy quyền: {a.lender_details_snapshot?.authority_agreement_number}</p><p>Nhận xe: {dateTime(a.terms_snapshot?.start_at)}</p><p>Trả xe: {dateTime(a.terms_snapshot?.end_at)}</p><p>Tiền thuê: {vnd(a.terms_snapshot?.rental_fee_amount)}. Tiền cọc: {vnd(a.terms_snapshot?.deposit_amount)}.</p><p>Giới hạn: {a.terms_snapshot?.mileage_policy?.included_km_per_day ?? 'Theo hồ sơ xe'} km/ngày. Phụ trội: {vnd(a.terms_snapshot?.mileage_policy?.extra_km_fee)}/km.</p><p>Trả muộn: {vnd(a.terms_snapshot?.rental_policy?.late_fee_per_hour)}/giờ.</p><p>Hủy miễn phí trước: {a.terms_snapshot?.cancellation?.config?.free_cancel_before_hours ?? 'Chưa quy định'} giờ (chính sách phiên bản {a.terms_snapshot?.cancellation?.version ?? 'chưa có'}).</p><p>Trường hợp chính sách chưa quy định mức hoàn sẽ được vận hành đối soát. Tiền cọc chỉ được khấu trừ khi có căn cứ đã xác minh và phê duyệt.</p><p>Thời hạn hoàn cọc sau khi đủ điều kiện: {a.terms_snapshot?.deposit_refund?.config?.refund_within_business_days ?? 'Theo đối soát'} ngày làm việc.</p><p>Khách thuê có trách nhiệm cung cấp giấy tờ hợp lệ, đối chiếu tình trạng xe lúc nhận/trả và thông báo sự cố trong chuyến. Việc bàn giao được nhân viên gara ghi nhận bằng biên bản.</p><p>Khách thuê xác nhận thông tin về xe, thời gian, tiền thuê, tiền cọc và chính sách được lưu cùng hợp đồng này.</p><p>— Hết điều khoản —</p>

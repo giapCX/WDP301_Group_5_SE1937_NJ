@@ -17,7 +17,8 @@ beforeEach(() => {
   refresh = jest.fn();
   useManagerActions.mockReturnValue({ reviewVehicle });
   useManagerCollection.mockReturnValue({ data: [vehicle], loading: false, error: '', refresh });
-  jest.spyOn(window, 'prompt').mockReturnValue('Reviewed complete report');
+  HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
+  HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); };
 });
 afterEach(() => jest.restoreAllMocks());
 
@@ -30,6 +31,8 @@ test('Manager can review submitted evidence and approve a pending passing report
   const approve = screen.getByRole('button', { name: 'Duyệt hồ sơ · chuyển sang hợp đồng' });
   expect(approve).toBeEnabled();
   fireEvent.click(approve);
+  fireEvent.change(screen.getByLabelText('Căn cứ duyệt'), { target: { value: 'Reviewed complete report' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Lưu' }));
   await waitFor(() => expect(reviewVehicle).toHaveBeenCalledWith('vehicle-id', { action: 'approve', note: 'Reviewed complete report', inspectionId: 'inspection-id', inspectionVersion: 2 }));
   expect(refresh).toHaveBeenCalled();
 });

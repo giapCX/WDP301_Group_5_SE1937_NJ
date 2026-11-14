@@ -1,3 +1,4 @@
+import ManagerActionForm from './ManagerActionForm';
 import Pagination from "../../../components/ui/Pagination";
 import { useState } from 'react';
 import { getBlobApi } from '../../../services/httpClient';
@@ -56,6 +57,7 @@ export default function VehicleApprovalsWorkspace({
   const {
     reviewVehicle
   } = useManagerActions();
+  const [dialog, setDialog] = useState(null);
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
   const vehicles = request.data;
@@ -87,34 +89,19 @@ export default function VehicleApprovalsWorkspace({
       onNotice(action === 'approve' ? 'Đã duyệt hồ sơ xe.' : action === 'revision' ? 'Đã gửi yêu cầu bổ sung cho chủ xe.' : 'Đã từ chối hồ sơ xe.');
       refresh();
     } catch (reason) {
-      setActionError(reason.message || 'Không thể cập nhật hồ sơ xe.');
+      throw reason;
     } finally {
       setBusyId('');
     }
   };
-  const requestAdditionalInfo = vehicle => {
-    const note = window.prompt(`Nêu rõ hồ sơ cần bổ sung cho ${vehicle.brand} ${vehicle.model} (${vehicle.licensePlate}):`);
-    if (note === null) return;
-    const trimmed = note.trim();
-    if (trimmed.length < 5) {
-      setActionError('Nội dung yêu cầu bổ sung cần ít nhất 5 ký tự để chủ xe biết cần chỉnh sửa gì.');
-      return;
-    }
-    if (trimmed.length > 1000) {
-      setActionError('Nội dung yêu cầu bổ sung không được vượt quá 1.000 ký tự.');
-      return;
-    }
-    act(vehicle, 'revision', trimmed);
-  };
-  const rejectApplication = vehicle => {
-    const note = window.prompt(`Lý do từ chối hồ sơ ${vehicle.licensePlate}:`);
-    if (note === null) return;
-    const trimmed = note.trim();
-    if (trimmed.length < 5) {
-      setActionError('Lý do từ chối cần ít nhất 5 ký tự.');
-      return;
-    }
-    act(vehicle, 'reject', trimmed);
+  const openDecision = (vehicle, action) => {
+    const title = { approve: 'Duyệt hồ sơ xe', revision: 'Yêu cầu bổ sung / kiểm định lại', reject: 'Từ chối hồ sơ xe' }[action];
+    setDialog({
+      title,
+      context: vehicle.licensePlate,
+      fields: [{ name: 'note', label: action === 'approve' ? 'Căn cứ duyệt' : 'Lý do hoặc nội dung cần bổ sung', type: 'textarea', minLength: 5, maxLength: 1000 }],
+      onSubmit: ({ note }) => act(vehicle, action, note),
+    });
   };
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải hồ sơ xe…</p><Pagination {...request.paging} /></section>;
   if (error && !vehicles.length) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div><Pagination {...request.paging} /></section>;
@@ -137,14 +124,9 @@ export default function VehicleApprovalsWorkspace({
         {vehicle.reviewNote && <div className="vehicle-prior-note"><strong>Ghi chú xét duyệt gần nhất</strong><p>{vehicle.reviewNote}</p></div>}
         <InspectionReviewDetails inspection={vehicle.inspection} />
         {!canDecide && <p className="vehicle-prior-note">Chờ Garage gửi biên bản kiểm định mới trước khi quyết định.</p>}
-        <footer className="vehicle-card-actions"><button className="action-approve" disabled={!canApprove || busyId === vehicle.id} title={!canApprove ? 'Cần Garage gửi biên bản đề xuất đạt trước khi duyệt' : ''} onClick={() => {
-              const note = window.prompt('Ghi căn cứ duyệt (ít nhất 5 ký tự), ví dụ đã đối chiếu checklist, xác nhận chủ xe và giấy tờ.', '');
-              if (note === null) return;
-              if (note.trim().length < 5) { setActionError('Cần ghi căn cứ duyệt tối thiểu 5 ký tự để lưu lịch sử.'); return; }
-              act(vehicle, 'approve', note.trim());
-            }}>{busyId === vehicle.id ? 'Đang lưu…' : 'Duyệt hồ sơ · chuyển sang hợp đồng'}</button><button className="action-review" disabled={!canDecide || busyId === vehicle.id} onClick={() => requestAdditionalInfo(vehicle)}>Yêu cầu bổ sung / kiểm định lại</button><button className="action-reject" disabled={!canDecide || busyId === vehicle.id} onClick={() => rejectApplication(vehicle)}>Từ chối hồ sơ</button></footer>
+        <footer className="vehicle-card-actions"><button className="action-approve" disabled={!canApprove || busyId === vehicle.id} title={!canApprove ? 'Cần Garage gửi biên bản đề xuất đạt trước khi duyệt' : ''} onClick={() => openDecision(vehicle, 'approve')}>{busyId === vehicle.id ? 'Đang lưu…' : 'Duyệt hồ sơ · chuyển sang hợp đồng'}</button><button className="action-review" disabled={!canDecide || busyId === vehicle.id} onClick={() => openDecision(vehicle, 'revision')}>Yêu cầu bổ sung / kiểm định lại</button><button className="action-reject" disabled={!canDecide || busyId === vehicle.id} onClick={() => openDecision(vehicle, 'reject')}>Từ chối hồ sơ</button></footer>
       </article>;
       })}</div>
     {!vehicles.length && <p className="manager-empty vehicle-empty">Không có hồ sơ xe chờ duyệt.</p>}
-  <Pagination {...request.paging} /></section>;
+  <Pagination {...request.paging} />{dialog && <ManagerActionForm {...dialog} onClose={() => setDialog(null)} />}</section>;
 }
