@@ -1,5 +1,6 @@
 import { postRenter } from '../../renter/api/renterApi';
-import { Otp } from '../../renter/components/Controls';
+import EmailOtp from './EmailOtp';
+import { postApi } from '../../../services/httpClient';
 import '../../renter/styles/renter.css';
 import React, { useState } from 'react';
 import './LoginPage.css';
@@ -7,6 +8,9 @@ import useLogin from '../hooks/useLogin';
 
 const LoginPage = () => {
   const [registrationOtp,setRegistrationOtp]=useState({});
+  const [resetOtp, setResetOtp] = useState({});
+  const [resetData, setResetData] = useState({ email: '', password: '', confirm_password: '' });
+  const [resetBusy, setResetBusy] = useState(false);
   const [registerBusy,setRegisterBusy]=useState(false);
   const [authTab, setAuthTab] = useState('login'); // 'login' | 'register'
   const [userRole, setUserRole] = useState('renter'); // 'renter' | 'host'
@@ -15,7 +19,6 @@ const LoginPage = () => {
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [formStatus, setFormStatus] = useState('');
   const [statusType, setStatusType] = useState('info'); // 'info' | 'success' | 'error'
-
   // Form states
   const [loginData, setLoginData] = useState({
     account: '',
@@ -56,9 +59,24 @@ const LoginPage = () => {
     if(userRole!=='renter'){setStatusType('error');setFormStatus('Đăng ký chủ xe chưa thuộc phạm vi chức năng renter.');return;}
     setRegisterBusy(true);setFormStatus('');
     try {
+      if (!registrationOtp.challenge_id || !/^\d{6}$/.test(registrationOtp.otp || '')) throw new Error('Vui lòng gửi và nhập mã OTP email gồm 6 số.');
       await postRenter('/register',{full_name:registerData.fullName,email:registerData.email,phone:registerData.phone,password:registerData.password,confirm_password:registerData.confirmPassword,agree_terms:registerData.agreeTerms,...registrationOtp});
       setStatusType('success');setFormStatus('Đăng ký thành công. Bạn có thể đăng nhập bằng tài khoản vừa tạo.');setAuthTab('login');
     }catch(error){setStatusType('error');setFormStatus(error.message);}finally{setRegisterBusy(false);}
+  };
+
+  const handleReset = async event => {
+    event.preventDefault();
+    if (resetBusy) return;
+    setResetBusy(true); setFormStatus('');
+    try {
+      if (!resetOtp.challenge_id || !/^\d{6}$/.test(resetOtp.otp || '')) throw new Error('Vui lòng gửi và nhập mã OTP email gồm 6 số.');
+      const result = await postApi('/auth/reset-password', { ...resetData, ...resetOtp });
+      setStatusType('success'); setFormStatus(result.data.message);
+      setLoginData(prev => ({ ...prev, account: resetData.email, password: '' }));
+      setResetData({ email: '', password: '', confirm_password: '' }); setResetOtp({}); setAuthTab('login');
+    } catch (error) { setStatusType('error'); setFormStatus(error.message); }
+    finally { setResetBusy(false); }
   };
 
   return (
@@ -329,7 +347,8 @@ const LoginPage = () => {
                     </label>
                     <a
                       className="text-body-sm font-body-sm font-medium text-primary-container hover:underline"
-                      href="#/login/forgot-password"
+                      href="#/login"
+                      onClick={event => { event.preventDefault(); setAuthTab('forgot'); setFormStatus(''); }}
                     >
                       Quên mật khẩu?
                     </a>
@@ -437,6 +456,17 @@ const LoginPage = () => {
           )}
 
           {/* ======================= 2. REGISTER FORM PANEL ======================= */}
+          {authTab === 'forgot' && <form onSubmit={handleReset} className="space-y-5">
+            <h2 className="text-headline-md">Quên mật khẩu</h2>
+            <p>Nhập email đã đăng ký để nhận mã OTP và tạo mật khẩu mới.</p>
+            <label className="renter-field">Email đã đăng ký<input type="email" required autoComplete="email" value={resetData.email} onChange={e => setResetData(prev => ({ ...prev, email: e.target.value }))} /></label>
+            <EmailOtp email={resetData.email} reset onChange={setResetOtp} />
+            <label className="renter-field">Mật khẩu mới<input type="password" required minLength={8} maxLength={32} autoComplete="new-password" value={resetData.password} onChange={e => setResetData(prev => ({ ...prev, password: e.target.value }))} /></label>
+            <label className="renter-field">Xác nhận mật khẩu mới<input type="password" required minLength={8} maxLength={32} autoComplete="new-password" value={resetData.confirm_password} onChange={e => setResetData(prev => ({ ...prev, confirm_password: e.target.value }))} /></label>
+            <p>Mật khẩu 8–32 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt @$!%*?&.</p>
+            <button className="w-full py-3 bg-primary-container text-on-primary rounded-xl" disabled={resetBusy || !resetOtp.challenge_id} type="submit">{resetBusy ? 'Đang cập nhật...' : 'Đặt lại mật khẩu'}</button>
+            <button type="button" onClick={() => { setAuthTab('login'); setFormStatus(''); }}>Quay về đăng nhập</button>
+          </form>}
           {authTab === 'register' && (
             <div className="transition-all duration-300">
               <div className="mb-6">
@@ -543,7 +573,6 @@ const LoginPage = () => {
               </div>
 
               <form className="space-y-3.5" onSubmit={handleRegisterSubmit}>
-                {userRole==='renter' && <Otp registration target={{email:registerData.email,phone:registerData.phone}} onChange={setRegistrationOtp} />}
                 {registerBusy && <p role="status">Đang tạo tài khoản...</p>}
                 {/* Full Name */}
                 <div>
@@ -596,12 +625,6 @@ const LoginPage = () => {
                       type="tel"
                       required
                     />
-                    <button
-                      className="absolute right-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-headline-sm text-body-sm transition-colors"
-                      type="button"
-                    >
-                      Gửi OTP
-                    </button>
                   </div>
                 </div>
 
@@ -613,7 +636,8 @@ const LoginPage = () => {
                   >
                     Địa chỉ Email
                   </label>
-                  <div className="relative rounded-xl border border-outline-variant/60 focus-within:border-primary-container focus-within:ring-2 focus-within:ring-primary-container/20 transition-all bg-surface-container-lowest">
+                  <EmailOtp email={registerData.email} onChange={setRegistrationOtp}>
+                  <div className="relative flex-1 min-w-0">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-secondary">
                       <span className="material-symbols-outlined" data-icon="mail">
                         mail
@@ -630,6 +654,7 @@ const LoginPage = () => {
                       required
                     />
                   </div>
+                  </EmailOtp>
                 </div>
 
                 {/* Password Fields */}
@@ -734,6 +759,7 @@ const LoginPage = () => {
 
                 {/* Register Submit Button */}
                 <button
+                  disabled={registerBusy || !registrationOtp.challenge_id}
                   className="w-full mt-2 py-3 px-4 bg-primary-container hover:bg-primary text-on-primary font-headline-sm text-body-lg rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] flex items-center justify-center space-x-2"
                   type="submit"
                 >
@@ -746,47 +772,6 @@ const LoginPage = () => {
             </div>
           )}
 
-          {/* ======================= SOCIAL LOGINS & INTEGRATIONS ======================= */}
-          <div className="mt-8">
-            <div className="relative flex items-center justify-center">
-              <div className="border-t border-outline-variant/40 w-full"></div>
-              <div className="bg-surface-container-lowest px-4 text-body-sm font-body-sm text-secondary uppercase tracking-wider relative whitespace-nowrap">
-                Hoặc tiếp tục với
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-center">
-              {/* Google Social Login */}
-              <button
-                className="flex items-center justify-center space-x-2.5 px-4 py-2.5 border border-outline-variant/70 hover:border-outline hover:bg-surface-container-low/50 rounded-xl transition-all duration-150 active:scale-95 bg-surface-container-lowest text-on-surface"
-                type="button"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    fill="#4285F4"
-                  ></path>
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  ></path>
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    fill="#FBBC05"
-                  ></path>
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    fill="#EA4335"
-                  ></path>
-                </svg>
-                <span className="text-body-md font-headline-sm font-medium text-on-surface">
-                  Google
-                </span>
-              </button>
-
-
-            </div>
-          </div>
         </div>
 
         {/* Footer Compliance, Trust & Security Badges */}

@@ -4,13 +4,29 @@ import { getCurrentUser, getSessionToken } from '../auth/session';
 import Pagination from '../../components/ui/Pagination';
 import './contracts.css';
 import ManagementContractPaper from './ManagementContractPaper';
+import RentalContractPaper from './RentalContractPaper';
 
 export const contractStatus = { draft: 'Chờ lập nội dung', awaiting_signature: 'Chờ lập nội dung ký', pending_signatures: 'Chờ chữ ký các bên', pending_signature: 'Chờ lập nội dung ký', signed: 'Đã ký đủ', active: 'Có hiệu lực', terminated: 'Đã chấm dứt', expired: 'Hết hạn', cancelled: 'Đã hủy' };
+function RentalSigningProgress({ agreement, onOpenBooking }) {
+  const unavailable = ['cancelled', 'rejected', 'expired'].includes(agreement.bookingStatus) || agreement.signingExpired;
+  const renterSigned = Boolean(agreement.partySignedAt || agreement.signature?.renter_confirmed);
+  const platformSigned = Boolean(agreement.platformSignedAt || agreement.signature?.platform_signer_user_id);
+  const stage = !agreement.document ? 1 : !renterSigned ? 2 : !platformSigned ? 3 : 4;
+  const steps = ['Tạo hồ sơ thuê', 'XeDi duyệt & lập nội dung', 'Khách thuê ký', 'XeDi ký', 'Thanh toán'];
+  return <section className="renter-contract-progress" aria-label="Trình tự hợp đồng thuê xe">
+    <h3>Trình tự hợp đồng</h3><ol>{steps.map((label, index) => <li key={label} aria-current={!unavailable && index === stage ? 'step' : undefined} data-completed={index < stage}>{label}</li>)}</ol>
+    <p role="status">{unavailable ? 'Chuyến thuê đã kết thúc, bị từ chối hoặc hết thời hạn ký. Bạn vẫn có thể xem hồ sơ.' : !agreement.document ? 'Đã tạo hồ sơ. Đang chờ XeDi duyệt chuyến và lập nội dung trình ký.' : !renterSigned ? 'Nội dung đã sẵn sàng. Đọc hợp đồng, nhập họ tên và xác nhận ký bên dưới.' : !platformSigned ? 'Đã ghi nhận chữ ký của bạn. Đang chờ đại diện XeDi ký.' : 'Hai bên đã ký. Bạn có thể mở chuyến thuê để tiếp tục thanh toán.'}</p>
+    {agreement.bookingId && <a className="contract-button contract-button--secondary" href={`#/renter/bookings/${agreement.bookingId}`} onClick={onOpenBooking}>Mở chuyến thuê & thanh toán</a>}
+  </section>;
+}
 const time = (value) => value ? new Date(value).toLocaleString('vi-VN') : 'Chưa ký';
 const statusTone = (status) => ['active', 'signed'].includes(status) ? 'success' : ['terminated', 'expired', 'cancelled'].includes(status) ? 'muted' : 'pending';
 const signatureState = (name, signedAt) => signedAt ? { title: 'Đã ký', name: name || 'Đã xác nhận', date: time(signedAt) } : { title: 'Chờ ký', name: 'Chưa ghi nhận chữ ký', date: 'Đang chờ xác nhận' };
 
 export function ContractContent({ agreement }) {
+  if (agreement.type === 'rental' && agreement.document) {
+    return <div className="contract-content"><RentalContractPaper agreement={agreement} /></div>;
+  }
   if (agreement.type === 'management' && agreement.document?.articles?.length) {
     return <div className="contract-content"><ManagementContractPaper agreement={agreement} /></div>;
   }
@@ -23,6 +39,9 @@ export function ContractContent({ agreement }) {
       <div className="contract-facts"><h3>Thông tin chính</h3><dl>{(agreement.document.facts || []).map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></div>
       <div className="contract-terms"><h3>Điều khoản hợp đồng</h3><ol>{(agreement.document.clauses || []).map((clause, index) => <li key={`${index}-${clause}`}><span className="contract-clause-number">{String(index + 1).padStart(2, '0')}</span><span>{clause}</span></li>)}</ol></div>
       <p className="contract-document-meta">Phiên bản {agreement.document.version} <span>·</span> Lập lúc {time(agreement.document.prepared_at)}</p>
+    </> : agreement.type === 'rental' && !['signed', 'active', 'terminated', 'expired', 'cancelled'].includes(agreement.status) ? <>
+      <p>Thông tin hồ sơ thuê xe đã được lưu. Đây là bản tóm tắt trước trình ký; XeDi sẽ lập nội dung hợp đồng để bạn đọc và xác nhận.</p>
+      <div className="contract-facts"><h3>Thông tin thuê xe</h3><dl>{(agreement.previewFacts || []).map(fact => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></div>
     </> : <p>Hồ sơ này chưa có bản nội dung để ký trực tuyến. Với hợp đồng cũ đã ký giấy, giữ hồ sơ hiện có; không ký lại hoặc tự đổi nội dung.</p>}
     <div className="contract-signatures"><h3>Trạng thái chữ ký</h3>
       {[{ label: partyLabel, ...partySignature }, { label: 'Đại diện XeDi', ...platformSignature }].map((signature) => <div className="contract-signature" key={signature.label}><span className={`contract-signature-check ${signature.title === 'Đã ký' ? 'is-signed' : ''}`}>{signature.title === 'Đã ký' ? '✓' : '·'}</span><div><strong>{signature.label}</strong><span>{signature.name}</span><small>{signature.date}</small></div><b>{signature.title}</b></div>)}
@@ -43,6 +62,18 @@ export function SigningDialog({ item, view, onClose, onSigned }) {
     return () => controller.abort();
   }, [item.type, item.id, view]);
   useEffect(() => {
+    if (item.type !== 'rental' || busy) return undefined;
+    const controller = new AbortController();
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      getApi(`/contracts/${item.type}/${item.id}?view=${view}`, { signal: controller.signal })
+        .then(result => { if (!controller.signal.aborted) setAgreement(result.data); })
+        .catch(reason => { if (!controller.signal.aborted) setError(reason.message); });
+    }, 15000);
+    return () => { clearInterval(timer); controller.abort(); };
+  }, [item.type, item.id, view, busy]);
+  useEffect(() => { setAccepted(false); }, [agreement?.document?.hash]);
+  useEffect(() => {
     const key = (event) => { if (event.key === 'Escape' && !busy) onClose(); };
     document.addEventListener('keydown', key);
     return () => document.removeEventListener('keydown', key);
@@ -57,9 +88,10 @@ export function SigningDialog({ item, view, onClose, onSigned }) {
     finally { setBusy(false); }
   }
   return <div className="contract-backdrop"><section role="dialog" aria-modal="true" aria-label="Nội dung và ký hợp đồng" className="contract-dialog">
-    <div className="contract-dialog-header"><div><span className="contract-eyebrow">XEDI · KÝ KẾT ĐIỆN TỬ</span><h2>Rà soát hợp đồng</h2><p>Đọc kỹ nội dung trước khi xác nhận.</p></div><div className="contract-toolbar">{!agreement?.document?.articles?.length && <button className="contract-button contract-button--secondary" onClick={() => window.print()} disabled={!agreement}>In / lưu PDF</button>}<button className="contract-close" onClick={onClose} disabled={busy} autoFocus aria-label="Đóng cửa sổ">×</button></div></div>
+    <div className="contract-dialog-header"><div><span className="contract-eyebrow">XEDI · KÝ KẾT ĐIỆN TỬ</span><h2>Rà soát hợp đồng</h2><p>Đọc kỹ nội dung trước khi xác nhận.</p></div><div className="contract-toolbar">{!(agreement?.type === 'rental' && agreement?.document) && !agreement?.document?.articles?.length && <button className="contract-button contract-button--secondary" onClick={() => window.print()} disabled={!agreement}>In / lưu PDF</button>}<button className="contract-close" onClick={onClose} disabled={busy} autoFocus aria-label="Đóng cửa sổ">×</button></div></div>
     {error && <p className="contract-alert" role="alert">{error}</p>}
     {!agreement ? <div className="contract-loading" role="status"><span className="contract-spinner" />Đang tải nội dung hợp đồng…</div> : <>
+      {agreement.type === 'rental' && <RentalSigningProgress agreement={agreement} onOpenBooking={onClose} />}
       <ContractContent agreement={agreement} />
       {agreement.canSign ? <form onSubmit={sign} className="contract-sign-form">
         <label>Họ tên người ký<input required minLength={2} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} disabled={busy} /></label>

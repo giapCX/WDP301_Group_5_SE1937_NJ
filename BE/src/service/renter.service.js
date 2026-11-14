@@ -58,6 +58,7 @@ export function cancellationDecision(booking, policy, now = new Date()) {
   };
 }
 export function createRenterService(repo, {
+  emailOtp,
   demo = process.env.RENTER_DEMO_SERVICES === 'true' && process.env.NODE_ENV !== 'production'
 } = {}) {
   let ready;
@@ -195,7 +196,8 @@ export function createRenterService(repo, {
         full_name = text(body.full_name, 2, 100, 'Họ tên');
       if (!/^[\p{L}\s]+$/u.test(full_name)) throw httpError(400, 'Họ tên chỉ chứa chữ và khoảng trắng.');
       if (typeof body.password !== 'string' || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,32}$/.test(body.password) || body.password !== body.confirm_password || body.agree_terms !== true) throw httpError(400, 'Mật khẩu 8–32 ký tự gồm hoa, thường, số, ký tự đặc biệt; xác nhận mật khẩu và đồng ý điều khoản.');
-      const consume = await challengeCheck(null, body, 'register', contactTarget(c));
+      if (!emailOtp) throw httpError(503, 'Chưa cấu hình dịch vụ OTP email đăng ký.');
+      const consume = await emailOtp.verify(body, 'register');
       const password_hash = await bcrypt.hash(body.password, 12);
       return repo.transaction(async session => {
         await consume(session);
@@ -216,6 +218,7 @@ export function createRenterService(repo, {
         const user = await repo.insert('users', {
           _id: new Types.ObjectId(),
           ...c,
+          email_verified_at: new Date(),
           full_name,
           password_hash,
           primary_role_id: role._id,

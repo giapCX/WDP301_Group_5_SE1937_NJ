@@ -112,7 +112,7 @@ export function createAuthService(repository) {
         let isPasswordValid = false;
         if (user.password_hash) {
           isPasswordValid = await bcrypt.compare(password, user.password_hash);
-        } else {
+        } else if (!user.google_only) {
         // Seeded mock users have password_hash: null in MongoDB
           if (ALLOWED_DEFAULT_PASSWORDS.has(password)) {
             isPasswordValid = true;

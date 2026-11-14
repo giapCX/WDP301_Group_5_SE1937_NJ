@@ -48,8 +48,8 @@ export function createApp(database, options = {}) {
       response.status(503).json({ status: 'unavailable' });
     }
   });
-  app.use('/api/renter', createRenterRouter(database));
-  app.use('/api/auth', createAuthRouter(database));
+  app.use('/api/renter', createRenterRouter(database, { sendEmail: options.sendEmail }));
+  app.use('/api/auth', createAuthRouter(database, { sendEmail: options.sendEmail }));
   app.use('/api/identity-verifications', createIdentityVerificationRouter(database, privateFileRepository));
   app.use('/api/listings', createListingsRouter(database, options.ownerFileRepository || privateFileRepository));
   app.use('/api/homepage', createHomepageRouter(database));

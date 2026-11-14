@@ -97,9 +97,20 @@ export function createContractService(repository) {
     const signingOpen = type !== 'rental' || (ctx.booking.status === 'awaiting_payment' && ctx.booking.start_at > new Date() && !isBookingHoldExpired(ctx.booking));
     return {
       id: String(row._id), type, number: row.agreement_number || row.contract_number, status: row.status,
+      ...(type === 'rental' ? { bookingId: String(ctx.booking._id), bookingCode: ctx.booking.booking_code, bookingStatus: ctx.booking.status, startDate: ctx.booking.start_at, endDate: ctx.booking.end_at, rentalFee: ctx.booking.rental_fee_amount, depositAmount: ctx.booking.deposit_amount_snapshot } : {}),
       vehicle: `${ctx.vehicle.brand || ''} ${ctx.vehicle.model || ''} · ${ctx.vehicle.license_plate}`,
-      commissionRatePct: row.commission_rate_pct, startDate: row.start_date, endDate: row.end_date,
+      commissionRatePct: row.commission_rate_pct, ...(type === 'management' ? { startDate: row.start_date, endDate: row.end_date } : {}),
       signature, document: row.contract_document || null, terms: row.contract_document?.clauses || [],
+      ...(type === 'rental' ? { signingExpired: ['pending', 'awaiting_payment'].includes(ctx.booking.status) && isBookingHoldExpired(ctx.booking) } : {}),
+      ...(type === 'rental' && !row.contract_document ? { previewFacts: [
+        { label: 'Khách thuê', value: row.renter_details_snapshot?.full_name || 'Theo hồ sơ đã xác minh' },
+        { label: 'Mã chuyến thuê', value: ctx.booking.booking_code },
+        { label: 'Phương tiện', value: `${ctx.vehicle.brand || ''} ${ctx.vehicle.model || ''} · ${ctx.vehicle.license_plate}` },
+        { label: 'Nhận xe', value: date(row.terms_snapshot?.start_at || ctx.booking.start_at) },
+        { label: 'Trả xe', value: date(row.terms_snapshot?.end_at || ctx.booking.end_at) },
+        { label: 'Tiền thuê', value: money(row.terms_snapshot?.rental_fee_amount ?? ctx.booking.rental_fee_amount) },
+        { label: 'Tiền cọc', value: money(row.terms_snapshot?.deposit_amount ?? ctx.booking.deposit_amount_snapshot) },
+      ] } : {}),
       partySignedAt: partyAt || null, platformSignedAt: platformAt || null,
       partyName: signature.owner_signature_name || signature.renter_signature_name || '', platformName: signature.platform_signature_name || '',
       canSign: Boolean(signingOpen && row.contract_document && row.status === 'pending_signatures' && (mode === 'party' ? !partyDone : actor.roles.includes('MANAGER') && !platformDone)),

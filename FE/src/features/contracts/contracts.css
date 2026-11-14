@@ -189,3 +189,4 @@
 
   .contract-signature b { font-size: 9px; }
 }
+.renter-contract-progress{padding:18px 24px;background:#f2f7f4;border-bottom:1px solid #dce5e0}.renter-contract-progress h3{font-weight:700;margin-bottom:10px}.renter-contract-progress ol{display:flex;gap:8px;flex-wrap:wrap;list-style:none;padding:0}.renter-contract-progress li{border:1px solid #cbdad3;border-radius:8px;padding:7px 10px;font-size:13px}.renter-contract-progress li[aria-current=step]{background:#176344;color:white}.renter-contract-progress li[data-completed=true]{color:#176344;background:#e1efe5}.renter-contract-progress p{margin:12px 0;line-height:1.6}
