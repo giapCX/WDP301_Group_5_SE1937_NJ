@@ -1,4 +1,11 @@
-const dateFields = ['ownerNotifiedAt', 'insurerNotifiedAt'];
+export const incidentMilestones = [
+  ['policeSubmittedAt', 'Đã nộp hồ sơ công an lúc'],
+  ['vehicleReleasedAt', 'Đã nhận lại xe từ nơi tạm giữ lúc'],
+  ['insuranceAssessedAt', 'Đã giám định bảo hiểm lúc'],
+  ['repairCompletedAt', 'Đã hoàn tất sửa chữa lúc'],
+  ['vehicleReturnedToOwnerAt', 'Đã bàn giao lại xe cho chủ lúc'],
+];
+const dateFields = ['ownerNotifiedAt', 'insurerNotifiedAt', ...incidentMilestones.map(([key]) => key)];
 const fields = [
   ['driverName', 'Người lái thực tế', 120],
   ['ownerNotifiedAt', 'Đã thông báo chủ xe lúc'],
@@ -10,6 +17,9 @@ const fields = [
   ['detentionProgress', 'Hồ sơ tạm giữ, người nhận xe và tình trạng nhận lại xe', 1000],
   ['insuranceProgress', 'Khai báo bảo hiểm, giám định và kết quả xử lý', 1000],
   ['repairProgress', 'Tiến độ sửa chữa và bàn giao lại xe', 1000],
+  ['vehicleRecipient', 'Người nhận lại xe từ nơi tạm giữ', 120],
+  ['releaseAuthorizationReference', 'Số giấy ủy quyền nhận xe hoặc tài liệu liên quan', 250],
+  ...incidentMilestones,
 ];
 
 export function readIncidentResponse(form) {

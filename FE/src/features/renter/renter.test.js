@@ -56,7 +56,7 @@ test('renter workspace requests login without showing fabricated history', () =>
   expect(global.fetch).not.toHaveBeenCalled();
   expect(screen.queryByText('BK-API-ONLY')).not.toBeInTheDocument();
 });
-test('renter homepage shows live trip totals and links to the public catalog without loading listings', async () => {
+test('renter homepage displays published vehicles and searches the catalog in place', async () => {
   window.history.replaceState(null, '', '/#/renter');
   localStorage.setItem('xedi_token', 'renter-token');
   global.fetch.mockImplementation(async url => {
@@ -64,18 +64,23 @@ test('renter homepage shows live trip totals and links to the public catalog wit
     if (url === '/api/renter/profile') return reply({ data: { full_name: 'Khách Thuê', identity_kyc: { status: 'verified' } } });
     if (url.startsWith('/api/renter/bookings')) return reply({ data: [], pagination: { total: url.includes('status=active') ? 4 : 2, totalPages: 1 } });
     if (url === '/api/renter/incidents') return reply({ data: [] });
+    if (url.startsWith('/api/listings?')) return reply({ data: [{
+      _id: '0123456789abcdef01234567', title: 'Toyota Vios', photos: [], daily_price: 500000,
+      vehicle: { brand: 'Toyota', model: 'Vios', manufacture_year: 2022 },
+      pickup_location: { city: 'Hà Nội' },
+    }], pagination: { total: 1 } });
     throw new Error('Unexpected API: ' + url);
   });
   render(<RenterPage />);
   expect(screen.getByRole('heading', { name: 'Trang chủ khách thuê', level: 1 })).toBeInTheDocument();
-  await screen.findByText('Chào Khách Thuê!');
-  expect(screen.getByText('4')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Tìm xe thuê' })).toHaveAttribute('href', '/#xe-noi-bat');
+  await screen.findByRole('button', { name: 'Xem Toyota Vios' });
+  expect(await screen.findByText('4')).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Tên hoặc hãng xe'), { target: { value: 'Toyota' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Tìm xe', exact: true }));
+  await waitFor(() => expect(global.fetch.mock.calls.some(([url]) => url.startsWith('/api/listings?') && url.includes('q=Toyota'))).toBe(true));
   expect(screen.getByRole('link', { name: 'Hồ sơ cá nhân' })).toHaveAttribute('href', '#/renter/profile');
   expect(screen.getByRole('link', { name: 'Chuyến đi & thanh toán' })).toHaveAttribute('href', '#/renter/bookings');
   expect(screen.getByRole('link', { name: 'Sự cố đã báo cáo' })).toHaveAttribute('href', '#/renter/incidents');
-  expect(screen.queryByRole('button', { name: 'Tìm xe phù hợp' })).not.toBeInTheDocument();
-  expect(global.fetch.mock.calls.some(([url]) => url.startsWith('/api/listings'))).toBe(false);
   expect(screen.queryByText('Trở thành chủ xe')).not.toBeInTheDocument();
 });
 test('booking workspace displays stored policy and blocks unconfigured payment', async () => {

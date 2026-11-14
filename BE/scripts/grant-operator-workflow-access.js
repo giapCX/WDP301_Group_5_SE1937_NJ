@@ -1,13 +1,11 @@
 import { connectDatabase, closeDatabase } from '../src/config/database.js';
 import { getModels } from '../src/models/index.js';
-
-const permissions = [
-  'operation.vehicle.inspection.review',
-  'operation.identity_verification.read',
-  'operation.identity_verification.precheck',
-];
+import { readFile } from 'node:fs/promises';
 
 try {
+  const roles = JSON.parse(await readFile(new URL('../data/roles.json', import.meta.url), 'utf8'));
+  const permissions = roles.find((role) => role.code === 'OPERATION_STAFF')?.permissions;
+  if (!permissions?.length) throw new Error('Operator permissions are missing from roles.json.');
   const connection = await connectDatabase();
   const { Role } = getModels(connection);
   const result = await Role.updateOne(

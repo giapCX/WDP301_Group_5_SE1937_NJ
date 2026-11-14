@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import ContractsPage from '../../contracts/ContractsPage';
 import IncidentRentalContext from '../components/IncidentRentalContext';
+import IncidentPrintSummary from '../components/IncidentPrintSummary';
 import IncidentResponseFields, { readIncidentResponse } from '../components/IncidentResponseFields';
 import Icon from '../../../components/Icon';
 import { Brand } from '../../../components/SiteHeader';
@@ -963,6 +964,7 @@ export default function OperatorPage({ initialSection } = {}) {
         )}>Tiếp nhận sự cố</button>}
         <p><strong>Tạm giữ xe:</strong> {selectedIncident.vehicleSeized === true ? 'Có' : selectedIncident.vehicleSeized === false ? 'Không' : 'Chưa ghi nhận'}</p>
         <IncidentRentalContext key={selectedIncident.id} context={selectedIncident.rentalContext} />
+        <IncidentPrintSummary incident={selectedIncident} />
         <form className="operator-form operator-form-single" onSubmit={saveIncidentChanges}>
           <label>Mô tả<textarea name="description" required maxLength={3000} rows="4" defaultValue={selectedIncident.description} disabled={!canEditSelectedIncident} /></label>
           {canEditSelectedIncident && <>

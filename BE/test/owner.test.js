@@ -137,6 +137,13 @@ test('owner payout, withdrawal and incident requests are scoped to the owner acc
   const received = await request(`${path}/receive`, 'POST', {}, operatorToken);
   assert.equal(received.status, 200, JSON.stringify(received));
   assert.equal(received.body.data.status, 'investigating');
+  const milestone = new Date(Date.now() - 60000).toISOString();
+  assert.equal((await request(path, 'PATCH', { responseChecklist: {
+    policeSubmittedAt: milestone, vehicleRecipient: 'Chủ xe', releaseAuthorizationReference: 'HS-01',
+  } }, operatorToken)).status, 200);
+  const updatedDetails = await request(path, 'GET', undefined, operatorToken);
+  assert.equal(updatedDetails.body.data.responseChecklist.policeSubmittedAt, milestone);
+  assert.equal(updatedDetails.body.data.responseChecklist.releaseAuthorizationReference, 'HS-01');
   assert.equal((await request(`${path}/receive`, 'POST', {}, operatorToken)).body.data.operatorReceivedAt, received.body.data.operatorReceivedAt);
   const dashboard = await request('/owner/dashboard');
   assert.equal(dashboard.body.data.incidents.find((item) => item.id === incident.body.data.id).status, 'investigating');

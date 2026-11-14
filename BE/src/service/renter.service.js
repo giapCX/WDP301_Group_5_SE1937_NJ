@@ -257,6 +257,17 @@ export function createRenterService(repo, {
       const consume = changed ? await challengeCheck(user, body, 'profile', contactTarget(c, user)) : null;
       const avatarChanged = body.avatar_key && body.avatar_key !== user.contact_profile?.avatar_key;
       if (avatarChanged) await files(user, [body.avatar_key], 'avatar');
+      if (!changed) {
+        await repo.update('users', { _id: user._id }, { $set: {
+          full_name,
+          'contact_profile.address': address,
+          'contact_profile.city': city,
+          ...(avatarChanged && { 'contact_profile.avatar_key': body.avatar_key }),
+          updated_at: new Date(),
+        } });
+        await audit(user, 'renter.profile.update', 'user', user._id);
+        return this.profile(user);
+      }
       await repo.transaction(async session => {
         await repo.update('users', {
           _id: user._id

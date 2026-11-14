@@ -123,8 +123,10 @@ export function parseIncidentUpdate(body) {
   if (body.responseChecklist !== undefined) {
     const checklist = body.responseChecklist;
     const limits = { driverName: 120, policeReference: 120, insurerReference: 120, missingDocuments: 1000,
+      vehicleRecipient: 120, releaseAuthorizationReference: 250,
       fieldResponder: 120, driverVerification: 1000, detentionProgress: 1000, insuranceProgress: 1000, repairProgress: 1000 };
-    const dates = ['ownerNotifiedAt', 'insurerNotifiedAt'];
+    const dates = ['ownerNotifiedAt', 'insurerNotifiedAt', 'policeSubmittedAt', 'vehicleReleasedAt',
+      'insuranceAssessedAt', 'repairCompletedAt', 'vehicleReturnedToOwnerAt'];
     objectBody(checklist, [...Object.keys(limits), ...dates, 'injuryStatus']);
     for (const [key, max] of Object.entries(limits)) {
       if (checklist[key] !== undefined) update[`response_checklist.${key}`] = text(checklist[key], key, { max });
@@ -133,7 +135,7 @@ export function parseIncidentUpdate(body) {
       if (checklist[key] === undefined) continue;
       const value = checklist[key];
       if (value !== null && (typeof value !== 'string' || !Number.isFinite(Date.parse(value)) || Date.parse(value) > Date.now())) {
-        throw httpError(400, 'Thời điểm thông báo phải hợp lệ và không ở tương lai.');
+        throw httpError(400, 'Thời điểm xử lý phải hợp lệ và không ở tương lai.');
       }
       update[`response_checklist.${key}`] = value === null ? null : new Date(value);
     }

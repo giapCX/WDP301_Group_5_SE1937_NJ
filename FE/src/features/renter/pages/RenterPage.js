@@ -15,10 +15,6 @@ export default function RenterPage() {
     [retry, setRetry] = useState(0);
   useEffect(() => {
     const change = () => {
-      if (/^#\/renter\/cars\/?$/.test(window.location.hash)) {
-        window.location.replace('/#xe-noi-bat');
-        return;
-      }
       setRoute(window.location.hash);
       setPage(1);
     };

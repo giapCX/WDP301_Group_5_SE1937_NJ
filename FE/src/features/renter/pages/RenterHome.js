@@ -1,14 +1,11 @@
 import { statusName, dateTime } from '../api/renterApi';
 import useRenterSummary from '../hooks/useRenterSummary';
+import RenterVehicleSearch from '../components/RenterVehicleSearch';
 
 export default function RenterHome() {
   const { summary, error: summaryError } = useRenterSummary();
   return <div className="renter-stack">
-    <section className="renter-welcome">
-      <span>HÀNH TRÌNH CỦA BẠN BẮT ĐẦU TẠI ĐÂY</span>
-      <h2>{summary ? `Chào ${summary.profile.full_name}!` : 'Chào mừng bạn đến với XeDi'}</h2>
-      <p>Quản lý chuyến đi, hợp đồng và thanh toán trong không gian của bạn.</p>
-    </section>
+    <RenterVehicleSearch />
     {summaryError && <p role="alert" className="renter-error">{summaryError}</p>}
     <div className="renter-shortcuts">
       <a className="renter-card" href="#/renter/bookings"><span>CHUYẾN ĐI CỦA TÔI</span><strong>{summary ? summary.active.pagination.total : '—'}</strong><p>Chuyến đã xác nhận hoặc đang thuê</p><b>Xem chuyến đi →</b></a>

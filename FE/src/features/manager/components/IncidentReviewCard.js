@@ -2,6 +2,7 @@ import { useState } from 'react';
 import IncidentConditionComparison from './IncidentConditionComparison';
 import GaragePhotoPreview from '../../garage/components/GaragePhotoPreview';
 import { getBlobApi } from '../../../services/httpClient';
+import { incidentMilestones } from '../../operator/components/IncidentResponseFields';
 
 const money = (value) => new Intl.NumberFormat('vi-VN').format(value || 0);
 const expenseTypes = { assessment: 'Giám định', repair: 'Sửa chữa', deductible: 'Miễn thường', towing: 'Cứu hộ', other: 'Khác' };
@@ -74,6 +75,11 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
       <dt>Tạm giữ và nhận lại xe</dt><dd>{checklist.detentionProgress || 'Chưa ghi nhận'}</dd>
       <dt>Bảo hiểm và giám định</dt><dd>{checklist.insuranceProgress || 'Chưa ghi nhận'}</dd>
       <dt>Sửa chữa và bàn giao lại</dt><dd>{checklist.repairProgress || 'Chưa ghi nhận'}</dd>
+      <dt>Người nhận lại xe</dt><dd>{checklist.vehicleRecipient || 'Chưa ghi nhận'}</dd>
+      <dt>Giấy ủy quyền hoặc tài liệu liên quan</dt><dd>{checklist.releaseAuthorizationReference || 'Chưa ghi nhận'}</dd>
+      {incidentMilestones.filter(([key]) => checklist[key]).map(([key, label]) => <div key={key}>
+        <dt>{label}</dt><dd>{notificationTime(checklist[key])}</dd>
+      </div>)}
     </dl>
   </details>;
   if (item.caseType === 'traffic_violation') return <article className="incident-card">
