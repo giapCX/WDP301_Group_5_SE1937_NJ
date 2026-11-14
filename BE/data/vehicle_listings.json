@@ -12,8 +12,7 @@
     "title": "Toyota Vios - xe tự lái",
     "description": "Xe Toyota Vios, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-01/cover.jpg",
-      "demo/listings/vehicle-01/interior.jpg"
+      "/images/demo-vehicles/toyota-vios.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hà Nội",
@@ -53,8 +52,7 @@
     "title": "Hyundai Accent - xe tự lái",
     "description": "Xe Hyundai Accent, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-02/cover.jpg",
-      "demo/listings/vehicle-02/interior.jpg"
+      "/images/demo-vehicles/hyundai-accent.webp"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hải Phòng",
@@ -94,8 +92,7 @@
     "title": "Kia Seltos - xe tự lái",
     "description": "Xe Kia Seltos, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-03/cover.jpg",
-      "demo/listings/vehicle-03/interior.jpg"
+      "/images/demo-vehicles/kia-seltos.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hà Nội",
@@ -135,8 +132,7 @@
     "title": "Mazda CX-5 - xe tự lái",
     "description": "Xe Mazda CX-5, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-04/cover.jpg",
-      "demo/listings/vehicle-04/interior.jpg"
+      "/images/demo-vehicles/mazda-cx-5.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hải Phòng",
@@ -176,8 +172,7 @@
     "title": "VinFast VF 5 - xe tự lái",
     "description": "Xe VinFast VF 5, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-05/cover.jpg",
-      "demo/listings/vehicle-05/interior.jpg"
+      "/images/demo-vehicles/vinfast-vf-5.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hà Nội",
@@ -217,8 +212,7 @@
     "title": "Honda City - xe tự lái",
     "description": "Xe Honda City, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-06/cover.jpg",
-      "demo/listings/vehicle-06/interior.jpg"
+      "/images/demo-vehicles/honda-city.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hải Phòng",
@@ -258,8 +252,7 @@
     "title": "Mitsubishi Xpander - xe tự lái",
     "description": "Xe Mitsubishi Xpander, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-07/cover.jpg",
-      "demo/listings/vehicle-07/interior.jpg"
+      "/images/demo-vehicles/mitsubishi-xpander.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hà Nội",
@@ -299,8 +292,7 @@
     "title": "Toyota Innova - xe tự lái",
     "description": "Xe Toyota Innova, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-08/cover.jpg",
-      "demo/listings/vehicle-08/interior.jpg"
+      "/images/demo-vehicles/toyota-innova.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hải Phòng",
@@ -350,8 +342,7 @@
     "title": "Ford Territory - xe tự lái",
     "description": "Xe Ford Territory, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-09/cover.jpg",
-      "demo/listings/vehicle-09/interior.jpg"
+      "/images/demo-vehicles/ford-territory.webp"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hà Nội",
@@ -401,8 +392,7 @@
     "title": "Kia Sonet - xe tự lái",
     "description": "Xe Kia Sonet, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-10/cover.jpg",
-      "demo/listings/vehicle-10/interior.jpg"
+      "/images/demo-vehicles/kia-sonet.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hải Phòng",
@@ -452,8 +442,7 @@
     "title": "Suzuki XL7 - xe tự lái",
     "description": "Xe Suzuki XL7, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-11/cover.jpg",
-      "demo/listings/vehicle-11/interior.jpg"
+      "/images/demo-vehicles/suzuki-xl7.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hà Nội",
@@ -503,8 +492,7 @@
     "title": "Toyota Corolla Cross - xe tự lái",
     "description": "Xe Toyota Corolla Cross, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-12/cover.jpg",
-      "demo/listings/vehicle-12/interior.jpg"
+      "/images/demo-vehicles/toyota-corolla-cross.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hải Phòng",
@@ -544,8 +532,7 @@
     "title": "Honda HR-V - xe tự lái",
     "description": "Xe Honda HR-V, nhận và trả tại gara của nền tảng; hồ sơ và tình trạng xe đã được kiểm tra.",
     "photos": [
-      "demo/listings/vehicle-13/cover.jpg",
-      "demo/listings/vehicle-13/interior.jpg"
+      "/images/demo-vehicles/honda-hr-v.jpg"
     ],
     "pickup_location": {
       "branch_name": "Demo Garage Hà Nội",

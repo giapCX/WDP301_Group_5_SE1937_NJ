@@ -1,4 +1,3 @@
-import BookingPanel from '../../renter/components/BookingPanel';
 import IncomeCalculator from '../components/IncomeCalculator';
 import { useEffect, useMemo, useState } from 'react';
 import Pagination from '../../../components/ui/Pagination';
@@ -401,7 +400,7 @@ export default function HomePage() {
                     listing={listing}
                     key={listing._id}
                     index={index}
-                    onDetails={(item) => setDialog({ type: 'vehicle', listing: item })}
+                    onDetails={(item) => { window.location.hash = '#/xe/' + item._id; }}
                   />
                 ))}
               </div>
@@ -580,9 +579,7 @@ export default function HomePage() {
       {dialog && (
         <Modal
           title={
-            dialog.type === 'vehicle'
-              ? dialog.listing.title
-              : dialog.type === 'policy'
+            dialog.type === 'policy'
                 ? 'Chính sách thuê và quản lý xe'
                 : dialog.type === 'owner'
                   ? 'Trở thành đối tác chủ xe'
@@ -590,9 +587,7 @@ export default function HomePage() {
           }
           onClose={() => setDialog(null)}
         >
-          {dialog.type === 'vehicle' ? (
-            <BookingPanel listingId={dialog.listing._id} initialDates={dates} />
-          ) : dialog.type === 'policy' ? (
+          {dialog.type === 'policy' ? (
             <div className="policy-content">
               <h3>Đặt và nhận xe</h3>
               <p>

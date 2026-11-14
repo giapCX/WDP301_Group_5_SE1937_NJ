@@ -1,0 +1,78 @@
+.vehicle-detail-page { min-height: 100vh; background: #fff; color: #17231e; }
+.vehicle-detail-main { box-sizing: border-box; width: min(calc(100% - 48px), 1440px); max-width: 100%; margin: auto; padding: 20px 0 64px; overflow-wrap: anywhere; }
+.vehicle-detail-back { display: inline-block; margin-bottom: 16px; color: var(--blue); font-weight: 650; }
+.detail-gallery { position: relative; display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr); grid-auto-rows: minmax(0, 1fr); gap: 12px; height: clamp(250px, 27vw, 380px); }
+.detail-gallery-4 { grid-template-rows: repeat(3, minmax(0, 1fr)); }
+.detail-gallery-3 { grid-template-rows: repeat(2, minmax(0, 1fr)); }
+.detail-gallery-1 { grid-template-columns: minmax(0, 1fr); background: #eef3f0; border-radius: 15px; }
+.detail-gallery button:not(.detail-all-photos) { padding: 0; border: 0; overflow: hidden; border-radius: 15px; min-width: 0; min-height: 0; }
+.detail-gallery button:first-child { grid-row: 1 / -1; }
+.detail-gallery img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.detail-gallery-1 img { object-fit: contain; }
+.detail-gallery .detail-all-photos { position: absolute; bottom: 16px; right: 16px; color: #17231e; box-shadow: 0 2px 14px #0002; }
+.detail-full-photo { display: block; width: 100%; max-height: 65vh; object-fit: contain; }
+.detail-photo-controls { display: flex; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.detail-title { padding: 22px 0 16px; }
+.detail-title h1 { margin: 0; font-size: clamp(22px, 2.5vw, 34px); line-height: 1.15; }
+.detail-title p { display: flex; flex-wrap: wrap; gap: 12px; margin: 9px 0 0; color: #55645c; }
+.detail-section-nav { position: sticky; top: 72px; z-index: 2; display: flex; flex-wrap: wrap; gap: 4px 20px; background: #fff; border-bottom: 1px solid #e1e7e3; }
+.vehicle-detail-main .detail-section-nav button { border: 0; padding: 12px 0; border-radius: 0; color: var(--blue); background: transparent; }
+.detail-section-nav button:hover, .vehicle-detail-back:hover { text-decoration: underline; }
+.detail-information a { color: var(--blue); }
+.detail-columns { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(310px, 1fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
+.detail-columns > *, .detail-date-grid .renter-field, .detail-date-grid input { min-width: 0; }
+.detail-date-grid input { max-width: 100%; }
+.detail-information section { margin: 0; padding: 25px 0; border-bottom: 1px solid #e1e7e3; scroll-margin-top: 145px; }
+.detail-information h2, .detail-booking-sidebar h2 { margin: 0 0 12px; }
+.detail-information p { margin: 6px 0; }
+.detail-description { white-space: pre-line; }
+.detail-location { display: flex; align-items: center; gap: 8px; }
+.detail-booking-sidebar { position: sticky; top: 126px; }
+.detail-booking-sidebar .renter-booking-box { background: #f2f7f7; }
+.detail-daily-rate { margin: 0; font-size: clamp(22px, 2.1vw, 29px); font-weight: 750; line-height: 1.2; }
+.detail-daily-rate small { font-size: 15px; color: #55645c; }
+.detail-date-grid { grid-template-columns: minmax(0, 1fr); gap: 0; margin: 8px 0; }
+.detail-date-grid .renter-field { margin: 5px 0; }
+.detail-garage-box { display: grid; padding: 9px 12px; border: 1px solid #dce5e0; border-radius: 9px; background: #fff; }
+.detail-costs { margin: 10px 0; }
+.detail-costs > div { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; }
+.detail-costs dd { margin: 0; text-align: right; font-weight: 650; }
+.detail-total { margin-top: 5px; border-top: 1px solid #dce5e0; font-weight: 750; }
+.detail-booking-sidebar .primary { width: 100%; }
+.detail-fees { padding: 16px; border: 1px solid #dce5e0; border-radius: 12px; }
+.detail-fees h2 { font-size: 17px; }
+.detail-related { background: #f6f8f7; border-radius: 16px; padding: 24px; }
+.detail-related .vehicle-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 850px), (max-height: 790px) {
+  .detail-booking-sidebar { position: static; }
+}
+@media (max-width: 760px) {
+  .vehicle-detail-main { width: calc(100% - 28px); }
+  .detail-gallery { height: clamp(160px, 44vw, 250px); gap: 6px; }
+  .detail-gallery button:not(.detail-all-photos) { border-radius: 9px; }
+  .detail-gallery .detail-all-photos { bottom: 8px; right: 8px; padding: 6px 9px; font-size: 12px; }
+  .detail-columns { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .detail-booking-sidebar { order: -1; }
+  .detail-section-nav { position: static; gap: 4px 12px; }
+  .detail-information section { scroll-margin-top: 75px; }
+}
+@media (max-width: 480px) {
+  .detail-related { padding: 14px; }
+}
+
+.vehicle-detail-main { font-size: 14px; }
+.detail-information h2, .detail-booking-sidebar h2, .detail-related h2 { font-size: 18px; }
+.detail-photo-empty { height: clamp(150px, 22vw, 280px); border-radius: 15px; }
+.detail-related .vehicle-grid { gap: 12px; }
+.detail-related .vehicle-image { width: 100%; aspect-ratio: auto; height: clamp(110px, 12vw, 170px); }
+.detail-related .vehicle-content { padding: 12px; font-size: 13px; }
+.detail-related .vehicle-content h3 { font-size: 15px; }
+.detail-related .vehicle-bottom strong { font-size: 16px; }
+.detail-related .vehicle-bottom { flex-wrap: wrap; }
+@media (max-width: 900px) {
+  .detail-related .vehicle-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .detail-related .vehicle-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.detail-photo-reference { position: absolute; left: 12px; bottom: 12px; padding: 3px 8px; border-radius: 5px; background: #17231e; color: #fff; font-size: 12px; pointer-events: none; }

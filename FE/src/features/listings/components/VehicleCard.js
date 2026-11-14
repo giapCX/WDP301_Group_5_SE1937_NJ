@@ -4,10 +4,15 @@ import Icon from '../../../components/Icon';
 export const money = (value) => new Intl.NumberFormat('vi-VN').format(value);
 export const fuelLabels = { gasoline: 'Xăng', diesel: 'Dầu', electric: 'Điện', hybrid: 'Hybrid' };
 
+export const isListingIllustration = (source) => /^\/images\/home\/car-[1-6]\.jpg$/.test(source);
+export const listingPhotos = (listing) => (listing.photos || []).filter(source =>
+  typeof source === 'string' && (/^https?:\/\//i.test(source) || source.startsWith('/uploads/') ||
+    source.startsWith('/api/listings/') || source.startsWith('/images/demo-vehicles/') || isListingIllustration(source))
+);
+
 export function listingPhoto(listing, index = 0) {
-  const source = listing.photos?.[0];
-  if (source && (/^https?:\/\//i.test(source) || source.startsWith('/uploads/') || source.startsWith('/api/listings/')))
-    return { src: source, illustration: false };
+  const [source] = listingPhotos(listing);
+  if (source) return { src: source, illustration: isListingIllustration(source) };
   const examples = [1, 2, 3, 4, 6, 2];
   const stableIndex = Number.parseInt(listing._id?.slice(-2), 16);
   return {
@@ -49,20 +54,20 @@ export default function VehicleCard({ listing, index, onDetails }) {
           aria-label={`Xem ${listing.title}`}
           onClick={() => onDetails(listing)}
         >
-          <img
-            src={imageFailed ? '/images/home/car-1.jpg' : photo.src}
-            onError={() => setImageFailed(true)}
-            alt={
-              photo.illustration || imageFailed
-                ? `Ảnh xe minh họa cho tin ${listing.title}`
-                : listing.title
-            }
-            loading="lazy"
-          />
+          {photo.illustration || imageFailed ? (
+            <span className="vehicle-photo-placeholder">
+              <Icon name="car" size={32} /> Chưa có ảnh xe
+            </span>
+          ) : (
+            <img src={photo.src} onError={() => setImageFailed(true)} alt={listing.title} loading="lazy" />
+          )}
         </button>
         <span className="vehicle-badge">
           <Icon name="shield" size={13} /> Xe đã kiểm duyệt
         </span>
+        {!imageFailed && photo.src.startsWith('/images/demo-vehicles/') && (
+          <span className="illustration-label">Ảnh tham khảo</span>
+        )}
         <button
           className={`favorite-button ${saved ? 'is-saved' : ''}`}
           aria-label={`${saved ? 'Bỏ lưu' : 'Lưu'} ${listing.title}`}
@@ -71,9 +76,6 @@ export default function VehicleCard({ listing, index, onDetails }) {
         >
           <Icon name="heart" size={18} />
         </button>
-        {(photo.illustration || imageFailed) && (
-          <span className="illustration-label">Ảnh minh họa</span>
-        )}
       </div>
       <div className="vehicle-content">
         <div className="vehicle-location">

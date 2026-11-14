@@ -502,10 +502,23 @@
   background: #e5eaf4;
 }
 .vehicle-image-link {
+  display: block;
   width: 100%;
   height: 100%;
   padding: 0;
+  border: 0;
   background: none;
+}
+.vehicle-photo-placeholder {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #55645c;
+  background: #eef3f0;
+  font-size: 13px;
 }
 .vehicle-image img {
   width: 100%;

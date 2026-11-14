@@ -10,6 +10,7 @@ import AdminPage from '../features/manager/pages/AdminPage';
 import ContractsPage from '../features/contracts/ContractsPage';
 import VerificationPage from '../features/verification/pages/VerificationPage';
 import OperatorPage from '../features/operator/pages/OperatorPage';
+import VehicleDetailPage from '../features/listings/pages/VehicleDetailPage';
 
 const isHashRoute = (hash, route) => new RegExp(`^#/${route}(?:/|$)`).test(hash);
 
@@ -25,6 +26,7 @@ export default function AppRouter() {
   const [isVerification, setIsVerification] = useState(() => window.location.hash.startsWith('#/verification'));
   const [isOperation, setIsOperation] = useState(() => isHashRoute(window.location.hash, 'operation'));
   const [isOperator, setIsOperator] = useState(() => isHashRoute(window.location.hash, 'operator'));
+  const [vehicleId, setVehicleId] = useState(() => window.location.hash.match(/^#\/xe\/([a-f0-9]{24})$/i)?.[1] || '');
 
   useEffect(() => {
     const onHashChange = () => {
@@ -39,6 +41,7 @@ export default function AppRouter() {
       setIsVerification(window.location.hash.startsWith('#/verification'));
       setIsOperation(isHashRoute(window.location.hash, 'operation'));
       setIsOperator(isHashRoute(window.location.hash, 'operator'));
+      setVehicleId(window.location.hash.match(/^#\/xe\/([a-f0-9]{24})$/i)?.[1] || '');
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
@@ -62,6 +65,7 @@ export default function AppRouter() {
   }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isOperator, isContracts, isVerification, isOperation, isRenter]);
 
   if (isRenter) return <RenterPage />;
+  if (vehicleId) return <VehicleDetailPage listingId={vehicleId} />;
   if (isContracts) return <ContractsPage />;
   if (isGarage) return <GarageAccess>{(user) => <GaragePage user={user} />}</GarageAccess>;
   if (isOwner) return <OwnerPage />;
