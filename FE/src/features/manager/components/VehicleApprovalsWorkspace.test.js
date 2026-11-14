@@ -27,7 +27,7 @@ test('Manager can review submitted evidence and approve a pending passing report
   expect(screen.getByText('70%')).toBeInTheDocument();
   expect(screen.getByText('Report submitted by Garage')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Xem minh chứng car.jpg' })).toBeInTheDocument();
-  const approve = screen.getByRole('button', { name: 'Duyệt xe và kiểm định' });
+  const approve = screen.getByRole('button', { name: 'Duyệt hồ sơ · chuyển sang hợp đồng' });
   expect(approve).toBeEnabled();
   fireEvent.click(approve);
   await waitFor(() => expect(reviewVehicle).toHaveBeenCalledWith('vehicle-id', { action: 'approve', note: 'Reviewed complete report', inspectionId: 'inspection-id', inspectionVersion: 2 }));
@@ -37,10 +37,10 @@ test('Manager can review submitted evidence and approve a pending passing report
 test('a Garage draft cannot be decided and a failed recommendation cannot be approved', () => {
   useManagerCollection.mockReturnValue({ data: [{ ...vehicle, inspection: { ...vehicle.inspection, status: 'draft' } }], loading: false, refresh });
   const { rerender } = render(<VehicleApprovalsWorkspace onNotice={jest.fn()} />);
-  expect(screen.getByRole('button', { name: 'Duyệt xe và kiểm định' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Duyệt hồ sơ · chuyển sang hợp đồng' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Từ chối hồ sơ' })).toBeDisabled();
   useManagerCollection.mockReturnValue({ data: [{ ...vehicle, inspection: { ...vehicle.inspection, recommendation: 'fail' } }], loading: false, refresh });
   rerender(<VehicleApprovalsWorkspace onNotice={jest.fn()} />);
-  expect(screen.getByRole('button', { name: 'Duyệt xe và kiểm định' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Duyệt hồ sơ · chuyển sang hợp đồng' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Yêu cầu bổ sung / kiểm định lại' })).toBeEnabled();
 });
