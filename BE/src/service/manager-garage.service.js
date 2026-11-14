@@ -7,6 +7,24 @@ const decisions = { approve: 'approved', revision: 'revision_required', reject: 
 const objectId = (value) => typeof value === 'string' && /^[a-f\d]{24}$/i.test(value) ? new Types.ObjectId(value) : null;
 const same = (a, b) => a && b && String(a) === String(b);
 const versionFilter = (record) => record.version === undefined ? { version: { $exists: false } } : { version: record.version };
+const REQUIRED_ONBOARDING_CHECKS = ['identity', 'odometer', 'exterior', 'interior', 'tires', 'brakes', 'powertrain', 'leaks', 'lights', 'accessories'];
+
+function validateApprovalEvidence(inspection) {
+  const report = inspection?.condition_report || {};
+  const checklist = report.checklist;
+  if (!Array.isArray(checklist)) return;
+  const byKey = new Map(checklist.map((item) => [item.key, item]));
+  if (REQUIRED_ONBOARDING_CHECKS.some((key) => !byKey.has(key)))
+    throw httpError(409, 'Checklist kiểm định chưa đủ 10 hạng mục. Yêu cầu Garage bổ sung trước khi duyệt.');
+  if (checklist.some((item) => item.result === 'fail' || item.result === 'unverified'))
+    throw httpError(409, 'Checklist có mục không đạt hoặc chưa xác minh. Không thể duyệt xe đạt.');
+  if (checklist.some((item) => !['pass', 'recorded', 'not_applicable'].includes(item.result)))
+    throw httpError(409, 'Checklist có kết quả không hợp lệ. Yêu cầu Garage cập nhật biên bản.');
+  if (checklist.some((item) => item.result === 'recorded' && (!item.note?.trim() || !item.photo_key || !(report.photo_keys || []).includes(item.photo_key))))
+    throw httpError(409, 'Mọi lỗi nhỏ được ghi nhận cần có mô tả và ảnh đối chiếu hợp lệ.');
+  if (checklist.some((item) => item.result === 'not_applicable' && item.key !== 'accessories'))
+    throw httpError(409, 'Chỉ mục phụ kiện được phép đánh dấu không áp dụng.');
+}
 
 export function createManagerGarageService(repository) {
   const collection = (name) => repository.collection(name);
@@ -70,13 +88,18 @@ export function createManagerGarageService(repository) {
         if (action === 'approve' && (!inspection || inspection.recommendation !== 'pass')) {
           throw httpError(409, 'Chỉ duyệt xe khi có biên bản kiểm định đầu vào đề xuất đạt.');
         }
+        if (action === 'approve' && vehicle.condition_declaration && !inspection.condition_report?.checklist)
+          throw httpError(409, 'Xe có bản khai hiện trạng cần checklist kiểm định đầy đủ trước khi duyệt.');
+        if (action === 'approve') validateApprovalEvidence(inspection);
         if (action === 'approve' && inspection?.approval_status === 'pending' && inspection.condition_report?.checklist
-          && inspection.owner_review?.status !== 'accepted') {
+          && (inspection.owner_review?.status !== 'accepted' || inspection.owner_review?.reviewed_version !== (inspection.version ?? 0))) {
           throw httpError(409, 'Chủ xe cần xác nhận hiện trạng trước khi duyệt hồ sơ.');
         }
         const documentKeys = ['registration', 'inspection_certificate', 'insurance'];
         if (action === 'approve' && vehicle.condition_declaration && documentKeys.some((key) => !vehicle.documents?.[key]?.file_key))
           throw httpError(409, 'Cần đủ đăng ký xe, đăng kiểm và bảo hiểm trước khi duyệt.');
+        if (action === 'approve' && note.trim().length < 5)
+          throw httpError(400, 'Ghi căn cứ duyệt tối thiểu 5 ký tự để lưu trong lịch sử hồ sơ.');
         const now = new Date();
         const verifiedDocuments = action === 'approve' && vehicle.condition_declaration
           ? Object.fromEntries(documentKeys.flatMap((key) => [

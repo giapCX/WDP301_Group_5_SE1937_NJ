@@ -2,6 +2,18 @@
 
 ## Kiểm định đầu vào
 
+### Tiêu chí quyết định cho Manager
+
+Manager duyệt tính đầy đủ và nhất quán của hồ sơ, không tự chẩn đoán động cơ/phanh. Kết luận kỹ thuật thuộc Garage Staff và phải đi cùng checklist, phương pháp/ghi chú, số đo và ảnh. Khi xe có bản khai hiện trạng, chủ xe phải xác nhận đúng phiên bản báo cáo; bất đồng hoặc phản hồi phiên bản cũ không đủ điều kiện duyệt.
+
+| Kết quả hồ sơ | Quyết định phù hợp |
+|---|---|
+| Checklist đủ 10 mục; không có mục `fail`/`unverified`; ngoại lệ nhỏ có ghi chú và ảnh; Garage đề xuất `pass`; chủ xe đồng ý đúng phiên bản; hồ sơ giấy tờ đủ | Duyệt và chuyển sang hoàn tất/ký hợp đồng quản lý |
+| Thiếu giấy tờ, ảnh, giải thích chênh lệch hoặc cần kiểm định lại | Yêu cầu bổ sung/kiểm định lại, nêu cụ thể hạng mục và giữ hồ sơ ở `revision_required` |
+| Garage kết luận `fail`, không thể đáp ứng điều kiện tiếp nhận hoặc hồ sơ không có căn cứ phù hợp | Từ chối, lưu lý do trong lịch sử (`rejected`) |
+
+`approved` là quyết định hồ sơ onboarding, không có nghĩa xe đã vào gara. Xe chỉ chuyển `at_garage` sau khi Garage lập biên bản tiếp nhận và các bên xác nhận hợp lệ. Sau từng chuyến thuê, biên bản nhận trả phải so với biên bản giao của chính booking đó; lỗi mới/nặng thêm tạo sự cố, Operation điều tra và Manager quyết định đề xuất bồi thường ở luồng riêng. Không dùng kiểm định onboarding để kết luận lỗi phát sinh sau chuyến thuê.
+
 1. Garage tạo/sửa nháp ở `/api/garage/inspections`, đính kèm ảnh và gửi bằng `POST /api/garage/inspections/:id/submit` với `version` hiện tại. Biên bản chuyển `draft → pending`; Garage chưa phê duyệt xe.
 2. Manager mở mục kiểm duyệt xe. `GET /api/manager/vehicles?status=pending` trả cả xe `submitted`, `pending_review`, `revision_required`. Với mỗi xe, backend chọn **vòng onboarding mới nhất theo `created_at`, `_id`**, không dùng biên bản periodic/return hoặc tìm một bản đạt cũ để bỏ qua vòng mới.
 3. Kết quả có `inspection.id`, `version`, `staffId`, `status`, `recommendation`, `conditionReport`, `decisionReason`, `inspectedAt`. Manager đọc checklist, số km, nhiên liệu và mở ảnh lớn trước khi quyết định.

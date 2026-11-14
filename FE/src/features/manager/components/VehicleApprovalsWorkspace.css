@@ -6,7 +6,7 @@
 .vehicle-card-header p { margin: 0; color: #68758b; font-size: 11px; }
 .vehicle-card-header p span { padding: 0 4px; color: #b1bac8; }
 .vehicle-review-status { padding: 6px 10px; border-radius: 999px; background: #fff5df; color: #936514; font-size: 10px; font-weight: 700; white-space: nowrap; }
-.vehicle-owner-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 13px 0; border-bottom: 1px solid #eff2f6; }
+.vehicle-owner-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 13px 0; border-bottom: 1px solid #eff2f6; }
 .vehicle-owner-row > div { display: grid; gap: 5px; min-width: 0; }
 .vehicle-owner-row small { color: #8591a5; font-size: 9px; font-weight: 700; }
 .vehicle-owner-row strong { color: #34435c; font-size: 11px; overflow-wrap: anywhere; }
@@ -31,10 +31,24 @@
 .vehicle-card-actions button { padding: 8px 11px; border-radius: 6px; font-size: 10px; font-weight: 650; }
 .vehicle-card-actions button:disabled { opacity: .52; cursor: not-allowed; }
 .vehicle-empty { padding: 22px 3px; text-align: center; }
+.manager-decision-guide { margin: 4px 0 13px; padding: 13px 15px; border: 1px solid #dbe6fb; border-radius: 9px; background: #f5f8ff; }
+.manager-decision-guide > div > strong, .vehicle-owner-declaration h4 { color: #283b5b; font-size: 11px; }
+.manager-decision-guide > div > p { margin: 5px 0 10px; color: #63728b; font-size: 10px; line-height: 1.55; }
+.manager-decision-guide ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 15px; margin: 0; padding: 0; list-style: none; }
+.manager-decision-guide li { color: #66738a; font-size: 10px; }
+.manager-decision-guide li::before { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-right: 6px; border-radius: 50%; content: '✓'; background: #e8f7ef; color: #25805f; font-weight: 800; }
+.manager-decision-guide li.is-blocked::before { content: '!'; background: #fff0ef; color: #bc514b; }
+.manager-decision-blockers { margin: 10px 0 0; color: #a34c43; font-size: 10px; line-height: 1.5; }
+.vehicle-owner-declaration { margin: 11px 0; padding: 12px 14px; border: 1px solid #e8edf5; border-radius: 8px; background: #fffdf7; }
+.vehicle-owner-declaration h4 { margin: 0 0 6px; }
+.vehicle-owner-declaration p { margin: 0 0 7px; color: #47566d; font-size: 11px; line-height: 1.6; white-space: pre-wrap; }
+.vehicle-owner-declaration small { color: #8a7653; font-size: 9px; line-height: 1.5; }
+.manager-decision-outcome { margin: 9px 0 0; color: #63728b; font-size: 10px; line-height: 1.6; }
 
 @media (max-width: 720px) {
   .vehicle-owner-row { grid-template-columns: 1fr 1fr; }
   .vehicle-review-grid { grid-template-columns: 1fr; }
+  .manager-decision-guide ul { grid-template-columns: 1fr; }
 }
 .inspection-review-details { margin: 14px 0; padding: 14px; border: 1px solid #e4eaf5; border-radius: 9px; background: #f8faff; }
 .inspection-review-details dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 0 0 12px; }

@@ -709,6 +709,8 @@ export function createManagerService(repository) {
           seats: item.seats,
           fuelType: item.fuel_type,
           transmission: item.transmission,
+          dailyPrice: item.daily_price,
+          conditionDeclaration: item.condition_declaration || '',
           physicalStatus: item.physical_status,
           status: item.onboarding_status,
           reviewNote: item.review_note || "",
