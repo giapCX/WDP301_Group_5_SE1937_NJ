@@ -37,9 +37,7 @@ export function publicListingPipeline(match, vehicleMatch = {}, rentalPeriod) {
       pipeline: [{
         $match: {
           onboarding_status: 'approved',
-          physical_status: {
-            $in: ['at_garage', 'rented']
-          }
+          physical_status: 'at_garage'
         }
       }, {
         $project: vehicleProjection
@@ -126,7 +124,7 @@ export function createListingRepository(database) {
       const listing = await VehicleListing.findOne({ _id: new ObjectId(id), status: 'published', photos: url }).select('vehicle_id').lean();
       if (!listing) return null;
       const vehicle = await Vehicle.findOne({
-        _id: listing.vehicle_id, onboarding_status: 'approved', physical_status: { $in: ['at_garage', 'rented'] }, publish_vehicle_photos: true,
+        _id: listing.vehicle_id, onboarding_status: 'approved', physical_status: 'at_garage', publish_vehicle_photos: true,
       }).select('photos').lean();
       return vehicle?.photos?.[index] || null;
     },

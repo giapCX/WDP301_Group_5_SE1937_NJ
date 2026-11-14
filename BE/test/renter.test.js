@@ -125,6 +125,42 @@ after(async () => {
   if (server) await new Promise(resolve => server.close(resolve));
   await closeTestDatabase();
 });
+test('profile saves with unchanged legacy contact data and validates replacements', async () => {
+  const legacyAvatar = 'demo/avatars/user-01.jpg';
+  const renter = {
+    ...other,
+    _id: oid(),
+    email: 'legacy-avatar@example.com',
+    phone: '090 123 4567',
+    contact_profile: { ...other.contact_profile, avatar_key: legacyAvatar }
+  };
+  await repo.insert('users', renter);
+  const payload = {
+    full_name: 'Khách Thuê Đã Sửa',
+    email: renter.email,
+    phone: renter.phone,
+    address: 'Địa chỉ đã cập nhật',
+    avatar_key: legacyAvatar
+  };
+  const saved = await service.updateProfile(renter, payload);
+  assert.equal(saved.full_name, payload.full_name);
+  assert.equal(saved.phone, renter.phone);
+  assert.equal(saved.contact_profile.address, payload.address);
+  assert.equal(saved.contact_profile.avatar_key, legacyAvatar);
+  await assert.rejects(
+    service.updateProfile(renter, { ...payload, phone: '0123456789' }),
+    /số điện thoại Việt Nam không hợp lệ/
+  );
+  await assert.rejects(
+    service.updateProfile(renter, { ...payload, phone: '0978152463' }),
+    /Cần xác thực OTP/
+  );
+  await assert.rejects(
+    service.updateProfile(renter, { ...payload, avatar_key: 'demo/avatars/other.jpg' }),
+    /Mã định danh không hợp lệ/
+  );
+});
+
 test('policy selection excludes inactive, future and expired versions', () => {
   const now = new Date('2026-11-10');
   const result = selectPolicies([{
@@ -182,6 +218,28 @@ test('renter API requires authentication and exposes no OTP unless configured', 
   const config = await (await fetch(base + '/api/renter/config')).json();
   assert.equal(config.data.services.payment, 'unconfigured');
 });
+test('published vehicles outside the garage are hidden and cannot be booked', async () => {
+  const vehicles = db.db.collection('vehicles');
+  const filter = { _id: vehicle._id };
+  try {
+    for (const physical_status of ['rented', 'with_owner', 'maintenance', 'returned_to_owner']) {
+      await vehicles.updateOne(filter, { $set: { physical_status } });
+      const response = await fetch(`${base}/api/listings/${listing._id}`);
+      assert.equal(response.status, 404);
+      const catalog = await (await fetch(`${base}/api/listings?limit=100`)).json();
+      assert.ok(catalog.data.every((item) => item._id !== String(listing._id)));
+      await assert.rejects(service.createBooking(user, payload('not-at-garage')), {
+        status: 409,
+        message: 'Xe chưa sẵn sàng tại gara.'
+      });
+    }
+  } finally {
+    await vehicles.updateOne(filter, { $set: { physical_status: 'at_garage' } });
+  }
+  const response = await fetch(`${base}/api/listings/${listing._id}`);
+  assert.equal(response.status, 200);
+});
+
 test('concurrent overlapping reservations cannot both succeed; amounts come from listing', async () => {
   const results = await Promise.allSettled([service.createBooking(user, {
     ...payload('concurrent-a'),

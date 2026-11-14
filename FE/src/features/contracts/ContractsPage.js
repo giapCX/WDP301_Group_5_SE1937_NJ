@@ -11,7 +11,7 @@ const statusTone = (status) => ['active', 'signed'].includes(status) ? 'success'
 const signatureState = (name, signedAt) => signedAt ? { title: 'Đã ký', name: name || 'Đã xác nhận', date: time(signedAt) } : { title: 'Chờ ký', name: 'Chưa ghi nhận chữ ký', date: 'Đang chờ xác nhận' };
 
 export function ContractContent({ agreement }) {
-  if (agreement.type === 'management' && agreement.document?.articles?.length) {
+  if (agreement.document?.articles?.length) {
     return <div className="contract-content"><ManagementContractPaper agreement={agreement} /></div>;
   }
   const partyLabel = agreement.type === 'management' ? 'Chủ xe' : 'Khách thuê';

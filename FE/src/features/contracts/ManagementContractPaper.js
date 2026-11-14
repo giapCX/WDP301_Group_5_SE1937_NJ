@@ -53,17 +53,19 @@ function printPaper(paper, number) {
 export default function ManagementContractPaper({ agreement }) {
   const paper = useRef(null);
   const contract = agreement.document;
+  const rental = agreement.type === 'rental';
   return <div className="management-contract-view">
     <div className="management-paper-toolbar">
       <button className="contract-button contract-button--secondary" type="button" onClick={() => printPaper(paper.current, agreement.number)}>In / lưu PDF</button>
     </div>
-    <article ref={paper} className="management-contract-paper" lang="vi" aria-label="Bản hợp đồng ủy quyền">
+    <article ref={paper} className="management-contract-paper" lang="vi" aria-label={contract.title}>
       <header className="management-paper-heading">
         <p>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
         <p>Độc lập – Tự do – Hạnh phúc</p>
         <h2>{contract.title}</h2>
         <p>Số {agreement.number}</p>
       </header>
+      {rental && <p>Căn cứ vào nhu cầu thuê xe và thỏa thuận của các bên.</p>}
       <p className="management-paper-intro">Lập ngày {date(contract.prepared_at)}, tại {contract.place}. Hai bên cùng thỏa thuận các nội dung dưới đây.</p>
       {(contract.parties || []).map((party) => <section key={party.heading} className="management-paper-party">
         <h3>{party.heading}</h3>
@@ -75,8 +77,13 @@ export default function ManagementContractPaper({ agreement }) {
         {article.paragraphs.map((text) => <p key={text}>{text}</p>)}
       </section>)}
       <footer className="management-paper-signatures">
-        <Signature heading="BÊN A · CHỦ XE" name={agreement.partyName} signedAt={agreement.partySignedAt} />
-        <Signature heading="BÊN B · ĐẠI DIỆN NỀN TẢNG" name={agreement.platformName} signedAt={agreement.platformSignedAt} />
+        {rental ? <>
+          <Signature heading="BÊN CHO THUÊ · ĐẠI DIỆN XEDI" name={agreement.platformName} signedAt={agreement.platformSignedAt} />
+          <Signature heading="BÊN THUÊ" name={agreement.partyName} signedAt={agreement.partySignedAt} />
+        </> : <>
+          <Signature heading="BÊN A · CHỦ XE" name={agreement.partyName} signedAt={agreement.partySignedAt} />
+          <Signature heading="BÊN B · ĐẠI DIỆN NỀN TẢNG" name={agreement.platformName} signedAt={agreement.platformSignedAt} />
+        </>}
       </footer>
       <p className="management-paper-version">Phiên bản {contract.version} · Mã nội dung {contract.hash.slice(0, 12)}</p>
     </article>

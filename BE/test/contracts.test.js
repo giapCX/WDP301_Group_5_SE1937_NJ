@@ -177,6 +177,11 @@ test('audit failure rolls back signature and contract status', async () => {
 
 test('Operation prepares rental snapshot, renter and Manager sign independently without marking money paid', async () => {
   const fixture = await rentalFixture(), row = (await fixture.prepare()).data;
+  assert.equal(row.document.version, 'xedi-rental-paper-v1');
+  assert.equal(row.document.parties.length, 2);
+  assert.equal(row.document.articles.length, 9);
+  assert.ok(row.document.facts.some(({ label }) => label === 'Biển số'));
+  assert.match(row.document.articles[3].paragraphs[0], /Tiền cọc/);
   await sign(row, 'otherRenter', 'party', signature(row), 404);
   await sign(row, 'operation', 'staff', signature(row), 403);
   await sign(row, 'manager', 'staff');

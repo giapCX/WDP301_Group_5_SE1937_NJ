@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { getRenter } from '../api/renterApi';
 
-export default function useRenterSummary(enabled) {
+export default function useRenterSummary() {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!enabled) return undefined;
     const controller = new AbortController();
     Promise.all([
       getRenter('/profile', { signal: controller.signal }),
@@ -17,7 +16,7 @@ export default function useRenterSummary(enabled) {
         if (reason.name !== 'AbortError') setError(reason.message);
       });
     return () => controller.abort();
-  }, [enabled]);
+  }, []);
 
   return { summary, error };
 }

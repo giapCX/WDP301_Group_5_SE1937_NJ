@@ -1,8 +1,8 @@
 import { bookingHoldExpression, isBookingHoldExpired } from '../utils/booking-hold.js';
-import { createHash } from 'node:crypto';
 import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
 import { createManagementContractDocument, parseManagementTerms } from './management-contract-document.js';
+import { createRentalContractDocument } from './rental-contract-document.js';
 import { findPageRows } from '../utils/pagination.js';
 
 const same = (a, b) => a && b && String(a) === String(b);
@@ -14,12 +14,7 @@ const checkType = (type) => {
   if (!['management', 'rental'].includes(type)) throw httpError(400, 'Loại hợp đồng không hợp lệ.');
 };
 const fail = (condition, message) => { if (condition) throw httpError(409, message); };
-const money = (value) => `${new Intl.NumberFormat('vi-VN').format(value)} VND`;
 const date = (value) => new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-function document(title, facts, clauses, now) {
-  const content = { version: 'xedi-acceptance-v1', title, facts: facts.map(([label, value]) => ({ label, value: String(value) })), clauses };
-  return { ...content, hash: createHash('sha256').update(JSON.stringify(content)).digest('hex'), prepared_at: now };
-}
 
 export function createContractService(repository) {
   async function actorInfo(actor) {
@@ -191,20 +186,9 @@ export function createContractService(repository) {
         }
         const party = await repository.users.findOne({ _id: ctx.partyId }, { session });
         const owner = await repository.users.findOne({ _id: vehicle.owner_id }, { session });
-        const common = [['Phương tiện', `${vehicle.brand} ${vehicle.model} · ${vehicle.license_plate}`], ['Chủ xe', owner?.full_name || ''], ['Bên nền tảng', 'XeDi']];
         row.contract_document = type === 'management'
           ? createManagementContractDocument({ row, owner, vehicle, inspection, terms: managementTerms, now })
-          : document('Hợp đồng thuê xe tự lái', [...common, ['Khách thuê', party?.full_name || ''], ['Mã booking', booking.booking_code], ['Nhận xe', date(booking.start_at)], ['Trả xe', date(booking.end_at)], ['Đơn giá/ngày', money(booking.pricing_snapshot?.daily_price)], ['Tiền thuê', money(booking.rental_fee_amount)], ['Tiền cọc', money(booking.deposit_amount_snapshot)], ['Nơi nhận', booking.pickup_location?.branch || 'Tại gara'], ['Nơi trả', booking.return_location?.branch || 'Tại gara'],
-            ['Hợp đồng ủy quyền', row.lender_details_snapshot.authority_agreement_number || String(row.management_agreement_id)],
-            ...(row.terms_snapshot.mileage_policy?.included_km_per_day == null ? [] : [['Giới hạn km/ngày', row.terms_snapshot.mileage_policy.included_km_per_day]]),
-            ...(row.terms_snapshot.mileage_policy?.extra_km_fee == null ? [] : [['Phí vượt km', money(row.terms_snapshot.mileage_policy.extra_km_fee)]]),
-            ...(row.terms_snapshot.rental_policy?.late_fee_per_hour == null ? [] : [['Phí trả muộn mỗi giờ', money(row.terms_snapshot.rental_policy.late_fee_per_hour)]]),
-          ], [
-          'XeDi ký trong phạm vi hợp đồng quản lý được chủ xe ủy quyền. Người thuê sử dụng xe đúng mục đích, có GPLX hợp lệ và không giao xe trái thỏa thuận.',
-          'Tiền thuê và cọc theo số tiền nêu trên. Hoàn tất ký chưa xác nhận đã thanh toán; chỉ bàn giao khi kiểm tra đủ hợp đồng, tiền và hồ sơ.',
-          'Garage lập biên bản giao/nhận với ODO, nhiên liệu và tình trạng xe; người thuê xác nhận hiện trạng thực tế.',
-          'Phí phát sinh, thiệt hại và hoàn cọc được đối chiếu chứng cứ, thông báo và giải quyết theo quy trình. Không tự khấu trừ chỉ vì khách chưa phản hồi.',
-        ], now);
+          : createRentalContractDocument({ row, booking, vehicle, owner, renter: party, now });
         const exists = await repo.findOne({ _id: newId }, { session });
         if (exists) { const { _id, ...set } = row; await repo.updateOne({ _id }, { $set: set }, { session }); }
         else await repo.create(row, { session });

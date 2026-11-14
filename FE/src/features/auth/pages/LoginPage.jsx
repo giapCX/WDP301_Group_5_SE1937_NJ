@@ -5,6 +5,15 @@ import React, { useState } from 'react';
 import './LoginPage.css';
 import useLogin from '../hooks/useLogin';
 
+const demoAccounts = [
+  ['Renter · Nguyễn Thành Long', 'renter08@example.com'],
+  ['Car Owner', 'owner01@example.com'],
+  ['Operation Staff', 'operation17@example.com'],
+  ['Garage Staff', 'garage15@example.com'],
+  ['Manager', 'manager19@example.com'],
+  ['Admin', 'admin20@example.com'],
+];
+
 const LoginPage = () => {
   const [registrationOtp,setRegistrationOtp]=useState({});
   const [registerBusy,setRegisterBusy]=useState(false);
@@ -49,6 +58,11 @@ const LoginPage = () => {
   };
 
   const { isLoading, handleLoginSubmit } = useLogin({ loginData, setFormStatus, setStatusType });
+
+  const selectDemoAccount = (account) => {
+    setLoginData((previous) => ({ ...previous, account, password: '123456' }));
+    setFormStatus('');
+  };
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
@@ -289,6 +303,28 @@ const LoginPage = () => {
                   Đăng nhập để tiếp tục quản lý hành trình, lịch đặt xe và ưu đãi thành viên XeDi.
                 </p>
               </div>
+
+              {process.env.NODE_ENV === 'development' && (
+                <section aria-labelledby="demo-account-heading" className="mb-6 rounded-xl border border-outline-variant/60 bg-surface-container-low p-4">
+                  <h3 id="demo-account-heading" className="font-semibold text-on-surface">Tài khoản mẫu</h3>
+                  <p className="mb-3 mt-1 text-body-sm text-secondary">Chọn vai trò để điền thông tin, sau đó bấm Đăng nhập.</p>
+                  <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {demoAccounts.map(([role, account]) => (
+                      <li key={account}>
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => selectDemoAccount(account)}
+                          className="w-full rounded-lg border border-outline-variant/60 bg-surface-container-lowest px-3 py-2 text-left text-body-sm hover:border-primary-container disabled:opacity-60"
+                        >
+                          <span className="block font-semibold text-on-surface">{role}</span>
+                          <span className="block break-all text-secondary">{account}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
 
               <form className="space-y-4" onSubmit={handleLoginSubmit}>
                 {/* Email / Phone Input */}

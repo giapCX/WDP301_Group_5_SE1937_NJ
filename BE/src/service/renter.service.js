@@ -139,16 +139,21 @@ export function createRenterService(repo, {
       if (result.modifiedCount !== 1) throw httpError(409, 'OTP đã dùng hoặc hết hạn.');
     };
   }
-  function contacts(body) {
-    const email = text(body.email, 5, 254, 'Email').toLowerCase();
-    const phone = text(body.phone, 10, 10, 'Số điện thoại');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^0[35789]\d{8}$/.test(phone)) throw httpError(400, 'Email hoặc số điện thoại Việt Nam không hợp lệ.');
+  function contacts(body, current) {
+    const emailUnchanged = current && body.email === current.email;
+    const phoneUnchanged = current && body.phone === current.phone;
+    const email = emailUnchanged ? current.email : text(body.email, 5, 254, 'Email').toLowerCase();
+    const phone = phoneUnchanged ? current.phone : text(body.phone, 10, 10, 'Số điện thoại');
+    if ((!emailUnchanged && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ||
+        (!phoneUnchanged && !/^0[35789]\d{8}$/.test(phone))) {
+      throw httpError(400, 'Email hoặc số điện thoại Việt Nam không hợp lệ.');
+    }
     return {
       email,
       phone
     };
   }
-  const contactTarget = body => hash(JSON.stringify(contacts(body)));
+  const contactTarget = (body, current) => hash(JSON.stringify(contacts(body, current)));
   const safeProfile = user => {
     const {
       password_hash,
@@ -181,7 +186,7 @@ export function createRenterService(repo, {
       if (!['register', 'profile', 'sign'].includes(purpose) || (!user && purpose !== 'register')) throw httpError(400, 'Mục đích OTP không hợp lệ.');
       let target;
       if (purpose === 'sign') { const booking = await owned(user, body.booking_id); held(booking); target = String(booking._id); }
-      else target = contactTarget(body);
+      else target = contactTarget(body, purpose === 'profile' ? user : undefined);
       const recent = await repo.one('renter_challenges', { actor: String(user?._id || 'guest'), purpose, target, created_at: { $gt: new Date(Date.now() - 60000) } });
       if (recent) throw httpError(429, 'Vui lòng chờ 60 giây trước khi gửi lại OTP.');
       const _id = new Types.ObjectId(), code = String(randomInt(0,1000000)).padStart(6,'0');
@@ -240,13 +245,17 @@ export function createRenterService(repo, {
       }));
     },
     async updateProfile(user, body) {
-      const c = contacts(body),
+      const c = contacts(body, user),
         full_name = text(body.full_name, 2, 100, 'Họ tên');
       const address = body.address ? text(body.address, 5, 255, 'Địa chỉ') : '';
       const city = body.city ? text(body.city, 1, 100, 'Thành phố') : '';
       const changed = c.email !== user.email || c.phone !== user.phone;
-      const consume = changed ? await challengeCheck(user, body, 'profile', contactTarget(c)) : null;
-      if (body.avatar_key) await files(user, [body.avatar_key], 'avatar');
+      if (changed && !body.challenge_id) {
+        throw httpError(400, 'Cần xác thực OTP để đổi email hoặc số điện thoại.');
+      }
+      const consume = changed ? await challengeCheck(user, body, 'profile', contactTarget(c, user)) : null;
+      const avatarChanged = body.avatar_key && body.avatar_key !== user.contact_profile?.avatar_key;
+      if (avatarChanged) await files(user, [body.avatar_key], 'avatar');
       await repo.transaction(async session => {
         await repo.update('users', {
           _id: user._id
@@ -279,7 +288,7 @@ export function createRenterService(repo, {
               ...user.contact_profile,
               address,
               city,
-              ...(body.avatar_key ? {
+              ...(avatarChanged ? {
                 avatar_key: body.avatar_key
               } : {})
             },
@@ -426,15 +435,13 @@ export function createRenterService(repo, {
         const lock = await repo.update('vehicles', {
           _id: listing.vehicle_id,
           onboarding_status: 'approved',
-          physical_status: {
-            $in: ['at_garage', 'rented']
-          }
+          physical_status: 'at_garage'
         }, {
           $inc: {
             renter_calendar_version: 1
           }
         }, session);
-        if (lock.matchedCount !== 1) throw httpError(409, 'Xe không sẵn sàng cho thuê.');
+        if (lock.matchedCount !== 1) throw httpError(409, 'Xe chưa sẵn sàng tại gara.');
         const vehicle = await repo.one('vehicles', {
           _id: listing.vehicle_id
         }, session);

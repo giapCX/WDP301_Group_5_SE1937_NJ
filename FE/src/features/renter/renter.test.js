@@ -56,7 +56,7 @@ test('renter workspace requests login without showing fabricated history', () =>
   expect(global.fetch).not.toHaveBeenCalled();
   expect(screen.queryByText('BK-API-ONLY')).not.toBeInTheDocument();
 });
-test('renter homepage contains renter navigation, live trip totals and car search', async () => {
+test('renter homepage shows live trip totals and links to the public catalog without loading listings', async () => {
   window.history.replaceState(null, '', '/#/renter');
   localStorage.setItem('xedi_token', 'renter-token');
   global.fetch.mockImplementation(async url => {
@@ -64,21 +64,19 @@ test('renter homepage contains renter navigation, live trip totals and car searc
     if (url === '/api/renter/profile') return reply({ data: { full_name: 'Khách Thuê', identity_kyc: { status: 'verified' } } });
     if (url.startsWith('/api/renter/bookings')) return reply({ data: [], pagination: { total: url.includes('status=active') ? 4 : 2, totalPages: 1 } });
     if (url === '/api/renter/incidents') return reply({ data: [] });
-    if (url.startsWith('/api/listings?')) return reply({ data: [], pagination: { total: 0 } });
     throw new Error('Unexpected API: ' + url);
   });
   render(<RenterPage />);
   expect(screen.getByRole('heading', { name: 'Trang chủ khách thuê', level: 1 })).toBeInTheDocument();
   await screen.findByText('Chào Khách Thuê!');
   expect(screen.getByText('4')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Tìm & đặt xe' })).toHaveAttribute('href', '#/renter/cars');
+  expect(screen.getByRole('link', { name: 'Tìm xe thuê' })).toHaveAttribute('href', '/#xe-noi-bat');
   expect(screen.getByRole('link', { name: 'Hồ sơ & xác minh' })).toHaveAttribute('href', '#/renter/profile');
   expect(screen.getByRole('link', { name: 'Chuyến đi & thanh toán' })).toHaveAttribute('href', '#/renter/bookings');
   expect(screen.getByRole('link', { name: 'Sự cố đã báo cáo' })).toHaveAttribute('href', '#/renter/incidents');
-  expect(screen.getByRole('button', { name: 'Tìm xe phù hợp' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Tìm xe phù hợp' })).not.toBeInTheDocument();
+  expect(global.fetch.mock.calls.some(([url]) => url.startsWith('/api/listings'))).toBe(false);
   expect(screen.queryByText('Trở thành chủ xe')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('link', { name: 'Tìm & đặt xe' }));
-  await screen.findByRole('heading', { name: 'Tìm và đặt xe', level: 1 });
 });
 test('booking workspace displays stored policy and blocks unconfigured payment', async () => {
   global.fetch.mockResolvedValue(reply({
