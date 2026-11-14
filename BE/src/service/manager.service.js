@@ -13,7 +13,7 @@ const {
 import bcrypt from "bcryptjs";
 const STAFF_ROLES = ["MANAGER", "OPERATION_STAFF", "GARAGE_STAFF", "ADMIN"];
 const MANAGED_STAFF_ROLES = ["OPERATION_STAFF", "GARAGE_STAFF"];
-const OPEN_INCIDENT_STATUSES = ["reported", "open", "investigating", "pending_review", "awaiting_response", "pending_manager", "under_review", "in_progress"];
+const OPEN_INCIDENT_STATUSES = ["reported", "open", "investigating", "pending_review", "awaiting_response", "pending_manager", "need_more_information", "under_review", "in_progress"];
 const MINIMUM_PICKUP_NOTICE_MS = 2 * 60 * 60 * 1000;
 const dayStart = date => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const toId = value => ObjectId.isValid(value) ? new ObjectId(value) : null;

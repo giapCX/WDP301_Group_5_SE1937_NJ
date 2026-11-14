@@ -7,7 +7,7 @@
 3. Manager xem chứng cứ và quyết định qua `PATCH /api/manager/vehicles/:id/review`. Xe chỉ được duyệt khi biên bản mới nhất đã gửi và đạt, các giấy tờ cần thiết hợp lệ.
 4. Sau khi duyệt, Garage tiếp nhận xe theo luồng `/api/garage/intakes`. Tin xe chỉ được Manager xuất bản khi xe đã được duyệt, ở gara, có hợp đồng quản lý hiệu lực và biên bản tiếp nhận hoàn tất.
 
-Lịch phân công tạo biên bản `draft`, không tự phê duyệt xe. Mỗi xe chỉ có một biên bản onboarding đang mở; Garage gửi biên bản rồi Manager mới có thể quyết định. Dữ liệu kiểm định cũ và lịch sử quyết định được giữ lại.
+Lịch phân công tạo biên bản `draft`, không tự phê duyệt xe. Mỗi xe chỉ có một biên bản onboarding đang mở; Garage gửi biên bản rồi Manager mới có thể quyết định. Operator chỉ đổi lịch/người phụ trách khi biên bản còn `draft`, dùng version; không sửa kết quả đã gửi. Dữ liệu kiểm định cũ và lịch sử quyết định được giữ lại. Chi tiết API/quyền xem [nghiệp vụ Operator Staff](operator-staff.md).
 
 ## Booking và tin xe
 
@@ -17,7 +17,7 @@ Lịch phân công tạo biên bản `draft`, không tự phê duyệt xe. Mỗi
 
 ## Sự cố
 
-Garage/Operator ghi nhận sự cố và chứng cứ; Operator cập nhật thông tin, đính kèm biên bản riêng tư rồi chuyển hồ sơ bằng `POST /api/operator/incidents/:id/submit`. Manager xem hồ sơ tại `/api/manager/incidents` và tự quyết định theo thẩm quyền. Operator không đưa ra kết luận pháp lý, mức bồi thường hoặc quyết định trừ cọc.
+Garage/Operator ghi nhận sự cố và chứng cứ; Operator cập nhật thông tin, đính kèm biên bản riêng tư rồi chuyển hồ sơ bằng `POST /api/operator/incidents/:id/submit`. Manager xem hồ sơ tại `/api/manager/incidents` và tự quyết định theo thẩm quyền. Nếu cần, Manager yêu cầu bổ sung bằng `PATCH /api/manager/incidents/:id/review` với `action: request_information`; chỉ khi hồ sơ ở `need_more_information` Operator mới có thể sửa và gửi lại. Operator không đưa ra kết luận pháp lý, mức bồi thường hoặc quyết định trừ cọc.
 
 Manager tiếp tục xử lý các yêu cầu bồi thường lịch sử đã có trên hồ sơ. Hồ sơ không gắn booking đúng xe không được dùng để trừ cọc renter. Kết luận hoặc quyết định bồi thường không tự chuyển xe ra khỏi `maintenance`.
 

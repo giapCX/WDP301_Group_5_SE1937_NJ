@@ -138,7 +138,49 @@ export function createManagerGarageService(repository) {
     async reviewIncident({ id: value, body = {}, actorId }) {
       const id = objectId(value);
       const { action, note = '' } = body;
-      if (!id || action !== 'resolve' || typeof note !== 'string' || !note.trim() || note.length > 1000) throw httpError(400, 'Cần lý do kết luận sự cố.');
+      if (!id) throw httpError(400, 'Hồ sơ sự cố không hợp lệ.');
+      if (action === 'request_information') {
+        if (typeof note !== 'string' || note.trim().length < 5 || note.trim().length > 1000) {
+          throw httpError(400, 'Cần nêu rõ thông tin cần Operator bổ sung (5–1.000 ký tự).');
+        }
+        return garageTransaction(repository, async (session) => {
+          const filter = {
+            _id: id,
+            status: 'pending_manager',
+            submitted_to_manager_by_user_id: { $exists: true },
+            'investigation.review_status': 'submitted',
+          };
+          const incident = await collection('incident_cases').findOne(filter, { session });
+          if (!incident) throw httpError(409, 'Chỉ có thể yêu cầu bổ sung khi hồ sơ đang chờ Manager xử lý.');
+          const now = new Date();
+          const changed = await collection('incident_cases').updateOne(
+            { ...filter, updated_at: incident.updated_at ?? { $exists: false } },
+            {
+              $set: {
+                status: 'need_more_information',
+                'investigation.review_status': 'needs_information',
+                updated_at: now,
+              },
+              $push: {
+                operation_timeline: {
+                  action: 'incident.information_requested',
+                  status: 'need_more_information',
+                  note: note.trim(),
+                  actor_user_id: actorId,
+                  at: now,
+                },
+              },
+            },
+            { session },
+          );
+          if (changed.modifiedCount !== 1) throw httpError(409, 'Hồ sơ vừa được cập nhật. Hãy tải lại.');
+          await audit(actorId, 'incident.request_information', 'incident_cases', id, { note: note.trim() }, session);
+          return { data: { id: String(id), status: 'need_more_information' } };
+        });
+      }
+      if (action !== 'resolve' || typeof note !== 'string' || !note.trim() || note.length > 1000) {
+        throw httpError(400, 'Cần lý do kết luận sự cố.');
+      }
       return garageTransaction(repository, async (session) => {
         const changed = await collection('incident_cases').updateOne({
           _id: id,

@@ -5,6 +5,8 @@ export function createOperatorRepository(connection) {
   const models = getModels(connection);
 
   return {
+    command: (command) => connection.db.command(command),
+    startSession: () => connection.startSession(),
     roles: createModelRepository(models.Role),
     users: createModelRepository(models.User),
     vehicles: createModelRepository(models.Vehicle),

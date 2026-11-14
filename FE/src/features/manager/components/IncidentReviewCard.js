@@ -48,6 +48,13 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
     if (!note?.trim()) return;
     run(() => reviewTrafficViolation(item.id, { decision, amount, note: note.trim() }), 'Đã lưu quyết định vi phạm.');
   }
+  function requestInformation() {
+    const note = window.prompt('Nêu rõ thông tin hoặc chứng cứ Operator cần bổ sung (5–1.000 ký tự):');
+    if (note?.trim()) run(
+      () => reviewIncident(item.id, { action: 'request_information', note: note.trim() }),
+      'Đã chuyển hồ sơ lại cho Operator bổ sung.',
+    );
+  }
   if (item.caseType === 'traffic_violation') return <article className="incident-card">
     <div className="incident-card-heading"><div><strong>{item.caseNumber} · Vi phạm giao thông</strong><p>{item.description}</p></div><span className="request-status rose">{item.status}</span></div>
     {(item.evidence || []).map((evidence, index) => evidence.file_key?.startsWith('owner-files/') || /^[a-f\d]{24}$/i.test(evidence.file_key || '')
@@ -57,9 +64,11 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
     {violation?.operation_recommendation && <p>Operation đề xuất {violation.operation_recommendation === 'confirm' ? `xác nhận, mức phạt ${money(violation.operation_recommended_penalty_fee)} ₫` : 'bác bỏ'}.</p>}
     {violation?.operation_review_note && <p>{violation.operation_review_note}</p>}
     {item.status === 'pending_manager' && violation?.official_confirmation === 'pending_manager_review' && <div className="workspace-actions">
+      {managerReview && <button className="action-review" disabled={busy} onClick={requestInformation}>Yêu cầu Operator bổ sung</button>}
       <button className="action-approve" disabled={busy} onClick={() => decideViolation('approve')}>Xác nhận vi phạm</button>
       <button className="action-reject" disabled={busy} onClick={() => decideViolation('reject')}>Bác bỏ vi phạm</button>
     </div>}
+    {item.status === 'need_more_information' && <p>Đang chờ Operator bổ sung hồ sơ; Manager chưa thể ra quyết định.</p>}
   </article>;
   return <article className="incident-card">
     <div className="incident-card-heading"><div><strong>{item.caseNumber} · {item.caseType}</strong><p>{item.description}</p></div><span className="request-status rose">{item.status}</span></div>
@@ -94,7 +103,9 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
     </div>)}
     {managerReview ? <p>Operator đã gửi thông tin và chứng cứ; Manager tự đánh giá, quyết định khoản bồi thường.</p>
       : item.investigation?.review_status !== 'proposed' && <p>Chưa có đề xuất đã xác minh từ Operation. Báo cáo Garage không tự xác lập trách nhiệm bồi thường.</p>}
-    {pending < 0 && <button className="action-review" disabled={busy} onClick={() => {
+    {managerReview && <button className="action-review" disabled={busy} onClick={requestInformation}>Yêu cầu Operator bổ sung</button>}
+    {item.status === 'need_more_information' && <p>Đang chờ Operator bổ sung hồ sơ; Manager chưa thể kết luận.</p>}
+    {pending < 0 && item.status !== 'need_more_information' && <button className="action-review" disabled={busy} onClick={() => {
       const note = window.prompt('Kết luận đóng hồ sơ, nêu rõ căn cứ không còn yêu cầu bồi thường:');
       if (note?.trim()) run(() => reviewIncident(item.id, { action: 'resolve', note: note.trim() }), 'Đã đóng hồ sơ. Xe vẫn cần quy trình kiểm tra/sửa chữa nếu đang bảo trì.');
     }}>Kết luận / đóng hồ sơ</button>}

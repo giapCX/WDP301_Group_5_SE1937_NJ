@@ -14,6 +14,7 @@ export const getOperatorVehicle = (id, options) => getApi(`/operator/vehicles/${
 export const getOperatorVehicleDocument = (id, kind, options) => getBlobApi(`/operator/vehicles/${encodeURIComponent(id)}/documents/${encodeURIComponent(kind)}`, options);
 export const updateOperatorVehicleStatus = (id, body) => patchApi(`/operator/vehicles/${encodeURIComponent(id)}/status`, body);
 export const scheduleOperatorVehicleInspection = (id, body) => postApi(`/operator/vehicles/${encodeURIComponent(id)}/inspection-schedule`, body);
+export const updateOperatorVehicleInspectionSchedule = (id, body) => patchApi(`/operator/vehicles/${encodeURIComponent(id)}/inspection-schedule`, body);
 export const getOperatorIncidents = (params, options) => getApi(`/operator/incidents${queryString(params)}`, options);
 export const getOperatorIncident = (id, options) => getApi(`/operator/incidents/${encodeURIComponent(id)}`, options);
 export const createOperatorIncident = (body) => postApi('/operator/incidents', body);

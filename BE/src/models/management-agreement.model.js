@@ -31,6 +31,10 @@ export const managementAgreementSchema = createSchema({
     owner_signer_user_id: ObjectId,
     platform_signature_name: String,
   }),
+  operator_intake: embedded({
+    confirmed_by_operator_id: ObjectId,
+    confirmed_at: Date,
+  }),
   contract_document: contractDocument(),
   signed_document_key: String,
   amendments: arrayOf(embedded({ proposed_terms: Schema.Types.Mixed, reason: String, status: String, created_by_manager_id: ObjectId, created_at: Date })),

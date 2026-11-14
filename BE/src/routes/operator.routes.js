@@ -20,6 +20,7 @@ export function createOperatorRouter(connection, files) {
   router.get('/vehicles/:id/documents/:kind', requirePermission('operation.vehicle.read'), controller.vehicleDocument);
   router.patch('/vehicles/:id/status', requirePermission('operation.vehicle.status.update'), controller.updateVehicleStatus);
   router.post('/vehicles/:id/inspection-schedule', requirePermission('operation.vehicle.inspection.schedule'), controller.scheduleVehicleInspection);
+  router.patch('/vehicles/:id/inspection-schedule', requirePermission('operation.vehicle.inspection.schedule'), controller.updateVehicleInspectionSchedule);
   router.get('/incidents', requirePermission('operation.incident.read'), controller.incidents);
   router.get('/incidents/:id', requirePermission('operation.incident.read', { allowManager: true }), controller.incident);
   router.get('/incidents/:id/evidence/:index', requirePermission('operation.incident.read', { allowManager: true }), controller.evidence);

@@ -34,6 +34,7 @@ async function managementFixture() {
 }
 const signature = (row) => ({ acceptedTerms: true, signatureName: 'Người ký thử nghiệm', documentHash: row.document.hash });
 const sign = (row, role, mode = 'party', body = signature(row), status = 200) => request(`/contracts/${row.type}/${row.id}/sign?view=${mode}`, 'POST', body, role, status);
+const confirmOperatorIntake = (row, role = 'operation', status = 200) => request(`/contracts/${row.type}/${row.id}/operator-intake?view=staff`, 'POST', {}, role, status);
 async function rentalFixture() {
   const { vehicle } = await managementFixture();
   await models.Vehicle.updateOne({ _id: vehicle._id }, { $set: { physical_status: 'at_garage' } });
@@ -43,6 +44,41 @@ async function rentalFixture() {
   const prepare = () => request(`/contracts/rental/prepare/${booking._id}`, 'POST', {}, 'manager');
   return { vehicle, booking, prepare };
 }
+
+test('contract lists search exact contract codes only', async () => {
+  const managementFixtureData = await managementFixture();
+  const management = (await managementFixtureData.prepare()).data;
+  const managementSearch = (q) => request(`/contracts/management?view=staff&q=${encodeURIComponent(q)}`, 'GET', undefined, 'operation');
+  assert.deepEqual((await managementSearch(management.number.toUpperCase())).data.map((item) => item.id), [management.id]);
+  assert.equal((await managementSearch(management.number.slice(0, -1))).pagination.total, 0);
+  assert.equal((await managementSearch(managementFixtureData.vehicle.license_plate)).pagination.total, 0);
+
+  const rentalFixtureData = await rentalFixture();
+  const rental = (await rentalFixtureData.prepare()).data;
+  const rentalSearch = (q) => request(`/contracts/rental?view=staff&q=${encodeURIComponent(q)}`, 'GET', undefined, 'operation');
+  assert.deepEqual((await rentalSearch(rental.number.toUpperCase())).data.map((item) => item.id), [rental.id]);
+  assert.equal((await rentalSearch(rental.number.slice(0, -1))).pagination.total, 0);
+  assert.equal((await rentalSearch(rentalFixtureData.booking.booking_code)).pagination.total, 0);
+});
+
+test('Operator with contract-read permission can view without contract-intake permission', async () => {
+  const operatorRole = await models.Role.findOne({ code: 'OPERATION_STAFF' });
+  const originalPermissions = operatorRole.permissions;
+  await models.Role.updateOne(
+    { _id: operatorRole._id },
+    { $set: { permissions: originalPermissions.filter((permission) => permission !== 'operation.contract.intake.confirm') } },
+  );
+  try {
+    const fixture = await managementFixture();
+    const contract = (await fixture.prepare()).data;
+    const list = await request('/contracts/management?view=staff', 'GET', undefined, 'operation');
+    assert.ok(list.data.some((item) => item.id === contract.id));
+    assert.equal((await request(`/contracts/management/${contract.id}?view=staff`, 'GET', undefined, 'operation')).data.id, contract.id);
+    await confirmOperatorIntake(contract, 'operation', 403);
+  } finally {
+    await models.Role.updateOne({ _id: operatorRole._id }, { $set: { permissions: originalPermissions } });
+  }
+});
 
 test('management requires approval, freezes displayed facts and separates both signers before intake', async () => {
   const fixture = await managementFixture();
@@ -57,6 +93,12 @@ test('management requires approval, freezes displayed facts and separates both s
   assert.equal((await models.ManagementAgreement.findById(row.id).lean()).status, 'pending_signatures');
   const eligibilityPath = `/garage/vehicles/${fixture.vehicle._id}/intake-eligibility?managementAgreementId=${row.id}`;
   assert.equal((await request(eligibilityPath, 'GET', undefined, 'garage')).data.eligible, false);
+  await sign(row, 'manager', 'staff', signature(row), 409);
+  const received = (await confirmOperatorIntake(row)).data;
+  assert.equal(received.canOperatorConfirm, false);
+  assert.ok(received.operatorIntakeConfirmedAt);
+  await confirmOperatorIntake(row, 'operation', 409);
+  assert.equal(await models.AuditLog.countDocuments({ entity_id: row.id, action: 'contract.operator_intake.confirm' }), 1);
   const signed = (await sign(row, 'manager', 'staff')).data;
   assert.equal(signed.status, 'active');
   assert.equal((await request(eligibilityPath, 'GET', undefined, 'garage')).data.eligible, true);
@@ -112,6 +154,7 @@ test('new owner vehicle moves through scheduling, approval, paper signing and pu
   assert.ok(contract.document.parties[0].facts.some(({ value }) => value === 'Địa chỉ chủ xe thử nghiệm'));
   assert.ok(contract.document.facts.some(({ value }) => value === '12.5%'));
   await sign(contract, 'owner');
+  await confirmOperatorIntake(contract);
   await sign(contract, 'manager', 'staff');
   const { data: intake } = await request('/garage/intakes', 'POST', {
     vehicleId, managementAgreementId: contract.id, odometerKm: 10020, fuelLevelPct: 70, condition,
@@ -145,21 +188,32 @@ test('ownership, staff authority, acceptance and stale document guards cannot be
   await sign(row, 'owner', 'staff', signature(row), 403);
   await sign(row, 'operation', 'staff', signature(row), 403);
   await sign(row, 'admin', 'staff', signature(row), 403);
+  await sign(row, 'manager', 'staff', signature(row), 409);
+  await confirmOperatorIntake(row, 'operation', 409);
+  await confirmOperatorIntake(row, 'owner', 403);
   await sign(row, 'owner', 'party', { ...signature(row), acceptedTerms: false }, 400);
   await sign(row, 'owner', 'party', { ...signature(row), documentHash: 'stale' }, 409);
+  await sign(row, 'owner');
+  await confirmOperatorIntake(row);
+  await confirmOperatorIntake(row, 'admin', 403);
   await sign(row, 'manager', 'staff');
   await sign(row, 'manager', 'staff', signature(row), 409);
-  assert.equal((await models.ManagementAgreement.findById(row.id).lean()).signature_info.owner_signed_at, undefined);
+  assert.ok((await models.ManagementAgreement.findById(row.id).lean()).signature_info.owner_signed_at);
 });
 
-test('concurrent independent signatures preserve both signers and retry cannot duplicate an acceptance', async () => {
+test('Manager signing waits for party signature and Operator intake; retry cannot duplicate either audit', async () => {
   const row = (await (await managementFixture()).prepare()).data;
-  await Promise.all([sign(row, 'owner'), sign(row, 'manager', 'staff')]);
+  await sign(row, 'manager', 'staff', signature(row), 409);
+  await sign(row, 'owner');
+  await sign(row, 'manager', 'staff', signature(row), 409);
+  await confirmOperatorIntake(row);
+  await sign(row, 'manager', 'staff');
   const stored = await models.ManagementAgreement.findById(row.id).lean();
   assert.equal(stored.status, 'active');
   assert.ok(stored.signature_info.owner_signed_at && stored.signature_info.platform_signed_at);
   await sign(row, 'owner', 'party', signature(row), 409);
   assert.equal(await models.AuditLog.countDocuments({ entity_id: row.id, action: 'contract.sign' }), 2);
+  assert.equal(await models.AuditLog.countDocuments({ entity_id: row.id, action: 'contract.operator_intake.confirm' }), 1);
 });
 
 test('audit failure rolls back signature and contract status', async () => {
@@ -176,17 +230,36 @@ test('audit failure rolls back signature and contract status', async () => {
   assert.equal(stored.signature_info?.owner_signed_at, undefined);
 });
 
-test('Manager prepares rental snapshot, renter and Manager sign independently without marking money paid', async () => {
+test('operator intake audit failure rolls back the handoff', async () => {
+  const row = (await (await managementFixture()).prepare()).data;
+  await sign(row, 'owner');
+  const original = models.AuditLog.collection.insertOne;
+  models.AuditLog.collection.insertOne = async function (document, ...args) {
+    if (document.action === 'contract.operator_intake.confirm') throw new Error('Injected audit failure');
+    return original.call(this, document, ...args);
+  };
+  try { await confirmOperatorIntake(row, 'operation', 500); }
+  finally { models.AuditLog.collection.insertOne = original; }
+  const stored = await models.ManagementAgreement.findById(row.id).lean();
+  assert.equal(stored.operator_intake?.confirmed_at, undefined);
+  assert.equal(await models.AuditLog.countDocuments({ entity_id: row.id, action: 'contract.operator_intake.confirm' }), 0);
+});
+
+test('Manager prepares rental snapshot, renter signs before Operator intake and Manager signing', async () => {
   const fixture = await rentalFixture(), row = (await fixture.prepare()).data;
-  assert.equal(row.document.version, 'xedi-rental-paper-v1');
+  assert.equal(row.document.version, 'xedi-rental-paper-v2');
   assert.equal(row.document.parties.length, 2);
+  assert.equal(row.document.parties[0].heading, 'BÊN A · XEDI, ĐẠI DIỆN THEO ỦY QUYỀN');
   assert.equal(row.document.articles.length, 9);
   assert.ok(row.document.facts.some(({ label }) => label === 'Biển số'));
   assert.match(row.document.articles[3].paragraphs[0], /Tiền cọc/);
   await sign(row, 'otherRenter', 'party', signature(row), 404);
   await sign(row, 'operation', 'staff', signature(row), 403);
-  await sign(row, 'manager', 'staff');
+  await sign(row, 'manager', 'staff', signature(row), 409);
   await sign(row, 'renter');
+  await sign(row, 'manager', 'staff', signature(row), 409);
+  await confirmOperatorIntake(row);
+  await sign(row, 'manager', 'staff');
   const agreement = await models.RentalAgreement.findById(row.id).lean();
   assert.equal(agreement.status, 'signed');
   assert.ok(agreement.signed_at);

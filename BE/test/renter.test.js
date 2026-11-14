@@ -330,9 +330,13 @@ test('Manager approves, both parties sign the same rental contract and payment i
   });
   const prepared = await contractRequest(`/contracts/rental/prepare/${booking._id}`, manager, {});
   const sign = { signatureName: 'Người ký kiểm thử', documentHash: prepared.document.hash, acceptedTerms: true };
+  await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign, 409);
   await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, sign);
   await assert.rejects(service.pay(user, String(booking._id), { agree_deposit: true, payment_method: 'VNPAY_QR' }), { status: 409 });
   await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, user, sign, 403);
+  const operatorRole = await repo.one('roles', { code: 'OPERATION_STAFF' });
+  const operator = await repo.one('users', { primary_role_id: operatorRole._id, account_status: 'active' });
+  await contractRequest(`/contracts/rental/${prepared.id}/operator-intake?view=staff`, operator, {});
   await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign);
   const a = await repo.one('rental_agreements', {
     booking_id: booking._id
@@ -402,11 +406,13 @@ test('paid renter trip progresses through Garage pickup and return with customer
     return repo.one('users', { primary_role_id: role._id, account_status: 'active' });
   };
   const manager = await staff('MANAGER');
+  const operator = await staff('OPERATION_STAFF');
   const garage = await staff('GARAGE_STAFF');
   await contractRequest(`/manager/bookings/${trip._id}/decision`, manager, { action: 'approve' });
   const prepared = await contractRequest(`/contracts/rental/prepare/${trip._id}`, manager, {});
   const sign = { signatureName: 'Người ký kiểm thử', documentHash: prepared.document.hash, acceptedTerms: true };
   await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, sign);
+  await contractRequest(`/contracts/rental/${prepared.id}/operator-intake?view=staff`, operator, {});
   await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign);
   await service.pay(user, String(trip._id), { agree_deposit: true, payment_method: 'VNPAY_QR' });
   const handover = createGarageHandoverService(createGarageHandoverRepository(db));

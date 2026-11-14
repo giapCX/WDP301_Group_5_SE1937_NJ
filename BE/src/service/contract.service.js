@@ -21,7 +21,12 @@ export function createContractService(repository) {
     const id = oid(actor.tokenPayload?.sub);
     const roleIds = [actor.user?.primary_role_id, ...(actor.user?.additional_role_ids || [])].filter(Boolean);
     const roles = await repository.roles.find({ _id: { $in: roleIds } }).exec();
-    return { id, name: actor.user?.full_name || '', roles: roles.map((row) => row.code) };
+    return {
+      id,
+      name: actor.user?.full_name || '',
+      roles: roles.map((row) => row.code),
+      permissions: [...new Set(roles.flatMap((row) => row.permissions || []))],
+    };
   }
   const requireRole = (actor, roles) => {
     if (!actor.roles.some((role) => roles.includes(role))) throw httpError(403, 'Bạn không có quyền thực hiện thao tác hợp đồng này.');
@@ -89,15 +94,30 @@ export function createContractService(repository) {
     const platformAt = signature.platform_signed_at;
     const partyDone = Boolean(partyAt || (type === 'rental' && signature.renter_confirmed));
     const platformDone = Boolean(platformAt || (type === 'rental' && signature.platform_signer_user_id));
+    const operatorIntakeConfirmedAt = row.operator_intake?.confirmed_at || null;
     const signingOpen = type !== 'rental' || (ctx.booking.status === 'awaiting_payment' && ctx.booking.start_at > new Date() && !isBookingHoldExpired(ctx.booking));
     return {
       id: String(row._id), type, number: row.agreement_number || row.contract_number, status: row.status,
       vehicle: `${ctx.vehicle.brand || ''} ${ctx.vehicle.model || ''} · ${ctx.vehicle.license_plate}`,
       commissionRatePct: row.commission_rate_pct, startDate: row.start_date, endDate: row.end_date,
       signature, document: row.contract_document || null, terms: row.contract_document?.clauses || [],
-      partySignedAt: partyAt || null, platformSignedAt: platformAt || null,
+      partySigned: partyDone, partySignedAt: partyAt || null,
+      platformSigned: platformDone, platformSignedAt: platformAt || null,
+      operatorIntakeConfirmedAt,
       partyName: signature.owner_signature_name || signature.renter_signature_name || '', platformName: signature.platform_signature_name || '',
-      canSign: Boolean(signingOpen && row.contract_document && row.status === 'pending_signatures' && (mode === 'party' ? !partyDone : actor.roles.includes('MANAGER') && !platformDone)),
+      canSign: Boolean(signingOpen && row.contract_document && row.status === 'pending_signatures'
+        && (mode === 'party' ? !partyDone : actor.roles.includes('MANAGER') && partyDone && operatorIntakeConfirmedAt && !platformDone)),
+      canOperatorConfirm: Boolean(
+        mode === 'staff'
+        && actor.roles.includes('OPERATION_STAFF')
+        && actor.permissions.includes('operation.contract.intake.confirm')
+        && signingOpen
+        && row.contract_document
+        && row.status === 'pending_signatures'
+        && partyDone
+        && !platformDone
+        && !operatorIntakeConfirmedAt,
+      ),
       canOwnerSign: Boolean(type === 'management' && mode === 'party' && row.contract_document && row.status === 'pending_signatures' && !partyDone),
       canPrepare: Boolean(signingOpen && !row.contract_document && !partyDone && !platformDone && ['draft', 'pending_signatures', 'pending_signature', 'awaiting_signature'].includes(row.status) && (type === 'rental' || ctx.vehicle.onboarding_status === 'approved')),
     };
@@ -125,29 +145,8 @@ export function createContractService(repository) {
         if (typeof query.q !== 'string' || query.q.length > 100) throw httpError(400, 'q không hợp lệ.');
         const q = query.q.trim();
         if (q) {
-          const pattern = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-          if (type === 'management') {
-            const vehicles = await repository.vehicles.find({ license_plate: pattern }, { projection: { _id: 1 } }).exec();
-            filter.$or = [
-              { agreement_number: pattern },
-              { vehicle_id: { $in: vehicles.map((vehicle) => vehicle._id) } },
-            ];
-          } else {
-            const [vehicles, bookings] = await Promise.all([
-              repository.vehicles.find({ license_plate: pattern }, { projection: { _id: 1 } }).exec(),
-              repository.bookings.find({ booking_code: pattern }, { projection: { _id: 1 } }).exec(),
-            ]);
-            const vehicleIds = vehicles.map((vehicle) => vehicle._id);
-            const bookingIds = bookings.map((booking) => booking._id);
-            if (vehicleIds.length) {
-              const vehicleBookings = await repository.bookings.find({ vehicle_id: { $in: vehicleIds } }, { projection: { _id: 1 } }).exec();
-              bookingIds.push(...vehicleBookings.map((booking) => booking._id));
-            }
-            filter.$or = [
-              { contract_number: pattern },
-              { booking_id: { $in: bookingIds } },
-            ];
-          }
+          const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          filter[type === 'management' ? 'agreement_number' : 'contract_number'] = new RegExp(`^${escaped}$`, 'i');
         }
       }
       const rows = await findPageRows(repository.agreement(type), filter, { ...query, page: query.page ?? '1', limit: query.limit ?? '10' }, { sort: { created_at: -1 } });
@@ -160,6 +159,53 @@ export function createContractService(repository) {
       const row = await repository.agreement(type).findOne({ _id: oid(id) });
       if (!row) throw httpError(404, 'Không tìm thấy hợp đồng.');
       return serialize(type, row, await access(type, row, actor, mode), mode, actor);
+    },
+    async confirmOperatorIntake(type, idValue, rawActor) {
+      checkType(type);
+      const actor = await actorInfo(rawActor);
+      requireRole(actor, ['OPERATION_STAFF']);
+      if (!actor.permissions.includes('operation.contract.intake.confirm')) {
+        throw httpError(403, 'Bạn không có quyền tiếp nhận hợp đồng.');
+      }
+
+      return transact(async (session) => {
+        const agreementRepository = repository.agreement(type);
+        const id = oid(idValue);
+        const row = await agreementRepository.findOne({ _id: id }, { session });
+        if (!row) throw httpError(404, 'Không tìm thấy hợp đồng.');
+        const ctx = await access(type, row, actor, 'staff', session);
+        if (same(actor.id, ctx.partyId) || same(actor.id, ctx.vehicle.owner_id)) {
+          throw httpError(403, 'Không thể tiếp nhận hợp đồng của chính mình.');
+        }
+        fail(row.status !== 'pending_signatures' || !row.contract_document || typeof row.contract_document.hash !== 'string', 'Hợp đồng chưa sẵn sàng để Operator tiếp nhận.');
+        const signature = type === 'management' ? row.signature_info || {} : row.signing_info || {};
+        const partySigned = type === 'management'
+          ? Boolean(signature.owner_signed_at)
+          : Boolean(signature.renter_signed_at || signature.renter_confirmed);
+        const platformSigned = Boolean(signature.platform_signed_at || (type === 'rental' && signature.platform_signer_user_id));
+        fail(!partySigned, 'Cần có xác nhận của chủ xe/người thuê trước khi tiếp nhận.');
+        fail(platformSigned, 'Manager đã xác nhận hợp đồng phía XeDi.');
+        fail(row.operator_intake?.confirmed_at, 'Hợp đồng đã được Operator tiếp nhận.');
+        await eligible(type, row, ctx, session);
+
+        const now = new Date();
+        const updated = await agreementRepository.findOneAndUpdate({
+          _id: id,
+          status: 'pending_signatures',
+          'contract_document.hash': row.contract_document.hash,
+          'operator_intake.confirmed_at': { $exists: false },
+        }, {
+          $set: {
+            operator_intake: { confirmed_by_operator_id: actor.id, confirmed_at: now },
+            updated_at: now,
+          },
+        }, { session, returnDocument: 'after' });
+        if (!updated) throw httpError(409, 'Hợp đồng vừa được thay đổi; hãy tải lại trước khi tiếp nhận.');
+        await audit(actor, type, id, 'contract.operator_intake.confirm', {
+          document_hash: row.contract_document.hash,
+        }, session);
+        return { data: serialize(type, updated, ctx, 'staff', actor) };
+      });
     },
     async candidates(type, query, rawActor) {
       checkType(type); const actor = await actorInfo(rawActor);
@@ -240,6 +286,12 @@ export function createContractService(repository) {
         if (mode !== 'party') {
           requireRole(actor, ['MANAGER']);
           if (same(actor.id, ctx.partyId) || same(actor.id, ctx.vehicle.owner_id)) throw httpError(403, 'Không được đại diện nền tảng ký hợp đồng của chính mình.');
+          const signature = type === 'management' ? row.signature_info || {} : row.signing_info || {};
+          const partySigned = type === 'management'
+            ? Boolean(signature.owner_signed_at)
+            : Boolean(signature.renter_signed_at || signature.renter_confirmed);
+          fail(!partySigned, 'Hợp đồng cần được chủ xe/người thuê xác nhận trước.');
+          fail(!row.operator_intake?.confirmed_at, 'Operator chưa tiếp nhận hợp đồng.');
         }
         fail(!row.contract_document || row.status !== 'pending_signatures', 'Hợp đồng chưa sẵn sàng ký hoặc đã ký xong.');
         fail(body.documentHash !== row.contract_document.hash, 'Nội dung hợp đồng đã thay đổi. Vui lòng mở lại trước khi ký.');
