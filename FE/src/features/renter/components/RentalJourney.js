@@ -22,7 +22,7 @@ export default function RentalJourney({ data, expired }) {
   const { booking, agreement, handovers } = data;
   const phase = expired ? undefined : phases[booking.status];
   const message = {
-    pending: 'Operation đang kiểm tra lịch và yêu cầu thuê.',
+    pending: 'Manager đang kiểm tra lịch và yêu cầu thuê.',
     awaiting_payment: agreement?.status === 'signed' ? 'Hợp đồng đã đủ xác nhận. Hoàn tất tiền thuê và cọc trong thời hạn giữ xe.'
       : 'Khách thuê và XeDi xác nhận hợp đồng trước khi thanh toán.',
     confirmed: 'Đến gara theo giờ hẹn để đối chiếu giấy tờ, xem hiện trạng và nhận xe.',
@@ -35,7 +35,7 @@ export default function RentalJourney({ data, expired }) {
       {steps.map((label, index) => <li key={label} aria-current={phase === index ? 'step' : undefined} data-completed={phase > index}>{label}</li>)}
     </ol>}
     {expired || booking.status === 'expired' ? <p>Yêu cầu đã hết hạn giữ xe. Vui lòng chọn lại lịch nếu vẫn muốn thuê.</p>
-      : booking.status === 'rejected' ? <p>Operation đã từ chối yêu cầu. {booking.review_info?.reason}</p>
+      : booking.status === 'rejected' ? <p>Manager đã từ chối yêu cầu. {booking.review_info?.reason}</p>
       : message && <p>{message}</p>}
     <Receipt label="Biên bản giao xe" record={handovers?.pickup} />
     <Receipt label="Biên bản nhận trả xe" record={handovers?.return} />

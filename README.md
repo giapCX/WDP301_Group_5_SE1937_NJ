@@ -33,6 +33,18 @@ Cần Node.js >= 20.19 và **MongoDB Server local có replica set**. Cấu hình
 
 Backend dung kien truc `Routes -> Controller -> Service -> Repository -> Mongoose Model`. Khi cap nhat tu ban Native Driver, chay `npm ci --prefix BE` va `npm run db:setup`; database hien co tiep tuc dung duoc, khong can seed lai. Chi tiet schema, connection va transaction xem [kien truc backend](docs/ARCHITECTURE.md#mongoose-và-dữ-liệu-hiện-có).
 
+## Operator Staff
+
+Tài khoản `OPERATION_STAFF` đăng nhập vào không gian Operator Staff tại `#/operator`, gồm Tổng quan, Hợp đồng xe (chỉ xem), Thông tin xe và Thông tin pháp lý sự cố của xe. API kiểm tra quyền riêng cho từng thao tác. Operator có thể lên lịch/phân công kiểm định đầu vào trong mục Thông tin xe; Manager xử lý duyệt booking và quản lý/xuất bản tin xe. API và giao diện Operation cũ đã được gỡ; dữ liệu nghiệp vụ lịch sử được giữ nguyên.
+
+Với database đã tồn tại, trước khi dùng bản cập nhật hãy kiểm tra `BE/.env` để chắc chắn đang trỏ đúng database, rồi chạy migration từ thư mục gốc:
+
+```powershell
+npm --prefix BE run db:migrate:operator-staff
+```
+
+Migration cập nhật nhãn và quyền của role `OPERATION_STAFF` hiện có; không tạo role mới, không chuyển/xóa user, không xóa dữ liệu lịch sử và không drop collection/cột. Đăng xuất rồi đăng nhập lại để giao diện nạp quyền mới. Để khôi phục giá trị role trong database, chạy `npm --prefix BE run db:rollback:operator-staff`; rollback dữ liệu không tự khôi phục mã nguồn của các workflow cũ.
+
 Tai thu muc goc:
 
 ```powershell
@@ -340,6 +352,6 @@ Da co `/api/garage/inspection-vehicles`, `/api/garage/inspections` va luong tao/
 
 ## Garage Staff: ban giao, nhan tra, su co va anh
 
-FE `/garage` dung `/api/garage/workspace` de hien cong viec, tong quan va lich su that; khong luu nghiep vu trong localStorage. Da co API nhap/xac nhan ban giao va nhan tra, doi chieu hien trang pickup, tu tao su co khi co hu hong moi, gui bao cao su co rieng va upload/doc anh qua JWT. Xe co hu hong moi duoc giu o maintenance; khong tu duyet boi thuong/hoan coc. Luong Garage - Operation - Manager xem [tai lieu phoi hop](BE/docs/manager-garage-workflow.md).
+FE `/garage` dung `/api/garage/workspace` de hien cong viec, tong quan va lich su that; khong luu nghiep vu trong localStorage. Da co API nhap/xac nhan ban giao va nhan tra, doi chieu hien trang pickup, tu tao su co khi co hu hong moi, gui bao cao su co rieng va upload/doc anh qua JWT. Xe co hu hong moi duoc giu o maintenance; khong tu duyet boi thuong/hoan coc. Luong Garage - Operator Staff - Manager xem [tai lieu phoi hop](BE/docs/manager-garage-workflow.md).
 
 Chay `npm run db:setup` de bo sung index, sau do `npm run dev`. Can MongoDB replica set/Atlas de gui/xac nhan va tao su co. Anh mac dinh luu tai `BE/storage/garage-photos` (gitignore); co the dat `GARAGE_UPLOAD_DIRECTORY`. Chi tiet API, request/version, quyen va cach kiem thu: [BE/docs/garage-staff.md](BE/docs/garage-staff.md).

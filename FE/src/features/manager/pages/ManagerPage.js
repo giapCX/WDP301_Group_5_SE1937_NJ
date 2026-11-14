@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import Icon from '../../../components/Icon';
 import { Brand } from '../../../components/SiteHeader';
 import ContractsWorkspace from '../components/ContractsWorkspace';
+import BookingApprovalsWorkspace from '../components/BookingApprovalsWorkspace';
+import ListingManagementWorkspace from '../components/ListingManagementWorkspace';
 import OperationsWorkspace from '../components/OperationsWorkspace';
 import ReportsWorkspace from '../components/ReportsWorkspace';
 import UserMenu from '../components/UserMenu';
@@ -13,6 +15,8 @@ import './ManagerPage.css';
 const sections = [
   { id: 'overview', label: 'Tổng quan', icon: 'gear' },
   { id: 'vehicles', label: 'Kiểm duyệt xe', icon: 'car' },
+  { id: 'bookings', label: 'Duyệt yêu cầu thuê', icon: 'document' },
+  { id: 'listings', label: 'Quản lý tin xe', icon: 'car' },
   { id: 'identityVerifications', label: 'Xét duyệt eKYC', icon: 'shield' },
   { id: 'incidents', label: 'Khiếu nại & sự cố', icon: 'info' },
   { id: 'policies', label: 'Chính sách nền tảng', icon: 'document' },
@@ -116,7 +120,11 @@ export default function ManagerPage() {
           <section className="manager-panel activity-panel"><div className="manager-panel-heading"><div><h2>Hoạt động gần đây</h2><p>Cập nhật mới nhất từ các bộ phận</p></div></div><div className="activity-list">{(dashboard?.activities || []).map((item) => <article className="activity-item" key={item.id}><span className="activity-icon blue"><Icon name="info" size={15} /></span><div><p>{item.actor} {actionText(item.action, item.entityType)}</p><span>{item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : 'Vừa cập nhật'}</span></div></article>)}{dashboard && !dashboard.activities.length && <p className="manager-empty">Chưa có hoạt động được ghi nhận.</p>}</div></section>
         </div>
         {canManageOperations && <section className="manager-panel requests-panel"><div className="manager-panel-heading"><div><h2>Yêu cầu cần xử lý</h2><p>Các công việc đang chờ đội ngũ quản lý xem xét</p></div></div><div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>YÊU CẦU</th><th>LOẠI</th><th>NGƯỜI GỬI</th><th>THỜI GIAN</th><th>TRẠNG THÁI</th></tr></thead><tbody>{(dashboard?.requests || []).map((request) => <tr key={request.id}><td><strong>{request.title}</strong><span>{request.code}</span></td><td>{request.type}</td><td>{request.owner}</td><td>{formatDate(request.createdAt)}</td><td><span className={`request-status ${request.type.includes('sự cố') ? 'rose' : 'amber'}`}><i />{requestStatus(request.status)}</span></td></tr>)}</tbody></table>{dashboard && !dashboard.requests.length && <p className="manager-empty">Không có yêu cầu đang chờ xử lý.</p>}</div></section>}
-        </> : active === 'vehicles'
+        </> : active === 'bookings'
+            ? <BookingApprovalsWorkspace onNotice={setNotice} />
+            : active === 'listings'
+              ? <ListingManagementWorkspace onNotice={setNotice} />
+            : active === 'vehicles'
             ? <VehicleApprovalsWorkspace onNotice={setNotice} />
             : active === 'identityVerifications'
               ? <IdentityVerificationWorkspace onNotice={setNotice} />

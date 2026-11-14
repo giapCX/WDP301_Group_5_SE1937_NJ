@@ -29,7 +29,7 @@ function decisionReadiness(vehicle) {
     || (item.result === 'not_applicable' && item.key !== 'accessories'));
   const weakEvidence = checklist.filter((item) => item.result === 'recorded' && (!item.note?.trim() || !item.photo_key));
   const ownerAccepted = inspection?.ownerReview?.status === 'accepted'
-    && inspection.ownerReview.reviewed_version === (inspection.version ?? 0);
+    && inspection.ownerReview.reviewed_version === inspection.version - 1;
   const checklistReady = checklist.length > 0 && !missing.length && !unsafe.length && !invalid.length && !weakEvidence.length;
   const blockers = [];
   if (inspection?.recommendation !== 'pass') blockers.push('Garage chưa kết luận đạt.');

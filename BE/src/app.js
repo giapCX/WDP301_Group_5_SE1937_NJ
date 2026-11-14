@@ -14,12 +14,11 @@ import { createGarageIncidentRouter } from './routes/garage-incident.routes.js';
 import { createGaragePhotoRouter } from './routes/garage-photo.routes.js';
 import { createGarageWorkspaceRouter } from './routes/garage-workspace.routes.js';
 import { createOwnerRouter } from './routes/owner.routes.js';
-import { createOperationIncidentRouter } from './routes/operation-incident.routes.js';
 import { createContractRouter } from './routes/contract.routes.js';
 import { createIdentityVerificationRouter } from './routes/identity-verification.routes.js';
 import { createCloudinaryOwnerFileRepository } from './repositories/cloudinary-owner-file.repository.js';
 import { createGridFsOwnerFileRepository } from './repositories/gridfs-owner-file.repository.js';
-import { createOperationRouter } from './routes/operation.routes.js';
+import { createOperatorRouter } from './routes/operator.routes.js';
 
 export function createApp(database, options = {}) {
   const app = express();
@@ -38,6 +37,7 @@ export function createApp(database, options = {}) {
   app.use('/api/owner', express.json({ limit: '20mb' }));
   app.use('/api/identity-verifications', express.json({ limit: '12mb' }));
   app.use('/api/renter/files', express.json({ limit: '29mb' }));
+  app.use('/api/operator', express.json({ limit: '6mb' }));
   app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/health', async (_request, response) => {
@@ -61,9 +61,8 @@ export function createApp(database, options = {}) {
   app.use('/api/garage', createGarageWorkspaceRouter(database));
   app.use('/api/manager', createManagerRouter(database, { fileRepository: privateFileRepository }));
   app.use('/api/owner', createOwnerRouter(database, { useLocalFileStorage, fileRepository: options.ownerFileRepository || privateFileRepository }));
-  app.use('/api/operations', createOperationIncidentRouter(database));
   app.use('/api/contracts', createContractRouter(database));
-  app.use('/api/operation', createOperationRouter(database, options.ownerFileRepository || privateFileRepository));
+  app.use('/api/operator', createOperatorRouter(database, options.ownerFileRepository || privateFileRepository));
   app.use(notFound);
   app.use(errorHandler);
   return app;

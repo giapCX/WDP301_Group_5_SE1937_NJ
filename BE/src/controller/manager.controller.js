@@ -12,6 +12,11 @@ export function createManagerController(service) {
     systemReport: async (request, response) => response.status(200).json(await service.systemReport(input(request))),
     saveSystemReport: async (request, response) => response.status(201).json(await service.saveSystemReport(input(request))),
     dashboard: async (request, response) => response.status(200).json(await service.dashboard(input(request))),
+    bookings: async (request, response) => response.status(200).json(await service.bookings(input(request))),
+    decideBooking: async (request, response) => response.status(200).json(await service.decideBooking(input(request))),
+    listings: async (request, response) => response.status(200).json(await service.listings(input(request))),
+    updateListing: async (request, response) => response.status(200).json(await service.updateListing(input(request))),
+    reviewListing: async (request, response) => response.status(200).json(await service.reviewListing(input(request))),
     vehicles: async (request, response) => response.status(200).json(await service.vehicles(input(request))),
     reviewVehicle: async (request, response) => response.status(200).json(await service.reviewVehicle(input(request))),
     vehicleDocument: async (request, response) => {

@@ -48,7 +48,7 @@ function onboardingStep(vehicle, agreement) {
   if (vehicle.approvalStatus === 'rejected') return 'Hồ sơ đã bị từ chối';
   if (vehicle.approvalStatus === 'revision_required') return 'Bổ sung hồ sơ hoặc ghi nội dung đã khắc phục';
   if (vehicle.listing?.status === 'published' && ['at_garage', 'rented'].includes(vehicle.operatingStatus)) return 'Tin xe đã xuất bản';
-  if (vehicle.operatingStatus === 'at_garage') return 'Đã nhập gara · chờ Operation xuất bản';
+  if (vehicle.operatingStatus === 'at_garage') return 'Đã nhập gara · chờ Manager xuất bản';
   if (vehicle.operatingStatus === 'maintenance') return 'Xe đang bảo dưỡng';
   if (vehicle.operatingStatus === 'returned_to_owner') return 'Xe đã giao lại cho chủ';
   if (vehicle.approvalStatus === 'approved') {
@@ -65,7 +65,7 @@ function onboardingStep(vehicle, agreement) {
     return vehicle.inspection.ownerReview || !vehicle.inspection.conditionReport?.checklist ? 'Chờ Manager duyệt' : 'Xem và xác nhận báo cáo kiểm định';
   }
   if (vehicle.inspection?.status === 'draft') return 'Đã mở lượt kiểm định';
-  return 'Chờ Operation sàng lọc và hẹn kiểm định';
+  return 'Chờ Manager xét duyệt và Operator phân công kiểm định';
 }
 
 const statusTone = status => ['approved', 'available', 'paid'].includes(status) ? 'green' : ['rejected', 'maintenance'].includes(status) ? 'red' : 'amber';

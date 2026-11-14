@@ -167,20 +167,21 @@ async function incidentFixture() {
   const booking = await models.Booking.create({ booking_code: randomUUID(), vehicle_id: vehicle._id, renter_id: actors.RENTER._id, start_at: new Date(Date.now() - 86400000), end_at: new Date(), status: 'completed' });
   const deposit = await models.SecurityDeposit.create({ booking_id: booking._id, collected_amount: 100, refundable_amount: 100, deducted_amount: 0, status: 'collected' });
   const incident = ok(await request('/garage/incidents', 'POST', { vehicleId: String(vehicle._id), bookingId: String(booking._id), description: 'New damage found at return', severity: 'medium', photoKeys: [], requestId: randomUUID() }), 201);
+  await models.IncidentCase.updateOne({ _id: incident._id }, {
+    $set: { compensation_claims: [{ requested_amount: 80, decision: 'pending', renter_response: 'disputed' }] },
+  });
   return { vehicle, booking, deposit, incident };
 }
-function proposal(incident, role = 'OPERATION_STAFF') {
-  return request(`/operations/incidents/${incident._id}/compensation-proposal`, 'POST', { amount: 80, evidenceBasis: 'Before and after photographs compared', renterResponse: 'disputed' }, role);
+function submitIncident(incident, role = 'OPERATION_STAFF') {
+  return request(`/operator/incidents/${incident._id}/submit`, 'POST', {}, role);
 }
 function approve(incident) { return request(`/manager/incidents/${incident._id}/compensation`, 'PATCH', { decision: 'approve', amount: 80, claimIndex: 0, note: 'Reviewed both sides and evidence' }, 'MANAGER'); }
 
-test('Garage incident requires Operation proposal, then Manager deducts once and leaves maintenance unchanged', async () => {
+test('Operator submits a Garage claim for direct Manager review and Manager deducts once', async () => {
   const f = await incidentFixture();
   assert.equal((await approve(f.incident)).status, 409);
-  assert.equal((await proposal(f.incident, 'GARAGE_STAFF')).status, 403);
-  assert.equal((await proposal(f.incident, 'MANAGER')).status, 403);
-  ok(await proposal(f.incident), 201);
-  assert.equal((await proposal(f.incident)).status, 409);
+  assert.equal((await request(`/operations/incidents/${f.incident._id}/compensation-proposal`, 'POST', {}, 'MANAGER')).status, 404);
+  ok(await submitIncident(f.incident));
   const results = await Promise.all([approve(f.incident), approve(f.incident)]);
   assert.deepEqual(results.map((result) => result.status).sort(), [200, 404]);
   const deposit = await models.SecurityDeposit.findById(f.deposit._id).lean();
@@ -195,7 +196,7 @@ test('Garage incident requires Operation proposal, then Manager deducts once and
 
 test('failed financial audit rolls back deposit and incident together', async (t) => {
   const f = await incidentFixture();
-  ok(await proposal(f.incident), 201);
+  ok(await submitIncident(f.incident));
   t.mock.method(console, 'error', () => {});
   await connection.db.command({ collMod: 'audit_logs', validator: { impossible_test_field: { $exists: true } } });
   try {
@@ -205,26 +206,38 @@ test('failed financial audit rolls back deposit and incident together', async (t
   } finally { await connection.db.command({ collMod: 'audit_logs', validator: {} }); }
 });
 
-test('Operation investigates an existing owner claim without duplicating it or treating silence as consent', async () => {
+test('Operator submits an existing owner claim without duplicating it or proposing an amount', async () => {
   const f = await incidentFixture();
-  await models.IncidentCase.updateOne({ _id: f.incident._id }, { $set: { compensation_claims: [{ requested_amount: 100, decision: 'pending' }] } });
+  await models.IncidentCase.updateOne({ _id: f.incident._id }, { $set: { compensation_claims: [{ requested_amount: 100, decision: 'pending', renter_response: 'not_received' }] } });
   assert.equal((await approve(f.incident)).status, 409);
-  ok(await request(`/operations/incidents/${f.incident._id}/compensation-proposal`, 'POST', { amount: 80, claimIndex: 0, evidenceBasis: 'Investigated owner supplied claim and photos', renterResponse: 'not_received' }, 'OPERATION_STAFF'), 201);
+  ok(await submitIncident(f.incident));
   const incident = await models.IncidentCase.findById(f.incident._id).lean();
   assert.equal(incident.compensation_claims.length, 1);
   assert.equal(incident.compensation_claims[0].requested_amount, 100);
-  assert.equal(incident.compensation_claims[0].proposed_amount, 80);
+  assert.equal(incident.compensation_claims[0].proposed_amount, undefined);
   assert.equal(incident.compensation_claims[0].renter_response, 'not_received');
   assert.equal((await models.SecurityDeposit.findById(f.deposit._id).lean()).refundable_amount, 100);
 });
 
-test('a multi-role employee cannot approve their own compensation proposal', async () => {
+test('Manager can resolve a submitted incident that has no compensation claim', async () => {
+  const f = await incidentFixture();
+  await models.IncidentCase.updateOne({ _id: f.incident._id }, { $set: { compensation_claims: [] } });
+  ok(await submitIncident(f.incident));
+  const result = await request(`/manager/incidents/${f.incident._id}/review`, 'PATCH', {
+    action: 'resolve',
+    note: 'Đã rà soát thông tin và không có yêu cầu bồi thường.',
+  }, 'MANAGER');
+  assert.equal(result.status, 200);
+  assert.equal((await models.IncidentCase.findById(f.incident._id).lean()).status, 'resolved');
+});
+
+test('a multi-role Manager cannot approve their own submitted incident', async () => {
   const f = await incidentFixture();
   const manager = await models.User.findById(actors.MANAGER._id).lean();
   const operationRole = await models.Role.findOne({ code: 'OPERATION_STAFF' }).lean();
   await models.User.updateOne({ _id: manager._id }, { $set: { additional_role_ids: [...(manager.additional_role_ids || []), operationRole._id] } });
   try {
-    ok(await proposal(f.incident, 'MANAGER'), 201);
+    ok(await submitIncident(f.incident, 'MANAGER'));
     assert.equal((await approve(f.incident)).status, 409);
     assert.equal((await models.SecurityDeposit.findById(f.deposit._id).lean()).refundable_amount, 100);
     assert.equal((await models.IncidentCase.findById(f.incident._id).lean()).compensation_claims[0].decision, 'pending');

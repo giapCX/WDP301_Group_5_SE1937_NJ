@@ -33,4 +33,5 @@ export const vehicleInspectionSchema = createSchema({
   scheduled_for: Date,
   schedule_note: String,
   assigned_by_operation_staff_id: { type: ObjectId, ref: 'User' },
+  assigned_by_operator_staff_id: { type: ObjectId, ref: 'User' },
 });

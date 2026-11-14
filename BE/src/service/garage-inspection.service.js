@@ -121,7 +121,7 @@ export function createVehicleInspectionService(repository) {
         message: 'Kiểm định đầu vào chỉ áp dụng khi xe đang ở chủ xe.',
       });
     if (data.vehicle.condition_declaration && !currentId && !data.open)
-      blockers.push({ code: 'INSPECTION_ASSIGNMENT_REQUIRED', message: 'Cần Operation hẹn và phân công kiểm định cho hồ sơ mới.' });
+      blockers.push({ code: 'INSPECTION_ASSIGNMENT_REQUIRED', message: 'Cần Operator Staff lên lịch và phân công kiểm định cho hồ sơ mới.' });
     if (data.open && (!currentId || !data.open._id.equals(currentId)))
       blockers.push({
         code: 'OPEN_INSPECTION_EXISTS',

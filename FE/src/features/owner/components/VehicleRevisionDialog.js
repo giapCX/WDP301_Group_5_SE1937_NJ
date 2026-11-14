@@ -77,7 +77,7 @@ export default function VehicleRevisionDialog({ vehicle, onClose, onSuccess }) {
         note: note.trim(),
       });
 
-      onSuccess(`Đã gửi tài liệu bổ sung cho xe ${vehicle.brand} ${vehicle.model} (${vehicle.licensePlate}). Operation sẽ xem hồ sơ và hẹn kiểm định lại khi đủ điều kiện.`);
+      onSuccess(`Đã gửi tài liệu bổ sung cho xe ${vehicle.brand} ${vehicle.model} (${vehicle.licensePlate}). Manager sẽ xem hồ sơ; Operator phân công kiểm định khi đủ điều kiện.`);
       onClose();
     } catch (err) {
       setError(err.message || 'Không thể gửi tài liệu bổ sung.');

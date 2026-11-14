@@ -37,7 +37,7 @@ export default function OperationsWorkspace({ active, onNotice }) {
   const [primary] = data;
   if (loading) return <section className="manager-panel workspace-panel"><p className="manager-empty">Đang tải dữ liệu…</p><Pagination {...request.paging} /></section>;
   if (error) return <section className="manager-panel workspace-panel"><div className="manager-notice manager-error">{error}<button onClick={refresh}>Thử lại</button></div><Pagination {...request.paging} /></section>;
-  if (active === 'incidents') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Khiếu nại & sự cố" subtitle="Garage ghi nhận; Operation xác minh; Manager quyết định." count={request.paging?.total ?? primary?.length ?? 0} />
+  if (active === 'incidents') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Khiếu nại & sự cố" subtitle="Garage/Operator ghi nhận; Operator chuyển hồ sơ; Manager quyết định." count={request.paging?.total ?? primary?.length ?? 0} />
     <div className="incident-list">{(primary || []).map(item => <IncidentReviewCard key={item.id} item={item} act={act} reviewCompensation={reviewCompensation} reviewIncident={reviewIncident} reviewTrafficViolation={reviewTrafficViolation} />)}{!primary?.length && <p className="manager-empty">Không có sự cố đang mở.</p>}</div>
   <Pagination {...request.paging} /></section>;
   if (active === 'policies') return <section className="manager-panel workspace-panel"><WorkspaceHeader title="Chính sách nền tảng" subtitle="Cập nhật chính sách sẽ tạo phiên bản mới và lưu lịch sử thay đổi." count={request.paging?.total ?? primary?.length ?? 0} />

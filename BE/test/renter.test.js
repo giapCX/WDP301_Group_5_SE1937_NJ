@@ -13,7 +13,7 @@ import { createApp } from '../src/app.js';
 import { once } from 'node:events';
 async function contractRequest(path, account, body, expected = 200) {
   const response = await fetch(base + '/api' + path, {
-    method: path.startsWith('/operation/') ? 'PATCH' : 'POST',
+    method: path.startsWith('/manager/bookings/') ? 'PATCH' : 'POST',
     headers: { Authorization: `Bearer ${jwt.sign({ sub: String(account._id) }, env.jwtSecret)}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
@@ -301,12 +301,10 @@ test('expired hold releases schedule and public search does not exclude the vehi
   });
   booking = (await service.createBooking(user, payload('after-expiry'))).booking;
 });
-test('Operation approves, both parties sign the same rental contract and payment is idempotent', async () => {
-  const operationRole = await repo.one('roles', { code: 'OPERATION_STAFF' });
+test('Manager approves, both parties sign the same rental contract and payment is idempotent', async () => {
   const managerRole = await repo.one('roles', { code: 'MANAGER' });
-  const operation = await repo.one('users', { primary_role_id: operationRole._id, account_status: 'active' });
   const manager = await repo.one('users', { primary_role_id: managerRole._id, account_status: 'active' });
-  const decision = await contractRequest(`/operation/bookings/${booking._id}/decision`, operation, { action: 'approve' });
+  const decision = await contractRequest(`/manager/bookings/${booking._id}/decision`, manager, { action: 'approve' });
   const approved = await repo.one('bookings', { _id: booking._id });
   assert.equal(approved.status, 'awaiting_payment');
   assert.equal(+approved.hold_expires_at, +approved.payment_deadline_at);
@@ -330,11 +328,11 @@ test('Operation approves, both parties sign the same rental contract and payment
   }), {
     status: 409
   });
-  const prepared = await contractRequest(`/contracts/rental/prepare/${booking._id}`, operation, {});
+  const prepared = await contractRequest(`/contracts/rental/prepare/${booking._id}`, manager, {});
   const sign = { signatureName: 'Người ký kiểm thử', documentHash: prepared.document.hash, acceptedTerms: true };
   await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, sign);
   await assert.rejects(service.pay(user, String(booking._id), { agree_deposit: true, payment_method: 'VNPAY_QR' }), { status: 409 });
-  await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, operation, sign, 403);
+  await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, user, sign, 403);
   await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign);
   const a = await repo.one('rental_agreements', {
     booking_id: booking._id
@@ -403,11 +401,10 @@ test('paid renter trip progresses through Garage pickup and return with customer
     const role = await repo.one('roles', { code });
     return repo.one('users', { primary_role_id: role._id, account_status: 'active' });
   };
-  const operation = await staff('OPERATION_STAFF');
   const manager = await staff('MANAGER');
   const garage = await staff('GARAGE_STAFF');
-  await contractRequest(`/operation/bookings/${trip._id}/decision`, operation, { action: 'approve' });
-  const prepared = await contractRequest(`/contracts/rental/prepare/${trip._id}`, operation, {});
+  await contractRequest(`/manager/bookings/${trip._id}/decision`, manager, { action: 'approve' });
+  const prepared = await contractRequest(`/contracts/rental/prepare/${trip._id}`, manager, {});
   const sign = { signatureName: 'Người ký kiểm thử', documentHash: prepared.document.hash, acceptedTerms: true };
   await contractRequest(`/contracts/rental/${prepared.id}/sign`, user, sign);
   await contractRequest(`/contracts/rental/${prepared.id}/sign?view=staff`, manager, sign);

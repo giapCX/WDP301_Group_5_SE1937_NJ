@@ -7,6 +7,8 @@ import {
 
 const resourcePaths = {
   vehicles: "/vehicles?status=pending",
+  bookings: "/bookings",
+  listings: "/listings",
   incidents: "/incidents?status=open",
   policies: "/policies",
   staff: "/staff",
@@ -48,6 +50,12 @@ export const getManagerDashboard = (period, options) =>
   getApi(`/manager/dashboard?period=${encodeURIComponent(period)}`, options);
 export const reviewVehicle = (id, body) =>
   patchApi(`/manager/vehicles/${id}/review`, body);
+export const decideBooking = (id, body) =>
+  patchApi(`/manager/bookings/${id}/decision`, body);
+export const updateListing = (id, body) =>
+  patchApi(`/manager/listings/${id}`, body);
+export const reviewListing = (id, body) =>
+  patchApi(`/manager/listings/${id}/review`, body);
 export const reviewIdentityVerification = (id, body) =>
   patchApi(`/manager/identity-verifications/${id}/review`, body);
 export const reviewCompensation = (id, body) =>
