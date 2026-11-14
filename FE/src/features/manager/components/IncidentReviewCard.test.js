@@ -5,12 +5,16 @@ const item = { id: 'incident', status: 'pending_review', caseNumber: 'SC-TEST', 
 
 test('pending is actionable after Operation investigation and sends the exact claim index', async () => {
   const reviewCompensation = jest.fn().mockResolvedValue({});
-  const prompt = jest.spyOn(window, 'prompt').mockReturnValueOnce('80').mockReturnValueOnce('Evidence reviewed');
+  const prompt = jest.spyOn(window, 'prompt').mockReturnValueOnce('80').mockReturnValueOnce('Evidence reviewed')
+    .mockReturnValueOnce('RENT-01, Điều 10').mockReturnValueOnce('Báo giá BG-01');
   try {
     render(<IncidentReviewCard item={item} reviewCompensation={reviewCompensation} act={(promise) => promise} />);
     expect(screen.getByText('Khách có bất đồng')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Duyệt bồi thường' }));
-    await waitFor(() => expect(reviewCompensation).toHaveBeenCalledWith('incident', { decision: 'approve', amount: 80, note: 'Evidence reviewed', claimIndex: 0 }));
+    await waitFor(() => expect(reviewCompensation).toHaveBeenCalledWith('incident', {
+      decision: 'approve', amount: 80, note: 'Evidence reviewed', claimIndex: 0,
+      settlementMode: 'record_only', contractBasis: 'RENT-01, Điều 10', evidenceReference: 'Báo giá BG-01',
+    }));
   } finally { prompt.mockRestore(); }
 });
 

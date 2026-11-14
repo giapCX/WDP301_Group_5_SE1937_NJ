@@ -181,7 +181,7 @@ export function createGarageHandoverService(repository) {
       if (!updated) throw httpError(409, 'Biên bản đã thay đổi. Đóng và mở lại trước khi lưu.');
       return updated;
     },
-    async confirm(id, { version, renterConfirmed, note, occurredAt }, actor) {
+    async confirm(id, { version, renterConfirmed, note, occurredAt, pickupVerification }, actor) {
       await ensureIndexes();
       return garageTransaction(repository, async (session) => {
         const record = await getRecord(id, session);
@@ -192,6 +192,10 @@ export function createGarageHandoverService(repository) {
         if (!data.eligible) throw httpError(409, 'Chưa đủ điều kiện giao nhận.', { blockers: data.blockers });
         validateReport(record, data.baselineOdometerKm);
         const returning = record.handover_type === 'return';
+        if (!returning && (pickupVerification || data.booking.review_info?.required === false)
+          && !(pickupVerification?.identityMatched && pickupVerification?.licenseChecked && pickupVerification?.fitToDrive)) {
+          throw httpError(409, 'Cần đối chiếu đúng người nhận, GPLX và điều kiện lái xe trước khi giao xe.');
+        }
         if (!returning && !renterConfirmed) throw httpError(400, 'Khách phải xác nhận trước khi giao xe.');
         if (!renterConfirmed && !record.vehicle_condition.photo_keys?.length)
           throw httpError(400, 'Cần ảnh hiện trạng khi nhận xe mà chưa có xác nhận của khách.');
@@ -209,6 +213,9 @@ export function createGarageHandoverService(repository) {
         if (bookingChange.modifiedCount !== 1 || vehicleChange.modifiedCount !== 1) throw httpError(409, 'Đơn thuê hoặc trạng thái xe đã thay đổi.');
         const confirmed = await repository.handovers.findOneAndUpdate({ _id: id, status: 'draft', version }, { $set: { status: 'confirmed', occurred_at: actualAt, renter_response: renterConfirmed ? 'accepted' : 'not_confirmed',
           ...(renterConfirmed ? { renter_confirmed_at: now } : { renter_dispute_note: note }),
+          ...(!returning && pickupVerification && { pickup_verification: {
+            identity_matched: true, license_checked: true, fit_to_drive: true, checked_at: now, checked_by: actor._id,
+          } }),
           'vehicle_condition.renter_signature_recorded': renterConfirmed,
           ...(returning ? { baseline_handover_id: data.pickup._id, damage_changes: damageChanges } : {}), confirmed_from_version: version, updated_at: now }, $inc: { version: 1 } }, { session, returnDocument: 'after' });
         if (!confirmed) throw httpError(409, 'Biên bản đã thay đổi.');

@@ -96,7 +96,7 @@ export function parseIncidentCreate(body) {
 }
 
 export function parseIncidentUpdate(body) {
-  objectBody(body, ['description', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity', 'vehicleSeized', 'note', 'responseChecklist']);
+  objectBody(body, ['description', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity', 'vehicleSeized', 'note', 'responseChecklist', 'expense']);
   if (!Object.keys(body).length) throw httpError(400, 'Cần ít nhất một trường để cập nhật hồ sơ.');
   const update = {};
   if (body.description !== undefined) update.description = text(body.description, 'description', { required: true, max: 3000 });
@@ -122,7 +122,8 @@ export function parseIncidentUpdate(body) {
   if (body.note !== undefined) update.note = text(body.note, 'note', { required: true, max: 2000 });
   if (body.responseChecklist !== undefined) {
     const checklist = body.responseChecklist;
-    const limits = { driverName: 120, policeReference: 120, insurerReference: 120, missingDocuments: 1000 };
+    const limits = { driverName: 120, policeReference: 120, insurerReference: 120, missingDocuments: 1000,
+      fieldResponder: 120, driverVerification: 1000, detentionProgress: 1000, insuranceProgress: 1000, repairProgress: 1000 };
     const dates = ['ownerNotifiedAt', 'insurerNotifiedAt'];
     objectBody(checklist, [...Object.keys(limits), ...dates, 'injuryStatus']);
     for (const [key, max] of Object.entries(limits)) {
@@ -140,6 +141,20 @@ export function parseIncidentUpdate(body) {
       if (!['unknown', 'none', 'reported'].includes(checklist.injuryStatus)) throw httpError(400, 'Tình trạng thương tích không hợp lệ.');
       update['response_checklist.injuryStatus'] = checklist.injuryStatus;
     }
+  }
+  if (body.expense !== undefined) {
+    const { category, amount, insuranceAmount, evidence, settlementParty } = body.expense || {};
+    objectBody(body.expense, ['category', 'amount', 'insuranceAmount', 'evidence', 'settlementParty']);
+    if (settlementParty !== undefined && !['owner_payable', 'renter_receivable', 'third_party_payable'].includes(settlementParty))
+      throw httpError(400, 'Bên đối soát không hợp lệ.');
+    if (!['assessment', 'repair', 'deductible', 'towing', 'other'].includes(category)
+      || !Number.isSafeInteger(amount) || amount < 1 || amount > 1e9
+      || !Number.isSafeInteger(insuranceAmount) || insuranceAmount < 0 || insuranceAmount > amount) {
+      throw httpError(400, 'Khoản chi hoặc phần bảo hiểm chấp nhận không hợp lệ.');
+    }
+    update.expense = { category, settlement_party: settlementParty, requested_amount: amount, insurance_amount: insuranceAmount,
+      proposed_amount: amount - insuranceAmount, decision: 'pending',
+      evidence_basis: text(evidence, 'Chứng từ', { required: true, max: 500 }) };
   }
   return update;
 }

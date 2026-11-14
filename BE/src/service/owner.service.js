@@ -136,7 +136,7 @@ export function createOwnerService(repository, contracts, handovers) {
           termsVersion: item.signature_info?.terms_version || '', status: item.status,
         })),
         withdrawals: withdrawals.map((item) => ({ id: item._id.toString(), vehicleId: item.vehicle_id?.toString(), reason: item.reason, requestedReturnAt: item.requested_return_at, status: item.status, requestedAt: item.requested_at || item.created_at })),
-        incidents: incidents.map((item) => ({ id: item._id.toString(), caseNumber: item.case_number, vehicleId: item.vehicle_id?.toString(), bookingId: item.booking_id?.toString(), caseType: item.case_type, vehicleSeized: typeof item.vehicle_seized === 'boolean' ? item.vehicle_seized : null, description: item.description, status: item.status, createdAt: item.created_at, compensation: (item.compensation_claims || []).reduce((sum, claim) => sum + (Number(claim.approved_amount) || 0), 0) })),
+        incidents: incidents.map((item) => ({ id: item._id.toString(), caseNumber: item.case_number, vehicleId: item.vehicle_id?.toString(), bookingId: item.booking_id?.toString(), caseType: item.case_type, vehicleSeized: typeof item.vehicle_seized === 'boolean' ? item.vehicle_seized : null, description: item.description, status: item.status, createdAt: item.created_at, settlementPending: (item.compensation_claims || []).some((claim) => claim.settlement_status === 'pending_settlement'), compensation: (item.compensation_claims || []).reduce((sum, claim) => sum + (Number(claim.approved_amount) || 0), 0) })),
       };
     },
 
@@ -291,7 +291,7 @@ export function createOwnerService(repository, contracts, handovers) {
         if (!booking) throw httpError(404, 'Không tìm thấy chuyến thuê của phương tiện này.');
         bookingId = booking._id;
       }
-      const caseType = ['vehicle_damage', 'traffic_violation', 'theft', 'other'].includes(body.caseType) ? body.caseType : null;
+      const caseType = ['accident', 'vehicle_damage', 'traffic_violation', 'theft', 'other'].includes(body.caseType) ? body.caseType : null;
       if (!caseType) throw httpError(400, 'Loại sự cố không hợp lệ.');
       const description = text(body.description, 'Nội dung sự cố', { min: 10, max: 3000 });
       if (typeof body.vehicleSeized !== 'boolean') throw httpError(400, 'Cần xác nhận xe có bị cơ quan chức năng tạm giữ hay không.');

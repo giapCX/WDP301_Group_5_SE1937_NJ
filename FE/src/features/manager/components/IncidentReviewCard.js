@@ -4,6 +4,8 @@ import GaragePhotoPreview from '../../garage/components/GaragePhotoPreview';
 import { getBlobApi } from '../../../services/httpClient';
 
 const money = (value) => new Intl.NumberFormat('vi-VN').format(value || 0);
+const expenseTypes = { assessment: 'Giám định', repair: 'Sửa chữa', deductible: 'Miễn thường', towing: 'Cứu hộ', other: 'Khác' };
+const settlementParties = { owner_payable: 'Đề xuất trả chủ xe', renter_receivable: 'Đề xuất thu từ người thuê', third_party_payable: 'Đề xuất trả bên thứ ba' };
 const responseText = { agreed: 'Khách đồng ý', disputed: 'Khách có bất đồng', not_received: 'Chưa nhận phản hồi' };
 
 export default function IncidentReviewCard({ item, reviewCompensation, reviewIncident, reviewTrafficViolation, act }) {
@@ -67,6 +69,11 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
       <dt>Mã hồ sơ công an</dt><dd>{checklist.policeReference || '—'}</dd>
       <dt>Mã hồ sơ bảo hiểm</dt><dd>{checklist.insurerReference || '—'}</dd>
       <dt>Tài liệu còn thiếu</dt><dd>{checklist.missingDocuments || 'Chưa ghi nhận'}</dd>
+      <dt>Hỗ trợ hiện trường</dt><dd>{checklist.fieldResponder || 'Chưa ghi nhận'}</dd>
+      <dt>Xác minh người lái</dt><dd>{checklist.driverVerification || 'Chưa ghi nhận'}</dd>
+      <dt>Tạm giữ và nhận lại xe</dt><dd>{checklist.detentionProgress || 'Chưa ghi nhận'}</dd>
+      <dt>Bảo hiểm và giám định</dt><dd>{checklist.insuranceProgress || 'Chưa ghi nhận'}</dd>
+      <dt>Sửa chữa và bàn giao lại</dt><dd>{checklist.repairProgress || 'Chưa ghi nhận'}</dd>
     </dl>
   </details>;
   if (item.caseType === 'traffic_violation') return <article className="incident-card">
@@ -100,10 +107,23 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
     {fileError && <p role="alert">{fileError}</p>}
     {claims.map((claim, index) => <div className="claim-row" key={`${item.id}-${index}`}>
       <div><span>Yêu cầu: {money(claim.requested_amount)} ₫</span>
+        {claim.category && <p>{expenseTypes[claim.category]} · Bảo hiểm chấp nhận {money(claim.insurance_amount)} ₫</p>}
+        {claim.settlement_party && <p>{settlementParties[claim.settlement_party]}</p>}
         {claim.proposed_amount !== undefined && <p>Operation đề xuất: {money(claim.proposed_amount)} ₫</p>}
         {claim.evidence_basis && <p>Căn cứ: {claim.evidence_basis}</p>}
+        {claim.contract_basis && <p>Điều khoản hợp đồng: {claim.contract_basis}</p>}
+        {claim.evidence_reference && <p>Chứng từ: {claim.evidence_reference}</p>}
+        {claim.manager_note && <p>Quyết định: {claim.manager_note}</p>}
+        {claim.settlement_status === 'pending_settlement' && <p>Đã duyệt {money(claim.approved_amount)} ₫ · Chờ xử lý thanh toán</p>}
+        {claim.settlement_status === 'settled' && <p>Đã ghi nhận thanh toán · {claim.settlement_reference}</p>}
         <p>{responseText[claim.renter_response] || 'Chưa có thông tin phản hồi của khách'}</p>
       </div>
+      {claim.settlement_status === 'pending_settlement' && <button className="action-review" disabled={busy} onClick={() => {
+        const reference = window.prompt('Mã chứng từ của giao dịch đã hoàn tất:');
+        if (reference?.trim()) run(() => reviewIncident(item.id, {
+          action: 'record_settlement', claimIndex: index, reference: reference.trim(),
+        }), 'Đã ghi nhận chứng từ thanh toán.');
+      }}>Ghi nhận thanh toán</button>}
       {claim.decision && claim.decision !== 'pending' ? <span className="claim-decided">{claim.decision === 'approved' ? 'Đã duyệt' : 'Đã từ chối'}</span> : <div className="workspace-actions">
         <button className="action-approve" disabled={busy || index !== pending || !(managerReview || operatorProposal)} onClick={() => {
           const raw = window.prompt('Số tiền bồi thường được duyệt (VND):', String(claim.proposed_amount ?? claim.requested_amount));
@@ -111,11 +131,19 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
           const amount = Number(raw);
           if (!Number.isSafeInteger(amount) || amount < 0) return;
           const note = window.prompt('Căn cứ quyết định bồi thường của Manager:');
-          if (note?.trim()) run(() => reviewCompensation(item.id, { decision: 'approve', amount, note: note.trim(), claimIndex: index }), 'Đã duyệt bồi thường và cập nhật cọc.');
+          if (!note?.trim()) return;
+          const contractBasis = window.prompt('Số hợp đồng và điều khoản áp dụng:');
+          if (!contractBasis?.trim()) return;
+          const evidenceReference = window.prompt('Mã hoặc tên chứng từ làm căn cứ:');
+          if (!evidenceReference?.trim()) return;
+          run(() => reviewCompensation(item.id, {
+            decision: 'approve', amount, note: note.trim(), claimIndex: index,
+            settlementMode: 'record_only', contractBasis: contractBasis.trim(), evidenceReference: evidenceReference.trim(),
+          }), 'Đã ghi nhận phê duyệt khoản bồi thường.');
         }}>Duyệt bồi thường</button>
-        <button className="action-reject" disabled={busy || index !== pending} onClick={() => {
+        <button className="action-reject" disabled={busy || index !== pending || !(managerReview || operatorProposal)} onClick={() => {
           const note = window.prompt('Lý do từ chối bồi thường:');
-          if (note?.trim()) run(() => reviewCompensation(item.id, { decision: 'reject', note: note.trim(), claimIndex: index }), 'Đã từ chối đề xuất.');
+          if (note?.trim()) run(() => reviewCompensation(item.id, { decision: 'reject', note: note.trim(), claimIndex: index, settlementMode: 'record_only' }), 'Đã từ chối đề xuất.');
         }}>Từ chối</button>
       </div>}
     </div>)}
@@ -123,7 +151,7 @@ export default function IncidentReviewCard({ item, reviewCompensation, reviewInc
       : item.investigation?.review_status !== 'proposed' && <p>Chưa có đề xuất đã xác minh từ Operation. Báo cáo Garage không tự xác lập trách nhiệm bồi thường.</p>}
     {managerReview && <button className="action-review" disabled={busy} onClick={requestInformation}>Yêu cầu Operator bổ sung</button>}
     {item.status === 'need_more_information' && <p>Đang chờ Operator bổ sung hồ sơ; Manager chưa thể kết luận.</p>}
-    {pending < 0 && item.status !== 'need_more_information' && <button className="action-review" disabled={busy} onClick={() => {
+    {pending < 0 && !['need_more_information', 'resolved', 'closed'].includes(item.status) && <button className="action-review" disabled={busy} onClick={() => {
       const note = window.prompt('Kết luận đóng hồ sơ, nêu rõ căn cứ không còn yêu cầu bồi thường:');
       if (note?.trim()) run(() => reviewIncident(item.id, { action: 'resolve', note: note.trim() }), 'Đã đóng hồ sơ. Xe vẫn cần quy trình kiểm tra/sửa chữa nếu đang bảo trì.');
     }}>Kết luận / đóng hồ sơ</button>}

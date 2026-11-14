@@ -194,6 +194,26 @@ test('Operator submits a Garage claim for direct Manager review and Manager dedu
   assert.equal(workspace.incidents.find((item) => item.recordId === f.incident._id).status, 'resolved');
 });
 
+test('Manager records compensation with evidence and contract basis separately from settlement', async () => {
+  const f = await incidentFixture();
+  ok(await submitIncident(f.incident));
+  const path = `/manager/incidents/${f.incident._id}/compensation`;
+  const body = { decision: 'approve', amount: 80, claimIndex: 0, note: 'Reviewed evidence', settlementMode: 'record_only' };
+  assert.equal((await request(path, 'PATCH', body, 'MANAGER')).status, 400);
+  const result = await request(path, 'PATCH', { ...body, contractBasis: 'Điều 10', evidenceReference: 'BG-01' }, 'MANAGER');
+  assert.equal(result.status, 200);
+  const incident = await models.IncidentCase.findById(f.incident._id).lean();
+  assert.equal(incident.compensation_claims[0].settlement_status, 'pending_settlement');
+  assert.equal(incident.compensation_claims[0].evidence_reference, 'BG-01');
+  assert.equal((await models.SecurityDeposit.findById(f.deposit._id).lean()).refundable_amount, 100);
+  const settlement = { action: 'record_settlement', claimIndex: 0, reference: 'UNC-01' };
+  const settlementPath = `/manager/incidents/${f.incident._id}/review`;
+  assert.equal((await request(settlementPath, 'PATCH', settlement, 'MANAGER')).status, 200);
+  assert.equal((await request(settlementPath, 'PATCH', settlement, 'MANAGER')).status, 409);
+  const settled = await models.IncidentCase.findById(f.incident._id).lean();
+  assert.equal(settled.compensation_claims[0].settlement_reference, 'UNC-01');
+});
+
 test('failed financial audit rolls back deposit and incident together', async (t) => {
   const f = await incidentFixture();
   ok(await submitIncident(f.incident));

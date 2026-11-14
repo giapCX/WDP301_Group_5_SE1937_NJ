@@ -727,6 +727,7 @@ export function createOperatorService(repository, files) {
             id: String(row._id), type: row.handover_type, occurredAt: row.occurred_at,
             odometerKm: row.odometer_km, fuelLevelPct: row.fuel_level_pct,
             note: row.vehicle_condition?.note,
+            pickupVerification: row.pickup_verification,
           })),
         };
         if (permissions.includes('operation.contract.read')) {
@@ -800,6 +801,7 @@ export function createOperatorService(repository, files) {
         if (!canProcessIncident(current)) {
           throw httpError(403, 'Operator chỉ được cập nhật hồ sơ mới hoặc hồ sơ Manager yêu cầu bổ sung.');
         }
+        if (changes.expense && current.case_type === 'traffic_violation') throw httpError(409, 'Vi phạm giao thông được xử lý theo luồng riêng.');
         if (changes.vehicle_seized !== undefined && typeof changes.vehicle_seized !== 'boolean') {
           throw httpError(400, 'Cần xác nhận xe bị tạm giữ hoặc không bị tạm giữ.');
         }
@@ -814,7 +816,7 @@ export function createOperatorService(repository, files) {
         const now = new Date();
         const set = { updated_at: now };
         for (const [key, value] of Object.entries(changes)) {
-          if (key !== 'note') set[key] = value;
+          if (key !== 'note' && key !== 'expense') set[key] = value;
         }
         const changedFields = Object.keys(set).filter((key) => key !== 'updated_at');
         const result = await repository.incidents.updateOne(
@@ -822,6 +824,7 @@ export function createOperatorService(repository, files) {
           {
             $set: set,
             $push: {
+              ...(changes.expense && { compensation_claims: changes.expense }),
               operation_timeline: {
                 action: 'incident.details.update',
                 note: changes.note || '',

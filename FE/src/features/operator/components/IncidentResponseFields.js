@@ -5,6 +5,11 @@ const fields = [
   ['insurerNotifiedAt', 'Đã thông báo bảo hiểm lúc'],
   ['policeReference', 'Mã hồ sơ công an', 120],
   ['insurerReference', 'Mã hồ sơ bảo hiểm', 120],
+  ['fieldResponder', 'Nhân viên được cử hỗ trợ hiện trường', 120],
+  ['driverVerification', 'Đối chiếu người lái, GPLX và kết quả kiểm tra từ cơ quan có thẩm quyền', 1000],
+  ['detentionProgress', 'Hồ sơ tạm giữ, người nhận xe và tình trạng nhận lại xe', 1000],
+  ['insuranceProgress', 'Khai báo bảo hiểm, giám định và kết quả xử lý', 1000],
+  ['repairProgress', 'Tiến độ sửa chữa và bàn giao lại xe', 1000],
 ];
 
 export function readIncidentResponse(form) {

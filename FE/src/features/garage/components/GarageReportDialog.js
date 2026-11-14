@@ -35,6 +35,7 @@ export default function GarageReportDialog({ task, onSave, onClose, onReviewArri
     accessories: [],
     ...task.report,
     confirmed: Boolean(task.report?.confirmed || (task.kind === 'intake' && task.ownerReview?.status === 'accepted')),
+    pickupVerification: task.pickupVerification || {},
     defects: task.report?.defects ?? (!task.recordId ? task.baselineCondition?.defects?.map((defect) => ({ ...defect, photo_key: '' })) : undefined),
     disputeNote: task.renterDisputeNote || '',
     occurredAt: task.kind === 'owner-return' && task.occurredAt ? toLocalInput(task.occurredAt) : '',
@@ -78,6 +79,10 @@ export default function GarageReportDialog({ task, onSave, onClose, onReviewArri
   }
   function submit(event) {
     event.preventDefault();
+    if (task.kind === 'handover' && !['identityMatched', 'licenseChecked', 'fitToDrive'].every((key) => report.pickupVerification[key])) {
+      setError('Cần đối chiếu đủ người nhận, GPLX và điều kiện lái xe trước khi giao xe.');
+      return;
+    }
     if (needsOwnerIntake && !ownerIntakeAccepted) {
       setError('Lưu biên bản và chờ chủ xe xác nhận ở mục Xem hiện trạng trước khi hoàn tất.');
       return;
@@ -125,6 +130,12 @@ export default function GarageReportDialog({ task, onSave, onClose, onReviewArri
       onClose={busy || uploading ? () => {} : onClose}
     >
       <GarageManagerDecision task={task} />
+      {task.kind === 'handover' && <fieldset disabled={readOnly || busy}>
+        <legend>Đối chiếu tại quầy trước khi giao xe</legend>
+        {Object.entries({ identityMatched: 'Người nhận đúng với hồ sơ thuê', licenseChecked: 'Đã đối chiếu GPLX phù hợp và còn hiệu lực', fitToDrive: 'Đã kiểm tra điều kiện lái xe tại thời điểm bàn giao' }).map(([key, label]) =>
+          <label key={key}><input type="checkbox" checked={Boolean(report.pickupVerification[key])}
+            onChange={(event) => set('pickupVerification', { ...report.pickupVerification, [key]: event.target.checked })} /> {label}</label>)}
+      </fieldset>}
       {needsOwnerIntake && <p className="gs-form-hint">{ownerIntakeAccepted ? 'Chủ xe đã xác nhận phiên bản này.'
         : task.ownerReview?.status === 'disputed' ? `Chủ xe có bất đồng: ${task.ownerReview.note}`
           : 'Lưu biên bản để chủ xe xem và xác nhận trong Đội xe của tôi.'}</p>}

@@ -415,6 +415,11 @@ export default function OperatorPage({ initialSection } = {}) {
         vehicleSeized: body.vehicleSeized === 'true',
         ...(body.note.trim() ? { note: body.note.trim() } : {}),
         responseChecklist: readIncidentResponse(new FormData(form)),
+        ...(body.expenseCategory && { expense: {
+          category: body.expenseCategory, amount: Number(body.expenseAmount),
+          ...(body.settlementParty && { settlementParty: body.settlementParty }),
+          insuranceAmount: Number(body.expenseInsurance), evidence: body.expenseEvidence,
+        } }),
       });
       setSelectedIncident(null);
     }, 'Đã cập nhật hồ sơ sự cố.');
@@ -967,10 +972,20 @@ export default function OperatorPage({ initialSection } = {}) {
             <label>Cơ quan chức năng có tạm giữ xe không?<select name="vehicleSeized" required defaultValue={selectedIncident.vehicleSeized === true ? 'true' : selectedIncident.vehicleSeized === false ? 'false' : ''}><option value="" disabled>Chọn tình trạng</option><option value="true">Có, xe đang bị tạm giữ</option><option value="false">Không bị tạm giữ</option></select></label>
             <label>Ghi chú bổ sung<textarea name="note" maxLength={2000} rows="2" /></label>
             <IncidentResponseFields checklist={selectedIncident.responseChecklist} />
+            {selectedIncident.caseType !== 'traffic_violation' && <fieldset>
+              <legend>Thêm khoản chi đề xuất</legend>
+              <label>Khoản đối soát<select name="settlementParty" defaultValue=""><option value="">Chưa xác định</option><option value="owner_payable">Đề xuất trả chủ xe</option><option value="renter_receivable">Đề xuất thu từ người thuê</option><option value="third_party_payable">Đề xuất trả bên thứ ba</option></select></label>
+              <label>Loại chi phí<select name="expenseCategory" defaultValue=""><option value="">Không thêm khoản chi</option><option value="assessment">Giám định</option><option value="repair">Sửa chữa</option><option value="deductible">Miễn thường</option><option value="towing">Cứu hộ</option><option value="other">Khác</option></select></label>
+              <label>Tổng chi phí (₫)<input name="expenseAmount" type="number" min="1" max="1000000000" /></label>
+              <label>Bảo hiểm đã chấp nhận (₫)<input name="expenseInsurance" type="number" min="0" defaultValue="0" /></label>
+              <label>Mã hoặc tên chứng từ<input name="expenseEvidence" maxLength={500} /></label>
+            </fieldset>}
             <button disabled={busy}>Lưu cập nhật</button>
           </>}
         </form>
         {!canEditSelectedIncident && canEditIncident(selectedIncident) && <p>Chỉ người có quyền cập nhật sự cố mới có thể sửa hồ sơ.</p>}
+        {selectedIncident.compensationClaims?.length > 0 && <ul>{selectedIncident.compensationClaims.map((claim, index) =>
+          <li key={index}>{claim.evidence_basis || 'Khoản chủ xe đề nghị'} · {Number(claim.requested_amount).toLocaleString('vi-VN')} ₫</li>)}</ul>}
         {selectedIncident.timeline?.length > 0 && <section className="operator-evidence"><h3>Lịch sử xử lý</h3><ul>{[...selectedIncident.timeline].reverse().map((entry, index) => <li key={`${entry.action}-${entry.at}-${index}`}><strong>{entry.action}</strong>{entry.at && <> · {new Date(entry.at).toLocaleString('vi-VN')}</>}{entry.note && <p>{entry.note}</p>}</li>)}</ul></section>}
         <section className="operator-evidence"><h3>Biên bản và chứng cứ</h3>
           {selectedIncident.evidence?.length ? selectedIncident.evidence.map((evidence) => evidence.isGaragePhoto

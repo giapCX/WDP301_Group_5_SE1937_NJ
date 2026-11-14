@@ -1015,11 +1015,12 @@ export function createManagerService(repository) {
     },
     incidents: async input => {
       const status = input.query.status || "open";
-      const match = status === "all" ? {} : {
-        status: status === "open" ? {
-          $in: OPEN_INCIDENT_STATUSES
-        } : status
-      };
+      const match = status === 'all' ? {} : status === 'open' ? {
+        $or: [
+          { status: { $in: OPEN_INCIDENT_STATUSES } },
+          { 'compensation_claims.settlement_status': 'pending_settlement' },
+        ],
+      } : { status };
       const items = await findPageRows(repository.collection("incident_cases"), match, input.query, {
         sort: {
           updated_at: -1

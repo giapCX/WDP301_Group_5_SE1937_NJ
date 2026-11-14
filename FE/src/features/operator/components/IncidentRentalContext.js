@@ -16,6 +16,7 @@ export default function IncidentRentalContext({ context }) {
       <summary>Biên bản {item.type === 'pickup' ? 'giao xe' : 'trả xe'} · {dateTime(item.occurredAt)}</summary>
       <p>ODO {item.odometerKm ?? '—'} km · Nhiên liệu/pin {item.fuelLevelPct ?? '—'}%</p>
       {item.note && <p>{item.note}</p>}
+      {item.pickupVerification && <p>Garage đã ghi nhận đối chiếu người nhận, GPLX và điều kiện lái xe lúc {dateTime(item.pickupVerification.checked_at)}.</p>}
     </details>) : <p>Chưa có biên bản giao nhận đã xác nhận.</p>}
     {contract && <SigningDialog item={contract} view="staff" readOnly onClose={() => setContract(null)} />}
   </section>;

@@ -46,6 +46,7 @@ export async function saveGarageTask(task, report, draft, checkpoint) {
   const action = task.kind === 'inspection' ? 'submit' : 'confirm';
   const confirmation = { version: record.version, ...(task.kind === 'intake' ? { ownerConfirmed: report.confirmed } : task.kind === 'inspection' ? {} : { renterConfirmed: report.confirmed,
     ...(report.disputeNote ? { disputeNote: report.disputeNote } : {}),
+    ...(task.kind === 'handover' && { pickupVerification: report.pickupVerification }),
     ...(report.occurredAt ? { occurredAt: new Date(report.occurredAt).toISOString() } : {}),
   }) };
   const { data } = await postApi(`${base}/${record._id}/${action}`, confirmation);

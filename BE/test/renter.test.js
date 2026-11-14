@@ -424,7 +424,10 @@ test('paid renter trip progresses through Garage pickup and return with customer
   const pickup = await handover.create({
     booking_id: trip._id, handover_type: 'pickup', odometer_km: 10000, fuel_level_pct: 80, vehicle_condition: condition,
   }, garage);
-  await handover.confirm(pickup._id, { version: pickup.version, renterConfirmed: true }, garage);
+  await assert.rejects(handover.confirm(pickup._id, { version: pickup.version, renterConfirmed: true }, garage), { status: 409 });
+  await handover.confirm(pickup._id, { version: pickup.version, renterConfirmed: true,
+    pickupVerification: { identityMatched: true, licenseChecked: true, fitToDrive: true },
+  }, garage);
   const ongoing = await service.detail(user, String(trip._id));
   assert.equal(ongoing.booking.status, 'ongoing');
   assert.equal(ongoing.handovers.pickup.odometer_km, 10000);
