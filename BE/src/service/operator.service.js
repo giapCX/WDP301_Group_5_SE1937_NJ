@@ -280,12 +280,6 @@ export function createOperatorService(repository, files) {
           inspectionsAwaitingManager,
         });
       }
-      if (hasPermission('operation.identity_verification.read')) {
-        metrics.identityVerificationsPending = await repository.users.countDocuments({
-          'identity_kyc.status': 'pending',
-          'driver_license.verification_status': 'pending',
-        });
-      }
       return {
         data: { metrics },
       };

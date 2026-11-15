@@ -5,9 +5,6 @@ import { createManagerRepository } from '../repositories/manager.repository.js';
 import { createManagerService } from '../service/manager.service.js';
 import { createManagerController } from '../controller/manager.controller.js';
 import { attachManagerRoles, requireManagerRoles } from '../middleware/manager-auth.middleware.js';
-import { createIdentityVerificationController } from '../controller/identity-verification.controller.js';
-import { createIdentityVerificationRepository } from '../repositories/identity-verification.repository.js';
-import { createIdentityVerificationService } from '../service/identity-verification.service.js';
 import { createContractRepository } from '../repositories/contract.repository.js';
 import { createContractService } from '../service/contract.service.js';
 
@@ -19,9 +16,6 @@ export function createManagerRouter(database, { fileRepository } = {}) {
 
   const contracts = createContractService(createContractRepository(database));
   const controller = createManagerController(service, createManagerApprovalService(repository, service, contracts));
-  const verificationController = fileRepository
-    ? createIdentityVerificationController(createIdentityVerificationService(createIdentityVerificationRepository(database, fileRepository), fileRepository))
-    : null;
   router.use(createAuthMiddleware(database), attachManagerRoles(service));
   router.get('/dashboard', controller.dashboard);
   const requireManager = requireManagerRoles('MANAGER');
@@ -46,11 +40,6 @@ export function createManagerRouter(database, { fileRepository } = {}) {
   router.get('/vehicles', requireManager, controller.vehicles);
   router.patch('/vehicles/:id/review', requireManager, controller.reviewVehicle);
   router.get('/vehicles/:id/documents/:kind', requireManager, controller.vehicleDocument);
-  if (verificationController) {
-    router.get('/identity-verifications', requireManager, verificationController.list);
-    router.patch('/identity-verifications/:id/review', requireManager, verificationController.review);
-    router.get('/identity-verifications/:id/documents/:kind', requireManager, verificationController.download);
-  }
   router.get('/incidents', requireManager, controller.incidents);
   router.patch('/incidents/:id/compensation', requireManager, controller.reviewCompensation);
   router.patch('/incidents/:id/violation', requireManager, controller.reviewTrafficViolation);

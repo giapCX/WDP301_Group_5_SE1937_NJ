@@ -10,7 +10,7 @@ export function createOwnerRepository(connection, fileRepository) {
   return {
     findRoles: (ids) => models.Role.find({ _id: { $in: ids } }).select({ code: 1 }).lean(),
     findVehicles: (ownerId) => vehicles.find({ owner_id: ownerId }, {
-      projection: { brand: 1, model: 1, manufacture_year: 1, license_plate: 1, onboarding_status: 1, review_note: 1, physical_status: 1, created_at: 1, updated_at: 1, documents: 1, photos: 1, condition_declaration: 1, inspection_schedule_request: 1 },
+      projection: { brand: 1, model: 1, manufacture_year: 1, license_plate: 1, onboarding_status: 1, review_note: 1, physical_status: 1, created_at: 1, updated_at: 1, documents: 1, photos: 1, condition_declaration: 1, inspection_schedule_request: 1, operator_document_review: 1 },
       sort: { updated_at: -1, _id: -1 },
     }),
     findListings: (vehicleIds) => models.VehicleListing.find({ vehicle_id: { $in: vehicleIds } })

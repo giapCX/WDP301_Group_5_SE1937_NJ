@@ -6,14 +6,14 @@ import '../../owner/pages/owner.css';
 const items = [
   ['home', 'Trang chủ', 'calendar'],
   ['bookings', 'Chuyến đi & thanh toán', 'document'],
-  ['profile', 'Hồ sơ & xác minh', 'people'],
+  ['profile', 'Hồ sơ cá nhân', 'people'],
   ['incidents', 'Sự cố đã báo cáo', 'shield'],
 ];
 const titles = { home: 'Trang chủ khách thuê', profile: 'Hồ sơ cá nhân', bookings: 'Chuyến đi của bạn', incidents: 'Sự cố và hỗ trợ' };
 const descriptions = {
   home: 'Theo dõi chuyến đi, hoàn thiện hồ sơ và tìm chiếc xe cho hành trình tiếp theo.',
   bookings: 'Quản lý lịch thuê, hợp đồng, thanh toán và yêu cầu hủy chuyến.',
-  profile: 'Cập nhật thông tin cá nhân và giấy tờ để sẵn sàng cho chuyến đi.',
+  profile: 'Cập nhật thông tin cá nhân để sẵn sàng cho chuyến đi.',
   incidents: 'Theo dõi báo cáo và quá trình hỗ trợ trong chuyến thuê của bạn.',
 };
 

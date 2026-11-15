@@ -154,7 +154,6 @@ export function createOwnerService(repository, contracts, handovers) {
     async requestInspectionSchedule(vehicleValue, body, actor) {
       const ownerId = await actorId(actor);
       if (!/^[a-f\d]{24}$/i.test(vehicleValue || '')) throw httpError(400, 'Phương tiện không hợp lệ.');
-      if (actor.user?.identity_kyc?.status !== 'verified') throw httpError(409, 'Cần được xác minh danh tính trước khi yêu cầu kiểm định xe.');
       if (typeof body?.requestedFor !== 'string' || Number.isNaN(Date.parse(body.requestedFor))
         || new Date(body.requestedFor) <= new Date()) throw httpError(400, 'Thời gian đề xuất phải hợp lệ và ở tương lai.');
       const note = text(body.note, 'Ghi chú lịch kiểm định', { min: 5, max: 500 });
@@ -324,7 +323,6 @@ export function createOwnerService(repository, contracts, handovers) {
 
     async registerVehicle(body, actor) {
       const ownerId = await actorId(actor);
-      if (actor.user?.identity_kyc?.status !== 'verified') throw httpError(409, 'Cần được xác minh danh tính trước khi đăng ký xe.');
       if (!body || typeof body !== 'object' || Array.isArray(body)) throw httpError(400, 'Thông tin đăng ký xe không hợp lệ.');
       if (body.acceptedTerms !== true) throw httpError(400, 'Bạn cần xác nhận thông tin hồ sơ và đồng ý quy trình đăng ký xe.');
       const licensePlate = text(body.licensePlate, 'Biển số xe', { max: 16 }).toUpperCase();

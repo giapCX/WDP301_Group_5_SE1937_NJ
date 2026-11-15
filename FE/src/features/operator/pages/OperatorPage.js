@@ -17,8 +17,6 @@ import {
   getOperatorEvidence,
   getOperatorIncident,
   getOperatorIncidents,
-  getOperatorIdentityDocument,
-  getOperatorIdentityVerifications,
   getOperatorGarageStaff,
   getOperatorInspectionWorkflow,
   getOperatorVehicles,
@@ -26,7 +24,6 @@ import {
   getOperatorVehicleDocument,
   reviewOperatorVehicleDocuments,
   scheduleOperatorVehicleInspection,
-  precheckOperatorIdentity,
   precheckOperatorVehicleInspection,
   receiveOperatorIncident,
   submitOperatorIncident,
@@ -48,7 +45,6 @@ const sections = [
   { id: 'listings', label: 'Tin xe', icon: 'car', permission: 'operation.listing.manage' },
   { id: 'bookings', label: 'Duyệt booking', icon: 'document', permission: 'operation.booking.read' },
   { id: 'trips', label: 'Chuyến thuê', icon: 'car', permission: 'operation.booking.read' },
-  { id: 'identity', label: 'Xác minh hồ sơ', icon: 'shield', permission: 'operation.identity_verification.read' },
   { id: 'incidents', label: 'Thông tin pháp lý sự cố của xe', icon: 'shield', permission: 'operation.incident.read' },
 ];
 const sectionDescriptions = {
@@ -59,7 +55,6 @@ const sectionDescriptions = {
   contracts: 'Theo dõi hồ sơ hợp đồng và chuyển Manager ký đúng quy trình.',
   vehicles: 'Tra cứu hồ sơ xe, lịch kiểm định và thông tin phân công Garage.',
   inspections: 'Xác nhận lịch Owner đề nghị, phân công Garage và kiểm tra biên bản Garage gửi.',
-  identity: 'Kiểm tra trước hồ sơ Chủ xe và Người thuê; Manager là người quyết định xác minh cuối.',
   incidents: 'Ghi nhận sự cố, bổ sung chứng cứ và chuyển hồ sơ cho Manager.',
 };
 const dashboardMetrics = [
@@ -73,7 +68,6 @@ const dashboardMetrics = [
   { key: 'inspectionsUpcoming', label: 'Lịch kiểm định sắp đến hạn', icon: 'check', tone: 'green' },
   { key: 'inspectionsOverdue', label: 'Lịch kiểm định quá hạn', icon: 'check', tone: 'rose' },
   { key: 'inspectionsAwaitingManager', label: 'Biên bản chờ Manager duyệt', icon: 'document', tone: 'amber' },
-  { key: 'identityVerificationsPending', label: 'Hồ sơ eKYC chờ Operator kiểm tra', icon: 'shield', tone: 'blue' },
 ];
 
 const vehicleStatuses = {
@@ -190,8 +184,6 @@ export default function OperatorPage({ initialSection } = {}) {
   const [rows, setRows] = useState([]);
   const [inspectionQueue, setInspectionQueue] = useState({ scheduleRequests: [], garageReports: [] });
   const [inspectionPagination, setInspectionPagination] = useState({});
-  const [identityRows, setIdentityRows] = useState([]);
-  const [identityNotes, setIdentityNotes] = useState({});
   const [pagination, setPagination] = useState(null);
   const [vehiclesForIncident, setVehiclesForIncident] = useState([]);
   const [incidentVehicleSearch, setIncidentVehicleSearch] = useState('');
@@ -289,9 +281,6 @@ export default function OperatorPage({ initialSection } = {}) {
             setRows(result.data || []);
             setPagination(result.pagination || null);
           }
-        } else if (section === 'identity') {
-          const result = await getOperatorIdentityVerifications({ status: 'pending' }, { signal: controller.signal });
-          if (!controller.signal.aborted) setIdentityRows(result.data || []);
         }
       } catch (reason) {
         if (!controller.signal.aborted) setError(reason.message || 'Không thể tải dữ liệu.');
@@ -441,27 +430,6 @@ export default function OperatorPage({ initialSection } = {}) {
     await runAction(
       () => updateOperatorVehicleStatus(selectedVehicle.id, { status: body.status, note: body.note.trim() }),
       'Đã cập nhật trạng thái xe và lưu lý do.',
-    );
-  }
-
-  async function downloadIdentityDocument(user, kind) {
-    try {
-      const file = await getOperatorIdentityDocument(user.id, kind);
-      saveBlob(file, `${user.id}-${kind}`);
-    } catch (reason) {
-      setError(reason.message || 'Không thể tải giấy tờ eKYC.');
-    }
-  }
-
-  async function reviewIdentity(user, action) {
-    const note = identityNotes[user.id] || '';
-    if (action === 'needs_revision' && note.trim().length < 5) {
-      setError('Ghi rõ lý do cần bổ sung (tối thiểu 5 ký tự).');
-      return;
-    }
-    await runAction(
-      () => precheckOperatorIdentity(user.id, { action, note }),
-      action === 'ready' ? 'Đã chuyển hồ sơ eKYC cho Manager quyết định.' : 'Đã ghi nhận yêu cầu bổ sung để Manager xem xét.',
     );
   }
 
@@ -673,30 +641,6 @@ export default function OperatorPage({ initialSection } = {}) {
             </section>
           ) : section === 'contracts' ? (
             <ContractsPage embedded key={revision + contractQueue} initialType={contractQueue ? "rental" : undefined} queue={contractQueue} />
-          ) : section === 'identity' ? (
-            <section className="operator-workspace">
-              {loading ? <p role="status">Đang tải hồ sơ eKYC…</p> : identityRows.length ? (
-                <div className="operator-table-wrap" tabIndex={0} role="region" aria-label="Bảng dữ liệu vận hành">
-                  <table className="operator-table">
-                    <thead><tr><th>Chủ thể</th><th>Danh tính</th><th>Giấy phép lái xe</th><th>Tài liệu</th><th>Kiểm tra trước</th></tr></thead>
-                    <tbody>{identityRows.map((user) => <tr key={user.id}>
-                      <td><strong>{user.name}</strong><span>{user.email}</span><span>{user.phone || '—'}</span></td>
-                      <td>{user.identity.status} · {user.identity.idMasked || '—'}</td>
-                      <td>{user.driverLicense.status} · {user.driverLicense.licenseMasked || '—'}<span>Hết hạn {user.driverLicense.expiresAt ? new Date(user.driverLicense.expiresAt).toLocaleDateString('vi-VN') : '—'}</span></td>
-                      <td><button className="operator-secondary" onClick={() => downloadIdentityDocument(user, 'identity')}>Tài liệu định danh</button><button className="operator-secondary" onClick={() => downloadIdentityDocument(user, 'license')}>Giấy phép lái xe</button></td>
-                      <td>
-                        <label className="operator-identity-note">Ghi chú<input value={identityNotes[user.id] || ''} maxLength={1000} onChange={(event) => setIdentityNotes((current) => ({ ...current, [user.id]: event.target.value }))} /></label>
-                        <div className="operator-section-actions">
-                          <button disabled={busy || Boolean(user.operatorPrecheck?.status)} onClick={() => reviewIdentity(user, 'ready')}>Đủ hồ sơ · chuyển Manager</button>
-                          <button className="operator-secondary" disabled={busy || Boolean(user.operatorPrecheck?.status) || (identityNotes[user.id] || '').trim().length < 5} onClick={() => reviewIdentity(user, 'needs_revision')}>Cần bổ sung</button>
-                        </div>
-                        {user.operatorPrecheck?.status && <span>Đã kiểm tra · {user.operatorPrecheck.status}</span>}
-                      </td>
-                    </tr>)}</tbody>
-                  </table>
-                </div>
-              ) : <p className="operator-empty">Không có hồ sơ eKYC đang chờ kiểm tra.</p>}
-            </section>
           ) : section === 'inspections' ? (
             <section className="operator-workspace">
               <form className="operator-filters" onSubmit={(event) => {

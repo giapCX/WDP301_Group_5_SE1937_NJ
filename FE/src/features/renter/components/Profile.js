@@ -52,7 +52,7 @@ export default function Profile() {
     [e.target.name]: e.target.value
   });
   return <div className="renter-stack">{error && <p role="alert" className="renter-error">{error}</p>}{notice && <p role="status" className="renter-notice">{notice}</p>}
-    <section className="renter-card"><h2>Hồ sơ cá nhân</h2><p><a href="#/verification">Xác minh CCCD và giấy phép lái xe</a></p><PrivateImage fileId={profile.avatar_key} alt="Ảnh đại diện" />
+    <section className="renter-card"><h2>Hồ sơ cá nhân</h2><PrivateImage fileId={profile.avatar_key} alt="Ảnh đại diện" />
       <form onSubmit={e => {
         e.preventDefault();
         perform(async () => {

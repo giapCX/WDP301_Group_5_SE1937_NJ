@@ -8,7 +8,6 @@ import OperationsWorkspace from '../components/OperationsWorkspace';
 import ReportsWorkspace from '../components/ReportsWorkspace';
 import UserMenu from '../components/UserMenu';
 import VehicleApprovalsWorkspace from '../components/VehicleApprovalsWorkspace';
-import IdentityVerificationWorkspace from '../components/IdentityVerificationWorkspace';
 import useManagerDashboard from '../hooks/useManagerDashboard';
 import './ManagerPage.css';
 
@@ -17,7 +16,6 @@ const sections = [
   { id: 'vehicles', label: 'Kiểm duyệt xe', icon: 'car' },
   { id: 'bookings', label: 'Duyệt yêu cầu thuê', icon: 'document' },
   { id: 'listings', label: 'Quản lý tin xe', icon: 'car' },
-  { id: 'identityVerifications', label: 'Xét duyệt eKYC', icon: 'shield' },
   { id: 'incidents', label: 'Khiếu nại & sự cố', icon: 'info' },
   { id: 'policies', label: 'Chính sách nền tảng', icon: 'document' },
   { id: 'finance', label: 'Tài chính', icon: 'wallet' },
@@ -126,8 +124,6 @@ export default function ManagerPage() {
               ? <ListingManagementWorkspace onNotice={setNotice} />
             : active === 'vehicles'
             ? <VehicleApprovalsWorkspace onNotice={setNotice} />
-            : active === 'identityVerifications'
-              ? <IdentityVerificationWorkspace onNotice={setNotice} />
             : active === 'contracts'
               ? <ContractsWorkspace onNotice={setNotice} />
             : ['finance', 'inspections', 'operations', 'savedReports'].includes(active)

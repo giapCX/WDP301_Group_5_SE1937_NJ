@@ -56,7 +56,6 @@ export default function SiteHeader({ onLogin }) {
           {canAccessOwner(currentUser) && <a href="/owner">Không gian chủ xe</a>}
           {canAccessGarage(currentUser) && <a href="/garage">Không gian gara</a>}
           {currentUser?.roles?.includes('OPERATION_STAFF') && <a href="/#/operator">Nhân viên vận hành</a>}
-          {canAccessOwner(currentUser) && <a href="#/verification">Xác minh eKYC</a>}
         </nav>
         <div className="header-actions">
           <span className="header-reassurance">

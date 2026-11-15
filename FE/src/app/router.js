@@ -9,7 +9,6 @@ import OwnerPage from '../features/owner/pages/OwnerPage';
 import OwnerAccess from '../features/owner/components/OwnerAccess';
 import AdminPage from '../features/admin/pages/AdminPage';
 import ContractsPage from '../features/contracts/ContractsPage';
-import VerificationPage from '../features/verification/pages/VerificationPage';
 import OperatorPage from '../features/operator/pages/OperatorPage';
 import VehicleDetailPage from '../features/listings/pages/VehicleDetailPage';
 
@@ -24,7 +23,6 @@ export default function AppRouter() {
   const [isAdmin, setIsAdmin] = useState(() => window.location.hash.startsWith('#/admin'));
   const [isOperations, setIsOperations] = useState(() => isHashRoute(window.location.hash, 'operations'));
   const [isContracts, setIsContracts] = useState(() => window.location.hash.startsWith('#/contracts'));
-  const [isVerification, setIsVerification] = useState(() => window.location.hash.startsWith('#/verification'));
   const [isOperation, setIsOperation] = useState(() => isHashRoute(window.location.hash, 'operation'));
   const [isOperator, setIsOperator] = useState(() => isHashRoute(window.location.hash, 'operator'));
   const [vehicleId, setVehicleId] = useState(() => window.location.hash.match(/^#\/xe\/([a-f0-9]{24})(?:\?.*)?$/i)?.[1] || '');
@@ -39,7 +37,6 @@ export default function AppRouter() {
       setIsAdmin(window.location.hash.startsWith('#/admin'));
       setIsOperations(isHashRoute(window.location.hash, 'operations'));
       setIsContracts(window.location.hash.startsWith('#/contracts'));
-      setIsVerification(window.location.hash.startsWith('#/verification'));
       setIsOperation(isHashRoute(window.location.hash, 'operation'));
       setIsOperator(isHashRoute(window.location.hash, 'operator'));
       setVehicleId(window.location.hash.match(/^#\/xe\/([a-f0-9]{24})(?:\?.*)?$/i)?.[1] || '');
@@ -53,8 +50,6 @@ export default function AppRouter() {
       ? 'Garage Staff — XeDi'
       : isOwner
       ? 'Cổng chủ xe — XeDi'
-      : isVerification
-      ? 'Xác minh eKYC — XeDi'
       : isLogin
       ? 'Đăng nhập & Đăng ký — XeDi'
       : isAdmin
@@ -63,7 +58,7 @@ export default function AppRouter() {
           ? 'Quản lý vận hành — XeDi'
           : 'XeDi — Thuê xe tự lái, vi vu mọi nẻo đường';
     window.scrollTo(0, 0);
-  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isOperator, isContracts, isVerification, isOperation, isRenter]);
+  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isOperator, isContracts, isOperation, isRenter]);
 
   if (isRenter) return <RenterPage />;
   if (vehicleId) return <VehicleDetailPage listingId={vehicleId} />;
@@ -73,7 +68,6 @@ export default function AppRouter() {
   if (isAdmin) return <AdminPage />;
   if (isOperator || isOperations || isOperation) return <OperatorPage initialSection={isOperations ? 'incidents' : undefined} />;
   if (isManager) return <ManagerPage />;
-  if (isVerification) return <VerificationPage />;
 
   return isLogin ? (
     <div className="login-page">

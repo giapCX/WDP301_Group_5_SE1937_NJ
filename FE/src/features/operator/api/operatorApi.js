@@ -27,9 +27,6 @@ export const confirmOperatorVehicleArrival = (id, body) => postApi(`/operator/ve
 export const scheduleOperatorVehicleInspection = (id, body) => postApi(`/operator/vehicles/${encodeURIComponent(id)}/inspection-schedule`, body);
 export const updateOperatorVehicleInspectionSchedule = (id, body) => patchApi(`/operator/vehicles/${encodeURIComponent(id)}/inspection-schedule`, body);
 export const precheckOperatorVehicleInspection = (id, body) => postApi(`/operator/inspections/${encodeURIComponent(id)}/precheck`, body);
-export const getOperatorIdentityVerifications = (params, options) => getApi(`/operator/identity-verifications${queryString(params)}`, options);
-export const getOperatorIdentityDocument = (id, kind, options) => getBlobApi(`/operator/identity-verifications/${encodeURIComponent(id)}/documents/${encodeURIComponent(kind)}`, options);
-export const precheckOperatorIdentity = (id, body) => postApi(`/operator/identity-verifications/${encodeURIComponent(id)}/precheck`, body);
 export const getOperatorIncidents = (params, options) => getApi(`/operator/incidents${queryString(params)}`, options);
 export const getOperatorIncident = (id, options) => getApi(`/operator/incidents/${encodeURIComponent(id)}`, options);
 export const createOperatorIncident = (body) => postApi('/operator/incidents', body);

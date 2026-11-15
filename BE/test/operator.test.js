@@ -86,7 +86,6 @@ test('Operator Staff reads contracts, updates vehicle status and schedules onboa
     'activeVehicles',
     'contractsToReview',
     'expiringContracts',
-    'identityVerificationsPending',
     'incidentsInProgress',
     'incidentsNeedsOperatorAction',
     'incidentsWaitingManager',
@@ -207,7 +206,22 @@ test('Operator schedules an onboarding inspection only for an eligible vehicle a
     physical_status: 'with_owner',
     onboarding_status: 'submitted',
     created_at: new Date(),
+    updated_at: new Date(),
+    operator_document_review: { status: 'pending' },
+    documents: {
+      registration: { file_key: 'registration' },
+      inspection_certificate: { file_key: 'inspection' },
+      insurance: { file_key: 'insurance' },
+    },
   });
+  const detail = await request(`/operator/vehicles/${vehicle._id}`);
+  await request(`/operator/vehicles/${vehicle._id}/document-review`, 'POST', {
+    status: 'verified', version: detail.result.data.reviewVersion,
+  });
+  const ownerDashboard = await request('/owner/dashboard', 'GET', undefined, 'owner');
+  const ownerVehicle = ownerDashboard.result.data.vehicles.find((item) => item.id === String(vehicle._id));
+  assert.equal(ownerVehicle.documentReview.status, 'verified');
+  await models.User.updateOne({ _id: actors.owner._id }, { $set: { 'identity_kyc.status': 'unverified' } });
   await request(`/owner/vehicles/${vehicle._id}/inspection-schedule-requests`, 'POST', {
     requestedFor: new Date(Date.now() + 3600000).toISOString(),
     note: 'Đề xuất lịch kiểm định xe.',

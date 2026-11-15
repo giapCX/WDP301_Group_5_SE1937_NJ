@@ -15,7 +15,6 @@ import { createGaragePhotoRouter } from './routes/garage-photo.routes.js';
 import { createGarageWorkspaceRouter } from './routes/garage-workspace.routes.js';
 import { createOwnerRouter } from './routes/owner.routes.js';
 import { createContractRouter } from './routes/contract.routes.js';
-import { createIdentityVerificationRouter } from './routes/identity-verification.routes.js';
 import { createCloudinaryOwnerFileRepository } from './repositories/cloudinary-owner-file.repository.js';
 import { createGridFsOwnerFileRepository } from './repositories/gridfs-owner-file.repository.js';
 import { createOperatorRouter } from './routes/operator.routes.js';
@@ -35,7 +34,6 @@ export function createApp(database, options = {}) {
   app.use(cors({ origin: env.frontendOrigin }));
   app.use('/api/owner/vehicles', express.json({ limit: '48mb' }));
   app.use('/api/owner', express.json({ limit: '20mb' }));
-  app.use('/api/identity-verifications', express.json({ limit: '12mb' }));
   app.use('/api/renter/files', express.json({ limit: '29mb' }));
   app.use('/api/operator', express.json({ limit: '6mb' }));
   app.use(express.json({ limit: '1mb' }));
@@ -50,7 +48,6 @@ export function createApp(database, options = {}) {
   });
   app.use('/api/renter', createRenterRouter(database, { sendEmail: options.sendEmail }));
   app.use('/api/auth', createAuthRouter(database, { sendEmail: options.sendEmail }));
-  app.use('/api/identity-verifications', createIdentityVerificationRouter(database, privateFileRepository));
   app.use('/api/listings', createListingsRouter(database, options.ownerFileRepository || privateFileRepository));
   app.use('/api/homepage', createHomepageRouter(database));
   app.use('/api/garage', createGarageIntakesRouter(database));

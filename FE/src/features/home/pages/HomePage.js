@@ -110,7 +110,7 @@ export default function HomePage() {
     },
     {
       title: 'Xác thực & xác nhận',
-      text: 'Xác minh danh tính, bằng lái, xác nhận hợp đồng và thanh toán. Nền tảng quản lý yêu cầu theo quy trình vận hành.',
+      text: 'Gửi yêu cầu thuê. Sau khi được duyệt, bạn ký hợp đồng và thanh toán để xác nhận chuyến.',
       note: 'Không cần chủ xe duyệt từng đơn',
       icon: 'document',
     },

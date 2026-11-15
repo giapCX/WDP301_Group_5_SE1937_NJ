@@ -18,6 +18,14 @@ function ConditionSummary({ report, odometer, fuel }) {
   </>;
 }
 
+export function canRequestOwnerInspectionSchedule(vehicle) {
+  return ['submitted', 'pending_review', 'revision_required'].includes(vehicle.approvalStatus)
+    && (vehicle.documentReview?.status === 'verified' || (!vehicle.documentReview && !vehicle.conditionDeclaration))
+    && ['with_owner', 'returned_to_owner'].includes(vehicle.operatingStatus)
+    && !['draft', 'pending'].includes(vehicle.inspection?.status)
+    && vehicle.inspectionScheduleRequest?.status !== 'pending';
+}
+
 export default function OwnerVehicleConditionDialog({ vehicle, onClose, onSaved }) {
   const [note, setNote] = useState('');
   const [requestedFor, setRequestedFor] = useState('');
@@ -27,11 +35,7 @@ export default function OwnerVehicleConditionDialog({ vehicle, onClose, onSaved 
   const report = inspection?.conditionReport || {};
   const canRespond = inspection?.status === 'pending' && !inspection.ownerReview && report.checklist?.length > 0
     && (!inspection.arrivalReview || inspection.operatorReview?.status === 'checked');
-  const canRequestSchedule = ['submitted', 'pending_review', 'revision_required'].includes(vehicle.approvalStatus)
-    && (vehicle.documentReview?.status === 'verified' || (!vehicle.documentReview && !vehicle.conditionDeclaration))
-    && ['with_owner', 'returned_to_owner'].includes(vehicle.operatingStatus)
-    && !['draft', 'pending'].includes(inspection?.status)
-    && inspectionScheduleRequest?.status !== 'pending';
+  const canRequestSchedule = canRequestOwnerInspectionSchedule(vehicle);
 
   async function requestSchedule(event) {
     event.preventDefault();
@@ -72,6 +76,12 @@ export default function OwnerVehicleConditionDialog({ vehicle, onClose, onSaved 
   }
 
   return <Modal title={`Hiện trạng xe · ${vehicle.licensePlate}`} className="owner-modal" onClose={busy ? () => {} : onClose}>
+    {canRequestSchedule && <form className="owner-form" onSubmit={requestSchedule}>
+      <h3>Chọn lịch kiểm định</h3>
+      <label className="owner-field">Thời gian đề xuất<input type="datetime-local" required value={requestedFor} onChange={(event) => setRequestedFor(event.target.value)} disabled={busy} /></label>
+      <label className="owner-field">Ghi chú<textarea required minLength={5} maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} disabled={busy} /></label>
+      <button className="owner-primary" type="submit" disabled={busy || !requestedFor}>{busy ? 'Đang gửi…' : 'Gửi yêu cầu lịch'}</button>
+    </form>}
     <p><strong>Khai báo của bạn</strong> · {vehicle.conditionDeclaration || 'Chưa có khai báo riêng.'}</p>
     {inspection?.status === 'draft' ? <section>
       <h3>Lịch kiểm định xe</h3>
@@ -104,12 +114,6 @@ export default function OwnerVehicleConditionDialog({ vehicle, onClose, onSaved 
       {inspectionScheduleRequest.note && <p>Ghi chú của bạn · {inspectionScheduleRequest.note}</p>}
       {inspectionScheduleRequest.responseNote && <p>Phản hồi Operator · {inspectionScheduleRequest.responseNote}</p>}
     </section>}
-    {canRequestSchedule && <form className="owner-form" onSubmit={requestSchedule}>
-      <h3>Yêu cầu Operator xác nhận lịch kiểm định</h3>
-      <label>Thời gian đề xuất<input type="datetime-local" required value={requestedFor} onChange={(event) => setRequestedFor(event.target.value)} disabled={busy} /></label>
-      <label>Ghi chú<textarea required minLength={5} maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} disabled={busy} /></label>
-      <button className="owner-primary" type="submit" disabled={busy || !requestedFor}>{busy ? 'Đang gửi…' : 'Gửi yêu cầu lịch'}</button>
-    </form>}
     {intake && <section>
       <h3>Biên bản tiếp nhận vào gara</h3>
       <p>Mã biên bản {intake.id} · {intake.confirmedAt ? new Date(intake.confirmedAt).toLocaleString('vi-VN') : 'Chưa có giờ xác nhận'}</p>

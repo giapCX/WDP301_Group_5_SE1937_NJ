@@ -6,9 +6,6 @@ import { createOperatorRepository } from '../repositories/operator.repository.js
 import { createOperatorService } from '../service/operator.service.js';
 import { createContractRepository } from '../repositories/contract.repository.js';
 import { createContractService } from '../service/contract.service.js';
-import { createIdentityVerificationRepository } from '../repositories/identity-verification.repository.js';
-import { createIdentityVerificationService } from '../service/identity-verification.service.js';
-import { createIdentityVerificationController } from '../controller/identity-verification.controller.js';
 import { createManagerRepository } from '../repositories/manager.repository.js';
 import { createRentalOperationsService } from '../service/rental-operations.service.js';
 import { createManagerApprovalService } from '../service/manager-approval.service.js';
@@ -26,9 +23,6 @@ export function createOperatorRouter(connection, files) {
     rentalOperations,
     createManagerApprovalService(rentalRepository, rentalOperations, contracts),
     { operatorQueue: true },
-  );
-  const identityController = createIdentityVerificationController(
-    createIdentityVerificationService(createIdentityVerificationRepository(connection, files), files),
   );
   const requirePermission = createOperatorPermissionMiddleware(repository.roles);
   router.use(createAuthMiddleware(connection));
@@ -50,9 +44,6 @@ export function createOperatorRouter(connection, files) {
   router.post('/vehicles/:id/inspection-schedule', requirePermission('operation.vehicle.inspection.schedule'), controller.scheduleVehicleInspection);
   router.patch('/vehicles/:id/inspection-schedule', requirePermission('operation.vehicle.inspection.schedule'), controller.updateVehicleInspectionSchedule);
   router.post('/inspections/:id/precheck', requirePermission('operation.vehicle.inspection.review'), controller.precheckVehicleInspection);
-  router.get('/identity-verifications', requirePermission('operation.identity_verification.read'), identityController.list);
-  router.get('/identity-verifications/:id/documents/:kind', requirePermission('operation.identity_verification.read'), identityController.download);
-  router.post('/identity-verifications/:id/precheck', requirePermission('operation.identity_verification.precheck'), identityController.precheck);
   router.get('/incidents', requirePermission('operation.incident.read'), controller.incidents);
   router.get('/incidents/:id', requirePermission('operation.incident.read', { allowManager: true }), controller.incident);
   router.get('/incidents/:id/evidence/:index', requirePermission('operation.incident.read', { allowManager: true }), controller.evidence);
