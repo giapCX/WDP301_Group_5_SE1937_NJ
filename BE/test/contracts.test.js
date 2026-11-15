@@ -35,7 +35,7 @@ async function managementFixture() {
 const signature = (row) => ({ acceptedTerms: true, signatureName: 'Người ký thử nghiệm', documentHash: row.document.hash });
 const sign = (row, role, mode = 'party', body = signature(row), status = 200) => request(`/contracts/${row.type}/${row.id}/sign?view=${mode}`, 'POST', body, role, status);
 const confirmOperatorIntake = (row, role = 'operation', status = 200) => request(`/contracts/${row.type}/${row.id}/operator-intake?view=staff`, 'POST', {}, role, status);
-const releaseManagementContract = (row, action = 'approve', note = '') => request(`/contracts/management/${row.id}/manager-review?view=staff`, 'POST', { action, note, documentHash: row.document.hash }, 'manager');
+const releaseManagementContract = (row, action = 'approve', note = '') => request(`/contracts/management/${row.id}/manager-review?view=staff`, 'POST', { action, note, documentHash: row.document.hash, signatureName: 'Manager XeDi', acceptedTerms: true }, 'manager');
 async function rentalFixture() {
   const { vehicle } = await managementFixture();
   await models.Vehicle.updateOne({ _id: vehicle._id }, { $set: { physical_status: 'at_garage' } });
@@ -93,13 +93,13 @@ test('management requires approval, freezes displayed facts and orders both sign
   assert.equal(released.status, 'pending_signatures');
   const owner = (await request(`/owner/agreements/${row.id}`, 'GET', undefined, 'owner')).data;
   assert.equal(owner.canOwnerSign, true);
-  await request(`/owner/agreements/${row.id}/sign`, 'POST', signature(row), 'owner');
-  assert.equal((await models.ManagementAgreement.findById(row.id).lean()).status, 'pending_signatures');
+  assert.equal(released.platformSigned, true);
+  assert.equal(released.partySigned, false);
   const eligibilityPath = `/garage/vehicles/${fixture.vehicle._id}/intake-eligibility?managementAgreementId=${row.id}`;
   assert.equal((await request(eligibilityPath, 'GET', undefined, 'garage')).data.eligible, false);
   await confirmOperatorIntake(row, 'operation', 409);
   assert.equal(await models.AuditLog.countDocuments({ entity_id: row.id, action: 'contract.operator_intake.confirm' }), 0);
-  const signed = (await sign(row, 'manager', 'staff')).data;
+  const signed = (await request(`/owner/agreements/${row.id}/sign`, 'POST', signature(row), 'owner')).data;
   assert.equal(signed.status, 'active');
   assert.equal((await request(eligibilityPath, 'GET', undefined, 'garage')).data.eligible, true);
   const stored = await models.ManagementAgreement.findById(row.id).lean();
@@ -199,7 +199,6 @@ test('new owner vehicle moves through scheduling, approval, paper signing and pu
   await releaseManagementContract(contract);
   await sign(contract, 'manager', 'staff', signature(contract), 409);
   await sign(contract, 'owner');
-  await sign(contract, 'manager', 'staff');
   assert.equal((await models.Vehicle.findById(vehicleId)).onboarding_status, 'pending_review');
   const keys = ['identity', 'odometer', 'exterior', 'interior', 'tires', 'brakes', 'powertrain', 'leaks', 'lights', 'accessories'];
   await request(inspectionPath, 'PATCH', {
@@ -257,17 +256,20 @@ test('ownership, staff authority, acceptance and stale document guards cannot be
   await sign(row, 'owner');
   await confirmOperatorIntake(row, 'operation', 409);
   await confirmOperatorIntake(row, 'admin', 403);
-  await sign(row, 'manager', 'staff');
   await sign(row, 'manager', 'staff', signature(row), 409);
   assert.ok((await models.ManagementAgreement.findById(row.id).lean()).signature_info.owner_signed_at);
 });
 
-test('Manager signing waits for contract review and party signature; retry cannot duplicate the signature audit', async () => {
+test('Manager review signs first and retry cannot duplicate the signature audit', async () => {
   const row = (await (await managementFixture()).prepare()).data;
   await sign(row, 'manager', 'staff', signature(row), 409);
+  const path = `/contracts/management/${row.id}/manager-review?view=staff`;
+  const approval = { action: 'approve', ...signature(row) };
+  await request(path, 'POST', { ...approval, acceptedTerms: false }, 'manager', 400);
+  await request(path, 'POST', { ...approval, documentHash: 'stale' }, 'manager', 409);
   await releaseManagementContract(row);
+  await request(path, 'POST', approval, 'manager', 409);
   await sign(row, 'owner');
-  await sign(row, 'manager', 'staff');
   const stored = await models.ManagementAgreement.findById(row.id).lean();
   assert.equal(stored.status, 'active');
   assert.ok(stored.signature_info.owner_signed_at && stored.signature_info.platform_signed_at);

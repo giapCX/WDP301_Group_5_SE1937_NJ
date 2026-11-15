@@ -146,3 +146,22 @@ test('Manager sees that platform signing is waiting for Operator intake', async 
   expect(await screen.findByText(/đang chờ Operator xác nhận tiếp nhận trước khi Manager có thể ký/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Xác nhận ký hợp đồng' })).not.toBeInTheDocument();
 });
+
+test('Manager explicitly signs the reviewed draft before sending it to the owner', async () => {
+  saveSession('manager-token', { full_name: 'Manager XeDi', roles: ['MANAGER'] }, false);
+  const draft = { ...row, status: 'pending_manager_review', canSign: false, canManagerRelease: true };
+  getApi.mockImplementation(async (path) => path.includes('agreement-1?') ? { data: draft }
+    : { data: [draft], pagination: { page: 1, total: 1 } });
+  postApi.mockResolvedValue({ data: { ...draft, status: 'pending_signatures', canManagerRelease: false, platformSigned: true } });
+  render(<ContractsPage embedded />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Duyệt bản nháp' }));
+  const dialog = within(screen.getByRole('dialog'));
+  const approve = await dialog.findByRole('button', { name: 'Duyệt, ký và gửi chủ xe' });
+  expect(approve).toBeDisabled();
+  fireEvent.click(dialog.getByRole('checkbox'));
+  fireEvent.click(approve);
+  await waitFor(() => expect(postApi).toHaveBeenCalledWith('/contracts/management/agreement-1/manager-review?view=staff', {
+    action: 'approve', note: '', documentHash: 'reviewed-content', signatureName: 'Manager XeDi', acceptedTerms: true,
+  }));
+  expect(await dialog.findByText('XeDi đã ký. Hợp đồng đang chờ chủ xe ký.')).toBeInTheDocument();
+});

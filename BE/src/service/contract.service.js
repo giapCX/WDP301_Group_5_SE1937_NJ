@@ -371,18 +371,30 @@ export function createContractService(repository) {
       if (!['approve', 'revision'].includes(action) || note.length > 1000 || (action === 'revision' && note.length < 5)) {
         throw httpError(400, 'Cần chọn phê duyệt hoặc yêu cầu chỉnh sửa; yêu cầu chỉnh sửa cần lý do từ 5 đến 1.000 ký tự.');
       }
+      const signatureName = typeof body?.signatureName === 'string' ? body.signatureName.trim() : '';
+      if (action === 'approve' && (body.acceptedTerms !== true || signatureName.length < 2 || signatureName.length > 120)) {
+        throw httpError(400, 'Cần nhập tên người ký và xác nhận đồng ý ký hợp đồng phía XeDi.');
+      }
       return transact(async (session) => {
         const repo = repository.agreement('management');
         const row = await repo.findOne({ _id: id }, { session });
         if (!row || row.status !== 'pending_manager_review' || !row.contract_document) throw httpError(409, 'Hợp đồng không còn chờ Manager rà soát.');
         const ctx = await access('management', row, actor, 'staff', session);
         if (same(actor.id, ctx.partyId)) throw httpError(403, 'Không được duyệt bản nháp hợp đồng của chính mình.');
-        fail(row.arrival_confirmed_at && body.documentHash !== row.contract_document.hash, 'Nội dung hợp đồng đã thay đổi. Vui lòng mở lại để rà soát.');
+        fail((action === 'approve' || row.arrival_confirmed_at) && body.documentHash !== row.contract_document.hash, 'Nội dung hợp đồng đã thay đổi. Vui lòng mở lại để rà soát.');
         await eligible('management', row, ctx, session);
         const now = new Date();
         const set = action === 'approve'
           ? {
-            status: 'pending_signatures',
+            status: row.signature_info?.owner_signed_at ? 'active' : 'pending_signatures',
+            platform_signer_id: actor.id,
+            signature_info: {
+              ...row.signature_info,
+              method: 'electronic_acceptance',
+              terms_version: row.contract_document.version,
+              platform_signed_at: now,
+              platform_signature_name: signatureName,
+            },
             manager_review: { status: 'approved', note, reason: '', reviewed_by_manager_id: actor.id, reviewed_at: now },
             updated_at: now,
           }
@@ -402,6 +414,12 @@ export function createContractService(repository) {
           document_hash: row.contract_document.hash,
           note,
         }, session);
+        if (action === 'approve') {
+          await repository.vehicles.updateOne({ _id: ctx.vehicle._id }, { $inc: { contract_workflow_version: 1 } }, { session });
+          await audit(actor, 'management', id, 'contract.sign', {
+            sign_as: 'platform', document_hash: row.contract_document.hash, terms_version: row.contract_document.version,
+          }, session);
+        }
         return { data: serialize('management', updated, ctx, 'staff', actor) };
       });
     },

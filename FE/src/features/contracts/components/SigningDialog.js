@@ -47,8 +47,11 @@ export default function SigningDialog({ item, view, onClose, onSigned, readOnly 
     }
     setBusy(true); setError('');
     try {
-      const result = await reviewManagementContract(item.id, { action, note: reviewNote, documentHash: agreement.document.hash });
-      setAgreement(result.data); setReviewNote(''); onSigned();
+      const result = await reviewManagementContract(item.id, {
+        action, note: reviewNote, documentHash: agreement.document.hash,
+        ...(action === 'approve' && { signatureName: name, acceptedTerms: accepted }),
+      });
+      setAgreement(result.data); setReviewNote(''); setAccepted(false); onSigned();
     } catch (reason) { setError(reason.message); }
     finally { setBusy(false); }
   }
@@ -58,14 +61,19 @@ export default function SigningDialog({ item, view, onClose, onSigned, readOnly 
     {!agreement ? <div className="contract-loading" role="status"><span className="contract-spinner" />Đang tải nội dung hợp đồng…</div> : <>
       <ContractContent agreement={agreement} />
       {!readOnly && <>
-      {agreement.canManagerRelease && <div className="contract-sign-form">
-        <p>Kiểm tra nội dung hợp đồng trước khi mở quyền ký cho chủ xe.</p>
+      {agreement.canManagerRelease && <form className="contract-sign-form" onSubmit={(event) => {
+        event.preventDefault();
+        if (accepted) reviewManagement('approve');
+      }}>
+        <p>Duyệt và ký phía XeDi để gửi hợp đồng cho chủ xe ký.</p>
         <label>Ghi chú rà soát<input maxLength={1000} value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} disabled={busy} /></label>
+        <label>Họ tên người ký<input required minLength={2} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} disabled={busy} /></label>
+        <label className="contract-accept"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} disabled={busy} /><span>Tôi đã đọc và đồng ý ký phía XeDi.</span></label>
         <div className="contract-toolbar">
           <button className="contract-button contract-button--secondary" type="button" onClick={() => reviewManagement('revision')} disabled={busy || reviewNote.trim().length < 5}>Yêu cầu chỉnh sửa</button>
-          <button className="contract-button contract-button--primary" type="button" onClick={() => reviewManagement('approve')} disabled={busy}>{busy ? 'Đang ghi nhận…' : 'Duyệt bản nháp và gửi chủ xe ký'}</button>
+          <button className="contract-button contract-button--primary" type="submit" disabled={busy || !accepted}>{busy ? 'Đang ghi nhận…' : 'Duyệt, ký và gửi chủ xe'}</button>
         </div>
-      </div>}
+      </form>}
       {agreement.canOperatorConfirm && <div className="contract-sign-form">
         <p>Chủ xe/người thuê đã xác nhận. Hãy kiểm tra hồ sơ và xác nhận đã tiếp nhận để chuyển Manager ký phía XeDi. Đây không phải phê duyệt nội dung hoặc chữ ký thay Manager.</p>
         <button className="contract-button contract-button--primary" type="button" onClick={confirmIntake} disabled={busy}>{busy ? 'Đang ghi nhận…' : 'Xác nhận đã tiếp nhận'}</button>
@@ -76,6 +84,8 @@ export default function SigningDialog({ item, view, onClose, onSigned, readOnly 
         <button className="contract-button contract-button--primary" type="submit" disabled={busy || !accepted}>{busy ? 'Đang ghi nhận…' : view === 'staff' && agreement.type === 'management' ? 'Xác nhận hợp đồng phía XeDi' : 'Xác nhận ký hợp đồng'}</button>
       </form> :       <p className="contract-signing-note" role="status">      {agreement.signingExpired
           ? 'Đã hết thời gian giữ xe. Khách thuê cần gửi yêu cầu thuê mới để tiếp tục.'
+          : agreement.type === 'management' && agreement.status === 'pending_signatures' && agreement.platformSigned && !agreement.partySigned
+          ? 'XeDi đã ký. Hợp đồng đang chờ chủ xe ký.'
           : view === 'staff' && agreement.partySigned && agreement.managerReviewStatus === 'approved' && !(agreement.platformSigned ?? Boolean(agreement.platformSignedAt))
           ? 'Chủ xe/người thuê đã ký sau bước rà soát. Hợp đồng đang chờ Manager ký phía XeDi.'
           : view === 'staff' && agreement.partySigned && agreement.operatorIntakeConfirmedAt && !(agreement.platformSigned ?? Boolean(agreement.platformSignedAt))
