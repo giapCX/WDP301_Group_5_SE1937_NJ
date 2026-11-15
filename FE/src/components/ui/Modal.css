@@ -1,0 +1,61 @@
+.xedi-dialog {
+  box-sizing: border-box;
+  width: min(36rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  overflow: auto;
+  border: 1px solid #dce4ef;
+  border-radius: 1rem;
+  box-shadow: 0 20px 70px rgb(14 32 63 / 24%);
+  background: #fff;
+  color: #172941;
+}
+
+.xedi-dialog::backdrop {
+  background: rgb(16 31 54 / 50%);
+  backdrop-filter: blur(2px);
+}
+
+.xedi-dialog .modal-content {
+  padding: clamp(1rem, 4vw, 1.75rem);
+}
+
+.xedi-dialog .modal-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #e7ecf3;
+  padding-bottom: .875rem;
+  margin-bottom: 1rem;
+}
+
+.xedi-dialog .modal-heading h2 {
+  color: inherit;
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.35;
+}
+
+.xedi-dialog .close-button {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: .5rem;
+  background: #edf2f8;
+  color: #314967;
+  cursor: pointer;
+}
+
+.xedi-dialog .close-button:hover {
+  background: #dce6f3;
+}
+
+.xedi-dialog :focus-visible {
+  outline: 2px solid #2160d8;
+  outline-offset: 2px;
+}

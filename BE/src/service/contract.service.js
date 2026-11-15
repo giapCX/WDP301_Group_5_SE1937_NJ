@@ -118,6 +118,8 @@ export function createContractService(repository) {
       operatorIntakeConfirmedAt,
       managerReviewStatus: row.manager_review?.status || null,
       partyName: signature.owner_signature_name || signature.renter_signature_name || '', platformName: signature.platform_signature_name || '',
+      signingExpired: type === 'rental' && !platformDone
+        && (ctx.booking.status === 'expired' || isBookingHoldExpired(ctx.booking, new Date()) || ctx.booking.start_at <= new Date()),
       canSign: Boolean(signingOpen && row.contract_document && row.status === 'pending_signatures'
         && (mode === 'party' ? !partyDone : actor.roles.includes('MANAGER') && partyDone
           && (type === 'management' && managerReviewed || operatorIntakeConfirmedAt) && !platformDone)),

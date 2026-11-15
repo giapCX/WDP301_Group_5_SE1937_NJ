@@ -1,3 +1,4 @@
+import { httpError } from '../utils/http-error.js';
 import { BOOKING_REVIEWER_ROLE } from '../utils/booking-hold.js';
 const validObjectId = (value) => typeof value === 'string' && /^[a-f\d]{24}$/i.test(value);
 const preparableStatuses = ['draft', 'pending_signatures', 'pending_signature', 'awaiting_signature'];
@@ -33,25 +34,25 @@ export function createManagerApprovalService(repository, service, contracts) {
 
     async reviewVehicle(input, actor) {
       let result;
-      if (input.body?.action === 'approve' && validObjectId(input.id)
-        && validObjectId(input.body.inspectionId) && Number.isSafeInteger(input.body.inspectionVersion)) {
+      const { action, note, inspectionId, inspectionVersion } = input.body || {};
+      if (action === 'approve' && validObjectId(input.id) && validObjectId(inspectionId)
+        && Number.isSafeInteger(inspectionVersion) && typeof note === 'string' && note.trim().length >= 5) {
         const vehicle = await repository.vehicles.findOne({ _id: input.id });
-        const inspection = vehicle?.onboarding_status === 'approved'
-          ? await repository.inspections.findOne({
-            _id: input.body.inspectionId,
-            vehicle_id: vehicle._id,
-            approval_status: 'approved',
-            recommendation: 'pass',
-            version: input.body.inspectionVersion,
-          })
-          : null;
-        const agreement = inspection
-          ? await repository.collection('management_agreements').findOne({
-            vehicle_id: vehicle._id,
-            status: { $nin: ['terminated', 'expired', 'cancelled'] },
-          })
-          : null;
-        if (inspection && contractNeedsPreparation(agreement)) result = { data: { id: String(vehicle._id), status: 'approved' } };
+        if (vehicle?.onboarding_status === 'approved' && String(vehicle.reviewed_by_manager_id) === String(input.actorId)
+          && vehicle.review_note === note.trim()) {
+          const latest = await repository.inspections.findOne(
+            { vehicle_id: vehicle._id, inspection_type: 'onboarding' },
+            { sort: { created_at: -1, _id: -1 } },
+          );
+          const sameVersion = (latest?.version ?? 0) === inspectionVersion;
+          const approvedFromVersion = latest?.version === inspectionVersion + 1
+            && String(latest.reviewed_by_manager_id) === String(input.actorId)
+            && latest.decision_reason === note.trim();
+          if (String(latest?._id) === inspectionId && latest.approval_status === 'approved'
+            && latest.recommendation === 'pass' && (sameVersion || approvedFromVersion)) {
+            result = { data: { id: String(vehicle._id), status: 'approved', inspectionId: latest._id, inspectionStatus: 'approved' } };
+          }
+        }
       }
       if (!result) {
         result = await service.reviewVehicle(input);
@@ -61,10 +62,21 @@ export function createManagerApprovalService(repository, service, contracts) {
           vehicle_id: input.id,
           status: { $nin: ['terminated', 'expired', 'cancelled'] },
         });
-        if (!existing || preparableStatuses.includes(existing.status)) {
-          const contract = await contracts.prepare('management', input.id, {}, actor);
-          result.data.contractNumber = contract.number;
-          result.data.contractStatus = contract.status;
+        if (contractNeedsPreparation(existing)) {
+          try {
+            const contract = await contracts.prepare('management', input.id, {}, actor);
+            result.data.contractNumber = contract.number;
+            result.data.contractStatus = contract.status;
+          } catch (error) {
+            if (error.status >= 400 && error.status < 500) {
+              throw httpError(error.status, `Xe đã được duyệt. Chưa lập được hợp đồng. ${error.message}`);
+            }
+            console.error('Could not prepare contract after vehicle approval', error);
+            throw httpError(503, 'Xe đã được duyệt. Chưa thể lập hợp đồng. Hãy thử lưu lại hoặc mở mục Quản lý hợp đồng.');
+          }
+        } else if (existing) {
+          result.data.contractNumber = existing.agreement_number;
+          result.data.contractStatus = existing.status;
         }
       }
       return result;

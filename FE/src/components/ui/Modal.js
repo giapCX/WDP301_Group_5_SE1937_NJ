@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react';
 import Icon from './Icon';
+import './Modal.css';
 export default function Modal({ title, children, onClose, className = '' }) {
   const titleId = useId();
   const ref = useRef(null);
@@ -12,7 +13,7 @@ export default function Modal({ title, children, onClose, className = '' }) {
   }, []);
   return (
     <dialog
-      className={`modal ${className}`}
+      className={`xedi-dialog ${className}`}
       aria-labelledby={titleId}
       ref={ref}
       onCancel={(event) => { event.preventDefault(); onClose(); }}
@@ -23,7 +24,7 @@ export default function Modal({ title, children, onClose, className = '' }) {
       <div className="modal-content">
         <div className="modal-heading">
           <h2 id={titleId}>{title}</h2>
-          <button className="close-button" aria-label="Đóng" onClick={onClose}>
+          <button type="button" className="close-button" aria-label="Đóng" onClick={onClose}>
             <Icon name="close" />
           </button>
         </div>

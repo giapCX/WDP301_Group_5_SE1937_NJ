@@ -38,7 +38,7 @@ export default function ManagerActionForm({ title, context, fields, onSubmit, on
 
   return <Modal title={title} onClose={() => { if (!saving) onClose(); }}>
     <form className="manager-action-form" onSubmit={submit}>
-      {context && <p>{context}</p>}
+      {context && <p className="manager-action-context">{context}</p>}
       {fields.map(({ name, label, type = 'text', value = '', options, required = true, minLength, maxLength, min, step }) => {
         const props = { name, defaultValue: value, required, disabled: saving, minLength, maxLength };
         return <label key={name}>{label}
@@ -48,7 +48,10 @@ export default function ManagerActionForm({ title, context, fields, onSubmit, on
         </label>;
       })}
       {error && <p role="alert">{error}</p>}
-      <button type="submit" className="manager-primary" disabled={saving}>{saving ? 'Đang lưu…' : 'Lưu'}</button>
+      <footer className="manager-action-footer">
+        <button type="button" className="manager-action-cancel" onClick={onClose} disabled={saving}>Hủy</button>
+        <button type="submit" className="manager-primary" disabled={saving}>{saving ? 'Đang lưu…' : 'Lưu'}</button>
+      </footer>
     </form>
   </Modal>;
 }

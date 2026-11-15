@@ -70,7 +70,12 @@ test('Garage submits, Manager reads full evidence and approves, then Garage rece
   assert.equal((await fetch(url, { headers: { Authorization: `Bearer ${tokens.MANAGER}` } })).status, 200);
   assert.equal((await fetch(url, { headers: { Authorization: `Bearer ${tokens.RENTER}` } })).status, 403);
   assert.equal((await request('/garage/photos', 'POST', { name: 'no.png', contentType: 'image/png', data: image }, 'MANAGER')).status, 403);
-  ok(await decide(vehicle, pending));
+  const firstApproval = ok(await decide(vehicle, pending));
+  const retriedApproval = ok(await decide(vehicle, pending));
+  assert.equal(retriedApproval.contractNumber, firstApproval.contractNumber);
+  assert.equal(retriedApproval.contractStatus, firstApproval.contractStatus);
+  assert.equal(await models.AuditLog.countDocuments({ action: 'vehicle.approve', entity_id: vehicle._id }), 1);
+  assert.equal((await decide(vehicle, pending, 'approve', 'Different evidence note')).status, 409);
   const approved = await models.VehicleInspection.findById(pending._id).lean();
   assert.equal(approved.approval_status, 'approved');
   assert.ok(approved.reviewed_by_manager_id.equals(actors.MANAGER._id));
@@ -103,7 +108,8 @@ test('drafts, non-passing reports and stale report versions cannot be approved',
   const pending = await submit(record);
   assert.equal((await decide(vehicle, record)).status, 409);
   const results = await Promise.all([decide(vehicle, pending), decide(vehicle, pending)]);
-  assert.deepEqual(results.map((result) => result.status).sort(), [200, 409]);
+  assert.ok(results.some((result) => result.status === 200));
+  assert.ok(results.every((result) => [200, 409].includes(result.status)));
   assert.equal(await models.AuditLog.countDocuments({ action: 'vehicle.inspection.approve', entity_id: pending._id }), 1);
   const other = await fixture();
   const failed = await submit(await draft(other.vehicle, [], 'fail'));

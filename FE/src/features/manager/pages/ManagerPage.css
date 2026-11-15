@@ -1293,3 +1293,76 @@
     min-width: 10rem;
   }
 }
+.manager-action-form {
+  gap: 1rem;
+}
+
+.manager-action-context {
+  justify-self: start;
+  background: #eef3fb;
+  border-radius: .5rem;
+  color: #2e4a71;
+  padding: .35rem .65rem;
+  margin: 0;
+  font-size: .875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.manager-action-form label {
+  font-size: .875rem;
+  font-weight: 600;
+  color: #233856;
+}
+
+.manager-action-form :is(input, textarea, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid #bccadd;
+  border-radius: .5rem;
+  padding: .65rem .75rem;
+  font: inherit;
+  font-weight: 400;
+  color: #172941;
+  background: #fff;
+}
+
+.manager-action-form textarea {
+  resize: vertical;
+}
+
+.manager-action-form [role="alert"] {
+  border: 1px solid #f0b8b8;
+  border-radius: .5rem;
+  background: #fff3f2;
+  color: #8e2323;
+  margin: 0;
+  padding: .7rem .8rem;
+  font-size: .875rem;
+}
+
+.manager-action-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .625rem;
+  border-top: 1px solid #e7ecf3;
+  padding-top: 1rem;
+}
+
+.manager-action-footer button {
+  min-height: 40px;
+  padding-inline: 1rem;
+}
+
+.manager-action-cancel {
+  border: 1px solid #c9d5e5;
+  border-radius: .5rem;
+  color: #304967;
+  background: #fff;
+  font: inherit;
+  font-size: .875rem;
+  cursor: pointer;
+}

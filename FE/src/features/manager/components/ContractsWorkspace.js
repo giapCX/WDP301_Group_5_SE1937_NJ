@@ -114,7 +114,10 @@ export default function ContractsWorkspace({
         </label>)}
       </fieldset> : <p>Hợp đồng chưa có điều khoản có thể chỉnh sửa tại đây.</p>)}
       {formError && <p role="alert">{formError}</p>}
-      <button className="manager-primary" type="submit" disabled={saving || (editing.action === 'amend' && !editableTerms.length)}>{saving ? 'Đang lưu…' : labels[editing.action]}</button>
+      <footer className="manager-action-footer">
+        <button type="button" className="manager-action-cancel" onClick={() => setEditing(null)} disabled={saving}>Hủy</button>
+        <button className="manager-primary" type="submit" disabled={saving || (editing.action === 'amend' && !editableTerms.length)}>{saving ? 'Đang lưu…' : labels[editing.action]}</button>
+      </footer>
     </form>
   </Modal>}
   </section>;

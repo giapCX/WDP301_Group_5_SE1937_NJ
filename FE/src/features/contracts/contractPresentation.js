@@ -20,6 +20,7 @@ export const contractTemplate = {
   },
 };
 export function workflowState(item) {
+  if (item.signingExpired) return 'Đã hết thời gian giữ xe';
   if (item.status === 'pending_manager_review') return 'Chờ duyệt bản nháp';
   if (item.platformSigned ?? Boolean(item.platformSignedAt)) return item.status === 'active' ? 'Đang có hiệu lực' : 'Đã hoàn tất chữ ký';
   if (item.managerReviewStatus === 'approved' && item.partySigned) return 'Chờ Manager ký';
