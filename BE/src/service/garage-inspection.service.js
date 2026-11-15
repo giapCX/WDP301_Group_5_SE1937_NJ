@@ -1,6 +1,7 @@
 import { validateInspectionChecklist } from '../validators/garage-inspection.validator.js';
 import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
+import { identifyImage, vehicleDocumentContentType } from '../utils/image-content.js';
 
 const { ObjectId } = Types;
 
@@ -30,9 +31,32 @@ const pagination = (page, limit, total) => ({
 });
 const openStatus = { $in: ['draft', 'pending'] };
 
-export function createVehicleInspectionService(repository) {
+export function createVehicleInspectionService(repository, ownerFiles) {
   const inspections = repository.inspections;
   const vehicles = repository.vehicles;
+  async function ownerVehicle(id, actor) {
+    const inspection = await inspections.findOne({
+      _id: id, garage_staff_id: actor._id, inspection_type: 'onboarding',
+    });
+    const vehicle = inspection && await vehicles.findOne({ _id: inspection.vehicle_id });
+    if (!vehicle) throw httpError(404, 'Không tìm thấy hồ sơ kiểm định được phân công.');
+    return vehicle;
+  }
+
+  function ownerAttachments(vehicle) {
+    const documents = [
+      ['registration', 'Giấy đăng ký xe'],
+      ['inspection_certificate', 'Giấy chứng nhận đăng kiểm'],
+      ['insurance', 'Giấy chứng nhận bảo hiểm'],
+    ].map(([id, name]) => ({ id, name, key: vehicle.documents?.[id]?.file_key }));
+    const photos = (vehicle.photos || []).map((key, index) => ({
+      id: 'photo-' + index, name: 'Ảnh xe ' + (index + 1), key, image: true,
+    }));
+    const prefix = 'owner-files/' + vehicle.owner_id + '/';
+    return [...photos, ...documents].filter(({ key }) =>
+      typeof key === 'string' && (key.startsWith(prefix) || /^[a-f\d]{24}$/i.test(key)),
+    );
+  }
   let indexReady;
   async function ensureIndex() {
     if (!indexReady)
@@ -441,6 +465,23 @@ export function createVehicleInspectionService(repository) {
   }
   return {
     list,
+    async ownerSubmission(id, actor) {
+      const vehicle = await ownerVehicle(id, actor);
+      return {
+        brand: vehicle.brand, model: vehicle.model, plate: vehicle.license_plate,
+        year: vehicle.manufacture_year, vin: vehicle.vin, declaration: vehicle.condition_declaration,
+        files: ownerAttachments(vehicle).map(({ id, name }) => ({ id, name })),
+      };
+    },
+    async ownerSubmissionFile(id, actor, fileId) {
+      const vehicle = await ownerVehicle(id, actor);
+      const file = ownerAttachments(vehicle).find(({ id }) => id === fileId);
+      if (!file) throw httpError(404, 'Không tìm thấy tệp chủ xe gửi.');
+      const bytes = await ownerFiles.read(file.key);
+      const contentType = file.image ? identifyImage(bytes)?.contentType : vehicleDocumentContentType(bytes);
+      if (!contentType) throw httpError(422, 'Định dạng tệp không được hỗ trợ.');
+      return { bytes, contentType };
+    },
     create,
     update,
     submit,

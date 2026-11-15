@@ -1918,3 +1918,41 @@
     transition: none;
   }
 }
+
+.gs-owner-submission {
+  padding: 16px;
+  border: 1px solid #dce3ec;
+  border-radius: 10px;
+  margin: 16px 0;
+}
+.gs-owner-submission h3 { margin: 0 0 12px; }
+.gs-owner-submission dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+  gap: 10px;
+  margin: 0 0 12px;
+}
+.gs-owner-submission dd { margin: 3px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.gs-owner-declaration { white-space: pre-wrap; overflow-wrap: anywhere; }
+.gs-owner-submission ul { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; }
+.gs-owner-submission button, .gs-owner-pdf button {
+  padding: 7px 10px;
+  border: 1px solid #dce3ec;
+  border-radius: 6px;
+  background: white;
+  color: var(--blue);
+}
+.gs-owner-pdf {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(850px, 94vw);
+  height: 85vh;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: white;
+}
+.gs-owner-pdf::backdrop { background: #0008; }
+.gs-owner-pdf header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.gs-owner-pdf iframe { width: 100%; height: calc(100% - 48px); border: 0; }

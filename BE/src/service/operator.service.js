@@ -31,6 +31,14 @@ const PHYSICAL_STATUS_TRANSITIONS = {
   rented: [],
   returned_to_owner: [],
 };
+function allowedVehicleStatusTransitions(vehicle) {
+  if (vehicle.onboarding_status === 'approved') return PHYSICAL_STATUS_TRANSITIONS[vehicle.physical_status] || [];
+  if (vehicle.physical_status === 'maintenance') {
+    const previous = vehicle.operational_status_history?.at(-1);
+    if (previous?.from === 'with_owner' && previous.to === 'maintenance') return ['with_owner'];
+  }
+  return [];
+}
 const INSPECTION_ELIGIBLE_ONBOARDING_STATUSES = ['submitted', 'pending_review', 'revision_required'];
 const ACTIVE_INCIDENT_BOOKING_STATUSES = ['confirmed', 'ongoing', 'completed'];
 const DASHBOARD_INSPECTION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
@@ -426,6 +434,7 @@ export function createOperatorService(repository, files) {
             insurance: Boolean(vehicle.documents?.insurance?.file_key),
           },
           statusHistory: vehicle.operational_status_history || [],
+          allowedStatusTransitions: allowedVehicleStatusTransitions(vehicle),
         },
       };
     },
@@ -481,13 +490,9 @@ export function createOperatorService(repository, files) {
         if (current.physical_status === input.status) {
           return { data: { id: id.toString(), physicalStatus: input.status, updatedAt: current.updated_at || null } };
         }
-        if (!PHYSICAL_STATUS_TRANSITIONS[current.physical_status]?.includes(input.status)) {
+        if (!allowedVehicleStatusTransitions(current).includes(input.status)) {
           throw httpError(409, `Không thể chuyển trạng thái xe từ ${current.physical_status || 'không xác định'} sang ${input.status}.`);
         }
-        if (input.status === 'at_garage' && current.onboarding_status !== 'approved') {
-          throw httpError(409, 'Chỉ có thể đưa xe về trạng thái tại gara sau khi hồ sơ được Manager duyệt.');
-        }
-
         const now = new Date();
         const history = {
           from: current.physical_status || null,

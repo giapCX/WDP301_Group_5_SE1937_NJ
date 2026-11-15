@@ -34,6 +34,9 @@ import {
   updateOperatorVehicleInspectionSchedule,
   updateOperatorVehicleStatus,
 } from '../api/operatorApi';
+import BookingApprovalsWorkspace from '../../manager/components/BookingApprovalsWorkspace';
+import ListingManagementWorkspace from '../../manager/components/ListingManagementWorkspace';
+import { decideOperatorBooking, getOperatorRentalResource, operatorListingActions } from '../api/operatorApi';
 import './OperatorPage.css';
 
 const EMPTY_LIST = Object.freeze([]);
@@ -42,10 +45,16 @@ const sections = [
   { id: 'contracts', label: 'Hợp đồng xe', icon: 'document', permission: 'operation.contract.read' },
   { id: 'vehicles', label: 'Thông tin xe', icon: 'car', permission: 'operation.vehicle.read' },
   { id: 'inspections', label: 'Lịch kiểm tra xe', icon: 'check', permission: 'operation.vehicle.read' },
+  { id: 'listings', label: 'Tin xe', icon: 'car', permission: 'operation.listing.manage' },
+  { id: 'bookings', label: 'Duyệt booking', icon: 'document', permission: 'operation.booking.read' },
+  { id: 'trips', label: 'Chuyến thuê', icon: 'car', permission: 'operation.booking.read' },
   { id: 'identity', label: 'Xác minh hồ sơ', icon: 'shield', permission: 'operation.identity_verification.read' },
   { id: 'incidents', label: 'Thông tin pháp lý sự cố của xe', icon: 'shield', permission: 'operation.incident.read' },
 ];
 const sectionDescriptions = {
+  listings: 'Hoàn thiện và xuất bản tin cho xe đã nhập gara.',
+  bookings: 'Xử lý yêu cầu thuê trước khi các bên ký hợp đồng.',
+  trips: 'Theo dõi xe chờ giao, đang thuê và đã trả.',
   overview: 'Theo dõi tiến độ vận hành và các công việc cần xử lý.',
   contracts: 'Theo dõi hồ sơ hợp đồng và chuyển Manager ký đúng quy trình.',
   vehicles: 'Tra cứu hồ sơ xe, lịch kiểm định và thông tin phân công Garage.',
@@ -73,13 +82,6 @@ const vehicleStatuses = {
   rented: 'Đang cho thuê',
   returned_to_owner: 'Đã trả chủ xe',
   maintenance: 'Bảo dưỡng',
-};
-const vehicleStatusTransitions = {
-  with_owner: ['maintenance'],
-  at_garage: ['maintenance'],
-  rented: [],
-  returned_to_owner: [],
-  maintenance: ['at_garage'],
 };
 const inspectionScheduleStates = {
   awaiting_manager: 'Chờ Manager',
@@ -220,10 +222,7 @@ export default function OperatorPage({ initialSection } = {}) {
   const hasPermission = (permission) => isAdmin || permissions.includes(permission);
   const canCreateIncident = hasPermission('operation.incident.create') && hasPermission('operation.vehicle.read');
   const canEditSelectedIncident = canEditIncident(selectedIncident) && hasPermission('operation.incident.update');
-  const availableVehicleStatusTransitions = selectedVehicle
-    ? (vehicleStatusTransitions[selectedVehicle.physicalStatus] || [])
-      .filter((target) => target !== 'at_garage' || selectedVehicle.onboardingStatus === 'approved')
-    : [];
+  const availableVehicleStatusTransitions = selectedVehicle?.allowedStatusTransitions || EMPTY_LIST;
   const refresh = useCallback(() => setRevision((value) => value + 1), []);
 
   function toggleCreateIncident() {
@@ -637,6 +636,12 @@ export default function OperatorPage({ initialSection } = {}) {
               <h2>Không có quyền truy cập</h2>
               <p>Tài khoản của bạn không được cấp quyền cho mục này.</p>
             </section>
+          ) : section === 'listings' ? (
+            <ListingManagementWorkspace onNotice={setNotice} loadResource={getOperatorRentalResource} actions={operatorListingActions} revision={revision} />
+          ) : section === 'bookings' || section === 'trips' ? (
+            <BookingApprovalsWorkspace key={section} onNotice={setNotice} loadResource={getOperatorRentalResource}
+              decideRequest={decideOperatorBooking} revision={revision} trips={section === 'trips'}
+              canReview={hasPermission('operation.booking.review')} />
           ) : section === 'overview' ? (
             <section className="operator-dashboard">
               {loading && !dashboard ? (

@@ -182,7 +182,7 @@ test('booking panel reads listing price then posts reservation without client-co
     start: '2026-12-01T09:00',
     end: '2026-12-03T09:00'
   }} />);
-  await screen.findByRole('heading', { name: 'Xe từ MongoDB' });
+  await screen.findByText(/Gara API/, { selector: "strong" });
   fireEvent.click(screen.getByRole('checkbox'));
   fireEvent.submit(screen.getByRole('button', {
     name: 'Gửi yêu cầu thuê xe'

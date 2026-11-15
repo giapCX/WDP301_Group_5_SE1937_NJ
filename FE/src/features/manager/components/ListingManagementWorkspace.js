@@ -13,9 +13,10 @@ const statusLabels = {
   rejected: 'Đã từ chối',
 };
 
-export default function ListingManagementWorkspace({ onNotice }) {
-  const request = useManagerCollection('listings', { status: 'all' });
-  const { reviewListing, updateListing } = useManagerActions();
+export default function ListingManagementWorkspace({ onNotice, loadResource, actions, revision }) {
+  const request = useManagerCollection('listings', { status: 'all' }, { loadResource, revision });
+  const managerActions = useManagerActions();
+  const { reviewListing, updateListing } = actions ?? managerActions;
   const [dialog, setDialog] = useState(null);
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');

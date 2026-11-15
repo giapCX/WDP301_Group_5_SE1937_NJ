@@ -306,18 +306,22 @@ test('rental operator intake audit failure rolls back the handoff', async () => 
   assert.equal(await models.AuditLog.countDocuments({ entity_id: row.id, action: 'contract.operator_intake.confirm' }), 0);
 });
 
-test('Manager prepares the hieupn rental contract and both parties sign independently', async () => {
+test('Manager prepares rental snapshot, renter signs before Operator intake and Manager signing', async () => {
   const fixture = await rentalFixture(), row = (await fixture.prepare()).data;
-  assert.equal(row.document.version, 'xedi-rental-paper-v1');
-  assert.ok(row.document.parties[0].facts.some(({ label, value }) => label === 'Đại diện theo ủy quyền' && value === 'XeDi'));
+  assert.equal(row.document.version, 'xedi-rental-representation-v1');
+  assert.equal(row.document.parties[0].heading, 'BÊN A · CHỦ XE, BÊN CHO THUÊ');
+  assert.ok(row.document.parties[0].facts.some(({ label, value }) => label === 'Đại diện ký theo ủy quyền' && value === 'XeDi'));
   assert.equal(row.document.parties.length, 2);
   assert.equal(row.document.articles.length, 9);
   assert.ok(row.document.facts.some(({ label }) => label === 'Biển số'));
   assert.match(row.document.articles[3].paragraphs[0], /Tiền cọc/);
   await sign(row, 'otherRenter', 'party', signature(row), 404);
   await sign(row, 'operation', 'staff', signature(row), 403);
-  await sign(row, 'manager', 'staff');
+  await sign(row, 'manager', 'staff', signature(row), 409);
   await sign(row, 'renter');
+  await sign(row, 'manager', 'staff', signature(row), 409);
+  await confirmOperatorIntake(row);
+  await sign(row, 'manager', 'staff');
   const agreement = await models.RentalAgreement.findById(row.id).lean();
   assert.equal(agreement.status, 'signed');
   assert.ok(agreement.signed_at);

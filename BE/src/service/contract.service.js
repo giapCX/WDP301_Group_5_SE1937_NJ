@@ -119,9 +119,8 @@ export function createContractService(repository) {
       managerReviewStatus: row.manager_review?.status || null,
       partyName: signature.owner_signature_name || signature.renter_signature_name || '', platformName: signature.platform_signature_name || '',
       canSign: Boolean(signingOpen && row.contract_document && row.status === 'pending_signatures'
-        && (mode === 'party' ? !partyDone : actor.roles.includes('MANAGER') && !platformDone
-          && ((type === 'rental' && ctx.booking.review_info?.required !== false)
-            || (partyDone && (managerReviewed || operatorIntakeConfirmedAt))))),
+        && (mode === 'party' ? !partyDone : actor.roles.includes('MANAGER') && partyDone
+          && (type === 'management' && managerReviewed || operatorIntakeConfirmedAt) && !platformDone)),
       canOperatorConfirm: Boolean(
         mode === 'staff'
         && actor.roles.includes('OPERATION_STAFF')
@@ -414,15 +413,13 @@ export function createContractService(repository) {
         if (mode !== 'party') {
           requireRole(actor, ['MANAGER']);
           if (same(actor.id, ctx.partyId) || same(actor.id, ctx.vehicle.owner_id)) throw httpError(403, 'Không được đại diện nền tảng ký hợp đồng của chính mình.');
-          if (type === 'management' || ctx.booking.review_info?.required === false) {
-            const signature = type === 'management' ? row.signature_info || {} : row.signing_info || {};
-            const partySigned = type === 'management'
-              ? Boolean(signature.owner_signed_at)
-              : Boolean(signature.renter_signed_at || signature.renter_confirmed);
-            fail(!partySigned, 'Hợp đồng cần được chủ xe/người thuê xác nhận trước.');
-            if (type === 'rental' || row.manager_review?.status !== 'approved') {
-              fail(!row.operator_intake?.confirmed_at, 'Operator chưa tiếp nhận hợp đồng.');
-            }
+          const signature = type === 'management' ? row.signature_info || {} : row.signing_info || {};
+          const partySigned = type === 'management'
+            ? Boolean(signature.owner_signed_at)
+            : Boolean(signature.renter_signed_at || signature.renter_confirmed);
+          fail(!partySigned, 'Hợp đồng cần được chủ xe/người thuê xác nhận trước.');
+          if (type === 'rental' || row.manager_review?.status !== 'approved') {
+            fail(!row.operator_intake?.confirmed_at, 'Operator chưa tiếp nhận hợp đồng.');
           }
         }
         fail(!row.contract_document || row.status !== 'pending_signatures', 'Hợp đồng chưa sẵn sàng ký hoặc đã ký xong.');

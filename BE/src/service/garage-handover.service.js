@@ -1,3 +1,4 @@
+import { BOOKING_REVIEWER_ROLE } from '../utils/booking-hold.js';
 import { Types } from 'mongoose';
 import { httpError } from '../utils/http-error.js';
 import { garageTransaction } from '../utils/garage-transaction.js';
@@ -192,7 +193,8 @@ export function createGarageHandoverService(repository) {
         if (!data.eligible) throw httpError(409, 'Chưa đủ điều kiện giao nhận.', { blockers: data.blockers });
         validateReport(record, data.baselineOdometerKm);
         const returning = record.handover_type === 'return';
-        if (!returning && (pickupVerification || data.booking.review_info?.required === false)
+        const review = data.booking.review_info;
+        if (!returning && (pickupVerification || review?.required === false || review?.reviewer_role === BOOKING_REVIEWER_ROLE)
           && !(pickupVerification?.identityMatched && pickupVerification?.licenseChecked && pickupVerification?.fitToDrive)) {
           throw httpError(409, 'Cần đối chiếu đúng người nhận, GPLX và điều kiện lái xe trước khi giao xe.');
         }

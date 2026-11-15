@@ -133,8 +133,6 @@ export default function BookingPanel({
         <section id="detail-documents">
           <h2>Giấy tờ thuê xe</h2>
           <ul>
-            <li>CCCD hoặc hộ chiếu đã xác minh.</li>
-            <li>Giấy phép lái xe đã xác minh, còn hạn đến thời điểm trả xe.</li>
             <li>Địa chỉ liên hệ đã lưu trong <a href="#/renter/profile">hồ sơ cá nhân</a>.</li>
           </ul>
         </section>

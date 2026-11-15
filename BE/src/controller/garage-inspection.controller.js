@@ -6,6 +6,17 @@ const { ObjectId } = Types;
 
 export function createVehicleInspectionController(service) {
   return {
+    ownerSubmission: async (request, response) => response.json({
+      data: await service.ownerSubmission(new ObjectId(objectId(request.params.id)), request.actor),
+    }),
+    ownerSubmissionFile: async (request, response) => {
+      const { bytes, contentType } = await service.ownerSubmissionFile(
+        new ObjectId(objectId(request.params.id)), request.actor, request.params.file,
+      );
+      response.set('Cache-Control', 'private, no-store');
+      response.set('X-Content-Type-Options', 'nosniff');
+      response.type(contentType).send(bytes);
+    },
     candidates: async (request, response) => response.json(
       await service.list(parseInspectionList(request.query, true), request.actor, true),
     ),

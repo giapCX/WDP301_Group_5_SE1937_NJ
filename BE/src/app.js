@@ -54,7 +54,7 @@ export function createApp(database, options = {}) {
   app.use('/api/listings', createListingsRouter(database, options.ownerFileRepository || privateFileRepository));
   app.use('/api/homepage', createHomepageRouter(database));
   app.use('/api/garage', createGarageIntakesRouter(database));
-  app.use('/api/garage', createGarageInspectionsRouter(database));
+  app.use('/api/garage', createGarageInspectionsRouter(database, options.ownerFileRepository || privateFileRepository));
   app.use('/api/garage', createGarageHandoverRouter(database));
   app.use('/api/garage', createGarageIncidentRouter(database));
   app.use('/api/garage', createGaragePhotoRouter(database, options.garageUploadDirectory, { useLocalFileStorage }));

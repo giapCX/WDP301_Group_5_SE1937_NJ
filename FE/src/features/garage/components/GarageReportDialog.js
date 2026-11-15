@@ -4,6 +4,7 @@ import Icon from '../../../components/ui/Icon';
 import GaragePhotoUpload from './GaragePhotoUpload';
 import GarageStatus from './GarageStatus';
 import GarageInspectionChecklist from './GarageInspectionChecklist';
+import GarageOwnerSubmission from './GarageOwnerSubmission';
 import GarageConditionDefects from './GarageConditionDefects';
 import GarageManagerDecision from './GarageManagerDecision';
 import {
@@ -180,6 +181,7 @@ export default function GarageReportDialog({ task, onSave, onClose, onReviewArri
         </div>
       </div>
       {task.scheduleNote && <p className="gs-form-hint">Ghi chú lịch kiểm định: {task.scheduleNote}</p>}
+      {task.kind === 'inspection' && task.recordId && <GarageOwnerSubmission key={task.recordId} inspectionId={task.recordId} />}
       {blockers.length > 0 && !readOnly && (
         <div className="gs-blocker">
           <Icon name="alert" size={20} />

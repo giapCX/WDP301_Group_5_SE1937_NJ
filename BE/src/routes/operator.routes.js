@@ -9,12 +9,24 @@ import { createContractService } from '../service/contract.service.js';
 import { createIdentityVerificationRepository } from '../repositories/identity-verification.repository.js';
 import { createIdentityVerificationService } from '../service/identity-verification.service.js';
 import { createIdentityVerificationController } from '../controller/identity-verification.controller.js';
+import { createManagerRepository } from '../repositories/manager.repository.js';
+import { createRentalOperationsService } from '../service/rental-operations.service.js';
+import { createManagerApprovalService } from '../service/manager-approval.service.js';
+import { createRentalOperationsController } from '../controller/rental-operations.controller.js';
 
 export function createOperatorRouter(connection, files) {
   const router = Router();
   const repository = createOperatorRepository(connection);
   const service = createOperatorService(repository, files);
-  const controller = createOperatorController(service, createContractService(createContractRepository(connection)));
+  const contracts = createContractService(createContractRepository(connection));
+  const controller = createOperatorController(service, contracts);
+  const rentalRepository = createManagerRepository(connection);
+  const rentalOperations = createRentalOperationsService(rentalRepository);
+  const rental = createRentalOperationsController(
+    rentalOperations,
+    createManagerApprovalService(rentalRepository, rentalOperations, contracts),
+    { operatorQueue: true },
+  );
   const identityController = createIdentityVerificationController(
     createIdentityVerificationService(createIdentityVerificationRepository(connection, files), files),
   );
@@ -22,6 +34,11 @@ export function createOperatorRouter(connection, files) {
   router.use(createAuthMiddleware(connection));
 
   router.get('/dashboard', requirePermission('operation.dashboard.read'), controller.dashboard);
+  router.get('/listings', requirePermission('operation.listing.manage'), rental.listings);
+  router.patch('/listings/:id', requirePermission('operation.listing.manage'), rental.updateListing);
+  router.patch('/listings/:id/review', requirePermission('operation.listing.manage'), rental.reviewListing);
+  router.get('/bookings', requirePermission('operation.booking.read'), rental.bookings);
+  router.patch('/bookings/:id/decision', requirePermission('operation.booking.review'), rental.decideBooking);
   router.get('/inspection-workflow', requirePermission('operation.vehicle.read'), controller.inspectionWorkflow);
   router.get('/vehicles/garage-staff', requirePermission('operation.vehicle.inspection.schedule'), controller.garageStaff);
   router.get('/vehicles', requirePermission('operation.vehicle.read'), controller.vehicles);

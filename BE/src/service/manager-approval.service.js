@@ -1,3 +1,4 @@
+import { BOOKING_REVIEWER_ROLE } from '../utils/booking-hold.js';
 const validObjectId = (value) => typeof value === 'string' && /^[a-f\d]{24}$/i.test(value);
 const preparableStatuses = ['draft', 'pending_signatures', 'pending_signature', 'awaiting_signature'];
 const contractNeedsPreparation = (agreement) => !agreement
@@ -5,6 +6,31 @@ const contractNeedsPreparation = (agreement) => !agreement
 
 export function createManagerApprovalService(repository, service, contracts) {
   return {
+    async decideBooking(input, actor) {
+      if (input.operatorQueue) return service.decideBooking(input);
+      const existing = input.body?.action === 'approve' && validObjectId(input.id)
+        ? await repository.collection('bookings').findOne({ _id: input.id })
+        : null;
+      const agreement = existing?.status === 'awaiting_payment'
+        ? await repository.collection('rental_agreements').findOne({ booking_id: existing._id })
+        : null;
+      const correctQueue = Boolean(input.operatorQueue) === (existing?.review_info?.reviewer_role === BOOKING_REVIEWER_ROLE);
+      const result = correctQueue && existing?.status === 'awaiting_payment' && existing.review_info?.decision === 'approved'
+        && contractNeedsPreparation(agreement)
+        ? { data: {
+          id: String(existing._id),
+          status: existing.status,
+          decision: 'approved',
+          ...(existing.payment_deadline_at ? { paymentDeadline: existing.payment_deadline_at } : {}),
+        } }
+        : await service.decideBooking(input);
+      if (result.data.status === 'awaiting_payment') {
+        const contract = await contracts.prepare('rental', input.id, {}, actor);
+        result.data.contractNumber = contract.number;
+      }
+      return result;
+    },
+
     async reviewVehicle(input, actor) {
       let result;
       if (input.body?.action === 'approve' && validObjectId(input.id)

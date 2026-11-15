@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getManagerResource } from '../api/managerApi';
 
-export default function useManagerCollection(resource, query = {}, { paginate = true } = {}) {
+export default function useManagerCollection(resource, query = {}, { paginate = true, loadResource = getManagerResource, revision = 0 } = {}) {
   const queryKey = useMemo(() => JSON.stringify(query), [query]);
   const key = `${resource}:${queryKey}`;
   const [selection, setSelection] = useState({ key, page: 1, pageSize: 10 });
@@ -19,7 +19,7 @@ export default function useManagerCollection(resource, query = {}, { paginate = 
     const controller = new AbortController();
     setLoading(true);
     setError('');
-    getManagerResource(resource, { ...JSON.parse(queryKey), ...(paginated ? { page, limit: pageSize } : {}), signal: controller.signal })
+    loadResource(resource, { ...JSON.parse(queryKey), ...(paginated ? { page, limit: pageSize } : {}), signal: controller.signal })
       .then((result) => {
         if (controller.signal.aborted) return;
         setData(result.data || []);
@@ -31,7 +31,7 @@ export default function useManagerCollection(resource, query = {}, { paginate = 
       })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [resource, queryKey, key, reload, page, pageSize, paginated]);
+  }, [resource, queryKey, key, reload, page, pageSize, paginated, loadResource, revision]);
 
   return { data, loading, error, refresh, paging: paginated ? {
     page, pageSize, total: pagination?.total ?? 0, disabled: loading,

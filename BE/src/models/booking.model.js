@@ -36,6 +36,7 @@ export const bookingSchema = createSchema({
   }),
   review_info: embedded({
     required: Boolean,
+    reviewer_role: String,
     decision: String,
     reviewed_by: ObjectId,
     reviewed_at: Date,

@@ -1,6 +1,8 @@
 import { getApi, getBlobApi, patchApi, postApi } from '../../../services/httpClient';
 
 export const getGarageWorkspace = (options) => getApi('/garage/workspace', options);
+export const getOwnerSubmission = (id, options) => getApi(`/garage/inspections/${encodeURIComponent(id)}/owner-submission`, options);
+export const getOwnerSubmissionFile = (id, file, options) => getBlobApi(`/garage/inspections/${encodeURIComponent(id)}/owner-submission/${encodeURIComponent(file)}`, options);
 export const uploadGaragePhoto = (body) => postApi('/garage/photos', body).then(({ data }) => data);
 export const getGaragePhoto = (key, options) => getBlobApi(`/garage/photos/${key.replace(/^garage-photos\//, '').split('/').map(encodeURIComponent).join('/')}`, options);
 

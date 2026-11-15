@@ -1,5 +1,6 @@
 export const BOOKING_REVIEW_WINDOW_MS = 2 * 60 * 60 * 1000;
 export const BOOKING_PAYMENT_WINDOW_MS = 15 * 60 * 1000;
+export const BOOKING_REVIEWER_ROLE = 'OPERATION_STAFF';
 
 export const openRentalSigningBookings = (now) => ({
   start_at: { $gt: now },

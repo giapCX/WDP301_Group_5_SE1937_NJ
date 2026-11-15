@@ -4,10 +4,10 @@ import { createVehicleInspectionController } from '../controller/garage-inspecti
 import { createVehicleInspectionRepository } from '../repositories/garage-inspection.repository.js';
 import { createVehicleInspectionService } from '../service/garage-inspection.service.js';
 
-export function createGarageInspectionsRouter(database) {
+export function createGarageInspectionsRouter(database, ownerFiles) {
   const router = Router();
   const repository = createVehicleInspectionRepository(database);
-  const service = createVehicleInspectionService(repository);
+  const service = createVehicleInspectionService(repository, ownerFiles);
   const controller = createVehicleInspectionController(service);
   router.use(
     ['/inspections', '/inspection-vehicles', '/vehicles/:vehicleId/inspection-eligibility'],
@@ -18,6 +18,8 @@ export function createGarageInspectionsRouter(database) {
   router.get('/inspections', controller.list);
   router.post('/inspections', controller.create);
   router.get('/inspections/:id', controller.get);
+  router.get('/inspections/:id/owner-submission', controller.ownerSubmission);
+  router.get('/inspections/:id/owner-submission/:file', controller.ownerSubmissionFile);
   router.patch('/inspections/:id', controller.update);
   router.post('/inspections/:id/arrival', controller.reviewArrival);
   router.post('/inspections/:id/submit', controller.submit);

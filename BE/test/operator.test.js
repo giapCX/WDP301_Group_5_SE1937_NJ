@@ -292,6 +292,29 @@ test('Operator can only schedule inspection for active Garage Staff with inspect
   await request(`/operator/vehicles/${vehicle._id}/inspection-schedule`, 'POST', assignment, 'operation', 404);
 });
 
+test('Operator listing and trip queues enforce permissions', async () => {
+  const listings = await request('/operator/listings');
+  assert.ok(Array.isArray(listings.result.data));
+  const trips = await request('/operator/bookings?status=trips');
+  assert.ok(trips.result.data.every((trip) => ['confirmed', 'ongoing', 'completed'].includes(trip.status)));
+  await request('/operator/listings', 'GET', undefined, 'renter', 403);
+  await request('/operator/bookings?status=trips', 'GET', undefined, 'renter', 403);
+});
+
+test('Operator can recover a submitted vehicle trapped in maintenance without assigning it to garage', async () => {
+  const vehicle = await models.Vehicle.create({
+    owner_id: actors.owner._id, license_plate: `OP-RECOVER-${randomUUID()}`,
+    physical_status: 'maintenance', onboarding_status: 'submitted',
+    operational_status_history: [{ from: 'with_owner', to: 'maintenance', changed_at: new Date() }],
+  });
+  const path = `/operator/vehicles/${vehicle._id}`;
+  const detail = await request(path);
+  assert.deepEqual(detail.result.data.allowedStatusTransitions, ['with_owner']);
+  await request(`${path}/status`, 'PATCH', { status: 'at_garage', note: 'Thử đưa xe về gara.' }, 'operation', 409);
+  await request(`${path}/status`, 'PATCH', { status: 'with_owner', note: 'Xe vẫn đang ở chủ xe.' });
+  await request(`${path}/status`, 'PATCH', { status: 'maintenance', note: 'Thử đưa đi bảo dưỡng.' }, 'operation', 409);
+});
+
 test('concurrent vehicle status updates do not duplicate history or audit entries', async () => {
   const vehicle = await models.Vehicle.create({
     owner_id: actors.owner._id,

@@ -8,6 +8,14 @@ function queryString(params = {}) {
 }
 
 export const getOperatorDashboard = (options) => getApi('/operator/dashboard', options);
+export const getOperatorRentalResource = (resource, { signal, ...params }) =>
+  getApi(`/operator/${resource}${queryString(params)}`, { signal });
+export const operatorListingActions = {
+  updateListing: (id, body) => patchApi(`/operator/listings/${encodeURIComponent(id)}`, body),
+  reviewListing: (id, body) => patchApi(`/operator/listings/${encodeURIComponent(id)}/review`, body),
+};
+export const decideOperatorBooking = (id, body) =>
+  patchApi(`/operator/bookings/${encodeURIComponent(id)}/decision`, body);
 export const getOperatorInspectionWorkflow = (params, options) => getApi(`/operator/inspection-workflow${queryString(params)}`, options);
 export const getOperatorVehicles = (params, options) => getApi(`/operator/vehicles${queryString(params)}`, options);
 export const getOperatorGarageStaff = (options) => getApi('/operator/vehicles/garage-staff', options);

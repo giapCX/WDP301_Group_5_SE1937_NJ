@@ -81,6 +81,7 @@ beforeEach(() => {
     licensePlate: 'TEST-1',
     physicalStatus: 'with_owner',
     onboardingStatus: 'approved',
+    allowedStatusTransitions: ['maintenance'],
     statusHistory: [],
     documents: {},
   } });
@@ -130,7 +131,7 @@ test('direct navigation to an unpermitted menu displays an access denial', () =>
 
 test('vehicle status updates require an explicit reason and use the permitted transition', async () => {
   getOperatorVehicles.mockResolvedValueOnce({
-    data: [{ id: 'vehicle-1', licensePlate: 'TEST-1', brand: 'Toyota', model: 'Vios', physicalStatus: 'with_owner' }],
+    data: [{ id: 'vehicle-1', licensePlate: 'TEST-1', brand: 'Toyota', model: 'Vios', physicalStatus: 'with_owner', allowedStatusTransitions: ['maintenance'] }],
     pagination: { page: 1, limit: 10, total: 1 },
   });
   render(<OperatorPage initialSection="vehicles" />);

@@ -8,6 +8,7 @@ export const rentalAgreementSchema = createSchema({
   booking_id: { type: ObjectId, ref: 'Booking', required: true },
   management_agreement_id: { type: ObjectId, ref: 'ManagementAgreement' },
   contract_number: { type: String, required: true },
+  template_code: String,
   lender_details_snapshot: embedded({
     owner_id: { type: ObjectId, ref: 'User' },
     platform_representative_user_id: ObjectId,
