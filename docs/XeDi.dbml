@@ -1,0 +1,564 @@
+// XeDi MongoDB/Mongoose schema represented in DBML for dbdiagram.io.
+// Embedded MongoDB subdocuments and arrays are represented as json columns.
+// MongoDB does not enforce these Ref relationships as SQL foreign keys.
+
+Table roles {
+  _id ObjectId [pk]
+  code varchar [not null, unique]
+  display_name varchar
+  permissions json
+  description text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table users {
+  _id ObjectId [pk]
+  full_name varchar
+  email varchar [not null, unique]
+  phone varchar
+  department varchar
+  job_title varchar
+  work_scope varchar
+  password_hash varchar
+  primary_role_id ObjectId
+  additional_role_ids json // array of Role ObjectIds
+  account_status varchar [not null, note: 'active, suspended, pending, inactive, locked']
+  identity_kyc json
+  driver_license json
+  verification_history json
+  contact_profile json
+  payout_profile json
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    primary_role_id
+  }
+}
+
+Table vehicles {
+  _id ObjectId [pk]
+  renter_calendar_version int
+  owner_id ObjectId [not null]
+  license_plate varchar [not null, unique]
+  vin varchar
+  brand varchar
+  model varchar
+  manufacture_year int
+  seats int
+  fuel_type varchar
+  transmission varchar
+  vehicle_type varchar
+  description text
+  daily_price int
+  mileage_policy json
+  photos json
+  physical_status varchar [note: 'with_owner, at_garage, rented, returned_to_owner, maintenance']
+  onboarding_status varchar [note: 'draft, submitted, pending_review, approved, revision_required, rejected']
+  documents json
+  registration_history json
+  created_at timestamp
+  updated_at timestamp
+  inspection_workflow_version int
+  contract_workflow_version int
+  reviewed_by_manager_id ObjectId
+  review_note text
+
+  indexes {
+    owner_id
+    onboarding_status
+  }
+}
+
+Table vehicle_inspections {
+  _id ObjectId [pk]
+  vehicle_id ObjectId [not null]
+  garage_staff_id ObjectId [not null]
+  reviewed_by_manager_id ObjectId
+  inspection_type varchar [not null, note: 'onboarding, periodic, return']
+  inspected_at timestamp
+  condition_report json
+  recommendation varchar [note: 'pass, requires_repair, fail']
+  approval_status varchar [not null, note: 'draft, pending, approved, revision_required, rejected']
+  decision_reason text
+  decided_at timestamp
+  created_at timestamp
+  version int
+  submitted_from_version int
+  submitted_at timestamp
+  updated_at timestamp
+  scheduled_for timestamp
+  schedule_note text
+  assigned_by_operation_staff_id ObjectId
+
+  indexes {
+    (vehicle_id, inspected_at)
+    (garage_staff_id, approval_status, created_at)
+    (vehicle_id, inspection_type, approval_status) [unique, note: 'Partial unique index: one open onboarding inspection per vehicle']
+  }
+}
+
+Table management_agreements {
+  _id ObjectId [pk]
+  vehicle_id ObjectId [not null]
+  owner_id ObjectId [not null]
+  platform_signer_id ObjectId
+  agreement_number varchar [not null, unique]
+  start_date date
+  end_date date
+  commission_rate_pct decimal
+  authorization_scope json
+  signature_info json
+  contract_document json
+  signed_document_key varchar
+  amendments json
+  manager_review json
+  status varchar
+  termination_info json
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (vehicle_id, status)
+  }
+}
+
+Table vehicle_intakes {
+  _id ObjectId [pk]
+  vehicle_id ObjectId [not null]
+  management_agreement_id ObjectId [not null, unique]
+  received_by_garage_staff_id ObjectId
+  received_at timestamp
+  owner_confirmed_at timestamp
+  odometer_km int
+  fuel_level_pct int
+  condition_snapshot json
+  intake_document_key varchar
+  created_at timestamp
+  status varchar [note: 'draft, completed; legacy completed records may omit status']
+  version int
+  created_by_garage_staff_id ObjectId
+  confirmed_from_version int
+  updated_at timestamp
+
+  indexes {
+    (vehicle_id, received_at)
+    (status, created_at)
+  }
+}
+
+Table vehicle_listings {
+  _id ObjectId [pk]
+  vehicle_id ObjectId [not null]
+  created_by_operation_staff_id ObjectId
+  title varchar [not null]
+  description text
+  photos json
+  pickup_location json
+  daily_price decimal
+  security_deposit_amount decimal
+  mileage_policy json
+  rental_policy_snapshot json
+  availability_blocks json
+  status varchar
+  published_at timestamp
+  updated_at timestamp
+  updated_by_operation_staff_id ObjectId
+  handled_by ObjectId
+  handled_at timestamp
+  operation_review_note text
+
+  indexes {
+    (status, daily_price)
+    vehicle_id
+  }
+}
+
+Table bookings {
+  _id ObjectId [pk]
+  hold_expires_at timestamp
+  policy_snapshot json
+  request_key varchar
+  discount_code varchar
+  discount_amount decimal
+  booking_code varchar [not null, unique]
+  renter_id ObjectId [not null]
+  vehicle_id ObjectId [not null]
+  listing_id ObjectId
+  management_agreement_id ObjectId
+  start_at timestamp [not null]
+  end_at timestamp [not null]
+  actual_start_at timestamp
+  actual_end_at timestamp
+  pickup_location json
+  return_location json
+  rental_fee_amount decimal
+  deposit_amount_snapshot decimal
+  pricing_snapshot json
+  review_info json
+  review_deadline_at timestamp
+  payment_deadline_at timestamp
+  operation_overdue_escalated_at timestamp
+  operation_overdue_escalated_by ObjectId
+  operation_overdue_note text
+  cancellation_info json
+  status_history json
+  operation_overdue_handled_at timestamp
+  operation_overdue_handled_by ObjectId
+  status varchar [not null, note: 'pending, awaiting_payment, confirmed, ongoing, completed, cancelled, rejected, expired']
+  created_at timestamp
+  updated_at timestamp
+  contract_workflow_version int
+
+  indexes {
+    (renter_id, created_at)
+    (vehicle_id, status, start_at, end_at)
+  }
+}
+
+Table rental_agreements {
+  _id ObjectId [pk]
+  booking_id ObjectId [not null, unique]
+  management_agreement_id ObjectId
+  contract_number varchar [not null, unique]
+  lender_details_snapshot json
+  renter_details_snapshot json
+  terms_snapshot json
+  signing_info json
+  contract_document json
+  signed_document_key varchar
+  amendments json
+  manager_review json
+  updated_at timestamp
+  status varchar
+  signed_at timestamp
+  created_at timestamp
+}
+
+Table rental_handovers {
+  _id ObjectId [pk]
+  booking_id ObjectId [not null]
+  vehicle_id ObjectId [not null]
+  garage_staff_id ObjectId
+  handover_type varchar [not null, note: 'pickup, return']
+  occurred_at timestamp
+  odometer_km int
+  fuel_level_pct int
+  vehicle_condition json
+  renter_confirmed_at timestamp
+  calculated_surcharges json
+  status varchar
+  version int
+  confirmed_from_version int
+  updated_at timestamp
+  created_at timestamp
+
+  indexes {
+    (booking_id, handover_type) [unique]
+  }
+}
+
+Table payment_transactions {
+  _id ObjectId [pk]
+  booking_id ObjectId
+  initiator_user_id ObjectId
+  transaction_type varchar
+  direction varchar
+  amount decimal [not null]
+  currency varchar
+  payment_method varchar
+  provider varchar
+  provider_transaction_id varchar
+  related_transaction_id ObjectId
+  idempotency_key varchar [not null, unique]
+  status varchar
+  provider_response json
+  paid_at timestamp
+  created_at timestamp
+
+  indexes {
+    (booking_id, created_at)
+  }
+}
+
+Table security_deposits {
+  _id ObjectId [pk]
+  booking_id ObjectId [not null, unique]
+  collection_payment_id ObjectId
+  required_amount decimal
+  collected_amount decimal
+  deducted_amount decimal
+  refunded_amount decimal
+  refundable_amount decimal
+  movements json
+  deduction_decisions json
+  status varchar
+  refund_due_at timestamp
+  updated_at timestamp
+}
+
+Table owner_settlements {
+  _id ObjectId [pk]
+  owner_id ObjectId [not null]
+  vehicle_id ObjectId
+  management_agreement_id ObjectId
+  period_start date
+  period_end date
+  items json
+  gross_rental_revenue decimal
+  platform_commission decimal
+  other_adjustments decimal
+  net_owner_payout decimal
+  payout_transaction_id ObjectId
+  payout_status varchar
+  settled_at timestamp
+  created_at timestamp
+
+  indexes {
+    (owner_id, period_start)
+  }
+}
+
+Table incident_cases {
+  _id ObjectId [pk]
+  case_number varchar [not null, unique]
+  reported_by_user_id ObjectId
+  assigned_operation_staff_id ObjectId
+  reviewed_by_manager_id ObjectId
+  vehicle_id ObjectId [not null]
+  booking_id ObjectId
+  case_type varchar
+  incident_type varchar
+  location json
+  odometer_km int
+  severity varchar [note: 'low, medium, high']
+  source_handover_id ObjectId
+  request_key varchar
+  request_fingerprint varchar
+  description text [not null]
+  evidence json
+  investigation json
+  traffic_violation_details json
+  compensation_claims json
+  resolution json
+  operation_timeline json
+  handled_by ObjectId
+  handled_at timestamp
+  status varchar
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (booking_id)
+    (status, assigned_operation_staff_id)
+    (reported_by_user_id, request_key) [unique, note: 'Partial unique index when request_key is present']
+    (source_handover_id) [unique, note: 'Partial unique index when source_handover_id is present']
+  }
+}
+
+Table vehicle_withdrawal_requests {
+  _id ObjectId [pk]
+  vehicle_id ObjectId [not null]
+  owner_id ObjectId [not null]
+  management_agreement_id ObjectId
+  assigned_operation_staff_id ObjectId
+  request_type varchar
+  reason text
+  requested_return_at timestamp
+  requested_at timestamp
+  affected_bookings json
+  termination_notice json
+  final_settlement json
+  owner_return_handover json
+  status varchar
+  completed_at timestamp
+  created_at timestamp
+
+  indexes {
+    (vehicle_id, status)
+  }
+}
+
+Table platform_policies {
+  _id ObjectId [pk]
+  policy_type varchar [not null]
+  version int [not null]
+  config json [not null]
+  effective_from timestamp
+  effective_until timestamp
+  updated_by_manager_id ObjectId
+  status varchar [note: 'active, superseded, inactive']
+  created_at timestamp
+
+  indexes {
+    (policy_type, status, effective_from)
+  }
+}
+
+Table notifications {
+  _id ObjectId [pk]
+  recipient_user_id ObjectId [not null]
+  notification_type varchar
+  title varchar [not null]
+  content text
+  related_entity_type varchar
+  related_entity_id ObjectId
+  delivery_channels json
+  is_read boolean
+  created_at timestamp
+  read_at timestamp
+
+  indexes {
+    (recipient_user_id, is_read, created_at)
+  }
+}
+
+Table audit_logs {
+  _id ObjectId [pk]
+  actor_user_id ObjectId
+  action varchar [not null]
+  entity_type varchar [not null]
+  entity_id ObjectId
+  sanitized_changes json
+  ip_address_masked varchar
+  created_at timestamp
+
+  indexes {
+    (entity_type, entity_id, created_at)
+  }
+}
+
+Table system_reports {
+  _id ObjectId [pk]
+  report_type varchar [not null, note: 'finance, operations']
+  title varchar
+  period_from timestamp
+  period_to timestamp
+  report_data json
+  generated_by ObjectId
+  generated_at timestamp
+
+  indexes {
+    (report_type, generated_at)
+    (generated_by, generated_at)
+  }
+}
+
+Table renter_challenges {
+  _id ObjectId [pk]
+  actor varchar
+  purpose varchar
+  target json
+  code_hash varchar
+  attempts int
+  used boolean
+  created_at timestamp
+  expires_at timestamp
+
+  indexes {
+    (expires_at) [note: 'MongoDB TTL index; expired challenge documents are removed asynchronously']
+  }
+}
+
+Table renter_files {
+  _id ObjectId [pk]
+  owner_id ObjectId
+  purpose varchar
+  content_type varchar
+  size int
+  name varchar
+  created_at timestamp
+
+  indexes {
+    (owner_id, created_at)
+  }
+}
+
+Table renter_file_chunks {
+  _id ObjectId [pk]
+  file_id ObjectId
+  n int
+  data blob
+
+  indexes {
+    (file_id, n)
+  }
+}
+
+Table renter_contact_keys {
+  _id varchar [pk, note: 'Unique contact key']
+}
+
+Table discount_codes {
+  _id ObjectId [pk]
+  code varchar [unique]
+  is_active boolean
+  expiry_date timestamp
+  starts_at timestamp
+  min_order_value decimal
+  usage_limit int
+  used_count int
+  discount_type varchar [note: 'percentage, fixed']
+  discount_value decimal
+}
+
+// Scalar Mongoose refs represented as diagram relationships.
+Ref: users.primary_role_id > roles._id
+Ref: vehicles.owner_id > users._id
+Ref: vehicles.reviewed_by_manager_id > users._id
+Ref: vehicle_inspections.vehicle_id > vehicles._id
+Ref: vehicle_inspections.garage_staff_id > users._id
+Ref: vehicle_inspections.reviewed_by_manager_id > users._id
+Ref: vehicle_inspections.assigned_by_operation_staff_id > users._id
+Ref: management_agreements.vehicle_id > vehicles._id
+Ref: management_agreements.owner_id > users._id
+Ref: management_agreements.platform_signer_id > users._id
+Ref: vehicle_intakes.vehicle_id > vehicles._id
+Ref: vehicle_intakes.management_agreement_id > management_agreements._id
+Ref: vehicle_intakes.received_by_garage_staff_id > users._id
+Ref: vehicle_intakes.created_by_garage_staff_id > users._id
+Ref: vehicle_listings.vehicle_id > vehicles._id
+Ref: vehicle_listings.created_by_operation_staff_id > users._id
+Ref: vehicle_listings.updated_by_operation_staff_id > users._id
+Ref: vehicle_listings.handled_by > users._id
+Ref: bookings.renter_id > users._id
+Ref: bookings.vehicle_id > vehicles._id
+Ref: bookings.listing_id > vehicle_listings._id
+Ref: bookings.management_agreement_id > management_agreements._id
+Ref: bookings.operation_overdue_escalated_by > users._id
+Ref: bookings.operation_overdue_handled_by > users._id
+Ref: bookings._id - rental_agreements.booking_id
+Ref: rental_agreements.management_agreement_id > management_agreements._id
+Ref: rental_handovers.booking_id > bookings._id
+Ref: rental_handovers.vehicle_id > vehicles._id
+Ref: rental_handovers.garage_staff_id > users._id
+Ref: payment_transactions.booking_id > bookings._id
+Ref: payment_transactions.initiator_user_id > users._id
+Ref: payment_transactions.related_transaction_id > payment_transactions._id
+Ref: bookings._id - security_deposits.booking_id
+Ref: security_deposits.collection_payment_id > payment_transactions._id
+Ref: owner_settlements.owner_id > users._id
+Ref: owner_settlements.vehicle_id > vehicles._id
+Ref: owner_settlements.management_agreement_id > management_agreements._id
+Ref: owner_settlements.payout_transaction_id > payment_transactions._id
+Ref: incident_cases.vehicle_id > vehicles._id
+Ref: incident_cases.booking_id > bookings._id
+Ref: incident_cases.reported_by_user_id > users._id
+Ref: incident_cases.assigned_operation_staff_id > users._id
+Ref: incident_cases.reviewed_by_manager_id > users._id
+Ref: incident_cases.source_handover_id > rental_handovers._id
+Ref: incident_cases.handled_by > users._id
+Ref: vehicle_withdrawal_requests.vehicle_id > vehicles._id
+Ref: vehicle_withdrawal_requests.owner_id > users._id
+Ref: vehicle_withdrawal_requests.management_agreement_id > management_agreements._id
+Ref: vehicle_withdrawal_requests.assigned_operation_staff_id > users._id
+Ref: platform_policies.updated_by_manager_id > users._id
+Ref: notifications.recipient_user_id > users._id
+Ref: audit_logs.actor_user_id > users._id
+Ref: system_reports.generated_by > users._id
+Ref: renter_files.owner_id > users._id
+Ref: renter_file_chunks.file_id > renter_files._id
+
+// ObjectId references nested inside json fields are intentionally documented
+// as notes rather than Refs: MongoDB stores those embedded values in the parent document.
