@@ -9,17 +9,17 @@ export function createOperatorPermissionMiddleware(rolesRepository) {
           ? await rolesRepository.find({ _id: { $in: roleIds } }).exec()
           : [];
         const codes = roles.map((role) => role.code);
+        const permissions = [...new Set(roles.flatMap((role) => role.permissions || []))];
+        request.currentRoles = codes;
+        request.currentPermissions = permissions;
         if (codes.includes('ADMIN') || (allowManager && codes.includes('MANAGER'))) {
-          request.currentRoles = codes;
           return next();
         }
 
-        const operatorRole = roles.find((role) => role.code === 'OPERATION_STAFF');
-        if (!operatorRole?.permissions?.includes(permission)) {
+        if (!permissions.includes(permission)) {
           return next(httpError(403, 'Bạn không có quyền thực hiện thao tác này.'));
         }
 
-        request.currentRoles = codes;
         return next();
       } catch (error) {
         return next(error);

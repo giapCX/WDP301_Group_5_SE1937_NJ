@@ -53,6 +53,10 @@ export function createManagerGarageService(repository) {
             throw httpError(409, 'Biên bản kiểm định đã thay đổi. Hãy tải lại hồ sơ trước khi quyết định.');
           }
           if (inspection.approval_status === 'draft') throw httpError(409, 'Garage chưa gửi biên bản kiểm định.');
+          if ((inspection.arrival_review || vehicle.inspection_schedule_request?.status === 'confirmed')
+            && inspection.operator_review?.status !== 'checked') {
+            throw httpError(409, 'Operator cần kiểm tra đầy đủ biên bản Garage trước khi Manager ra quyết định.');
+          }
           // Historical approved reports may support initial approval; a decided failed round cannot be reused.
           if (!['pending', 'approved'].includes(inspection.approval_status)) throw httpError(409, 'Vòng kiểm định đã kết thúc. Cần Garage gửi biên bản mới.');
         } else if (inspectionId || inspectionVersion !== undefined && inspectionVersion !== null) {
@@ -102,6 +106,12 @@ export function createManagerGarageService(repository) {
     async reviewCompensation({ id: value, body = {}, actorId }) {
       const id = objectId(value);
       const { decision, amount, note = '' } = body;
+      const { settlementMode, contractBasis, evidenceReference } = body;
+      const recordOnly = settlementMode === 'record_only';
+      if (settlementMode !== undefined && !recordOnly) throw httpError(400, 'Phương thức ghi nhận không hợp lệ.');
+      if (recordOnly && decision === 'approve' && [contractBasis, evidenceReference].some(
+        (value) => typeof value !== 'string' || !value.trim() || value.length > 500,
+      )) throw httpError(400, 'Cần ghi điều khoản hợp đồng và chứng từ làm căn cứ.');
       if (!id || !['approve', 'reject'].includes(decision) || !Number.isSafeInteger(body.claimIndex) || body.claimIndex < 0 || typeof note !== 'string' || !note.trim() || note.length > 1000 || decision === 'approve' && (!Number.isSafeInteger(amount) || amount < 0)) {
         throw httpError(400, 'Cần quyết định, số tiền hợp lệ và lý do xử lý bồi thường.');
       }
@@ -120,13 +130,13 @@ export function createManagerGarageService(repository) {
         const managerReview = incident.status === 'pending_manager'
           && incident.investigation?.review_status === 'submitted'
           && Boolean(incident.submitted_to_manager_by_user_id);
-        if (decision === 'approve' && !operatorProposal && !managerReview) {
+        if ((decision === 'approve' || recordOnly) && !operatorProposal && !managerReview) {
           throw httpError(409, 'Hồ sơ cần được Operator chuyển Manager trước khi duyệt bồi thường.');
         }
         if (decision === 'approve' && same(incident.assigned_operation_staff_id, actorId)) throw httpError(409, 'Người lập đề xuất không được tự phê duyệt bồi thường.');
         const now = new Date();
         const approved = decision === 'approve' ? amount : 0;
-        if (approved > 0) {
+        if (approved > 0 && !recordOnly) {
           if (!incident.booking_id) throw httpError(409, 'Sự cố chưa gắn chuyến thuê; không được tự khấu trừ cọc khách.');
           const booking = await collection('bookings').findOne({ _id: incident.booking_id, vehicle_id: incident.vehicle_id }, options);
           if (!booking) throw httpError(409, 'Chuyến thuê không khớp xe của sự cố.');
@@ -146,10 +156,15 @@ export function createManagerGarageService(repository) {
           if (changed.modifiedCount !== 1) throw httpError(409, 'Cọc đã thay đổi hoặc sự cố đã được khấu trừ.');
         }
         claims[index] = { ...claim, decision: decision === 'approve' ? 'approved' : 'rejected', approved_amount: approved, decision_at: now, reviewed_by_manager_id: actorId, manager_note: note.trim() };
+        if (recordOnly && decision === 'approve') {
+          claims[index].contract_basis = contractBasis.trim();
+          claims[index].evidence_reference = evidenceReference.trim();
+          claims[index].settlement_status = approved > 0 ? 'pending_settlement' : 'no_payment_due';
+        }
         const complete = claims.every((item) => item.decision && item.decision !== 'pending');
         const changed = await collection('incident_cases').updateOne({ _id: id, status: incident.status, [`compensation_claims.${index}.decision`]: { $in: [null, 'pending'] } }, {
           $set: { [`compensation_claims.${index}`]: claims[index], reviewed_by_manager_id: actorId, updated_at: now,
-            ...(complete ? { status: 'resolved', resolution: { outcome: decision === 'approve' ? 'compensation_approved' : 'compensation_rejected', amount: claims.reduce((sum, item) => sum + (item.approved_amount || 0), 0), note: note.trim(), resolved_at: now } } : {}),
+            ...(complete ? { status: 'resolved', resolution: { outcome: claims.some((item) => item.decision === 'approved') ? 'compensation_approved' : 'compensation_rejected', amount: claims.reduce((sum, item) => sum + (item.approved_amount || 0), 0), note: note.trim(), resolved_at: now } } : {}),
           },
         }, options);
         if (changed.modifiedCount !== 1) throw httpError(409, 'Đề xuất vừa được người khác xử lý.');
@@ -161,7 +176,70 @@ export function createManagerGarageService(repository) {
     async reviewIncident({ id: value, body = {}, actorId }) {
       const id = objectId(value);
       const { action, note = '' } = body;
-      if (!id || action !== 'resolve' || typeof note !== 'string' || !note.trim() || note.length > 1000) throw httpError(400, 'Cần lý do kết luận sự cố.');
+      if (!id) throw httpError(400, 'Hồ sơ sự cố không hợp lệ.');
+      if (action === 'record_settlement') {
+        const { claimIndex, reference } = body;
+        if (!Number.isSafeInteger(claimIndex) || claimIndex < 0 || typeof reference !== 'string'
+          || !reference.trim() || reference.length > 500) throw httpError(400, 'Cần chọn khoản đã duyệt và nhập mã chứng từ thanh toán.');
+        return garageTransaction(repository, async (session) => {
+          const path = `compensation_claims.${claimIndex}`;
+          const now = new Date();
+          const result = await collection('incident_cases').updateOne({
+            _id: id, [`${path}.decision`]: 'approved', [`${path}.settlement_status`]: 'pending_settlement',
+          }, { $set: {
+            [`${path}.settlement_status`]: 'settled',
+            [`${path}.settlement_reference`]: reference.trim(),
+            [`${path}.settled_at`]: now,
+            [`${path}.settled_by_manager_id`]: actorId,
+            updated_at: now,
+          } }, { session });
+          if (!result.modifiedCount) throw httpError(409, 'Khoản này không còn chờ ghi nhận thanh toán.');
+          await audit(actorId, 'compensation.settlement_recorded', 'incident_cases', id, { claimIndex, reference: reference.trim() }, session);
+          return { data: { id: String(id), claimIndex, settlementStatus: 'settled' } };
+        });
+      }
+      if (action === 'request_information') {
+        if (typeof note !== 'string' || note.trim().length < 5 || note.trim().length > 1000) {
+          throw httpError(400, 'Cần nêu rõ thông tin cần Operator bổ sung (5–1.000 ký tự).');
+        }
+        return garageTransaction(repository, async (session) => {
+          const filter = {
+            _id: id,
+            status: 'pending_manager',
+            submitted_to_manager_by_user_id: { $exists: true },
+            'investigation.review_status': 'submitted',
+          };
+          const incident = await collection('incident_cases').findOne(filter, { session });
+          if (!incident) throw httpError(409, 'Chỉ có thể yêu cầu bổ sung khi hồ sơ đang chờ Manager xử lý.');
+          const now = new Date();
+          const changed = await collection('incident_cases').updateOne(
+            { ...filter, updated_at: incident.updated_at ?? { $exists: false } },
+            {
+              $set: {
+                status: 'need_more_information',
+                'investigation.review_status': 'needs_information',
+                updated_at: now,
+              },
+              $push: {
+                operation_timeline: {
+                  action: 'incident.information_requested',
+                  status: 'need_more_information',
+                  note: note.trim(),
+                  actor_user_id: actorId,
+                  at: now,
+                },
+              },
+            },
+            { session },
+          );
+          if (changed.modifiedCount !== 1) throw httpError(409, 'Hồ sơ vừa được cập nhật. Hãy tải lại.');
+          await audit(actorId, 'incident.request_information', 'incident_cases', id, { note: note.trim() }, session);
+          return { data: { id: String(id), status: 'need_more_information' } };
+        });
+      }
+      if (action !== 'resolve' || typeof note !== 'string' || !note.trim() || note.length > 1000) {
+        throw httpError(400, 'Cần lý do kết luận sự cố.');
+      }
       return garageTransaction(repository, async (session) => {
         const changed = await collection('incident_cases').updateOne({
           _id: id,

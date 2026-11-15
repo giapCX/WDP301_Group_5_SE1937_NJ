@@ -58,9 +58,7 @@ before(async () => {
       address: 'Địa chỉ khách thuê',
       city: 'Hà Nội'
     },
-    identity_kyc: {
-      status: 'verified'
-    },
+    identity_kyc: { status: 'verified' },
     driver_license: {
       class: 'B2',
       verification_status: 'verified',
@@ -491,7 +489,7 @@ test('private uploads stay owned, registration uses one-use OTP and strong passw
   const bytes = Buffer.alloc(100 * 1024, 1);
   Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]).copy(bytes);
   const file = await service.upload(user, {
-    purpose: 'identity',
+    purpose: 'avatar',
     name: 'test.png',
     content_type: 'image/png',
     data: bytes.toString('base64')
@@ -526,7 +524,7 @@ test('private uploads stay owned, registration uses one-use OTP and strong passw
   });
   const created = await service.register(body);
   assert.equal(created.password_hash, undefined);
-  assert.equal(created.identity_kyc.status, 'unverified');
+  assert.equal(created.identity_kyc, undefined);
   await assert.rejects(service.register(body), {
     status: 400
   });

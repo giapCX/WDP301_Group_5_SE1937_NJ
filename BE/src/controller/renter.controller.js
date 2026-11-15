@@ -1,9 +1,10 @@
-export function createRenterController(service) {
+export function createRenterController(service, emailOtp) {
   const data = handler => async (req, res) => res.json({
     data: await handler(req)
   });
   return {
     config: data(() => service.config()),
+    requestRegistrationOtp: data(req => emailOtp.send(req.body, 'register')),
     challenge: data(req => service.challenge(req.user, req.body)),
     register: async (req, res) => res.status(201).json({
       data: await service.register(req.body)
@@ -11,7 +12,6 @@ export function createRenterController(service) {
     profile: data(req => service.profile(req.user)),
     updateProfile: data(req => service.updateProfile(req.user, req.body)),
     password: data(req => service.password(req.user, req.body)),
-    ekyc: data(req => service.ekyc(req.user, req.body)),
     upload: data(req => service.upload(req.user, req.body)),
     download: async (req, res) => {
       const {

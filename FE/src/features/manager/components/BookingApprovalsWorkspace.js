@@ -1,3 +1,5 @@
+import CopyCode from '../../../components/ui/CopyCode';
+import ManagerActionForm from './ManagerActionForm';
 import { useState } from 'react';
 import Pagination from '../../../components/ui/Pagination';
 import useManagerActions from '../hooks/useManagerActions';
@@ -9,21 +11,14 @@ const dateTime = (value) => value ? new Date(value).toLocaleString('vi-VN') : '�
 export default function BookingApprovalsWorkspace({ onNotice }) {
   const request = useManagerCollection('bookings', { status: 'pending' });
   const { decideBooking } = useManagerActions();
+  const [dialog, setDialog] = useState(null);
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
   const refresh = () => {
     setActionError('');
     request.refresh();
   };
-  const decide = async (booking, action) => {
-    const reason = action === 'reject'
-      ? window.prompt(`Lý do từ chối yêu cầu ${booking.bookingCode}:`)
-      : '';
-    if (reason === null) return;
-    if (action === 'reject' && !reason.trim()) {
-      setActionError('Vui lòng nhập lý do từ chối.');
-      return;
-    }
+  const decide = async (booking, action, reason = '') => {
     setBusyId(booking.id);
     setActionError('');
     try {
@@ -31,6 +26,7 @@ export default function BookingApprovalsWorkspace({ onNotice }) {
       onNotice(action === 'approve' ? 'Đã duyệt yêu cầu thuê; khách có 15 phút để thanh toán.' : 'Đã từ chối yêu cầu thuê.');
       refresh();
     } catch (error) {
+      if (action === 'reject') throw error;
       setActionError(error.message || 'Không thể cập nhật yêu cầu thuê.');
     } finally {
       setBusyId('');
@@ -42,16 +38,16 @@ export default function BookingApprovalsWorkspace({ onNotice }) {
   return <section className="manager-panel workspace-panel">
     <div className="workspace-header"><div><h2>Yêu cầu thuê xe chờ duyệt</h2><p>Chỉ Manager duyệt hoặc từ chối; booking được duyệt chuyển sang bước thanh toán.</p></div><span className="workspace-count">{request.paging?.total ?? request.data.length} yêu cầu</span></div>
     {(actionError || request.error) && <div className="manager-notice manager-error" role="alert">{actionError || request.error}<button onClick={() => setActionError('')}>Đóng</button></div>}
-    <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>MÃ BOOKING</th><th>KHÁCH THUÊ</th><th>XE</th><th>THỜI GIAN THUÊ</th><th>GIÁ THUÊ</th><th>THAO TÁC</th></tr></thead><tbody>
+    <div className="requests-table-wrap" tabIndex={0} role="region" aria-label="Yêu cầu thuê xe"><table className="requests-table"><thead><tr><th>MÃ CHUYẾN THUÊ</th><th>KHÁCH THUÊ</th><th>XE</th><th>THỜI GIAN THUÊ</th><th>GIÁ THUÊ</th><th>THAO TÁC</th></tr></thead><tbody>
       {request.data.map((booking) => <tr key={booking.id}>
-        <td><strong>{booking.bookingCode || booking.id}</strong><span>Gửi lúc {dateTime(booking.createdAt)}</span></td>
+        <td><strong><CopyCode value={booking.bookingCode || booking.id} label="mã chuyến thuê" /></strong><span>Gửi lúc {dateTime(booking.createdAt)}</span></td>
         <td><strong>{booking.renter?.full_name || '—'}</strong><span>{booking.renter?.email || ''}</span></td>
         <td><strong>{booking.vehicle ? `${booking.vehicle.brand || ''} ${booking.vehicle.model || ''}` : '—'}</strong><span>{booking.vehicle?.license_plate || ''}</span></td>
         <td>{dateTime(booking.startAt)}<span>đến {dateTime(booking.endAt)}</span></td>
         <td>{money(booking.rentalFeeAmount)} ₫</td>
-        <td><button className="action-approve" disabled={busyId === booking.id} onClick={() => decide(booking, 'approve')}>Duyệt</button> <button className="action-reject" disabled={busyId === booking.id} onClick={() => decide(booking, 'reject')}>Từ chối</button></td>
+        <td><button className="action-approve" disabled={busyId === booking.id} onClick={() => decide(booking, 'approve')}>Duyệt</button> <button className="action-reject" disabled={busyId === booking.id} onClick={() => setDialog({ title: 'Từ chối yêu cầu thuê', context: booking.bookingCode, fields: [{ name: 'reason', label: 'Lý do từ chối', type: 'textarea', maxLength: 1000 }], onSubmit: ({ reason }) => decide(booking, 'reject', reason) })}>Từ chối</button></td>
       </tr>)}
     </tbody></table>{!request.data.length && <p className="manager-empty">Không có yêu cầu thuê đang chờ duyệt.</p>}</div>
     <Pagination {...request.paging} />
-  </section>;
+  {dialog && <ManagerActionForm {...dialog} onClose={() => setDialog(null)} />}</section>;
 }

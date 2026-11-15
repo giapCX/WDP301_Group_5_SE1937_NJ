@@ -115,9 +115,39 @@ test('owner payout, withdrawal and incident requests are scoped to the owner acc
   const withdrawal = await request('/owner/vehicle-withdrawals', 'POST', { vehicleId: vehicle._id.toString(), reason: 'Cần sử dụng xe cho gia đình.' });
   assert.equal(withdrawal.status, 201, JSON.stringify(withdrawal));
   assert.equal((await models.ManagementAgreement.findById(agreement._id).lean()).status, 'termination_requested');
-  const incident = await request('/owner/incidents', 'POST', { vehicleId: vehicle._id.toString(), caseType: 'vehicle_damage', description: 'Xe có vết xước mới ở cản trước sau khi bàn giao.' });
+  const renter = await models.User.findOne({ email: 'renter08@example.com' }).lean();
+  const booking = await models.Booking.create({
+    booking_code: 'BK-OWNER-INCIDENT', vehicle_id: vehicle._id, renter_id: renter._id,
+    management_agreement_id: agreement._id, status: 'ongoing', start_at: new Date(), end_at: new Date(Date.now() + 86400000),
+  });
+  const incident = await request('/owner/incidents', 'POST', { vehicleId: vehicle._id.toString(), bookingId: booking.booking_code, caseType: 'vehicle_damage', description: 'Xe có vết xước mới ở cản trước sau khi bàn giao.', vehicleSeized: false });
   assert.equal(incident.status, 201, JSON.stringify(incident));
   assert.equal((await models.IncidentCase.findById(incident.body.data.id).lean()).vehicle_id.toString(), vehicle._id.toString());
+  const role = await models.Role.findOne({ code: 'OPERATION_STAFF' }).lean();
+  const operator = await models.User.findOne({ primary_role_id: role._id }).lean();
+  const login = await request('/auth/login', 'POST', { account: operator.email, password: '123456' }, null);
+  assert.equal(login.status, 200);
+  const operatorToken = login.body.data.token;
+  const path = `/operator/incidents/${incident.body.data.id}`;
+  const details = await request(path, 'GET', undefined, operatorToken);
+  assert.equal(details.body.data.rentalContext.bookingCode, booking.booking_code);
+  assert.ok(details.body.data.rentalContext.contracts.some((contract) => contract.id === String(agreement._id)));
+  assert.equal((await request(`${path}/receive`, 'POST', {}, ownerToken)).status, 403);
+  assert.equal((await request(`${path}/submit`, 'POST', {}, operatorToken)).status, 409);
+  const received = await request(`${path}/receive`, 'POST', {}, operatorToken);
+  assert.equal(received.status, 200, JSON.stringify(received));
+  assert.equal(received.body.data.status, 'investigating');
+  const milestone = new Date(Date.now() - 60000).toISOString();
+  assert.equal((await request(path, 'PATCH', { responseChecklist: {
+    policeSubmittedAt: milestone, vehicleRecipient: 'Chủ xe', releaseAuthorizationReference: 'HS-01',
+  } }, operatorToken)).status, 200);
+  const updatedDetails = await request(path, 'GET', undefined, operatorToken);
+  assert.equal(updatedDetails.body.data.responseChecklist.policeSubmittedAt, milestone);
+  assert.equal(updatedDetails.body.data.responseChecklist.releaseAuthorizationReference, 'HS-01');
+  assert.equal((await request(`${path}/receive`, 'POST', {}, operatorToken)).body.data.operatorReceivedAt, received.body.data.operatorReceivedAt);
+  const dashboard = await request('/owner/dashboard');
+  assert.equal(dashboard.body.data.incidents.find((item) => item.id === incident.body.data.id).status, 'investigating');
+  assert.equal(await models.AuditLog.countDocuments({ entity_id: incident.body.data.id, action: 'incident.operator_receive' }), 1);
 });
 
 test('vehicle registration stores private files and an unsigned draft without impersonating either signer', async () => {

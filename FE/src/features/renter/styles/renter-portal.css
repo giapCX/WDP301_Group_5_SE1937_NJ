@@ -114,3 +114,10 @@
   .renter-content .renter-shortcuts .renter-shortcut-label { font-size: 13px; }
   .renter-content .renter-grid { grid-template-columns: 1fr; }
 }
+.renter-vehicle-search .vehicle-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+}
+
+.renter-vehicle-search form {
+  margin-bottom: 16px;
+}

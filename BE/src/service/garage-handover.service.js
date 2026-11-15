@@ -41,7 +41,7 @@ export function createGarageHandoverService(repository) {
     if (!booking) throw httpError(404, 'Không tìm thấy đơn thuê.');
     const vehicle = await repository.vehicles.findOne({ _id: booking.vehicle_id }, { ...options, projection: vehicleProjection });
     if (!vehicle) throw httpError(404, 'Không tìm thấy xe.');
-    const renter = await repository.users.findOne({ _id: booking.renter_id }, { ...options, projection: { full_name: 1, account_status: 1, 'identity_kyc.status': 1, 'driver_license.verification_status': 1, 'driver_license.expires_at': 1 } });
+    const renter = await repository.users.findOne({ _id: booking.renter_id }, { ...options, projection: { full_name: 1, account_status: 1 } });
     const agreement = await repository.agreements.findOne({ booking_id: bookingId }, options);
     const management = await repository.managementAgreements.findOne({ _id: booking.management_agreement_id }, options);
     const payments = await repository.payments.find({ booking_id: bookingId, status: 'succeeded' }, options).exec();
@@ -58,7 +58,7 @@ export function createGarageHandoverService(repository) {
       if (vehicle.onboarding_status !== 'approved' || vehicle.physical_status !== 'at_garage') add('VEHICLE_NOT_READY', 'Xe chưa được duyệt hoặc chưa sẵn sàng tại gara.');
       if (!agreement || agreement.status !== 'signed' || !agreement.signed_at || agreement.signing_info?.renter_confirmed !== true || !agreement.signing_info?.platform_signer_user_id || !same(agreement.management_agreement_id, booking.management_agreement_id)) add('RENTAL_NOT_SIGNED', 'Hợp đồng thuê chưa được ký/xác nhận đầy đủ.');
       if (!management || !same(management.vehicle_id, booking.vehicle_id) || management.status !== 'active' || !management.signature_info?.owner_signed_at || !management.signature_info?.platform_signed_at || !management.authorization_scope?.vehicle_custody || !management.authorization_scope?.rental_contract_signing || !(management.start_date <= now && management.end_date >= booking.end_at)) add('MANAGEMENT_NOT_ACTIVE', 'Hợp đồng quản lý hoặc quyền cho thuê/lưu giữ xe chưa hợp lệ.');
-      if (!renter || renter.account_status !== 'active' || renter.identity_kyc?.status !== 'verified' || renter.driver_license?.verification_status !== 'verified' || !(renter.driver_license?.expires_at >= booking.end_at)) add('RENTER_NOT_VERIFIED', 'Khách thuê chưa có hồ sơ và giấy phép lái xe hợp lệ.');
+      if (!renter || renter.account_status !== 'active') add('RENTER_INACTIVE', 'Tài khoản khách thuê không còn hoạt động.');
       const netRental = payments.filter((item) => ['rental_payment', 'rental_refund'].includes(item.transaction_type)).reduce((sum, item) => sum + (item.direction === 'in' ? 1 : -1) * item.amount, 0);
       if (!Number.isFinite(booking.rental_fee_amount) || booking.rental_fee_amount < 0 || !Number.isFinite(netRental) || netRental < booking.rental_fee_amount) add('RENTAL_UNPAID', 'Chưa xác nhận đủ tiền thuê.');
       const required = booking.deposit_amount_snapshot;
@@ -181,7 +181,7 @@ export function createGarageHandoverService(repository) {
       if (!updated) throw httpError(409, 'Biên bản đã thay đổi. Đóng và mở lại trước khi lưu.');
       return updated;
     },
-    async confirm(id, { version, renterConfirmed, note, occurredAt }, actor) {
+    async confirm(id, { version, renterConfirmed, note, occurredAt, pickupVerification }, actor) {
       await ensureIndexes();
       return garageTransaction(repository, async (session) => {
         const record = await getRecord(id, session);
@@ -192,6 +192,10 @@ export function createGarageHandoverService(repository) {
         if (!data.eligible) throw httpError(409, 'Chưa đủ điều kiện giao nhận.', { blockers: data.blockers });
         validateReport(record, data.baselineOdometerKm);
         const returning = record.handover_type === 'return';
+        if (!returning && (pickupVerification || data.booking.review_info?.required === false)
+          && !(pickupVerification?.identityMatched && pickupVerification?.licenseChecked && pickupVerification?.fitToDrive)) {
+          throw httpError(409, 'Cần đối chiếu đúng người nhận, GPLX và điều kiện lái xe trước khi giao xe.');
+        }
         if (!returning && !renterConfirmed) throw httpError(400, 'Khách phải xác nhận trước khi giao xe.');
         if (!renterConfirmed && !record.vehicle_condition.photo_keys?.length)
           throw httpError(400, 'Cần ảnh hiện trạng khi nhận xe mà chưa có xác nhận của khách.');
@@ -209,6 +213,9 @@ export function createGarageHandoverService(repository) {
         if (bookingChange.modifiedCount !== 1 || vehicleChange.modifiedCount !== 1) throw httpError(409, 'Đơn thuê hoặc trạng thái xe đã thay đổi.');
         const confirmed = await repository.handovers.findOneAndUpdate({ _id: id, status: 'draft', version }, { $set: { status: 'confirmed', occurred_at: actualAt, renter_response: renterConfirmed ? 'accepted' : 'not_confirmed',
           ...(renterConfirmed ? { renter_confirmed_at: now } : { renter_dispute_note: note }),
+          ...(!returning && pickupVerification && { pickup_verification: {
+            identity_matched: true, license_checked: true, fit_to_drive: true, checked_at: now, checked_by: actor._id,
+          } }),
           'vehicle_condition.renter_signature_recorded': renterConfirmed,
           ...(returning ? { baseline_handover_id: data.pickup._id, damage_changes: damageChanges } : {}), confirmed_from_version: version, updated_at: now }, $inc: { version: 1 } }, { session, returnDocument: 'after' });
         if (!confirmed) throw httpError(409, 'Biên bản đã thay đổi.');

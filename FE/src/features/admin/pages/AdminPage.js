@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '../../../components/Icon';
 import { Brand } from '../../../components/SiteHeader';
-import AccountsWorkspace from '../components/AccountsWorkspace';
-import AdminToolsWorkspace from '../components/AdminToolsWorkspace';
-import ReportsWorkspace from '../components/ReportsWorkspace';
-import UserMenu from '../components/UserMenu';
-import useManagerAdminOverview from '../hooks/useManagerAdminOverview';
-import { ChangeSummary, humanizeField } from '../components/dataDisplay';
-import './ManagerPage.css';
+import AccountsWorkspace from '../../manager/components/AccountsWorkspace';
+import AdminToolsWorkspace from '../../manager/components/AdminToolsWorkspace';
+import ReportsWorkspace from '../../manager/components/ReportsWorkspace';
+import UserMenu from '../../manager/components/UserMenu';
+import useManagerAdminOverview from '../../manager/hooks/useManagerAdminOverview';
+import { ChangeSummary, humanizeField } from '../../manager/components/dataDisplay';
+import '../../manager/pages/ManagerPage.css';
 import './AdminPage.css';
 
 const adminSections = [
@@ -36,13 +36,13 @@ function AdminOverview({ onSelect, snapshot, loading, error, refresh }) {
 
   return <>
     <section className="admin-overview-metrics">
-      <article className="manager-metric"><span className="manager-metric-label">Tài khoản hệ thống</span><strong>{snapshot.accounts.length}</strong><span className="manager-metric-detail">Tài khoản trong hệ thống</span></article>
-      <article className="manager-metric"><span className="manager-metric-label">Vai trò</span><strong>{snapshot.roles.length}</strong><span className="manager-metric-detail">Vai trò và nhóm quyền</span></article>
-      <article className="manager-metric"><span className="manager-metric-label">Tài khoản hoạt động</span><strong>{snapshot.accounts.filter((item) => item.status === 'active').length}</strong><span className="manager-metric-detail">Có thể đăng nhập</span></article>
-      <article className="manager-metric"><span className="manager-metric-label">Hoạt động gần đây</span><strong>{snapshot.logs.length}</strong><span className="manager-metric-detail">Bản ghi gần nhất</span></article>
+      <article className="manager-metric"><span className="manager-metric-label">Tài khoản hệ thống</span><strong>{snapshot.accountCount}</strong><span className="manager-metric-detail">Tổng tài khoản trên toàn hệ thống</span></article>
+      <article className="manager-metric"><span className="manager-metric-label">Vai trò chính</span><strong>{snapshot.roleCount}</strong><span className="manager-metric-detail">Không tính Admin và profile phụ</span></article>
+      <article className="manager-metric"><span className="manager-metric-label">Tài khoản hoạt động</span><strong>{snapshot.activeAccountCount}</strong><span className="manager-metric-detail">Có thể đăng nhập</span></article>
+      <article className="manager-metric"><span className="manager-metric-label">Hoạt động gần đây</span><strong>{snapshot.recentLogs.length}</strong><span className="manager-metric-detail">5 bản ghi gần nhất</span></article>
     </section>
     <section className="manager-panel admin-recent-panel"><div className="manager-panel-heading"><div><h2>Hoạt động quản trị gần đây</h2><p>Các thay đổi tài khoản, vai trò và báo cáo mới nhất.</p></div><button className="all-requests" onClick={() => onSelect('auditLogs')}>Mở nhật ký <span>→</span></button></div>
-      <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>THỜI GIAN</th><th>NGƯỜI THỰC HIỆN</th><th>THAO TÁC</th><th>THAY ĐỔI</th></tr></thead><tbody>{snapshot.logs.map((item) => <tr key={item.id}><td>{item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '—'}</td><td>{item.actor}<span>{item.actorEmail || ''}</span></td><td><span className="audit-action-pill">{actionLabels[item.action] || humanizeField(item.action)}</span></td><td><ChangeSummary changes={item.changes} /></td></tr>)}</tbody></table>{!snapshot.logs.length && <p className="manager-empty">Chưa có hoạt động quản trị.</p>}</div>
+      <div className="requests-table-wrap"><table className="requests-table"><thead><tr><th>THỜI GIAN</th><th>NGƯỜI THỰC HIỆN</th><th>THAO TÁC</th><th>THAY ĐỔI</th></tr></thead><tbody>{snapshot.recentLogs.map((item) => <tr key={item.id}><td>{item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '—'}</td><td>{item.actor}<span>{item.actorEmail || ''}</span></td><td><span className="audit-action-pill">{actionLabels[item.action] || humanizeField(item.action)}</span></td><td><ChangeSummary changes={item.changes} /></td></tr>)}</tbody></table>{!snapshot.recentLogs.length && <p className="manager-empty">Chưa có hoạt động quản trị.</p>}</div>
     </section>
   </>;
 }
@@ -75,10 +75,10 @@ export default function AdminPage() {
     if (!snapshot) return;
     const rows = [
       ['Chỉ số quản trị', 'Giá trị'],
-      ['Tài khoản được liệt kê', snapshot.accounts.length],
-      ['Vai trò', snapshot.roles.length],
-      ['Tài khoản hoạt động', snapshot.accounts.filter((item) => item.status === 'active').length],
-      ['Hoạt động gần đây', snapshot.logs.length],
+      ['Tổng tài khoản', snapshot.accountCount],
+      ['Vai trò chính', snapshot.roleCount],
+      ['Tài khoản hoạt động', snapshot.activeAccountCount],
+      ['Nhật ký gần đây', snapshot.recentLogs.length],
     ];
     const csv = rows.map((row) => row.map((value) => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\r\n');
     const url = URL.createObjectURL(new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' }));

@@ -24,12 +24,10 @@
 .owner-btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; white-space: nowrap; cursor: pointer; }
 .owner-text-muted { color: #9ca3af; }
 
-/* Sidebar eKYC link and Topbar Pill */
-.owner-sidebar-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #10b981; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 8px; margin-top: 8px; transition: background 0.2s; }
-.owner-sidebar-link:hover { background: rgba(16, 185, 129, 0.1); }
-.owner-sidebar-link i { font-style: normal; font-weight: 700; }
-.owner-ekyc-pill { display: inline-flex; align-items: center; gap: 6px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none; margin-right: 12px; transition: background 0.2s; }
-.owner-ekyc-pill:hover { background: #d1fae5; }
+.owner-access { min-height: 100vh; display: grid; align-content: center; justify-items: center; gap: 12px; padding: 24px; color: #17243a; font-family: 'Be Vietnam Pro', Arial, sans-serif; text-align: center; }
+.owner-access h1,.owner-access p { margin: 0; }
+.owner-access a { color: #155eef; }
+.owner-access button { padding: 8px 12px; cursor: pointer; }
 
 /* Revision Dialog */
 .owner-revision-dialog { max-width: 640px !important; }

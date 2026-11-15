@@ -5,11 +5,11 @@ function date(value) {
   return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'long', timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(value));
 }
 
-function Signature({ heading, name, signedAt }) {
+function Signature({ heading, name, signedAt, signed = Boolean(signedAt) }) {
   return <div className="management-paper-signature">
     <strong>{heading}</strong>
-    <em>{signedAt ? 'Đã xác nhận điện tử' : 'Chờ xác nhận'}</em>
-    {signedAt && <><b>{name}</b><span>{date(signedAt)}</span></>}
+    <em>{signed ? 'Đã xác nhận điện tử' : 'Chờ xác nhận'}</em>
+    {signed && <><b>{name || 'Đã xác nhận'}</b>{signedAt && <span>{date(signedAt)}</span>}</>}
   </div>;
 }
 
@@ -76,13 +76,18 @@ export default function ManagementContractPaper({ agreement }) {
         {index === 0 && <Facts values={contract.facts} />}
         {article.paragraphs.map((text) => <p key={text}>{text}</p>)}
       </section>)}
+      {contract.appendices?.map((appendix) => <section key={appendix.title} className="management-paper-article">
+        <h3>{appendix.title}</h3>
+        <Facts values={appendix.facts} />
+        {appendix.paragraphs.map((text) => <p key={text}>{text}</p>)}
+      </section>)}
       <footer className="management-paper-signatures">
         {rental ? <>
-          <Signature heading="BÊN CHO THUÊ · ĐẠI DIỆN XEDI" name={agreement.platformName} signedAt={agreement.platformSignedAt} />
-          <Signature heading="BÊN THUÊ" name={agreement.partyName} signedAt={agreement.partySignedAt} />
+          <Signature heading={contract.version === 'xedi-rental-representation-v1' ? 'XEDI KÝ ĐẠI DIỆN THEO ỦY QUYỀN CỦA BÊN CHO THUÊ' : 'BÊN CHO THUÊ · ĐẠI DIỆN XEDI'} name={agreement.platformName} signedAt={agreement.platformSignedAt} signed={agreement.platformSigned} />
+          <Signature heading="BÊN THUÊ" name={agreement.partyName} signedAt={agreement.partySignedAt} signed={agreement.partySigned} />
         </> : <>
-          <Signature heading="BÊN A · CHỦ XE" name={agreement.partyName} signedAt={agreement.partySignedAt} />
-          <Signature heading="BÊN B · ĐẠI DIỆN NỀN TẢNG" name={agreement.platformName} signedAt={agreement.platformSignedAt} />
+          <Signature heading="BÊN A · CHỦ XE" name={agreement.partyName} signedAt={agreement.partySignedAt} signed={agreement.partySigned} />
+          <Signature heading="BÊN B · ĐẠI DIỆN NỀN TẢNG" name={agreement.platformName} signedAt={agreement.platformSignedAt} signed={agreement.platformSigned} />
         </>}
       </footer>
       <p className="management-paper-version">Phiên bản {contract.version} · Mã nội dung {contract.hash.slice(0, 12)}</p>

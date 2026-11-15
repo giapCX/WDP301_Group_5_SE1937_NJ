@@ -13,8 +13,17 @@ const {
 import bcrypt from "bcryptjs";
 const STAFF_ROLES = ["MANAGER", "OPERATION_STAFF", "GARAGE_STAFF", "ADMIN"];
 const MANAGED_STAFF_ROLES = ["OPERATION_STAFF", "GARAGE_STAFF"];
-const OPEN_INCIDENT_STATUSES = ["reported", "open", "investigating", "pending_review", "awaiting_response", "pending_manager", "under_review", "in_progress"];
+const OPEN_INCIDENT_STATUSES = ["reported", "open", "investigating", "pending_review", "awaiting_response", "pending_manager", "need_more_information", "under_review", "in_progress"];
 const MINIMUM_PICKUP_NOTICE_MS = 2 * 60 * 60 * 1000;
+const isValidEmail = value => typeof value === 'string' && value.trim().length <= 254 && /^(?=.{1,64}@)[A-Z0-9.!#$%&'*+/=?^_~-]+@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,63}$/i.test(value.trim()) && !value.trim().includes('..');
+const normalizeVietnamPhone = value => {
+  if (typeof value !== 'string') return null;
+  const raw = value.trim();
+  if (!raw) return '';
+  const compact = raw.replace(/[\s().-]/g, '');
+  const national = compact.startsWith('+84') ? `0${compact.slice(3)}` : compact;
+  return /^0[35789]\d{8}$/.test(national) ? national : null;
+};
 const dayStart = date => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const toId = value => ObjectId.isValid(value) ? new ObjectId(value) : null;
 async function buildOperationsReport(repository, from, to) {
@@ -128,7 +137,7 @@ export function createManagerService(repository) {
       const { q = '', status = 'pending' } = input.query;
       if (typeof q !== 'string' || q.length > 100 || !['pending', 'all'].includes(status)) throw httpError(400, 'Bộ lọc booking không hợp lệ.');
       await expireStaleBookings();
-      const filter = status === 'all' ? {} : { status: 'pending' };
+      const filter = status === 'all' ? {} : { status: 'pending', 'review_info.required': { $ne: false } };
       if (q.trim()) {
         const pattern = new RegExp(escapeRegExp(q.trim()), 'i');
         filter.$or = [{ booking_code: pattern }, { status: pattern }];
@@ -165,6 +174,7 @@ export function createManagerService(repository) {
       await expireStaleBookings(now);
       const booking = await repository.collection('bookings').findOne({ _id: id });
       if (!booking || booking.status !== 'pending' || isBookingHoldExpired(booking, now)) throw httpError(409, 'Booking không còn ở trạng thái chờ xử lý.');
+      if (booking.review_info?.required === false) throw httpError(409, 'Yêu cầu này chuyển sang thanh toán sau khi hợp đồng đủ chữ ký.');
       if (action === 'approve' && (!(booking.start_at instanceof Date) || booking.start_at.getTime() < now.getTime() + MINIMUM_PICKUP_NOTICE_MS)) {
         throw httpError(409, 'Thời gian nhận xe phải còn tối thiểu 2 giờ; yêu cầu booking lịch mới.');
       }
@@ -398,7 +408,8 @@ export function createManagerService(repository) {
         roles: roleCodes = [],
         status = "active"
       } = input.body || {};
-      if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 120 || typeof email !== "string" || email.trim().length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || typeof phone !== "string" || phone.trim().length > 40 || typeof password !== "string" || password.length < 8 || password.length > 128 || !Array.isArray(roleCodes) || !roleCodes.length || roleCodes.some(code => typeof code !== "string" || !code.trim()) || !["active", "suspended"].includes(status)) {
+      const normalizedPhone = normalizeVietnamPhone(phone);
+      if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 120 || !isValidEmail(email) || normalizedPhone === null || typeof password !== "string" || password.length < 8 || password.length > 128 || !Array.isArray(roleCodes) || !roleCodes.length || roleCodes.some(code => typeof code !== "string" || !code.trim()) || !["active", "suspended"].includes(status)) {
         throw httpError(400, "Thông tin tài khoản không hợp lệ; mật khẩu phải có ít nhất 8 ký tự.");
       }
       const normalizedRoleCodes = [...new Set(roleCodes.map(code => code.trim().toUpperCase()))];
@@ -423,7 +434,7 @@ export function createManagerService(repository) {
       const inserted = await users.create({
         full_name: name.trim(),
         email: normalizedEmail,
-        phone: phone.trim(),
+        phone: normalizedPhone,
         password_hash: await bcrypt.hash(password, 12),
         primary_role_id: roleRows[0]._id,
         additional_role_ids: roleRows.slice(1).map(item => item._id),
@@ -630,6 +641,31 @@ export function createManagerService(repository) {
         })),
         pagination: rows.pagination
       };
+    },
+    adminOverview: async () => {
+      const users = repository.collection("users");
+      const roles = repository.collection("roles");
+      const logs = repository.collection("audit_logs");
+      const [accountCount, activeAccountCount, allRoles, latestLogs] = await Promise.all([
+        users.countDocuments({}),
+        users.countDocuments({ account_status: "active" }),
+        roles.find({}).select({ code: 1, display_name: 1 }).exec(),
+        logs.find({}).sort({ created_at: -1 }).limit(5).exec()
+      ]);
+      const mainRoles = allRoles.filter(role => role.code !== "ADMIN" && !/(viewer|lead|profile|audit|finance)/i.test(`${role.code} ${role.display_name || ''}`));
+      const actorIds = [...new Map(latestLogs.map(log => log.actor_user_id).filter(Boolean).map(id => [id.toString(), id])).values()];
+      const actors = actorIds.length ? await users.find({ _id: { $in: actorIds } }).select({ full_name: 1, email: 1 }).exec() : [];
+      const actorMap = new Map(actors.map(actor => [actor._id.toString(), actor]));
+      return { data: {
+        accountCount,
+        activeAccountCount,
+        roleCount: mainRoles.length,
+        roles: mainRoles.map(role => ({ code: role.code, name: role.display_name })),
+        recentLogs: latestLogs.map(log => {
+          const actor = actorMap.get(log.actor_user_id?.toString());
+          return { id: log._id.toString(), action: log.action, entityType: log.entity_type, entityId: log.entity_id?.toString() || null, actor: actor?.full_name || "Hệ thống", actorEmail: actor?.email || null, changes: log.sanitized_changes || {}, createdAt: log.created_at || null };
+        })
+      } };
     },
     systemReports: async input => {
       const filter = input.currentRoles?.includes("MANAGER") ? {} : {
@@ -949,6 +985,8 @@ export function createManagerService(repository) {
             version: inspectionMap.get(item._id.toString()).version ?? 0,
             staffId: inspectionMap.get(item._id.toString()).garage_staff_id,
             ownerReview: inspectionMap.get(item._id.toString()).owner_review,
+            operatorReviewRequired: Boolean(inspectionMap.get(item._id.toString()).arrival_review || item.inspection_schedule_request?.status === 'confirmed'),
+            operatorReview: inspectionMap.get(item._id.toString()).operator_review,
             conditionReport: inspectionMap.get(item._id.toString()).condition_report || {},
             decisionReason: inspectionMap.get(item._id.toString()).decision_reason || '',
             status: inspectionMap.get(item._id.toString()).approval_status,
@@ -977,11 +1015,12 @@ export function createManagerService(repository) {
     },
     incidents: async input => {
       const status = input.query.status || "open";
-      const match = status === "all" ? {} : {
-        status: status === "open" ? {
-          $in: OPEN_INCIDENT_STATUSES
-        } : status
-      };
+      const match = status === 'all' ? {} : status === 'open' ? {
+        $or: [
+          { status: { $in: OPEN_INCIDENT_STATUSES } },
+          { 'compensation_claims.settlement_status': 'pending_settlement' },
+        ],
+      } : { status };
       const items = await findPageRows(repository.collection("incident_cases"), match, input.query, {
         sort: {
           updated_at: -1
@@ -1011,7 +1050,11 @@ export function createManagerService(repository) {
           } : null,
           sourceWithdrawalId: item.source_withdrawal_id,
           caseNumber: item.case_number,
+          responseChecklist: item.response_checklist,
+          timeline: (item.operation_timeline || []).map(({ action, at, note }) => ({ action, at, note })),
+          resolution: item.resolution?.note ? { note: item.resolution.note } : null,
           caseType: item.case_type,
+          vehicleSeized: typeof item.vehicle_seized === 'boolean' ? item.vehicle_seized : null,
           status: item.status,
           description: item.description,
           investigation: item.investigation || {},
@@ -1201,7 +1244,8 @@ export function createManagerService(repository) {
         jobTitle = "",
         workScope = ""
       } = input.body || {};
-      if (typeof name !== "string" || name.trim().length < 2 || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || typeof phone !== "string" || phone.length > 40 || typeof password !== "string" || password.length < 8 || password.length > 128 || !MANAGED_STAFF_ROLES.includes(role) || [department, jobTitle, workScope].some(value => typeof value !== "string" || value.length > 1000)) {
+      const normalizedPhone = normalizeVietnamPhone(phone);
+      if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 120 || !isValidEmail(email) || normalizedPhone === null || typeof password !== "string" || password.length < 8 || password.length > 128 || !MANAGED_STAFF_ROLES.includes(role) || [department, jobTitle, workScope].some(value => typeof value !== "string" || value.length > 1000)) {
         throw httpError(400, "Thông tin nhân viên không hợp lệ; mật khẩu phải có ít nhất 8 ký tự.");
       }
       const normalizedEmail = email.trim().toLowerCase();
@@ -1217,7 +1261,7 @@ export function createManagerService(repository) {
       const inserted = await users.create({
         full_name: name.trim(),
         email: normalizedEmail,
-        phone: phone.trim(),
+        phone: normalizedPhone,
         password_hash: await bcrypt.hash(password, 12),
         primary_role_id: roleDoc._id,
         additional_role_ids: [],
@@ -1274,8 +1318,8 @@ export function createManagerService(repository) {
       for (const [input, field] of Object.entries(profileFields)) {
         if (input.body?.[input] === undefined) continue;
         const value = input.body[input];
-        if (typeof value !== "string" || value.trim().length > (input === "workScope" ? 1000 : 120)) throw httpError(400, "Thông tin hồ sơ nhân viên không hợp lệ.");
-        set[field] = value.trim();
+        if (typeof value !== "string" || value.trim().length > (input === "workScope" ? 1000 : 120) || input === 'phone' && normalizeVietnamPhone(value) === null) throw httpError(400, "Thông tin hồ sơ nhân viên hoặc số điện thoại không hợp lệ.");
+        set[field] = input === 'phone' ? normalizeVietnamPhone(value) : value.trim();
       }
       if (!id || Object.keys(set).length === 1) throw httpError(400, "Vui lòng cung cấp thông tin cần cập nhật.");
       const managedRoleRows = await repository.collection("roles").find({

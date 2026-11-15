@@ -24,6 +24,9 @@ export function createVehicleInspectionController(service) {
     update: async (request, response) => response.json({
       data: await service.update(new ObjectId(objectId(request.params.id)), parseInspectionDraft(request.body), request.actor),
     }),
+    reviewArrival: async (request, response) => response.json({
+      data: await service.reviewArrival(new ObjectId(objectId(request.params.id)), request.body, request.actor),
+    }),
     submit: async (request, response) => response.json(
       await service.submit(new ObjectId(objectId(request.params.id)), parseInspectionSubmission(request.body), request.actor),
     ),

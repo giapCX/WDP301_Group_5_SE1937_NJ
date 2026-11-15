@@ -29,6 +29,7 @@ const agreementFields = {
   signature_info: 1,
   inspection_id: 1,
   inspection_version: 1,
+  arrival_confirmed_at: 1,
   'authorization_scope.vehicle_custody': 1,
 };
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -384,7 +385,7 @@ export function createVehicleIntakeService(repository) {
               blockers: ready.blockers,
             });
           if (data.agreement.inspection_id && (!sameId(data.agreement.inspection_id, data.inspection?._id)
-            || data.agreement.inspection_version !== (data.inspection?.version ?? 0)))
+            || (!data.agreement.arrival_confirmed_at && data.agreement.inspection_version !== (data.inspection?.version ?? 0))))
             throw httpError(409, 'Báo cáo kiểm định hiện tại không khớp phiên bản trong hợp đồng.');
           if (data.vehicle.condition_declaration && item.owner_review?.status !== 'accepted')
             throw httpError(409, 'Chủ xe cần xác nhận đúng phiên bản biên bản tiếp nhận.');

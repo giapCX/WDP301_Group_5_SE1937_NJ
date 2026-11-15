@@ -77,7 +77,7 @@ export default function VehicleRevisionDialog({ vehicle, onClose, onSuccess }) {
         note: note.trim(),
       });
 
-      onSuccess(`Đã gửi tài liệu bổ sung cho xe ${vehicle.brand} ${vehicle.model} (${vehicle.licensePlate}). Manager sẽ xem hồ sơ; Operator phân công kiểm định khi đủ điều kiện.`);
+      onSuccess(`Đã gửi tài liệu bổ sung cho xe ${vehicle.brand} ${vehicle.model} (${vehicle.licensePlate}). Bạn có thể đề xuất lịch sau khi Operator xác thực hồ sơ.`);
       onClose();
     } catch (err) {
       setError(err.message || 'Không thể gửi tài liệu bổ sung.');
@@ -99,7 +99,7 @@ export default function VehicleRevisionDialog({ vehicle, onClose, onSuccess }) {
           <div>
             <span className="owner-eyebrow">YÊU CẦU BỔ SUNG TÀI LIỆU</span>
             <h2>{vehicle.brand} {vehicle.model} · {vehicle.licensePlate}</h2>
-            <p>Tải lên lại tài liệu hoặc ảnh xe được Quản lý yêu cầu chỉnh sửa.</p>
+            <p>Tải lại tài liệu hoặc ảnh xe theo nội dung yêu cầu bổ sung.</p>
           </div>
           <button className="owner-close" onClick={onClose} aria-label="Đóng">
             ×
@@ -108,7 +108,7 @@ export default function VehicleRevisionDialog({ vehicle, onClose, onSuccess }) {
 
         {vehicle.reviewNote && (
           <div className="owner-revision-manager-note">
-            <strong>Yêu cầu từ Quản lý xét duyệt:</strong>
+            <strong>Lý do yêu cầu bổ sung</strong>
             <p>{vehicle.reviewNote}</p>
           </div>
         )}
@@ -156,7 +156,7 @@ export default function VehicleRevisionDialog({ vehicle, onClose, onSuccess }) {
                 multiple
                 onChange={onPhotosChange}
               />
-              <small>{photos.length ? `${photos.length} ảnh đã chọn` : 'Chỉ chọn nếu Quản lý yêu cầu chụp lại ảnh xe'}</small>
+              <small>{photos.length ? `${photos.length} ảnh đã chọn` : 'Chọn ảnh mới nếu hồ sơ yêu cầu bổ sung ảnh xe'}</small>
             </label>
           </div>
 

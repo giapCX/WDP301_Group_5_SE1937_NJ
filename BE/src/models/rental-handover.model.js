@@ -34,6 +34,7 @@ export const rentalHandoverSchema = createSchema({
     basis: String,
   })),
   status: String,
+  pickup_verification: embedded({ identity_matched: Boolean, license_checked: Boolean, fit_to_drive: Boolean, checked_at: Date, checked_by: ObjectId }),
   version: integer({ min: 0 }),
   confirmed_from_version: integer({ min: 0 }),
   updated_at: Date,

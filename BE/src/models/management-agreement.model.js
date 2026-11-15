@@ -22,6 +22,8 @@ export const managementAgreementSchema = createSchema({
   }),
   inspection_id: { type: ObjectId, ref: 'VehicleInspection' },
   inspection_version: Number,
+  arrival_confirmed_at: Date,
+  arrival_confirmed_by: ObjectId,
   signature_info: embedded({
     method: String,
     owner_signed_at: Date,
@@ -31,10 +33,14 @@ export const managementAgreementSchema = createSchema({
     owner_signer_user_id: ObjectId,
     platform_signature_name: String,
   }),
+  operator_intake: embedded({
+    confirmed_by_operator_id: ObjectId,
+    confirmed_at: Date,
+  }),
   contract_document: contractDocument(),
   signed_document_key: String,
   amendments: arrayOf(embedded({ proposed_terms: Schema.Types.Mixed, reason: String, status: String, created_by_manager_id: ObjectId, created_at: Date })),
-  manager_review: embedded({ note: String, reason: String, reviewed_by_manager_id: ObjectId, reviewed_at: Date }),
+  manager_review: embedded({ status: String, note: String, reason: String, reviewed_by_manager_id: ObjectId, reviewed_at: Date }),
   status: String,
   termination_info: embedded({
     legal_effective_at: Date,

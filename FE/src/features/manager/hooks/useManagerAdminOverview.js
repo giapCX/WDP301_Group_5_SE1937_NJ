@@ -12,12 +12,8 @@ export default function useManagerAdminOverview() {
     const controller = new AbortController();
     setLoading(true);
     setError('');
-    Promise.all([
-      getManagerResource('accounts', { signal: controller.signal }),
-      getManagerResource('roles', { signal: controller.signal }),
-      getManagerResource('auditLogs', { limit: 5, signal: controller.signal }),
-    ])
-      .then(([accounts, roles, logs]) => setSnapshot({ accounts: accounts.data || [], roles: roles.data || [], logs: logs.data || [] }))
+    getManagerResource('adminOverview', { signal: controller.signal })
+      .then((result) => setSnapshot(result.data))
       .catch((reason) => { if (reason.name !== 'AbortError') setError(reason.message || 'Không thể tải tổng quan quản trị.'); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();

@@ -1,0 +1,18 @@
+.copy-code {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .35rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.copy-code button {
+  padding: .2rem .45rem;
+  border: 1px solid currentColor;
+  border-radius: .35rem;
+  background: transparent;
+  color: #2052ac;
+  font-size: .75rem;
+  cursor: pointer;
+}

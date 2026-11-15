@@ -1,5 +1,8 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { httpError } from '../utils/http-error.js';
+
+const authorizationArticles = JSON.parse(readFileSync(new URL('./management-contract-articles.json', import.meta.url), 'utf8'));
 
 const vietnamDate = (value) => new Intl.DateTimeFormat('vi-VN', {
   day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh',
@@ -26,7 +29,14 @@ export function parseManagementTerms(body, agreement) {
 }
 
 export function createManagementContractDocument({ row, owner, vehicle, inspection, terms, now }) {
-  const articles = [
+  const articles = row.arrival_confirmed_at ? authorizationArticles.map((article, index) => ({
+    ...article,
+    paragraphs: article.paragraphs.map((text, paragraph) => {
+      if (index === 2 && paragraph === 0) return `1. Thời hạn ủy quyền từ ngày ${vietnamDate(row.start_date)} đến ngày ${vietnamDate(row.end_date)}.`;
+      if (index === 4 && paragraph === 0) return text.replace('…… %', `${row.commission_rate_pct}%`);
+      return text;
+    }),
+  })) : [
     { title: 'Phương tiện và hiện trạng', paragraphs: [
       'Bên A giao phương tiện nêu trên cho Bên B quản lý trong phạm vi hợp đồng. Báo cáo kiểm định được dẫn chiếu ghi nhận hiện trạng đã được duyệt. Hai bên lập biên bản riêng khi giao xe thực tế, ghi số km, nhiên liệu hoặc pin, chìa khóa, phụ kiện và ảnh hiện trạng.',
       'Nếu hiện trạng lúc giao khác đáng kể so với báo cáo, hai bên ghi nhận chênh lệch và thống nhất cách xử lý trước khi Bên B tiếp nhận.',
@@ -51,8 +61,8 @@ export function createManagementContractDocument({ row, owner, vehicle, inspecti
     ] },
   ];
   const content = {
-    version: 'xedi-management-paper-v1',
-    title: 'HỢP ĐỒNG ỦY QUYỀN QUẢN LÝ VÀ KHAI THÁC XE',
+    version: row.arrival_confirmed_at ? 'xedi-authorization-v1' : 'xedi-management-paper-v1',
+    title: row.arrival_confirmed_at ? 'HỢP ĐỒNG ỦY QUYỀN CHO THUÊ XE Ô TÔ' : 'HỢP ĐỒNG ỦY QUYỀN QUẢN LÝ VÀ KHAI THÁC XE',
     place: terms.place,
     parties: [
       { heading: 'BÊN A · CHỦ XE', facts: facts([['Họ và tên', owner?.full_name], ['Điện thoại', owner?.phone], ['Địa chỉ liên hệ', vehicle.owner_contact_address || owner?.contact_profile?.address]]) },
@@ -63,12 +73,27 @@ export function createManagementContractDocument({ row, owner, vehicle, inspecti
       ['Hoa hồng trên tiền thuê', `${row.commission_rate_pct}%`],
       ['Năm sản xuất', vehicle.manufacture_year], ['Số chỗ', vehicle.seats], ['Số khung (VIN)', vehicle.vin],
       ['Khai báo hiện trạng của chủ xe', vehicle.condition_declaration],
-      ['Biên bản kiểm định', `${inspection._id} · phiên bản ${row.inspection_version}`],
+      [row.arrival_confirmed_at ? 'Hồ sơ đối chiếu tiếp nhận' : 'Biên bản kiểm định', `${inspection._id} · phiên bản ${row.inspection_version}`],
       ['Số km lúc kiểm định', inspection.condition_report?.odometer_km],
       ['Ghi chú kiểm định', inspection.condition_report?.note],
     ]),
     clauses: articles.flatMap((article) => article.paragraphs),
     articles,
+    ...(row.arrival_confirmed_at && {
+      appendices: [
+        { title: 'Phụ lục 01. Thiết lập cho thuê của Chủ xe', facts: facts([
+          ['Giá thuê ngày thường', vehicle.daily_price != null ? `${vehicle.daily_price} VNĐ/ngày` : null],
+          ['Giới hạn quãng đường', vehicle.mileage_policy?.included_km_per_day != null ? `${vehicle.mileage_policy.included_km_per_day} km/ngày` : null],
+          ['Phụ phí vượt km', vehicle.mileage_policy?.extra_km_fee != null ? `${vehicle.mileage_policy.extra_km_fee} VNĐ/km` : null],
+          ['Phí dịch vụ của Xedi', `${row.commission_rate_pct}%`],
+        ]), paragraphs: [] },
+        { title: 'Phụ lục 02. Mẫu hợp đồng thuê xe', facts: [], paragraphs: ['Mẫu Hợp đồng thuê xe ô tô tự lái của Xedi.'] },
+        { title: 'Phụ lục 03. Bản sao giấy tờ kèm theo', facts: [], paragraphs: [
+          'Hồ sơ định danh của Bên A và hồ sơ xe được quản lý trên XeDi.',
+          'Giấy đăng ký xe, giấy chứng nhận kiểm định và giấy chứng nhận bảo hiểm đã được Operator đối chiếu.',
+        ] },
+      ],
+    }),
   };
   return { ...content, hash: createHash('sha256').update(JSON.stringify(content)).digest('hex'), prepared_at: now };
 }

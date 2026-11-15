@@ -13,6 +13,7 @@ const vehicleFields = {
   manufacture_year: 1,
   condition_declaration: 1,
   onboarding_status: 1,
+  operator_document_review: 1,
   physical_status: 1,
 };
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -120,7 +121,7 @@ export function createVehicleInspectionService(repository) {
         code: 'INVALID_PHYSICAL_STATUS',
         message: 'Kiểm định đầu vào chỉ áp dụng khi xe đang ở chủ xe.',
       });
-    if (data.vehicle.condition_declaration && !currentId && !data.open)
+    if ((data.vehicle.condition_declaration || data.vehicle.operator_document_review) && !currentId && !data.open)
       blockers.push({ code: 'INSPECTION_ASSIGNMENT_REQUIRED', message: 'Cần Operator Staff lên lịch và phân công kiểm định cho hồ sơ mới.' });
     if (data.open && (!currentId || !data.open._id.equals(currentId)))
       blockers.push({
@@ -263,6 +264,8 @@ export function createVehicleInspectionService(repository) {
   async function update(id, draft, actor) {
     const record = await get(id);
     requireOwner(record, actor);
+    if (record.arrival_review && record.arrival_review.status !== 'accepted')
+      throw httpError(409, 'Cần xác nhận tiếp nhận xe trước khi lập biên bản.');
     if (record.approval_status !== 'draft')
       throw httpError(409, 'Chỉ được chỉnh sửa bản nháp kiểm định.');
     const { version, ...changes } = draft;
@@ -279,6 +282,23 @@ export function createVehicleInspectionService(repository) {
     if (!updated)
       throw httpError(409, 'Biên bản đã thay đổi. Tải lại trước khi lưu.');
     return updated;
+  }
+  async function reviewArrival(id, body, actor) {
+    const { status, version } = body || {};
+    const note = typeof body?.note === 'string' ? body.note.trim() : '';
+    if (!['accepted', 'mismatch'].includes(status) || !Number.isSafeInteger(version)
+      || note.length > 500 || (status === 'mismatch' && note.length < 5)) {
+      throw httpError(400, 'Cần kết quả đối chiếu hợp lệ và lý do nếu thông tin không khớp.');
+    }
+    const record = await get(id);
+    requireOwner(record, actor);
+    const result = await inspections.findOneAndUpdate(
+      { _id: id, garage_staff_id: actor._id, approval_status: 'draft', version, 'arrival_review.status': 'pending' },
+      { $set: { arrival_review: { status, note, reviewed_at: new Date() }, updated_at: new Date() }, $inc: { version: 1 } },
+      { returnDocument: 'after' },
+    );
+    if (!result) throw httpError(409, 'Lịch tiếp nhận đã thay đổi. Hãy tải lại hồ sơ.');
+    return result;
   }
   async function submit(id, version, actor) {
     await ensureIndex();
@@ -304,6 +324,8 @@ export function createVehicleInspectionService(repository) {
               409,
               'Biên bản đã thay đổi. Tải lại trước khi gửi.',
             );
+          if (record.arrival_review && record.arrival_review.status !== 'accepted')
+            throw httpError(409, 'Cần xác nhận tiếp nhận xe trước khi gửi biên bản.');
           const data = await context(record.vehicle_id, session);
           requireEligible(eligibility(data, record._id));
           const report = record.condition_report || {};
@@ -422,6 +444,7 @@ export function createVehicleInspectionService(repository) {
     create,
     update,
     submit,
+    reviewArrival,
     eligibility: async (vehicleId) => eligibility(await context(vehicleId)),
     get: async (id) => {
       const record = await get(id);

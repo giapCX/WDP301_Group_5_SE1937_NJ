@@ -5,7 +5,6 @@ import { parsePaging } from '../utils/pagination.js';
 const physicalStatuses = new Set(['with_owner', 'at_garage', 'rented', 'returned_to_owner', 'maintenance']);
 const caseTypes = new Set(['vehicle_damage', 'traffic_violation', 'theft', 'other', 'damage', 'accident', 'safety', 'overdue']);
 const severities = new Set(['low', 'medium', 'high']);
-const operatorCaseStatuses = new Set(['reported', 'open', 'investigating', 'in_progress', 'under_review', 'awaiting_response', 'need_more_information']);
 const allowedEvidenceTypes = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/webp']);
 
 function objectBody(body, allowed) {
@@ -14,10 +13,10 @@ function objectBody(body, allowed) {
   if (unsupported) throw httpError(400, `Trường không được hỗ trợ: ${unsupported}.`);
 }
 
-function text(value, field, { required = false, max = 500 } = {}) {
+function text(value, field, { required = false, min = 0, max = 500 } = {}) {
   if (typeof value !== 'string') throw httpError(400, `${field} phải là chuỗi.`);
   const normalized = value.trim();
-  if ((required && !normalized) || normalized.length > max) throw httpError(400, `${field} không hợp lệ.`);
+  if ((required && !normalized) || normalized.length < min || normalized.length > max) throw httpError(400, `${field} không hợp lệ.`);
   return normalized;
 }
 
@@ -44,7 +43,7 @@ export function parseVehicleStatusUpdate(body) {
   if (!physicalStatuses.has(body.status)) throw httpError(400, 'Trạng thái vận hành không hợp lệ.');
   return {
     status: body.status,
-    ...(body.note !== undefined ? { note: text(body.note, 'note', { max: 1000 }) } : {}),
+    note: text(body.note, 'note', { required: true, min: 5, max: 1000 }),
   };
 }
 
@@ -63,13 +62,23 @@ export function parseVehicleInspectionAssignment(body) {
   };
 }
 
+export function parseVehicleInspectionReschedule(body) {
+  objectBody(body, ['garageStaffId', 'scheduledFor', 'note', 'version']);
+  if (!Number.isSafeInteger(body.version) || body.version < 0) {
+    throw httpError(400, 'version phải là số nguyên không âm.');
+  }
+  const { version, ...assignment } = body;
+  return { ...parseVehicleInspectionAssignment(assignment), version };
+}
+
 export function parseIncidentCreate(body) {
-  objectBody(body, ['caseType', 'description', 'vehicleId', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity']);
+  objectBody(body, ['caseType', 'description', 'vehicleId', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity', 'vehicleSeized']);
   if (!caseTypes.has(body.caseType)) throw httpError(400, 'caseType không hợp lệ.');
   const description = text(body.description, 'description', { required: true, max: 3000 });
   const vehicleId = objectId(body.vehicleId, 'vehicleId');
   const bookingId = body.bookingId === undefined ? null : objectId(body.bookingId, 'bookingId');
   if (body.severity !== undefined && !severities.has(body.severity)) throw httpError(400, 'severity không hợp lệ.');
+  if (body.vehicleSeized !== undefined && typeof body.vehicleSeized !== 'boolean') throw httpError(400, 'vehicleSeized phải là giá trị boolean.');
   if (body.odometerKm !== undefined && (!Number.isSafeInteger(body.odometerKm) || body.odometerKm < 0)) {
     throw httpError(400, 'odometerKm phải là số nguyên không âm.');
   }
@@ -82,14 +91,20 @@ export function parseIncidentCreate(body) {
     ...(body.location !== undefined ? { location: location(body.location) } : {}),
     ...(body.odometerKm !== undefined ? { odometerKm: body.odometerKm } : {}),
     ...(body.severity !== undefined ? { severity: body.severity } : {}),
+    ...(body.vehicleSeized !== undefined ? { vehicleSeized: body.vehicleSeized } : {}),
   };
 }
 
 export function parseIncidentUpdate(body) {
-  objectBody(body, ['description', 'incidentType', 'location', 'odometerKm', 'severity', 'status', 'note']);
+  objectBody(body, ['description', 'bookingId', 'incidentType', 'location', 'odometerKm', 'severity', 'vehicleSeized', 'note', 'responseChecklist', 'expense']);
   if (!Object.keys(body).length) throw httpError(400, 'Cần ít nhất một trường để cập nhật hồ sơ.');
   const update = {};
   if (body.description !== undefined) update.description = text(body.description, 'description', { required: true, max: 3000 });
+  if (body.bookingId !== undefined) {
+    update.booking_id = body.bookingId === null
+      ? null
+      : new Types.ObjectId(objectId(body.bookingId, 'bookingId'));
+  }
   if (body.incidentType !== undefined) update.incident_type = text(body.incidentType, 'incidentType', { max: 80 });
   if (body.location !== undefined) update.location = location(body.location);
   if (body.odometerKm !== undefined) {
@@ -100,11 +115,49 @@ export function parseIncidentUpdate(body) {
     if (!severities.has(body.severity)) throw httpError(400, 'severity không hợp lệ.');
     update.severity = body.severity;
   }
-  if (body.status !== undefined) {
-    if (!operatorCaseStatuses.has(body.status)) throw httpError(400, 'Operator chỉ được cập nhật trạng thái ghi nhận/điều tra.');
-    update.status = body.status;
+  if (body.vehicleSeized !== undefined) {
+    if (typeof body.vehicleSeized !== 'boolean') throw httpError(400, 'vehicleSeized phải là giá trị boolean.');
+    update.vehicle_seized = body.vehicleSeized;
   }
   if (body.note !== undefined) update.note = text(body.note, 'note', { required: true, max: 2000 });
+  if (body.responseChecklist !== undefined) {
+    const checklist = body.responseChecklist;
+    const limits = { driverName: 120, policeReference: 120, insurerReference: 120, missingDocuments: 1000,
+      vehicleRecipient: 120, releaseAuthorizationReference: 250,
+      fieldResponder: 120, driverVerification: 1000, detentionProgress: 1000, insuranceProgress: 1000, repairProgress: 1000 };
+    const dates = ['ownerNotifiedAt', 'insurerNotifiedAt', 'policeSubmittedAt', 'vehicleReleasedAt',
+      'insuranceAssessedAt', 'repairCompletedAt', 'vehicleReturnedToOwnerAt'];
+    objectBody(checklist, [...Object.keys(limits), ...dates, 'injuryStatus']);
+    for (const [key, max] of Object.entries(limits)) {
+      if (checklist[key] !== undefined) update[`response_checklist.${key}`] = text(checklist[key], key, { max });
+    }
+    for (const key of dates) {
+      if (checklist[key] === undefined) continue;
+      const value = checklist[key];
+      if (value !== null && (typeof value !== 'string' || !Number.isFinite(Date.parse(value)) || Date.parse(value) > Date.now())) {
+        throw httpError(400, 'Thời điểm xử lý phải hợp lệ và không ở tương lai.');
+      }
+      update[`response_checklist.${key}`] = value === null ? null : new Date(value);
+    }
+    if (checklist.injuryStatus !== undefined) {
+      if (!['unknown', 'none', 'reported'].includes(checklist.injuryStatus)) throw httpError(400, 'Tình trạng thương tích không hợp lệ.');
+      update['response_checklist.injuryStatus'] = checklist.injuryStatus;
+    }
+  }
+  if (body.expense !== undefined) {
+    const { category, amount, insuranceAmount, evidence, settlementParty } = body.expense || {};
+    objectBody(body.expense, ['category', 'amount', 'insuranceAmount', 'evidence', 'settlementParty']);
+    if (settlementParty !== undefined && !['owner_payable', 'renter_receivable', 'third_party_payable'].includes(settlementParty))
+      throw httpError(400, 'Bên đối soát không hợp lệ.');
+    if (!['assessment', 'repair', 'deductible', 'towing', 'other'].includes(category)
+      || !Number.isSafeInteger(amount) || amount < 1 || amount > 1e9
+      || !Number.isSafeInteger(insuranceAmount) || insuranceAmount < 0 || insuranceAmount > amount) {
+      throw httpError(400, 'Khoản chi hoặc phần bảo hiểm chấp nhận không hợp lệ.');
+    }
+    update.expense = { category, settlement_party: settlementParty, requested_amount: amount, insurance_amount: insuranceAmount,
+      proposed_amount: amount - insuranceAmount, decision: 'pending',
+      evidence_basis: text(evidence, 'Chứng từ', { required: true, max: 500 }) };
+  }
   return update;
 }
 

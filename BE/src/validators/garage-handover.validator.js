@@ -27,7 +27,7 @@ export function handoverType(value) {
   return value;
 }
 export function parseHandoverConfirmation(body) {
-  if (!body || Object.keys(body).some((key) => !['version', 'renterConfirmed', 'disputeNote', 'occurredAt'].includes(key))
+  if (!body || Object.keys(body).some((key) => !['version', 'renterConfirmed', 'disputeNote', 'occurredAt', 'pickupVerification'].includes(key))
     || typeof body.renterConfirmed !== 'boolean') throw httpError(400, 'Cần ghi nhận phản hồi của khách thuê.');
   const note = body.disputeNote ?? '';
   if (typeof note !== 'string' || note.length > 1000 || (!body.renterConfirmed && !note.trim()))
@@ -35,5 +35,11 @@ export function parseHandoverConfirmation(body) {
   const occurredAt = body.occurredAt === undefined ? undefined : new Date(body.occurredAt);
   if (occurredAt && (typeof body.occurredAt !== 'string' || !Number.isFinite(+occurredAt) || occurredAt > new Date()))
     throw httpError(400, 'Thời điểm giao nhận thực tế không hợp lệ.');
-  return { version: parseVersion(body.version), renterConfirmed: body.renterConfirmed, note: note.trim(), occurredAt };
+  const pickupVerification = body.pickupVerification;
+  if (pickupVerification !== undefined && (!pickupVerification || Array.isArray(pickupVerification)
+    || Object.keys(pickupVerification).length !== 3
+    || ['identityMatched', 'licenseChecked', 'fitToDrive'].some((key) => typeof pickupVerification[key] !== 'boolean'))) {
+    throw httpError(400, 'Kết quả đối chiếu khi giao xe không hợp lệ.');
+  }
+  return { version: parseVersion(body.version), renterConfirmed: body.renterConfirmed, note: note.trim(), occurredAt, pickupVerification };
 }

@@ -6,7 +6,8 @@ import GaragePage from '../features/garage/pages/GaragePage';
 import GarageAccess from '../features/garage/components/GarageAccess';
 import ManagerPage from '../features/manager/pages/ManagerPage';
 import OwnerPage from '../features/owner/pages/OwnerPage';
-import AdminPage from '../features/manager/pages/AdminPage';
+import OwnerAccess from '../features/owner/components/OwnerAccess';
+import AdminPage from '../features/admin/pages/AdminPage';
 import ContractsPage from '../features/contracts/ContractsPage';
 import VerificationPage from '../features/verification/pages/VerificationPage';
 import OperatorPage from '../features/operator/pages/OperatorPage';
@@ -26,7 +27,7 @@ export default function AppRouter() {
   const [isVerification, setIsVerification] = useState(() => window.location.hash.startsWith('#/verification'));
   const [isOperation, setIsOperation] = useState(() => isHashRoute(window.location.hash, 'operation'));
   const [isOperator, setIsOperator] = useState(() => isHashRoute(window.location.hash, 'operator'));
-  const [vehicleId, setVehicleId] = useState(() => window.location.hash.match(/^#\/xe\/([a-f0-9]{24})$/i)?.[1] || '');
+  const [vehicleId, setVehicleId] = useState(() => window.location.hash.match(/^#\/xe\/([a-f0-9]{24})(?:\?.*)?$/i)?.[1] || '');
 
   useEffect(() => {
     const onHashChange = () => {
@@ -41,7 +42,7 @@ export default function AppRouter() {
       setIsVerification(window.location.hash.startsWith('#/verification'));
       setIsOperation(isHashRoute(window.location.hash, 'operation'));
       setIsOperator(isHashRoute(window.location.hash, 'operator'));
-      setVehicleId(window.location.hash.match(/^#\/xe\/([a-f0-9]{24})$/i)?.[1] || '');
+      setVehicleId(window.location.hash.match(/^#\/xe\/([a-f0-9]{24})(?:\?.*)?$/i)?.[1] || '');
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
@@ -68,7 +69,7 @@ export default function AppRouter() {
   if (vehicleId) return <VehicleDetailPage listingId={vehicleId} />;
   if (isContracts) return <ContractsPage />;
   if (isGarage) return <GarageAccess>{(user) => <GaragePage user={user} />}</GarageAccess>;
-  if (isOwner) return <OwnerPage />;
+  if (isOwner) return <OwnerAccess><OwnerPage /></OwnerAccess>;
   if (isAdmin) return <AdminPage />;
   if (isOperator || isOperations || isOperation) return <OperatorPage initialSection={isOperations ? 'incidents' : undefined} />;
   if (isManager) return <ManagerPage />;

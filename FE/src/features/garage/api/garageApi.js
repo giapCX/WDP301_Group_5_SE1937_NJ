@@ -4,6 +4,8 @@ export const getGarageWorkspace = (options) => getApi('/garage/workspace', optio
 export const uploadGaragePhoto = (body) => postApi('/garage/photos', body).then(({ data }) => data);
 export const getGaragePhoto = (key, options) => getBlobApi(`/garage/photos/${key.replace(/^garage-photos\//, '').split('/').map(encodeURIComponent).join('/')}`, options);
 
+export const reviewGarageArrival = (id, body) => postApi(`/garage/inspections/${encodeURIComponent(id)}/arrival`, body);
+
 export async function saveGarageTask(task, report, draft, checkpoint) {
   const condition = {
     ...Object.fromEntries(['exterior', 'interior', 'engine', 'tires'].filter((key) => report[key]).map((key) => [key, report[key]])),
@@ -44,6 +46,7 @@ export async function saveGarageTask(task, report, draft, checkpoint) {
   const action = task.kind === 'inspection' ? 'submit' : 'confirm';
   const confirmation = { version: record.version, ...(task.kind === 'intake' ? { ownerConfirmed: report.confirmed } : task.kind === 'inspection' ? {} : { renterConfirmed: report.confirmed,
     ...(report.disputeNote ? { disputeNote: report.disputeNote } : {}),
+    ...(task.kind === 'handover' && { pickupVerification: report.pickupVerification }),
     ...(report.occurredAt ? { occurredAt: new Date(report.occurredAt).toISOString() } : {}),
   }) };
   const { data } = await postApi(`${base}/${record._id}/${action}`, confirmation);

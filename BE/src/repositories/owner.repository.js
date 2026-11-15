@@ -10,7 +10,7 @@ export function createOwnerRepository(connection, fileRepository) {
   return {
     findRoles: (ids) => models.Role.find({ _id: { $in: ids } }).select({ code: 1 }).lean(),
     findVehicles: (ownerId) => vehicles.find({ owner_id: ownerId }, {
-      projection: { brand: 1, model: 1, manufacture_year: 1, license_plate: 1, onboarding_status: 1, review_note: 1, physical_status: 1, created_at: 1, updated_at: 1, documents: 1, photos: 1, condition_declaration: 1 },
+      projection: { brand: 1, model: 1, manufacture_year: 1, license_plate: 1, onboarding_status: 1, review_note: 1, physical_status: 1, created_at: 1, updated_at: 1, documents: 1, photos: 1, condition_declaration: 1, inspection_schedule_request: 1 },
       sort: { updated_at: -1, _id: -1 },
     }),
     findListings: (vehicleIds) => models.VehicleListing.find({ vehicle_id: { $in: vehicleIds } })
@@ -18,6 +18,9 @@ export function createOwnerRepository(connection, fileRepository) {
     findInspections: (vehicleIds) => models.VehicleInspection.find({
       vehicle_id: { $in: vehicleIds }, inspection_type: 'onboarding',
     }).sort({ created_at: -1, _id: -1 }).lean(),
+    findOpenInspection: (vehicleId) => models.VehicleInspection.findOne({
+      vehicle_id: vehicleId, inspection_type: 'onboarding', approval_status: { $in: ['draft', 'pending'] },
+    }).lean(),
     findLatestIntakes: (vehicleIds) => models.VehicleIntake.find({
       vehicle_id: { $in: vehicleIds }, status: { $in: ['draft', 'completed'] },
     }).sort({ created_at: -1, _id: -1 }).lean(),
@@ -27,6 +30,7 @@ export function createOwnerRepository(connection, fileRepository) {
     }, { $set: { owner_review: ownerReview }, $inc: { version: 1 } }),
     respondToInspection: (vehicleId, inspectionId, version, ownerReview) => models.VehicleInspection.updateOne({
       _id: inspectionId, vehicle_id: vehicleId, version, approval_status: 'pending', 'owner_review.status': { $exists: false },
+      $or: [{ 'arrival_review.status': { $exists: false } }, { 'operator_review.status': 'checked' }],
     }, { $set: { owner_review: ownerReview }, $inc: { version: 1 } }),
     findSettlements: (ownerId) => settlements.find({ owner_id: ownerId }, { sort: { period_start: -1 } }),
     findAgreements: (ownerId) => agreements.find({ owner_id: ownerId }, { sort: { created_at: -1 } }),
@@ -35,7 +39,10 @@ export function createOwnerRepository(connection, fileRepository) {
     findAgreement: (ownerId, agreementId) => models.ManagementAgreement.findOne({ _id: agreementId, owner_id: ownerId }).lean(),
     requestAgreementTermination: (ownerId, agreementId, at, reason) => models.ManagementAgreement.updateOne({ _id: agreementId, owner_id: ownerId, status: 'active' }, { $set: { status: 'termination_requested', termination_info: { reason, notice_method: 'owner_portal', legal_effective_at: at }, updated_at: at } }),
     findVehicle: (ownerId, vehicleId) => models.Vehicle.findOne({ _id: vehicleId, owner_id: ownerId }).lean(),
-    findBooking: (vehicleId, bookingId) => models.Booking.findOne({ _id: bookingId, vehicle_id: vehicleId }).select({ _id: 1 }).lean(),
+    findBooking: (vehicleId, reference) => models.Booking.findOne({
+      vehicle_id: vehicleId,
+      ...(/^[a-f\d]{24}$/i.test(reference) ? { _id: reference } : { booking_code: reference }),
+    }).select({ _id: 1 }).lean(),
     findOpenWithdrawal: (vehicleId) => models.VehicleWithdrawalRequest.findOne({ vehicle_id: vehicleId, status: { $in: ['requested', 'coordinating_bookings', 'pending_review', 'processing'] } }).lean(),
     findActiveBookings: (vehicleId) => models.Booking.find({ vehicle_id: vehicleId, status: { $in: ['confirmed', 'ongoing', 'in_progress'] } }).select({ _id: 1 }).lean(),
     findPayableSettlements: (ownerId) => models.OwnerSettlement.find({ owner_id: ownerId, payout_status: 'payable' }).sort({ period_start: 1, _id: 1 }).lean(),
@@ -47,7 +54,7 @@ export function createOwnerRepository(connection, fileRepository) {
     uploadPrivateFile: (ownerId, input, purpose) => fileRepository.save(ownerId, input, purpose),
     deletePrivateFiles: (keys) => fileRepository.remove(keys),
     createVehicle: (vehicle) => vehicles.create(vehicle),
-    updateVehicle: (id, ownerId, update) => models.Vehicle.updateOne({ _id: id, owner_id: ownerId }, update),
+    updateVehicle: (id, ownerId, update, filter = {}) => models.Vehicle.updateOne({ _id: id, owner_id: ownerId, ...filter }, update),
     deleteVehicle: (id) => models.Vehicle.deleteOne({ _id: id }),
     createAgreement: (agreement) => agreements.create(agreement),
     deleteAgreement: (id) => models.ManagementAgreement.deleteOne({ _id: id }),

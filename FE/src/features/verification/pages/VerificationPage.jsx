@@ -1,11 +1,16 @@
 import { useState } from 'react';
-import { getCurrentUser } from '../../auth/session';
+import { canAccessOwner, getCurrentUser } from '../../auth/session';
 import useIdentityVerification from '../hooks/useIdentityVerification';
 import './VerificationPage.css';
 
 const labels = { unverified: 'Chưa gửi', pending: 'Đang xét duyệt', verified: 'Đã xác minh', revision_required: 'Cần bổ sung', rejected: 'Không đạt' };
 
 export default function VerificationPage() {
+  if (!canAccessOwner(getCurrentUser())) return <main className="verification-page"><p>Mục này dành cho chủ xe.</p><a href="#/renter/profile">Hồ sơ cá nhân</a></main>;
+  return <OwnerVerificationForm />;
+}
+
+function OwnerVerificationForm() {
   const { data, loading, saving, error, submit, refresh } = useIdentityVerification();
   const [notice, setNotice] = useState('');
   const user = getCurrentUser();
@@ -14,7 +19,7 @@ export default function VerificationPage() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const saved = await submit({ documentType: form.get('documentType'), identityNumber: form.get('identityNumber'), identityFile: form.get('identityFile'), licenseNumber: form.get('licenseNumber'), licenseClass: form.get('licenseClass'), expiresAt: form.get('expiresAt'), licenseFile: form.get('licenseFile') });
-    if (saved) setNotice('Hồ sơ đã được gửi. XeDi sẽ xét duyệt cả danh tính và bằng lái trước khi bạn đặt xe.');
+    if (saved) setNotice('Hồ sơ đã được gửi. XeDi sẽ xét duyệt trước khi bạn đăng ký xe cho thuê.');
   };
   if (loading) return <main className="verification-page"><p>Đang tải trạng thái xác minh…</p></main>;
   return <main className="verification-page"><a className="verification-back" href="#trang-chu">← Về trang chủ</a><section className="verification-card"><p className="verification-eyebrow">XÁC MINH DANH TÍNH</p><h1>eKYC và giấy phép lái xe</h1><p className="verification-intro">Xác minh một lần để đủ điều kiện tạo yêu cầu đặt xe. Tài liệu được lưu private và chỉ đội ngũ được phân quyền xem xét.</p>{user && <p className="verification-user">Hồ sơ của <strong>{user.full_name || user.email}</strong></p>}

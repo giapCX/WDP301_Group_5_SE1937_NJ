@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createManagerApprovalService } from '../service/manager-approval.service.js';
 import { createAuthMiddleware } from '../middleware/auth.middleware.js';
 import { createManagerRepository } from '../repositories/manager.repository.js';
 import { createManagerService } from '../service/manager.service.js';
@@ -7,12 +8,17 @@ import { attachManagerRoles, requireManagerRoles } from '../middleware/manager-a
 import { createIdentityVerificationController } from '../controller/identity-verification.controller.js';
 import { createIdentityVerificationRepository } from '../repositories/identity-verification.repository.js';
 import { createIdentityVerificationService } from '../service/identity-verification.service.js';
+import { createContractRepository } from '../repositories/contract.repository.js';
+import { createContractService } from '../service/contract.service.js';
+
 
 export function createManagerRouter(database, { fileRepository } = {}) {
   const router = Router();
   const repository = createManagerRepository(database, fileRepository);
   const service = createManagerService(repository);
-  const controller = createManagerController(service);
+
+  const contracts = createContractService(createContractRepository(database));
+  const controller = createManagerController(service, createManagerApprovalService(repository, service, contracts));
   const verificationController = fileRepository
     ? createIdentityVerificationController(createIdentityVerificationService(createIdentityVerificationRepository(database, fileRepository), fileRepository))
     : null;
@@ -26,6 +32,7 @@ export function createManagerRouter(database, { fileRepository } = {}) {
   router.get('/listings', requireManager, controller.listings);
   router.patch('/listings/:id', requireManager, controller.updateListing);
   router.patch('/listings/:id/review', requireManager, controller.reviewListing);
+  router.get('/admin/overview', requireAdmin, controller.adminOverview);
   router.get('/accounts', requireAdmin, controller.accounts);
   router.post('/accounts', requireAdmin, controller.createAccount);
   router.patch('/accounts/:id', requireAdmin, controller.updateAccount);

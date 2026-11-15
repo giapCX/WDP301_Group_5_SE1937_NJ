@@ -94,7 +94,7 @@ test('handover validates prerequisites, owns drafts, rejects stale versions and 
   assert.equal((await request('/handovers', 'POST', { bookingId: String(f.booking._id), type: 'pickup' })).status, 409);
 });
 
-test('pickup rechecks payment, deposit, signed agreement and verified identity at confirmation time', async () => {
+test('pickup rechecks payment, deposit, signed agreement and active account at confirmation time', async () => {
   const f = await fixture();
   const record = await draft(f.booking);
   await models.SecurityDeposit.updateOne({ booking_id: f.booking._id }, { $set: { status: 'unpaid' } });
@@ -110,9 +110,9 @@ test('pickup rechecks payment, deposit, signed agreement and verified identity a
   result = await confirm(record);
   assert.ok(result.body.error.details.blockers.some((item) => item.code === 'RENTAL_NOT_SIGNED'));
   await models.RentalAgreement.updateOne({ booking_id: f.booking._id }, { $set: { status: 'signed' } });
-  await models.User.updateOne({ _id: f.renter._id }, { $set: { 'identity_kyc.status': 'pending' } });
+  await models.User.updateOne({ _id: f.renter._id }, { $set: { account_status: 'suspended' } });
   result = await confirm(record);
-  assert.ok(result.body.error.details.blockers.some((item) => item.code === 'RENTER_NOT_VERIFIED'));
+  assert.ok(result.body.error.details.blockers.some((item) => item.code === 'RENTER_INACTIVE'));
   assert.equal((await models.Booking.findById(f.booking._id).lean()).status, 'confirmed');
 });
 

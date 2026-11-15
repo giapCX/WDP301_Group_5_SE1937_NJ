@@ -1,3 +1,4 @@
+import ManagerActionForm from './ManagerActionForm';
 import { useState } from 'react';
 import Pagination from '../../../components/ui/Pagination';
 import useManagerActions from '../hooks/useManagerActions';
@@ -15,54 +16,42 @@ const statusLabels = {
 export default function ListingManagementWorkspace({ onNotice }) {
   const request = useManagerCollection('listings', { status: 'all' });
   const { reviewListing, updateListing } = useManagerActions();
+  const [dialog, setDialog] = useState(null);
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
   const refresh = () => {
     setActionError('');
     request.refresh();
   };
-  const edit = async (listing) => {
-    const title = window.prompt('Tiêu đề tin xe:', listing.title || '');
-    if (title === null) return;
-    const description = window.prompt('Mô tả tin xe:', listing.description || '');
-    if (description === null) return;
-    const dailyPrice = window.prompt('Giá thuê mỗi ngày (VND):', String(listing.dailyPrice ?? ''));
-    if (dailyPrice === null) return;
-    const securityDepositAmount = window.prompt('Tiền cọc (VND):', String(listing.securityDepositAmount ?? ''));
-    if (securityDepositAmount === null) return;
+  const edit = (listing) => {
     const location = listing.pickupLocation || {};
-    const branchName = window.prompt('Tên gara:', location.branch_name || '');
-    if (branchName === null) return;
-    const city = window.prompt('Tỉnh/thành:', location.city || '');
-    if (city === null) return;
-    const addressLabel = window.prompt('Địa chỉ giao xe:', location.address_label || '');
-    if (addressLabel === null) return;
-    const body = {
-      title,
-      description,
-      dailyPrice: Number(dailyPrice),
-      securityDepositAmount: Number(securityDepositAmount),
-      pickupLocation: { branchName, city, addressLabel },
-    };
-    setBusyId(listing.id);
-    setActionError('');
-    try {
-      await updateListing(listing.id, body);
-      onNotice('Đã cập nhật thông tin tin xe.');
-      refresh();
-    } catch (error) {
-      setActionError(error.message || 'Không thể cập nhật tin xe.');
-    } finally {
-      setBusyId('');
-    }
+    setDialog({
+      title: 'Sửa tin xe',
+      fields: [
+        { name: 'title', label: 'Tiêu đề tin xe', value: listing.title },
+        { name: 'description', label: 'Mô tả tin xe', type: 'textarea', value: listing.description, required: false },
+        { name: 'dailyPrice', label: 'Giá thuê mỗi ngày (VND)', type: 'number', min: 1, value: listing.dailyPrice },
+        { name: 'securityDepositAmount', label: 'Tiền cọc (VND)', type: 'number', min: 0, value: listing.securityDepositAmount },
+        { name: 'branchName', label: 'Tên gara', value: location.branch_name },
+        { name: 'city', label: 'Tỉnh/thành', value: location.city },
+        { name: 'addressLabel', label: 'Địa chỉ giao xe', value: location.address_label },
+      ],
+      onSubmit: async ({ branchName, city, addressLabel, ...terms }) => {
+        await updateListing(listing.id, { ...terms, pickupLocation: { branchName, city, addressLabel } });
+        onNotice('Đã cập nhật thông tin tin xe.');
+        refresh();
+      },
+    });
   };
-  const review = async (listing, action) => {
-    const reason = ['reject', 'deactivate'].includes(action)
-      ? window.prompt(action === 'reject' ? 'Lý do từ chối tin xe:' : 'Lý do tạm ngưng tin xe:')
-      : '';
-    if (reason === null) return;
-    if (action === 'reject' && !reason.trim()) {
-      setActionError('Vui lòng nhập lý do từ chối.');
+  const review = async (listing, action, reason) => {
+    const needsReason = ['reject', 'deactivate'].includes(action);
+    if (needsReason && reason === undefined) {
+      setDialog({
+        title: action === 'reject' ? 'Từ chối tin xe' : 'Tạm ngưng tin xe',
+        context: listing.title,
+        fields: [{ name: 'reason', label: 'Lý do', type: 'textarea', required: action === 'reject', maxLength: 1000 }],
+        onSubmit: (values) => review(listing, action, values.reason),
+      });
       return;
     }
     setBusyId(listing.id);
@@ -72,6 +61,7 @@ export default function ListingManagementWorkspace({ onNotice }) {
       onNotice(action === 'approve' || action === 'activate' ? 'Tin xe đã được xuất bản.' : action === 'reject' ? 'Tin xe đã bị từ chối.' : 'Tin xe đã được tạm ngưng.');
       refresh();
     } catch (error) {
+      if (needsReason) throw error;
       setActionError(error.message || 'Không thể cập nhật trạng thái tin xe.');
     } finally {
       setBusyId('');
@@ -100,5 +90,5 @@ export default function ListingManagementWorkspace({ onNotice }) {
       </tr>)}
     </tbody></table>{!request.data.length && <p className="manager-empty">Chưa có tin xe.</p>}</div>
     <Pagination {...request.paging} />
-  </section>;
+  {dialog && <ManagerActionForm {...dialog} onClose={() => setDialog(null)} />}</section>;
 }
