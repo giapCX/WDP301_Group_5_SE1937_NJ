@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { inspectionMeasurementLimits } from '../utils/inspection-measurements.js';
 import { httpError, objectId } from '../utils/http-error.js';
 import { parseIntakeDraft, parseVersion } from './garage-intake.validator.js';
 
@@ -83,6 +84,7 @@ export function parseInspectionDraft(body, create = false) {
       'note',
       'photoKeys',
       'checklist',
+      'measurements',
     ]);
   }
   // Share numeric/condition/key validation with intake; only the validated report fields are retained.
@@ -92,12 +94,22 @@ export function parseInspectionDraft(body, create = false) {
     ...(body.fuelLevelPct !== undefined
       ? { fuelLevelPct: body.fuelLevelPct }
       : {}),
-    condition: Object.fromEntries(Object.entries(body.condition || {}).filter(([key]) => key !== 'checklist')),
+    condition: Object.fromEntries(Object.entries(body.condition || {}).filter(([key]) => !['checklist', 'measurements'].includes(key))),
   });
   const result = create
     ? { vehicle_id: new ObjectId(objectId(body.vehicleId, 'vehicleId')) }
     : { version: parseVersion(body.version) };
   const report = { ...condition_snapshot };
+  if (body.condition?.measurements !== undefined) {
+    const measurements = body.condition.measurements;
+    bodyObject(measurements, Object.keys(inspectionMeasurementLimits));
+    for (const [key, value] of Object.entries(measurements)) {
+      if (!Number.isFinite(value) || value < 0 || value > inspectionMeasurementLimits[key]) {
+        throw httpError(400, 'Số đo kỹ thuật không hợp lệ. Kiểm tra giá trị và đơn vị đo.');
+      }
+    }
+    report.measurements = measurements;
+  }
   if (body.condition?.checklist !== undefined)
     report.checklist = parseChecklist(body.condition.checklist, report.photo_keys || []);
   if (odometer_km !== undefined) report.odometer_km = odometer_km;
