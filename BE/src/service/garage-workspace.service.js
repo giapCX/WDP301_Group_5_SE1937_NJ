@@ -54,7 +54,7 @@ export function createGarageWorkspaceService(repository, inspectionService, inta
             odometer: String(record?.odometer_km ?? report.odometer_km ?? ''), fuel: String(record?.fuel_level_pct ?? report.fuel_level_pct ?? ''),
             ...Object.fromEntries(['exterior', 'interior', 'engine', 'tires'].map((key) => [key, normalizeCondition(report[key])])),
             note: report.note || '', photos: (report.photo_keys || []).map(photo), accessories: report.accessories || [], recommendation: recommendation[record?.recommendation] || '',
-            checklist: report.checklist, defects: report.defects,
+            checklist: report.checklist, defects: report.defects, measurements: report.measurements,
             confirmed: Boolean(record?.owner_confirmed_at || record?.renter_confirmed_at),
           } : null,
         });

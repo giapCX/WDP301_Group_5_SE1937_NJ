@@ -8,6 +8,7 @@ import Icon from '../../../components/Icon';
 import { Brand } from '../../../components/SiteHeader';
 import Pagination from '../../../components/ui/Pagination';
 import GaragePhotoPreview from '../../garage/components/GaragePhotoPreview';
+import InspectionMeasurements from '../../garage/components/InspectionMeasurements';
 import { clearSession, getCurrentUser } from '../../auth/session';
 import {
   attachOperatorEvidence,
@@ -1031,6 +1032,7 @@ export default function OperatorPage({ initialSection } = {}) {
                   <h4>Biên bản Garage · {inspectionRecommendations[selectedVehicle.inspectionReport.recommendation] || selectedVehicle.inspectionReport.recommendation}</h4>
                   <p><strong>ODO:</strong> {selectedVehicle.inspectionReport.conditionReport?.odometer_km ?? '—'} km · <strong>Nhiên liệu/pin:</strong> {selectedVehicle.inspectionReport.conditionReport?.fuel_level_pct ?? '—'}%</p>
                   <p><strong>Ghi chú Garage:</strong> {selectedVehicle.inspectionReport.conditionReport?.note || '—'}</p>
+                  <InspectionMeasurements values={selectedVehicle.inspectionReport.conditionReport?.measurements} />
                   <p><strong>Chủ xe phản hồi:</strong> {selectedVehicle.inspectionReport.ownerReview?.status === 'accepted' ? 'Đã xác nhận' : selectedVehicle.inspectionReport.ownerReview?.status === 'disputed' ? `Có ý kiến khác${selectedVehicle.inspectionReport.ownerReview.note ? `: ${selectedVehicle.inspectionReport.ownerReview.note}` : ''}` : 'Chưa phản hồi'}</p>
                   {selectedVehicle.inspectionReport.conditionReport?.checklist?.length > 0 && <ul>
                     {selectedVehicle.inspectionReport.conditionReport.checklist.map((item) => <li key={item.key}>

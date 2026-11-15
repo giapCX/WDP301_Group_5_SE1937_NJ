@@ -7,6 +7,7 @@ import GarageInspectionChecklist from './GarageInspectionChecklist';
 import GarageOwnerSubmission from './GarageOwnerSubmission';
 import GarageConditionDefects from './GarageConditionDefects';
 import GarageManagerDecision from './GarageManagerDecision';
+import InspectionMeasurements from './InspectionMeasurements';
 import {
   conditionFields,
   conditionLabels,
@@ -110,11 +111,12 @@ export default function GarageReportDialog({ task, onSave, onClose, onReviewArri
     <p>{task.vehicle} · {task.plate}{task.vin && ` · VIN ${task.vin}`}</p>
     <p>Chủ xe: {task.contact} · {displayDate(task.schedule)} {displayTime(task.schedule)}</p>
     {task.scheduleNote && <p>{task.scheduleNote}</p>}
+    {task.recordId && <GarageOwnerSubmission inspectionId={task.recordId} />}
     {task.arrivalReview.status === 'mismatch' ? <p>Thông tin không khớp. {task.arrivalReview.note} Đang chờ Operator cập nhật lịch.</p>
       : !readOnly && <>
         <label><input type="checkbox" checked={matched} onChange={(event) => setMatched(event.target.checked)} /> Đã đối chiếu người giao, giấy tờ, biển số và VIN của xe thực tế</label>
         <label>Ghi chú đối chiếu <textarea maxLength={500} value={arrivalNote} onChange={(event) => setArrivalNote(event.target.value)} /></label>
-        <button type="button" disabled={busy || !matched} onClick={() => reviewArrival('accepted')}>Tiếp nhận xe</button>
+        <button type="button" disabled={busy || !matched} onClick={() => reviewArrival('accepted')}>Xác nhận và mở biên bản kiểm định</button>
         <button type="button" disabled={busy || arrivalNote.trim().length < 5} onClick={() => reviewArrival('mismatch')}>Báo thông tin không khớp</button>
       </>}
     {error && <p role="alert">{error}</p>}
@@ -131,6 +133,7 @@ export default function GarageReportDialog({ task, onSave, onClose, onReviewArri
       onClose={busy || uploading ? () => {} : onClose}
     >
       <GarageManagerDecision task={task} />
+      {task.arrivalReview?.status === 'accepted' && <p><strong>Đối chiếu khi tiếp nhận</strong> · Đã xác nhận{task.arrivalReview.note && ` · ${task.arrivalReview.note}`}</p>}
       {task.kind === 'handover' && <fieldset disabled={readOnly || busy}>
         <legend>Đối chiếu tại quầy trước khi giao xe</legend>
         {!readOnly && <p>Còn {['identityMatched', 'licenseChecked', 'fitToDrive'].filter((key) => !report.pickupVerification[key]).length} mục cần xác nhận.</p>}
@@ -310,6 +313,9 @@ export default function GarageReportDialog({ task, onSave, onClose, onReviewArri
             readOnly={readOnly || ownerIntakeAccepted || busy}
             onBusyChange={setUploading}
           />
+          {task.kind === 'inspection' && <InspectionMeasurements values={report.measurements}
+            onChange={readOnly ? undefined : (values) => set('measurements', values)}
+            disabled={busy || uploading} />}
           {task.kind === 'inspection' ? <GarageInspectionChecklist
             declaration={task.conditionDeclaration}
             items={report.checklist || []}

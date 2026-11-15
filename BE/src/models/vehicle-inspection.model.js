@@ -1,5 +1,6 @@
 import { Schema } from 'mongoose';
 import { createSchema, embedded, arrayOf, integer } from './schema.js';
+import { inspectionMeasurementLimits } from '../utils/inspection-measurements.js';
 
 const { ObjectId } = Schema.Types;
 
@@ -18,6 +19,8 @@ export const vehicleInspectionSchema = createSchema({
     fuel_level_pct: integer({ min: 0, max: 100 }),
     photo_keys: arrayOf(String),
     note: String,
+    measurements: embedded(Object.fromEntries(Object.entries(inspectionMeasurementLimits)
+      .map(([key, max]) => [key, { type: Number, min: 0, max }]))),
     checklist: { type: [embedded({ key: String, result: String, note: String, photo_key: String })], default: undefined },
   }),
   recommendation: { type: String, enum: ["pass", "requires_repair", "fail"] },

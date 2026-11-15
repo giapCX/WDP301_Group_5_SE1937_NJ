@@ -34,6 +34,11 @@ beforeEach(() => {
       workspace.tasks[0].version = body.version + 1;
       return json({ data: { _id: recordId, version: body.version + 1 } });
     }
+    if (url === `/api/garage/inspections/${recordId}/arrival`) {
+      const arrival_review = { status: body.status, note: body.note };
+      workspace.tasks[0] = { ...workspace.tasks[0], arrivalReview: arrival_review, version: body.version + 1 };
+      return json({ data: { _id: recordId, arrival_review, version: body.version + 1 } });
+    }
     if (url === `/api/garage/inspections/${recordId}/submit`) {
       if (failConfirm) return json({ error: { message: 'Server chưa gửi được đề xuất' } }, 503);
       workspace.tasks[0] = { ...workspace.tasks[0], status: 'submitted', readOnly: true, version: body.version + 1 };
@@ -94,6 +99,25 @@ test('saves a real inspection draft and retains it when the page loads again', a
   expect(localStorage.getItem('xedi.garage.preview.v1')).toBeNull();
   view.unmount(); render(<GaragePage />);
   await screen.findByText('Bản nháp', { selector: '.gs-status' });
+});
+
+test('opens the complete inspection after arrival and saves with the updated version', async () => {
+  workspace.tasks[0] = {
+    ...workspace.tasks[0], recordId, version: 2, status: 'draft', arrivalReview: { status: 'pending' },
+  };
+  render(<GaragePage />);
+  const arrival = await openReport();
+  fireEvent.click(within(arrival).getByLabelText(/Đã đối chiếu người giao/));
+  fireEvent.click(within(arrival).getByRole('button', { name: 'Xác nhận và mở biên bản kiểm định' }));
+  const checklist = await screen.findByText('Checklist kiểm định đầu vào');
+  expect(checklist).toBeInTheDocument();
+  const report = within(screen.getByRole('dialog'));
+  fireEvent.change(report.getByLabelText('Áp suất lốp trước trái (kPa)'), { target: { value: '230' } });
+  fireEvent.click(report.getByRole('button', { name: 'Lưu bản nháp' }));
+  await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+    `/api/garage/inspections/${recordId}`,
+    expect.objectContaining({ method: 'PATCH', body: expect.stringContaining('"tire_front_left_kpa":230') }),
+  ));
 });
 
 test('maps inspection recommendation and waits for submit to succeed before showing success', async () => {

@@ -15,6 +15,10 @@ export async function saveGarageTask(task, report, draft, checkpoint) {
   };
   const body = { condition };
   if (task.kind === 'inspection' && report.checklist?.length) condition.checklist = report.checklist;
+  if (task.kind === 'inspection' && report.measurements) {
+    condition.measurements = Object.fromEntries(Object.entries(report.measurements)
+      .filter(([, value]) => value !== '').map(([key, value]) => [key, Number(value)]));
+  }
   if (task.kind !== 'inspection') {
     condition.accessories = report.accessories || [];
     if (report.defects !== undefined) condition.defects = report.defects;

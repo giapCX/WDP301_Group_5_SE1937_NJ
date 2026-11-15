@@ -50,8 +50,11 @@ export default function useGarageWorkspace() {
     await reload();
   }
   async function reviewArrival(task, status, note) {
-    await reviewGarageArrival(task.recordId, { version: task.version, status, note });
-    await reload();
+    const { data } = await reviewGarageArrival(task.recordId, { version: task.version, status, note });
+    const updated = { ...task, version: data.version, arrivalReview: data.arrival_review };
+    tasks.current = tasks.current.map((item) => item.id === updated.id ? updated : item);
+    setWorkspace((current) => ({ ...current, tasks: tasks.current }));
+    return updated;
   }
   return { workspace, loading, error, reload, saveReport, addIncident, reviewArrival };
 }

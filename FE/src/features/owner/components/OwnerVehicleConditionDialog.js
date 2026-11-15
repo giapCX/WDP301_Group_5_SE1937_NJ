@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../../../components/ui/Modal';
 import GaragePhotoPreview from '../../garage/components/GaragePhotoPreview';
 import InspectionChecklistResults from '../../garage/components/InspectionChecklistResults';
+import InspectionMeasurements from '../../garage/components/InspectionMeasurements';
 import { confirmOwnerReturn, requestOwnerInspectionSchedule, respondToOwnerInspection, respondToOwnerIntake } from '../api/ownerApi';
 
 const conclusion = { pass: 'Đạt', requires_repair: 'Cần sửa và kiểm định lại', fail: 'Không đạt' };
@@ -91,6 +92,7 @@ export default function OwnerVehicleConditionDialog({ vehicle, onClose, onSaved 
       <h3>Báo cáo kiểm định · phiên bản {inspection.version ?? '—'}</h3>
       <p>Kết luận Garage · {conclusion[inspection.recommendation] || 'Chưa cập nhật'}</p>
       <ConditionSummary report={report} odometer={report.odometer_km} fuel={report.fuel_level_pct} />
+      <InspectionMeasurements values={report.measurements} />
       <InspectionChecklistResults items={report.checklist} />
       {inspection.decisionReason && <p>Quyết định Manager · {inspection.decisionReason}</p>}
       {inspection.ownerReview && <p>Phản hồi của bạn · {inspection.ownerReview.status === 'accepted' ? 'Đã xác nhận' : 'Có bất đồng'}

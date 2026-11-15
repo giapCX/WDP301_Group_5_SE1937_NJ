@@ -361,8 +361,8 @@ export default function GaragePage({ user }) {
           task={dialog.task}
           onSave={reportSaved}
           onReviewArrival={async (task, status, note) => {
-            await reviewArrival(task, status, note);
-            setDialog(null);
+            const updated = await reviewArrival(task, status, note);
+            setDialog({ type: 'report', task: updated });
           }}
           onClose={() => setDialog(null)}
         />

@@ -756,6 +756,7 @@ export function createManagerService(repository) {
             id: inspectionMap.get(item._id.toString())._id,
             version: inspectionMap.get(item._id.toString()).version ?? 0,
             staffId: inspectionMap.get(item._id.toString()).garage_staff_id,
+            arrivalReview: inspectionMap.get(item._id.toString()).arrival_review,
             ownerReview: inspectionMap.get(item._id.toString()).owner_review,
             operatorReviewRequired: Boolean(inspectionMap.get(item._id.toString()).arrival_review || item.inspection_schedule_request?.status === 'confirmed'),
             operatorReview: inspectionMap.get(item._id.toString()).operator_review,

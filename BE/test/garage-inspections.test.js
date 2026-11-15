@@ -196,7 +196,7 @@ test('creates partial drafts, merges edits, and rejects stale versions and spoof
   const updated = await request(`/inspections/${draft._id}`, 'PATCH', {
     version: 0,
     odometerKm: 10020,
-    condition: { exterior: 'good', note: 'Đang kiểm tra.' },
+    condition: { exterior: 'good', note: 'Đang kiểm tra.', measurements: { tire_front_left_kpa: 230, minimum_tread_mm: 0 } },
   });
   assert.equal(updated.status, 200);
   assert.equal(updated.body.data.version, 1);
@@ -207,6 +207,11 @@ test('creates partial drafts, merges edits, and rejects stale versions and spoof
   });
   assert.equal(next.body.data.condition_report.exterior, 'good');
   assert.equal(next.body.data.condition_report.interior, 'good');
+  assert.deepEqual(next.body.data.condition_report.measurements, { tire_front_left_kpa: 230, minimum_tread_mm: 0 });
+  const invalidMeasurement = await request(`/inspections/${draft._id}`, 'PATCH', {
+    version: 2, condition: { measurements: { minimum_tread_mm: -1 } },
+  });
+  assert.equal(invalidMeasurement.status, 400);
   assert.equal(
     (
       await request(`/inspections/${draft._id}`, 'PATCH', {
