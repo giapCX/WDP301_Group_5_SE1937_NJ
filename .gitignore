@@ -1,0 +1,9 @@
+# Local secrets and environment overrides
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies and generated build output
+**/node_modules/
+**/dist/
+**/coverage/

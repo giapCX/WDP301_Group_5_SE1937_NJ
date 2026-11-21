@@ -1,0 +1,9 @@
+{
+  "name": "sdn302-project",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.js"
+  }
+}
