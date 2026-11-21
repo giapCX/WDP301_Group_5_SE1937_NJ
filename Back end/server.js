@@ -1,31 +1,46 @@
 const express = require('express');
 const morgan = require('morgan');
+const { connectDb, disconnectDb } = require('./dal/database');
+const corsMiddleware = require('./middlewares/cors.middleware');
+const notFoundMiddleware = require('./middlewares/not-found.middleware');
+const errorMiddleware = require('./middlewares/error.middleware');
 
 require('dotenv').config();
 
 const app = express();
+app.use(corsMiddleware);
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
-app.use(morgan("dev"));
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
-app.get('/api', async(req,resp,next) => {
-    try {
-        resp.status(200).json({message:`Welcome Express server`});
-    } catch (error) {
-        next(error);
-    }
+app.get('/api', (req, res) => {
+  res.status(200).json({ message: 'Welcome Express server' });
 });
 
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
 
-(async()=>{
-    try {
+async function startServer() {
+  try {
+    await connectDb();
+    const port = Number(process.env.PORT) || 9999;
+    const server = app.listen(port, () => {
+      console.log(`API chạy tại http://localhost:${port}/api`);
+    });
 
-        const server = app.listen(process.env.PORT, () => {
-            console.log(`API chạy tại http://localhost:${process.env.PORT}/api`);
+    for (const signal of ['SIGINT', 'SIGTERM']) {
+      process.once(signal, () => {
+        server.close(async () => {
+          await disconnectDb();
+          process.exit(0);
         });
-        
-    } catch (error) {
-        console.error(`Không khởi động được server: `, error.message);
-        process.exit(1);
+      });
     }
-})()
+  } catch (error) {
+    console.error('Không khởi động được server:', error.message);
+    await disconnectDb().catch(() => {});
+    process.exitCode = 1;
+  }
+}
+
+startServer();

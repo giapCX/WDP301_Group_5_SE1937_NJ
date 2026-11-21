@@ -19,4 +19,4 @@ cd ..
 npm run dev
 ```
 
-`npm run dev` starts the API and Vite client together. Stop both with Ctrl+C. The backend listens on port `9999` (from `Back end/.env`) and currently exposes `GET /api`; the frontend uses `http://localhost:9999/api` by default. Override the API address in `front end/.env` with `VITE_API_BASE_URL` if needed.
+`npm run dev` starts the API and Vite client together. Stop both with Ctrl+C. The backend listens on port `9999` (from `Back end/.env`) and currently exposes `GET /api`; the frontend uses `http://localhost:9999/api` by default. Override the API address in `front end/.env` with `VITE_API_BASE_URL` if needed. Backend configuration keys are documented in `Back end/.env.example`.
