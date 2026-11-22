@@ -1,0 +1,1349 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
+.viettour-home *, .viettour-home ::before, .viettour-home ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style:  ;
+}
+
+.viettour-home ::backdrop {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style:  ;
+}
+
+.viettour-home *,
+.viettour-home ::before,
+.viettour-home ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+}
+
+.viettour-home ::before,
+.viettour-home ::after {
+  --tw-content: '';
+}
+
+.viettour-home,
+.viettour-home {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.viettour-home {
+  margin: 0;
+  line-height: inherit;
+}
+
+.viettour-home hr {
+  height: 0;
+  color: inherit;
+  border-top-width: 1px;
+}
+
+.viettour-home abbr:where([title]) {
+  text-decoration: underline dotted;
+}
+
+.viettour-home h1,
+.viettour-home h2,
+.viettour-home h3,
+.viettour-home h4,
+.viettour-home h5,
+.viettour-home h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.viettour-home a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+.viettour-home b,
+.viettour-home strong {
+  font-weight: bolder;
+}
+
+.viettour-home code,
+.viettour-home kbd,
+.viettour-home samp,
+.viettour-home pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  font-size: 1em;
+}
+
+.viettour-home small {
+  font-size: 80%;
+}
+
+.viettour-home sub,
+.viettour-home sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.viettour-home sub {
+  bottom: -0.25em;
+}
+
+.viettour-home sup {
+  top: -0.5em;
+}
+
+.viettour-home table {
+  text-indent: 0;
+  border-color: inherit;
+  border-collapse: collapse;
+}
+
+.viettour-home button,
+.viettour-home input,
+.viettour-home optgroup,
+.viettour-home select,
+.viettour-home textarea {
+  font-family: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+.viettour-home button,
+.viettour-home select {
+  text-transform: none;
+}
+
+.viettour-home button,
+.viettour-home input:where([type='button']),
+.viettour-home input:where([type='reset']),
+.viettour-home input:where([type='submit']) {
+  -webkit-appearance: button;
+  background-color: transparent;
+  background-image: none;
+}
+
+.viettour-home :-moz-focusring {
+  outline: auto;
+}
+
+.viettour-home :-moz-ui-invalid {
+  box-shadow: none;
+}
+
+.viettour-home progress {
+  vertical-align: baseline;
+}
+
+.viettour-home ::-webkit-inner-spin-button,
+.viettour-home ::-webkit-outer-spin-button {
+  height: auto;
+}
+
+.viettour-home [type='search'] {
+  -webkit-appearance: textfield;
+  outline-offset: -2px;
+}
+
+.viettour-home ::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+.viettour-home ::-webkit-file-upload-button {
+  -webkit-appearance: button;
+  font: inherit;
+}
+
+.viettour-home summary {
+  display: list-item;
+}
+
+.viettour-home blockquote,
+.viettour-home dl,
+.viettour-home dd,
+.viettour-home h1,
+.viettour-home h2,
+.viettour-home h3,
+.viettour-home h4,
+.viettour-home h5,
+.viettour-home h6,
+.viettour-home hr,
+.viettour-home figure,
+.viettour-home p,
+.viettour-home pre {
+  margin: 0;
+}
+
+.viettour-home fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+.viettour-home legend {
+  padding: 0;
+}
+
+.viettour-home ol,
+.viettour-home ul,
+.viettour-home menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.viettour-home dialog {
+  padding: 0;
+}
+
+.viettour-home textarea {
+  resize: vertical;
+}
+
+.viettour-home input::placeholder,
+.viettour-home textarea::placeholder {
+  opacity: 1;
+  color: #9ca3af;
+}
+
+.viettour-home button,
+.viettour-home [role="button"] {
+  cursor: pointer;
+}
+.viettour-home :disabled {
+  cursor: default;
+}
+
+.viettour-home img,
+.viettour-home svg,
+.viettour-home video,
+.viettour-home canvas,
+.viettour-home audio,
+.viettour-home iframe,
+.viettour-home embed,
+.viettour-home object {
+  display: block;
+  vertical-align: middle;
+}
+
+.viettour-home img,
+.viettour-home video {
+  max-width: 100%;
+  height: auto;
+}
+.viettour-home [hidden]:where(:not([hidden="until-found"])) {
+  display: none;
+}
+.viettour-home .pointer-events-none {
+  pointer-events: none;
+}
+.viettour-home .fixed {
+  position: fixed;
+}
+.viettour-home .absolute {
+  position: absolute;
+}
+.viettour-home .relative {
+  position: relative;
+}
+.viettour-home .inset-0 {
+  inset: 0px;
+}
+.viettour-home .-bottom-20 {
+  bottom: -5rem;
+}
+.viettour-home .-right-20 {
+  right: -5rem;
+}
+.viettour-home .-right-32 {
+  right: -8rem;
+}
+.viettour-home .-top-32 {
+  top: -8rem;
+}
+.viettour-home .bottom-0 {
+  bottom: 0px;
+}
+.viettour-home .bottom-space-md {
+  bottom: 1rem;
+}
+.viettour-home .bottom-space-sm {
+  bottom: 0.5rem;
+}
+.viettour-home .left-0 {
+  left: 0px;
+}
+.viettour-home .left-space-md {
+  left: 1rem;
+}
+.viettour-home .left-space-sm {
+  left: 0.5rem;
+}
+.viettour-home .right-0 {
+  right: 0px;
+}
+.viettour-home .right-space-md {
+  right: 1rem;
+}
+.viettour-home .right-space-sm {
+  right: 0.5rem;
+}
+.viettour-home .top-0 {
+  top: 0px;
+}
+.viettour-home .top-space-sm {
+  top: 0.5rem;
+}
+.viettour-home .z-10 {
+  z-index: 10;
+}
+.viettour-home .z-20 {
+  z-index: 20;
+}
+.viettour-home .z-50 {
+  z-index: 50;
+}
+.viettour-home .mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+.viettour-home .-mt-12 {
+  margin-top: -3rem;
+}
+.viettour-home .-mt-20 {
+  margin-top: -5rem;
+}
+.viettour-home .mb-1 {
+  margin-bottom: 0.25rem;
+}
+.viettour-home .mb-space-lg {
+  margin-bottom: 1.5rem;
+}
+.viettour-home .mb-space-md {
+  margin-bottom: 1rem;
+}
+.viettour-home .mb-space-sm {
+  margin-bottom: 0.5rem;
+}
+.viettour-home .mb-space-xl {
+  margin-bottom: 2.5rem;
+}
+.viettour-home .mb-space-xs {
+  margin-bottom: 0.25rem;
+}
+.viettour-home .ml-1 {
+  margin-left: 0.25rem;
+}
+.viettour-home .ml-3\.5 {
+  margin-left: 0.875rem;
+}
+.viettour-home .mr-1 {
+  margin-right: 0.25rem;
+}
+.viettour-home .mt-space-lg {
+  margin-top: 1.5rem;
+}
+.viettour-home .mt-space-md {
+  margin-top: 1rem;
+}
+.viettour-home .mt-space-xl {
+  margin-top: 2.5rem;
+}
+.viettour-home .mt-space-xs {
+  margin-top: 0.25rem;
+}
+.viettour-home .inline-block {
+  display: inline-block;
+}
+.viettour-home .flex {
+  display: flex;
+}
+.viettour-home .inline-flex {
+  display: inline-flex;
+}
+.viettour-home .grid {
+  display: grid;
+}
+.viettour-home .hidden {
+  display: none;
+}
+.viettour-home .h-1 {
+  height: 0.25rem;
+}
+.viettour-home .h-11 {
+  height: 2.75rem;
+}
+.viettour-home .h-12 {
+  height: 3rem;
+}
+.viettour-home .h-14 {
+  height: 3.5rem;
+}
+.viettour-home .h-20 {
+  height: 5rem;
+}
+.viettour-home .h-32 {
+  height: 8rem;
+}
+.viettour-home .h-6 {
+  height: 1.5rem;
+}
+.viettour-home .h-60 {
+  height: 15rem;
+}
+.viettour-home .h-7 {
+  height: 1.75rem;
+}
+.viettour-home .h-8 {
+  height: 2rem;
+}
+.viettour-home .h-80 {
+  height: 20rem;
+}
+.viettour-home .h-9 {
+  height: 2.25rem;
+}
+.viettour-home .h-96 {
+  height: 24rem;
+}
+.viettour-home .h-full {
+  height: 100%;
+}
+.viettour-home .min-h-\[calc\(100vh-80px\)\] {
+  min-height: calc(100vh - 80px);
+}
+.viettour-home .w-0\.5 {
+  width: 0.125rem;
+}
+.viettour-home .w-11 {
+  width: 2.75rem;
+}
+.viettour-home .w-12 {
+  width: 3rem;
+}
+.viettour-home .w-14 {
+  width: 3.5rem;
+}
+.viettour-home .w-32 {
+  width: 8rem;
+}
+.viettour-home .w-7 {
+  width: 1.75rem;
+}
+.viettour-home .w-8 {
+  width: 2rem;
+}
+.viettour-home .w-80 {
+  width: 20rem;
+}
+.viettour-home .w-9 {
+  width: 2.25rem;
+}
+.viettour-home .w-96 {
+  width: 24rem;
+}
+.viettour-home .w-auto {
+  width: auto;
+}
+.viettour-home .w-full {
+  width: 100%;
+}
+.viettour-home .max-w-2xl {
+  max-width: 42rem;
+}
+.viettour-home .max-w-3xl {
+  max-width: 48rem;
+}
+.viettour-home .max-w-4xl {
+  max-width: 56rem;
+}
+.viettour-home .max-w-\[1280px\] {
+  max-width: 1280px;
+}
+.viettour-home .max-w-md {
+  max-width: 28rem;
+}
+.viettour-home .flex-1 {
+  flex: 1 1 0%;
+}
+.viettour-home .cursor-pointer {
+  cursor: pointer;
+}
+.viettour-home .grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+.viettour-home .grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.viettour-home .grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.viettour-home .flex-col {
+  flex-direction: column;
+}
+.viettour-home .flex-wrap {
+  flex-wrap: wrap;
+}
+.viettour-home .items-start {
+  align-items: flex-start;
+}
+.viettour-home .items-center {
+  align-items: center;
+}
+.viettour-home .justify-center {
+  justify-content: center;
+}
+.viettour-home .justify-between {
+  justify-content: space-between;
+}
+.viettour-home .gap-1 {
+  gap: 0.25rem;
+}
+.viettour-home .gap-1\.5 {
+  gap: 0.375rem;
+}
+.viettour-home .gap-2 {
+  gap: 0.5rem;
+}
+.viettour-home .gap-space-lg {
+  gap: 1.5rem;
+}
+.viettour-home .gap-space-md {
+  gap: 1rem;
+}
+.viettour-home .gap-space-sm {
+  gap: 0.5rem;
+}
+.viettour-home .gap-space-xl {
+  gap: 2.5rem;
+}
+.viettour-home .gap-space-xs {
+  gap: 0.25rem;
+}
+.viettour-home .overflow-hidden {
+  overflow: hidden;
+}
+.viettour-home .truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.viettour-home .rounded {
+  border-radius: 0.25rem;
+}
+.viettour-home .rounded-full {
+  border-radius: 9999px;
+}
+.viettour-home .rounded-lg {
+  border-radius: 0.5rem;
+}
+.viettour-home .rounded-xl {
+  border-radius: 0.75rem;
+}
+.viettour-home .rounded-t-full {
+  border-top-left-radius: 9999px;
+  border-top-right-radius: 9999px;
+}
+.viettour-home .rounded-bl-full {
+  border-bottom-left-radius: 9999px;
+}
+.viettour-home .border-t {
+  border-top-width: 1px;
+}
+.viettour-home .border-on-primary\/10 {
+  border-color: rgb(255 255 255 / 0.1);
+}
+.viettour-home .border-surface-container-highest {
+  --tw-border-opacity: 1;
+  border-color: rgb(224 227 230 / var(--tw-border-opacity, 1));
+}
+.viettour-home .bg-outline-variant {
+  --tw-bg-opacity: 1;
+  background-color: rgb(195 198 206 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-primary {
+  --tw-bg-opacity: 1;
+  background-color: rgb(0 29 55 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-primary-container\/90 {
+  background-color: rgb(22 50 79 / 0.9);
+}
+.viettour-home .bg-primary\/10 {
+  background-color: rgb(0 29 55 / 0.1);
+}
+.viettour-home .bg-primary\/5 {
+  background-color: rgb(0 29 55 / 0.05);
+}
+.viettour-home .bg-secondary {
+  --tw-bg-opacity: 1;
+  background-color: rgb(0 81 213 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-secondary-fixed {
+  --tw-bg-opacity: 1;
+  background-color: rgb(219 225 255 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-secondary\/15 {
+  background-color: rgb(0 81 213 / 0.15);
+}
+.viettour-home .bg-secondary\/20 {
+  background-color: rgb(0 81 213 / 0.2);
+}
+.viettour-home .bg-secondary\/5 {
+  background-color: rgb(0 81 213 / 0.05);
+}
+.viettour-home.bg-surface, .viettour-home .bg-surface {
+  --tw-bg-opacity: 1;
+  background-color: rgb(247 249 252 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-surface-container {
+  --tw-bg-opacity: 1;
+  background-color: rgb(236 238 241 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-surface-container-high {
+  --tw-bg-opacity: 1;
+  background-color: rgb(230 232 235 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-surface-container-high\/40 {
+  background-color: rgb(230 232 235 / 0.4);
+}
+.viettour-home .bg-surface-container-high\/50 {
+  background-color: rgb(230 232 235 / 0.5);
+}
+.viettour-home .bg-surface-container-high\/60 {
+  background-color: rgb(230 232 235 / 0.6);
+}
+.viettour-home .bg-surface-container-low {
+  --tw-bg-opacity: 1;
+  background-color: rgb(242 244 247 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-surface-container-lowest {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-surface-container-lowest\/10 {
+  background-color: rgb(255 255 255 / 0.1);
+}
+.viettour-home .bg-surface-container-lowest\/5 {
+  background-color: rgb(255 255 255 / 0.05);
+}
+.viettour-home .bg-surface-container-lowest\/90 {
+  background-color: rgb(255 255 255 / 0.9);
+}
+.viettour-home .bg-surface-container-lowest\/95 {
+  background-color: rgb(255 255 255 / 0.95);
+}
+.viettour-home .bg-surface\/90 {
+  background-color: rgb(247 249 252 / 0.9);
+}
+.viettour-home .bg-tertiary-container {
+  --tw-bg-opacity: 1;
+  background-color: rgb(0 55 51 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-tertiary-container\/10 {
+  background-color: rgb(0 55 51 / 0.1);
+}
+.viettour-home .bg-tertiary-fixed {
+  --tw-bg-opacity: 1;
+  background-color: rgb(156 242 232 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .bg-transparent {
+  background-color: transparent;
+}
+.viettour-home .bg-gradient-to-b {
+  background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
+}
+.viettour-home .from-primary\/80 {
+  --tw-gradient-from: rgb(0 29 55 / 0.8) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(0 29 55 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.viettour-home .via-primary\/95 {
+  --tw-gradient-to: rgb(0 29 55 / 0)  var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), rgb(0 29 55 / 0.95) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.viettour-home .to-background {
+  --tw-gradient-to: #f7f9fc var(--tw-gradient-to-position);
+}
+.viettour-home .bg-cover {
+  background-size: cover;
+}
+.viettour-home .bg-center {
+  background-position: center;
+}
+.viettour-home .object-contain {
+  object-fit: contain;
+}
+.viettour-home .object-cover {
+  object-fit: cover;
+}
+.viettour-home .p-1 {
+  padding: 0.25rem;
+}
+.viettour-home .p-space-lg {
+  padding: 1.5rem;
+}
+.viettour-home .p-space-md {
+  padding: 1rem;
+}
+.viettour-home .p-space-sm {
+  padding: 0.5rem;
+}
+.viettour-home .px-margin {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+.viettour-home .px-space-lg {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+.viettour-home .px-space-md {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.viettour-home .px-space-sm {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.viettour-home .px-space-xl {
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+}
+.viettour-home .px-space-xs {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+.viettour-home .py-0\.5 {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+.viettour-home .py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.viettour-home .py-1\.5 {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+.viettour-home .py-2\.5 {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+.viettour-home .py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+.viettour-home .py-3\.5 {
+  padding-top: 0.875rem;
+  padding-bottom: 0.875rem;
+}
+.viettour-home .py-space-md {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+.viettour-home .py-space-sm {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.viettour-home .pb-20 {
+  padding-bottom: 5rem;
+}
+.viettour-home .pb-space-lg {
+  padding-bottom: 1.5rem;
+}
+.viettour-home .pb-space-xl {
+  padding-bottom: 2.5rem;
+}
+.viettour-home .pl-2 {
+  padding-left: 0.5rem;
+}
+.viettour-home .pl-space-sm {
+  padding-left: 0.5rem;
+}
+.viettour-home .pt-20 {
+  padding-top: 5rem;
+}
+.viettour-home .pt-28 {
+  padding-top: 7rem;
+}
+.viettour-home .pt-space-md {
+  padding-top: 1rem;
+}
+.viettour-home .pt-space-sm {
+  padding-top: 0.5rem;
+}
+.viettour-home .pt-space-xl {
+  padding-top: 2.5rem;
+}
+.viettour-home .pt-space-xs {
+  padding-top: 0.25rem;
+}
+.viettour-home .text-left {
+  text-align: left;
+}
+.viettour-home .text-center {
+  text-align: center;
+}
+.viettour-home .text-right {
+  text-align: right;
+}
+.viettour-home .font-body-lg {
+  font-family: Inter;
+}
+.viettour-home.font-body-md, .viettour-home .font-body-md {
+  font-family: Inter;
+}
+.viettour-home .font-body-sm {
+  font-family: Inter;
+}
+.viettour-home .font-headline-lg {
+  font-family: Inter;
+}
+.viettour-home .font-headline-md {
+  font-family: Inter;
+}
+.viettour-home .font-headline-sm {
+  font-family: Inter;
+}
+.viettour-home .font-headline-xl {
+  font-family: Inter;
+}
+.viettour-home .font-label-lg {
+  font-family: Inter;
+}
+.viettour-home .font-label-md {
+  font-family: Inter;
+}
+.viettour-home .font-label-sm {
+  font-family: Inter;
+}
+.viettour-home .font-title-md {
+  font-family: Inter;
+}
+.viettour-home .font-title-sm {
+  font-family: Inter;
+}
+.viettour-home .text-\[16px\] {
+  font-size: 16px;
+}
+.viettour-home .text-\[18px\] {
+  font-size: 18px;
+}
+.viettour-home .text-body-lg {
+  font-size: 16px;
+  line-height: 26px;
+  font-weight: 400;
+}
+.viettour-home .text-body-md {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+}
+.viettour-home .text-body-sm {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+}
+.viettour-home .text-headline-lg {
+  font-size: 36px;
+  line-height: 44px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+.viettour-home .text-headline-md {
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+.viettour-home .text-headline-sm {
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: -0.005em;
+  font-weight: 600;
+}
+.viettour-home .text-headline-xl-mobile {
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+.viettour-home .text-label-lg {
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
+.viettour-home .text-label-md {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+.viettour-home .text-label-sm {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.viettour-home .text-title-md {
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
+}
+.viettour-home .text-title-sm {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+.viettour-home .font-bold {
+  font-weight: 700;
+}
+.viettour-home .font-medium {
+  font-weight: 500;
+}
+.viettour-home .font-normal {
+  font-weight: 400;
+}
+.viettour-home .font-semibold {
+  font-weight: 600;
+}
+.viettour-home .uppercase {
+  text-transform: uppercase;
+}
+.viettour-home .italic {
+  font-style: italic;
+}
+.viettour-home .leading-none {
+  line-height: 1;
+}
+.viettour-home .leading-relaxed {
+  line-height: 1.625;
+}
+.viettour-home .leading-tight {
+  line-height: 1.25;
+}
+.viettour-home .tracking-tight {
+  letter-spacing: -0.025em;
+}
+.viettour-home .tracking-wider {
+  letter-spacing: 0.05em;
+}
+.viettour-home .tracking-widest {
+  letter-spacing: 0.1em;
+}
+.viettour-home .text-on-primary {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-on-primary-container {
+  --tw-text-opacity: 1;
+  color: rgb(128 154 189 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-on-primary\/40 {
+  color: rgb(255 255 255 / 0.4);
+}
+.viettour-home .text-on-primary\/90 {
+  color: rgb(255 255 255 / 0.9);
+}
+.viettour-home .text-on-secondary {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-on-secondary-fixed {
+  --tw-text-opacity: 1;
+  color: rgb(0 23 75 / var(--tw-text-opacity, 1));
+}
+.viettour-home.text-on-surface, .viettour-home .text-on-surface {
+  --tw-text-opacity: 1;
+  color: rgb(25 28 30 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-on-surface-variant {
+  --tw-text-opacity: 1;
+  color: rgb(67 71 77 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-on-tertiary-container {
+  --tw-text-opacity: 1;
+  color: rgb(79 166 157 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-on-tertiary-fixed {
+  --tw-text-opacity: 1;
+  color: rgb(0 32 29 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-primary {
+  --tw-text-opacity: 1;
+  color: rgb(0 29 55 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-secondary {
+  --tw-text-opacity: 1;
+  color: rgb(0 81 213 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-secondary-fixed {
+  --tw-text-opacity: 1;
+  color: rgb(219 225 255 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-tertiary-container {
+  --tw-text-opacity: 1;
+  color: rgb(0 55 51 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-tertiary-fixed {
+  --tw-text-opacity: 1;
+  color: rgb(156 242 232 / var(--tw-text-opacity, 1));
+}
+.viettour-home .text-tertiary-fixed-dim {
+  --tw-text-opacity: 1;
+  color: rgb(128 213 203 / var(--tw-text-opacity, 1));
+}
+.viettour-home.antialiased, .viettour-home .antialiased {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.viettour-home .opacity-25 {
+  opacity: 0.25;
+}
+.viettour-home .mix-blend-luminosity {
+  mix-blend-mode: luminosity;
+}
+.viettour-home .shadow-\[0_16px_40px_-8px_rgba\(22\2c 50\2c 79\2c 0\.14\)\2c 0_6px_16px_-4px_rgba\(22\2c 50\2c 79\2c 0\.06\)\] {
+  --tw-shadow: 0 16px 40px -8px rgba(22,50,79,0.14),0 6px 16px -4px rgba(22,50,79,0.06);
+  --tw-shadow-colored: 0 16px 40px -8px var(--tw-shadow-color), 0 6px 16px -4px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.viettour-home .shadow-\[0_1px_8px_rgba\(22\2c 50\2c 79\2c 0\.05\)\] {
+  --tw-shadow: 0 1px 8px rgba(22,50,79,0.05);
+  --tw-shadow-colored: 0 1px 8px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.viettour-home .shadow-\[0_2px_8px_-2px_rgba\(22\2c 50\2c 79\2c 0\.15\)\] {
+  --tw-shadow: 0 2px 8px -2px rgba(22,50,79,0.15);
+  --tw-shadow-colored: 0 2px 8px -2px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.viettour-home .shadow-\[0_4px_20px_-4px_rgba\(22\2c 50\2c 79\2c 0\.06\)\] {
+  --tw-shadow: 0 4px 20px -4px rgba(22,50,79,0.06);
+  --tw-shadow-colored: 0 4px 20px -4px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.viettour-home .shadow-\[0_8px_20px_-4px_rgba\(0\2c 81\2c 213\2c 0\.4\)\] {
+  --tw-shadow: 0 8px 20px -4px rgba(0,81,213,0.4);
+  --tw-shadow-colored: 0 8px 20px -4px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.viettour-home .shadow-md {
+  --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.viettour-home .shadow-sm {
+  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.viettour-home .outline-none {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+.viettour-home .blur-3xl {
+  --tw-blur: blur(64px);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.viettour-home .backdrop-blur-md {
+  --tw-backdrop-blur: blur(12px);
+  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+}
+.viettour-home .backdrop-blur-sm {
+  --tw-backdrop-blur: blur(4px);
+  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+}
+.viettour-home .backdrop-blur-xl {
+  --tw-backdrop-blur: blur(24px);
+  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+}
+.viettour-home .transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.viettour-home .transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.viettour-home .transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.viettour-home .duration-500 {
+  transition-duration: 500ms;
+}
+.viettour-home .placeholder\:text-outline::placeholder {
+  --tw-text-opacity: 1;
+  color: rgb(116 119 126 / var(--tw-text-opacity, 1));
+}
+.viettour-home .focus-within\:bg-surface-container-lowest:focus-within {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .focus-within\:shadow-\[0_0_0_2px_\#0051d5\]:focus-within {
+  --tw-shadow: 0 0 0 2px #0051d5;
+  --tw-shadow-colored: 0 0 0 2px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.viettour-home .hover\:scale-105:hover {
+  --tw-scale-x: 1.05;
+  --tw-scale-y: 1.05;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+.viettour-home .hover\:bg-primary:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(0 29 55 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .hover\:bg-primary-container:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(22 50 79 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .hover\:bg-secondary:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(0 81 213 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .hover\:bg-surface-container-highest:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(224 227 230 / var(--tw-bg-opacity, 1));
+}
+.viettour-home .hover\:text-on-surface:hover {
+  --tw-text-opacity: 1;
+  color: rgb(25 28 30 / var(--tw-text-opacity, 1));
+}
+.viettour-home .hover\:text-primary:hover {
+  --tw-text-opacity: 1;
+  color: rgb(0 29 55 / var(--tw-text-opacity, 1));
+}
+.viettour-home .hover\:underline:hover {
+  text-decoration-line: underline;
+}
+.viettour-home .hover\:shadow-\[0_12px_32px_-6px_rgba\(22\2c 50\2c 79\2c 0\.12\)\]:hover {
+  --tw-shadow: 0 12px 32px -6px rgba(22,50,79,0.12);
+  --tw-shadow-colored: 0 12px 32px -6px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.viettour-home .group:hover .group-hover\:scale-110 {
+  --tw-scale-x: 1.1;
+  --tw-scale-y: 1.1;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+@media (min-width: 640px) {
+
+  .viettour-home .sm\:inline {
+    display: inline;
+  }
+
+  .viettour-home .sm\:inline-flex {
+    display: inline-flex;
+  }
+
+  .viettour-home .sm\:w-auto {
+    width: auto;
+  }
+
+  .viettour-home .sm\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .viettour-home .sm\:flex-row {
+    flex-direction: row;
+  }
+}
+@media (min-width: 768px) {
+
+  .viettour-home .md\:-mt-16 {
+    margin-top: -4rem;
+  }
+
+  .viettour-home .md\:mt-24 {
+    margin-top: 6rem;
+  }
+
+  .viettour-home .md\:block {
+    display: block;
+  }
+
+  .viettour-home .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .viettour-home .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .viettour-home .md\:flex-row {
+    flex-direction: row;
+  }
+
+  .viettour-home .md\:items-end {
+    align-items: flex-end;
+  }
+
+  .viettour-home .md\:p-space-xl {
+    padding: 2.5rem;
+  }
+
+  .viettour-home .md\:pb-28 {
+    padding-bottom: 7rem;
+  }
+
+  .viettour-home .md\:text-headline-xl {
+    font-size: 48px;
+    line-height: 56px;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+}
+@media (min-width: 1024px) {
+
+  .viettour-home .lg\:h-\[420px\] {
+    height: 420px;
+  }
+
+  .viettour-home .lg\:w-1\/2 {
+    width: 50%;
+  }
+
+  .viettour-home .lg\:w-auto {
+    width: auto;
+  }
+
+  .viettour-home .lg\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .viettour-home .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .viettour-home .lg\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .viettour-home .lg\:flex-row {
+    flex-direction: row;
+  }
+}
+@media (min-width: 1280px) {
+
+  .viettour-home .xl\:flex {
+    display: flex;
+  }
+}

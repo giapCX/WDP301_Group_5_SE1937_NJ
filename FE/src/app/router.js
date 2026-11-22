@@ -1,6 +1,7 @@
 import RenterPage from '../features/renter/pages/RenterPage';
 import { useEffect, useState } from 'react';
 import HomePage from '../features/home/pages/HomePage';
+import TravelHomePage from '../features/home/pages/TravelHomePage';
 import Login from '../features/auth/pages/LoginPage';
 import GaragePage from '../features/garage/pages/GaragePage';
 import GarageAccess from '../features/garage/components/GarageAccess';
@@ -13,10 +14,12 @@ import OperatorPage from '../features/operator/pages/OperatorPage';
 import VehicleDetailPage from '../features/listings/pages/VehicleDetailPage';
 
 const isHashRoute = (hash, route) => new RegExp(`^#/${route}(?:/|$)`).test(hash);
+const isLoginRoute = () => isHashRoute(window.location.hash, 'login') ||
+  (!window.location.hash && /^\/login\/?$/.test(window.location.pathname));
 
 export default function AppRouter() {
   const [isRenter,setIsRenter]=useState(()=>window.location.hash.startsWith('#/renter'));
-  const [isLogin, setIsLogin] = useState(() => window.location.hash.startsWith('#/login'));
+  const [isLogin, setIsLogin] = useState(isLoginRoute);
   const [isGarage, setIsGarage] = useState(() => window.location.pathname.startsWith('/garage') || window.location.hash.startsWith('#/garage'));
   const [isOwner, setIsOwner] = useState(() => window.location.pathname.startsWith('/owner') || window.location.hash.startsWith('#/owner'));
   const [isManager, setIsManager] = useState(() => window.location.hash.startsWith('#/manager'));
@@ -30,7 +33,7 @@ export default function AppRouter() {
   useEffect(() => {
     const onHashChange = () => {
       setIsRenter(window.location.hash.startsWith('#/renter'));
-      setIsLogin(window.location.hash.startsWith('#/login'));
+      setIsLogin(isLoginRoute());
       setIsManager(window.location.hash.startsWith('#/manager'));
       setIsGarage(window.location.hash.startsWith('#/garage'));
       setIsOwner(window.location.hash.startsWith('#/owner'));
@@ -56,7 +59,9 @@ export default function AppRouter() {
         ? 'Quản trị hệ thống — XeDi'
         : isManager
           ? 'Quản lý vận hành — XeDi'
-          : 'XeDi — Thuê xe tự lái, vi vu mọi nẻo đường';
+          : window.location.pathname === '/xe-tu-lai'
+            ? 'XeDi — Thuê xe tự lái, vi vu mọi nẻo đường'
+            : 'VietTour — Thuê xe du lịch';
     window.scrollTo(0, 0);
   }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isOperator, isContracts, isOperation, isRenter]);
 
@@ -74,6 +79,6 @@ export default function AppRouter() {
       <Login />
     </div>
   ) : (
-    <HomePage />
+    window.location.pathname === '/xe-tu-lai' ? <HomePage /> : <TravelHomePage />
   );
 }

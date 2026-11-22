@@ -1,0 +1,69 @@
+.viettour-home {
+  min-height: 100vh;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.viettour-home [hidden] { display: none !important; }
+.viettour-home [id] { scroll-margin-top: 88px; }
+.viettour-home button { cursor: pointer; }
+.viettour-home :focus-visible { outline: 3px solid #75a8ff; outline-offset: 3px; }
+.viettour-home header { z-index: 50; }
+
+.viettour-home .material-symbols-outlined {
+  display: inline-block;
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-feature-settings: 'liga';
+  font-style: normal;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.viettour-home [data-mode][aria-pressed='true'] { background: #fff; color: #001d37; }
+.viettour-home [data-mode][aria-pressed='false'] { background: #e6e8eb80; color: #43474d; }
+.viettour-home [data-filter][aria-pressed='true'] { background: #001d37; color: #fff; }
+.viettour-home [data-filter][aria-pressed='false'] { background: #eceef1; color: #43474d; }
+
+.vt-account-link {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 7px 11px;
+  border-radius: 8px;
+  background: #0051d5;
+  color: white;
+  font-weight: 700;
+}
+
+.vt-search-results {
+  width: min(1216px, 100% - 40px);
+  margin: 28px auto 0;
+  padding: 20px;
+  border: 1px solid #e0e3e6;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.viettour-home .vt-search-results h2 { margin-bottom: 8px; font-size: 1.25rem; font-weight: 700; }
+.viettour-home .vt-search-results p + p { margin-top: 6px; }
+.vt-result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 10px; margin-top: 12px; }
+.vt-result-grid a { display: grid; gap: 4px; background: #f2f4f7; border-radius: 8px; padding: 12px; }
+.vt-result-grid a:hover { background: #dbe1ff; }
+.viettour-home .vt-live-fleet-link { display: inline-block; margin-top: 12px; color: #0051d5; font-weight: 700; }
+
+.viettour-home .vt-detail-dialog {
+  width: min(420px, 100% - 32px);
+  margin: auto;
+  padding: 24px;
+  border-radius: 12px;
+}
+
+.vt-detail-dialog::backdrop { background: #001d3780; }
+.vt-detail-dialog h2 { font-weight: 800; font-size: 1.2rem; }
+.vt-detail-dialog p { margin: 10px 0; }
+.vt-detail-dialog a { color: #0051d5; font-weight: 700; }
+.vt-detail-dialog button { margin-left: 16px; }
+
+@media (max-width: 650px) {
+  .viettour-home header > div { padding-inline: 14px; gap: 8px; }
+  .viettour-home header a[href='/#/renter/bookings'] { display: none; }
+}

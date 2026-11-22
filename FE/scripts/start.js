@@ -9,6 +9,7 @@ require.cache[webpackDevServerConfigPath].exports = (proxy, allowedHost) => {
   return config;
 };
 
-process.env.HOST = '127.0.0.1';
+process.env.HOST = 'localhost';
+process.env.PORT = '3000';
 
 require('react-scripts/scripts/start');

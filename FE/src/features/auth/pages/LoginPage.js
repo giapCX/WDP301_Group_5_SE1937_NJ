@@ -94,167 +94,42 @@ const LoginPage = () => {
   };
 
   return (
-    <main className="min-h-screen w-full flex flex-col lg:flex-row overflow-x-hidden bg-background text-on-background selection:bg-primary-container selection:text-on-primary">
-      {/* LEFT COLUMN: Brand Storytelling & Atmospheric Scenic Banner (48% on large screens) */}
-      <div className="relative w-full lg:w-[46%] xl:w-[48%] flex-shrink-0 min-h-[460px] lg:min-h-screen bg-inverse-surface flex flex-col justify-between p-6 sm:p-10 xl:p-14 overflow-hidden text-surface-bright">
-        {/* Scenic Background Image */}
-        <img
-          alt="Chuyến đi khám phá cung đường ven biển Việt Nam cùng ô tô điện hiện đại XeDi"
-          className="absolute inset-0 w-full h-full object-cover object-center z-0 scale-105 transition-transform duration-1000 ease-out hover:scale-100"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvjaFpfAC5bI13Nt6zDkT0tGEDSiujaPtFENrwD54o8AbMKymcbeUBl8b4h3X99cJnA39ajnDrBF0ySkNtyIf6HmNXQChu_L7w-r1TosMjXtiYKdZ2suNYs25Tx1aBgQjOnfXti6hdGMBKSJh3HDxssHnQ3rC-sGduETryAKn3UoUKyyIJ7bqVYt9wxruqw2MjaULRWQIlpfmYcc79dT3ySeRgrdmPqVXQZPDhvPbEQyPgHVaeM_CSZA"
-        />
-        {/* Multilayered Ambient Gradient Overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface via-inverse-surface/65 to-inverse-surface/40 z-10 backdrop-blur-[1px]"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-inverse-surface/80 via-transparent to-transparent z-10"></div>
-
-        {/* Top Section: Brand Bar & Back Navigation */}
-        <div className="relative z-20 flex items-center justify-between w-full">
-          <div className="flex items-center space-x-3">
-            <a className="flex items-center space-x-2.5 group focus:outline-none" href="#trang-chu">
-              <span className="w-10 h-10 rounded-xl bg-primary-container text-on-primary flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                <span
-                  className="material-symbols-outlined"
-                  data-icon="electric_car"
-                  style={{ fontSize: '24px' }}
-                >
-                  electric_car
-                </span>
-              </span>
-              <span className="text-headline-md font-headline-md font-extrabold text-surface-bright tracking-tight">
-                XeDi
-              </span>
-            </a>
-            <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-surface-container-lowest/15 backdrop-blur-md border border-surface-container-lowest/20 text-label-tag font-label-tag text-surface-bright">
-              P2P Car Rental
-            </span>
-          </div>
-          <a
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-surface-container-lowest/20 hover:bg-surface-container-lowest/30 backdrop-blur-md border border-surface-container-lowest/25 text-body-sm font-body-sm text-surface-bright transition-all active:scale-95"
-            href="#trang-chu"
-          >
-            <span className="material-symbols-outlined" data-icon="arrow_back">
-              arrow_back
-            </span>
-            <span>Về trang chủ</span>
-          </a>
+    <main className="xedi-login-card w-full overflow-hidden bg-background text-on-background">
+      <aside className="xedi-login-visual" aria-label="Giới thiệu XeDi">
+        <a className="xedi-auth-brand" href="/#trang-chu">
+          <span className="material-symbols-outlined" aria-hidden="true">directions_car</span>
+          XeDi
+        </a>
+        <div>
+          <h2 className="xedi-auth-visual-title">Khởi đầu hành trình tinh tế &amp; an tâm</h2>
+          <p>Chọn xe tự lái phù hợp với lịch trình của bạn. Xe được kiểm tra và bàn giao tại gara, với chi phí rõ ràng trước khi đặt.</p>
         </div>
+        <figure className="xedi-auth-photo">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMT-9LHyTi6sVXvZmQnX_bqW6DoG3ZksyEd8see0MeAVdHr9qEvWMk9e3LrMCFuVR0kXC_3y6D_ZV8ybxtIzDVqzB_6jNEoNC2m7idE2I89dW61ACjEAbqqy0eIGZE8-0-R2xs7Ybn-hWCrsTXV09im2o_M4KedTAFH75fcNYH3OEePgzYADj5SFFiza7uHbF5Voo0jx8Z491gklo-3W6A7BdjYUl2xIIgFeQWU34" alt="Xe du lịch đón khách trước khu nghỉ dưỡng" />
+          <figcaption>
+            <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
+            Ảnh minh họa dịch vụ
+          </figcaption>
+        </figure>
+        <ul className="xedi-auth-benefits">
+          <li><span className="material-symbols-outlined" aria-hidden="true">fact_check</span>Kiểm tra xe</li>
+          <li><span className="material-symbols-outlined" aria-hidden="true">receipt_long</span>Giá rõ ràng</li>
+          <li><span className="material-symbols-outlined" aria-hidden="true">support_agent</span>Hỗ trợ thuê xe</li>
+        </ul>
+      </aside>
 
-        {/* Middle Section: Hero Value Proposition */}
-        <div className="relative z-20 my-auto py-10 lg:py-16 max-w-xl">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary-container/90 text-on-primary text-label-tag font-label-tag uppercase tracking-wider mb-5 shadow-sm">
-            <span
-              className="material-symbols-outlined"
-              data-icon="verified_user"
-              style={{ fontSize: '14px' }}
-            >
-              verified_user
-            </span>
-            <span>Nền tảng thuê xe tự lái P2P hàng đầu</span>
-          </div>
-          <h1 className="text-display-hero-mobile lg:text-display-hero font-display-hero text-surface-bright tracking-tight leading-tight mb-4">
-            Thuê xe dễ dàng — Trải nghiệm mọi cung đường.
-          </h1>
-          <p className="text-body-lg font-body-lg text-outline-variant/90 leading-relaxed max-w-lg mb-8">
-            Khám phá hơn{' '}
-            <strong className="text-surface-bright font-semibold">5.000+ xe đời mới</strong> sẵn
-            sàng phục vụ tại TP.HCM, Hà Nội, Đà Nẵng và toàn quốc với gói bảo hiểm vật chất đối tác
-            MIC toàn diện.
-          </p>
-
-          {/* Feature bullet points for Host & Renter Confidence */}
-          <div className="grid grid-cols-2 gap-3.5 text-body-sm font-body-sm text-surface-bright/90">
-            <div className="flex items-center space-x-2 bg-surface-container-lowest/10 backdrop-blur-md rounded-xl p-2.5 border border-surface-container-lowest/10">
-              <span
-                className="material-symbols-outlined text-tertiary-fixed"
-                data-icon="lock_open_right"
-              >
-                lock_open_right
-              </span>
-              <span>Không giữ giấy tờ tuỳ thân gốc</span>
-            </div>
-            <div className="flex items-center space-x-2 bg-surface-container-lowest/10 backdrop-blur-md rounded-xl p-2.5 border border-surface-container-lowest/10">
-              <span className="material-symbols-outlined text-tertiary-fixed" data-icon="security">
-                security
-              </span>
-              <span>Bảo hiểm bảo trợ MIC tới 2 tỷ</span>
-            </div>
-            <div className="flex items-center space-x-2 bg-surface-container-lowest/10 backdrop-blur-md rounded-xl p-2.5 border border-surface-container-lowest/10">
-              <span className="material-symbols-outlined text-tertiary-fixed" data-icon="bolt">
-                bolt
-              </span>
-              <span>Đặt xe duyệt ngay chỉ 3 phút</span>
-            </div>
-            <div className="flex items-center space-x-2 bg-surface-container-lowest/10 backdrop-blur-md rounded-xl p-2.5 border border-surface-container-lowest/10">
-              <span
-                className="material-symbols-outlined text-tertiary-fixed"
-                data-icon="ev_station"
-              >
-                ev_station
-              </span>
-              <span>Miễn phí sạc xe điện VinFast</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Floating Social Proof Card */}
-        <div className="relative z-20 w-full">
-          <div className="bg-surface-container-lowest/15 backdrop-blur-xl border border-surface-container-lowest/25 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
-            <div className="flex items-center space-x-3.5">
-              <div className="flex -space-x-2.5 overflow-hidden">
-                <span className="inline-block h-9 w-9 rounded-full ring-2 ring-surface-container-lowest bg-surface-variant flex items-center justify-center text-primary font-bold text-body-sm">
-                  VN
-                </span>
-                <span className="inline-block h-9 w-9 rounded-full ring-2 ring-surface-container-lowest bg-tertiary text-on-tertiary flex items-center justify-center text-body-sm font-bold">
-                  KH
-                </span>
-                <span className="inline-block h-9 w-9 rounded-full ring-2 ring-surface-container-lowest bg-secondary text-on-secondary flex items-center justify-center text-body-sm font-bold">
-                  TM
-                </span>
-                <div className="h-9 w-9 rounded-full ring-2 ring-surface-container-lowest bg-primary-container text-on-primary flex items-center justify-center text-body-sm font-bold">
-                  +12k
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center space-x-1 text-tertiary-fixed">
-                  {[...Array(5)].map((_, i) => (
-                    <span
-                      key={i}
-                      className="material-symbols-outlined text-sm"
-                      data-icon="star"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      star
-                    </span>
-                  ))}
-                  <span className="text-surface-bright font-bold text-body-sm ml-1">4.96/5</span>
-                </div>
-                <p className="text-body-sm font-body-sm text-outline-variant">
-                  120.000+ chuyến đi an toàn &amp; 98.6% khách hàng hài lòng
-                </p>
-              </div>
-            </div>
-            <div className="hidden xl:flex items-center text-tertiary-fixed text-label-tag font-label-tag bg-tertiary-container/50 px-3 py-1.5 rounded-full">
-              <span className="material-symbols-outlined text-sm mr-1" data-icon="verified">
-                verified
-              </span>
-              Đối tác xác thực
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT COLUMN: Authentication Canvas & Interactive Form Flow (54% - 52%) */}
-      <div className="w-full lg:w-[54%] xl:w-[52%] flex flex-col justify-between p-6 sm:p-10 xl:p-16 bg-surface-container-lowest custom-scroll overflow-y-auto">
+      <div className="xedi-login-panel flex flex-col bg-surface-container-lowest">
         {/* Top Segmented Auth Switcher & Support Info */}
-        <div className="flex items-center justify-between pb-6 border-b border-outline-variant/30">
+        <div className="xedi-auth-toolbar">
           {/* Modern Pill Segmented Control */}
-          <div className="bg-surface-container-low p-1.5 rounded-xl flex items-center space-x-1 border border-outline-variant/30">
+          <div className="xedi-auth-tabs bg-surface-container-low rounded-xl">
             <button
               className={`px-5 py-2 rounded-lg text-body-md font-headline-sm transition-all duration-200 ${
                 authTab === 'login'
                   ? 'bg-surface-container-lowest text-primary shadow-sm'
                   : 'text-secondary hover:text-on-surface'
               }`}
+              aria-pressed={authTab === 'login'}
               onClick={() => {
                 setAuthTab('login');
                 setFormStatus('');
@@ -269,6 +144,7 @@ const LoginPage = () => {
                   ? 'bg-surface-container-lowest text-primary shadow-sm'
                   : 'text-secondary hover:text-on-surface'
               }`}
+              aria-pressed={authTab === 'register'}
               onClick={() => {
                 setAuthTab('register');
                 setFormStatus('');
@@ -289,7 +165,7 @@ const LoginPage = () => {
         </div>
 
         {/* Main Form Container */}
-        <div className="my-auto py-8 max-w-lg w-full mx-auto">
+        <div className="xedi-auth-content">
           {formStatus && (
             <div
               role="status"
@@ -315,7 +191,7 @@ const LoginPage = () => {
             <div className="transition-all duration-300">
               <div className="mb-8">
                 <h2 className="text-headline-xl font-headline-xl text-on-surface tracking-tight mb-2">
-                  Chào mừng bạn trở lại!
+                  Mừng bạn trở lại với XeDi
                 </h2>
                 <p className="text-body-md font-body-md text-secondary">
                   Đăng nhập để tiếp tục quản lý hành trình, lịch đặt xe và ưu đãi thành viên XeDi.
@@ -323,8 +199,8 @@ const LoginPage = () => {
               </div>
 
               {process.env.NODE_ENV === 'development' && (
-                <section aria-labelledby="demo-account-heading" className="mb-6 rounded-xl border border-outline-variant/60 bg-surface-container-low p-4">
-                  <h3 id="demo-account-heading" className="font-semibold text-on-surface">Tài khoản mẫu</h3>
+                <details className="mb-6 rounded-xl border border-outline-variant/60 bg-surface-container-low p-4">
+                  <summary className="font-semibold text-on-surface">Tài khoản mẫu</summary>
                   <p className="mb-3 mt-1 text-body-sm text-secondary">Chọn vai trò để điền thông tin, sau đó bấm Đăng nhập.</p>
                   <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {demoAccounts.map(([role, account]) => (
@@ -341,7 +217,7 @@ const LoginPage = () => {
                       </li>
                     ))}
                   </ul>
-                </section>
+                </details>
               )}
 
               <form className="space-y-4" onSubmit={handleLoginSubmit}>
