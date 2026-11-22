@@ -10,7 +10,7 @@ import AdminPage from '../features/admin/pages/AdminPage';
 import OperationIncidentsPage from '../features/operations/pages/OperationIncidentsPage';
 import ContractsPage from '../features/contracts/ContractsPage';
 import VerificationPage from '../features/verification/pages/VerificationPage';
-import OperationPage from '../features/operation/pages/OperationPage';
+import OperationPage from '../pages/operator/OperatorDashboard';
 
 export default function AppRouter() {
   const [isRenter,setIsRenter]=useState(()=>window.location.hash.startsWith('#/renter'));
