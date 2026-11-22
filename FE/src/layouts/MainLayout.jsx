@@ -6,7 +6,7 @@ export default function MainLayout({ children }) {
       <Header />
       <main className="container py-4">{children}</main>
       <footer className="border-top py-3 text-center text-secondary">
-        <div className="container">SDN302 Frontend</div>
+        <div className="container">VietTour · Quản lý thuê xe du lịch</div>
       </footer>
     </div>
   );
