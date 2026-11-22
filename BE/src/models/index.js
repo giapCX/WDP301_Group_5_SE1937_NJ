@@ -1,3 +1,4 @@
+const BookingChangeRequest = require('./booking-change-request.model');
 const Role = require('./role.model');
 const User = require('./user.model');
 const DriverProfile = require('./driver-profile.model');
@@ -16,6 +17,7 @@ const Incident = require('./incident.model');
 const Review = require('./review.model');
 
 module.exports = {
+  BookingChangeRequest,
   Role,
   User,
   DriverProfile,

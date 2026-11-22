@@ -3,8 +3,8 @@ const assert = require('node:assert/strict');
 const models = require('../src/models');
 const data = require('../src/config/sample-data');
 
-test('all 16 models preserve every sample field and validate all 68 documents', async () => {
-  assert.equal(Object.keys(models).length, 16);
+test('all 17 models preserve every sample field and validate all 71 documents', async () => {
+  assert.equal(Object.keys(models).length, 17);
   for (const Model of Object.values(models)) {
     const rows = data[Model.collection.name];
     assert.ok(rows, Model.modelName);
@@ -13,7 +13,8 @@ test('all 16 models preserve every sample field and validate all 68 documents', 
         assert.ok(Model.schema.path(key), `${Model.modelName}.${key}`);
       const document = new Model(row);
       await document.validate();
-      for (const key of Object.keys(row)) assert.deepEqual(document.get(key), row[key]);
+      for (const key of Object.keys(row))
+        assert.deepEqual(document.toObject({ virtuals: false })[key], row[key]);
     }
   }
 });
