@@ -9,7 +9,11 @@
     "seed": "node scripts/seed.js",
     "seed:check": "node scripts/seed.js --check",
     "db:booking-review-fields": "node scripts/add-booking-review-fields.js",
-    "test:models": "node --test tests/models.test.js"
+    "test:models": "node --test tests/models.test.js",
+    "db:local": "node scripts/start-local-db.js",
+    "db:vehicle-schedule-version": "node scripts/add-vehicle-schedule-version.js",
+    "test:booking": "node --test tests/booking.service.test.js tests/booking.routes.test.js",
+    "test:booking-concurrency": "node --test tests/booking.concurrency.test.js"
   },
   "keywords": [],
   "author": "",

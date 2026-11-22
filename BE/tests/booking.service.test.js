@@ -56,7 +56,7 @@ test('detail uses numeric booking_id and returns 404 for missing booking', async
   });
 
   assert.equal(await service.getBookingById('2'), booking);
-  assert.deepEqual(find.mock.calls[0].arguments, [2]);
+  assert.deepEqual(find.mock.calls[0].arguments, [2, null]);
   await assert.rejects(service.getBookingById('999'), { statusCode: 404 });
 
   for (const id of [undefined, null, '', 'abc', '2.5', -1, {}, ['2']]) {
@@ -76,6 +76,7 @@ test('database errors propagate without becoming validation or not-found errors'
 });
 
 function mockReviewRepository(context, overrides = {}) {
+  context.mock.method(repository, 'runInTransaction', async (work) => work(null));
   const pending = {
     booking_id: 1,
     vehicle_id: 2,
@@ -85,7 +86,7 @@ function mockReviewRepository(context, overrides = {}) {
   };
   const defaults = {
     findBookingById: pending,
-    findVehicleById: { vehicle_id: 2, status: 'available' },
+    lockVehicleSchedule: { vehicle_id: 2, status: 'available' },
     findOverlappingVehicleBooking: null,
     approvePendingBooking: { ...pending, booking_status: 'confirmed' },
     rejectPendingBooking: { ...pending, booking_status: 'rejected' },
@@ -115,6 +116,7 @@ test('approval selects a vehicle and uses the trusted reviewer argument', async 
     bookingId: 1,
     vehicleId: 3,
     reviewedBy: 3,
+    session: null,
   });
 });
 
@@ -122,8 +124,8 @@ test('approval rejects missing, processed, unavailable and conflicting data', as
   const cases = [
     [{ findBookingById: null }, 404],
     [{ findBookingById: { booking_status: 'confirmed' } }, 409],
-    [{ findVehicleById: null }, 404],
-    [{ findVehicleById: { status: 'maintenance' } }, 409],
+    [{ lockVehicleSchedule: null }, 404],
+    [{ lockVehicleSchedule: { status: 'maintenance' } }, 409],
     [{ findOverlappingVehicleBooking: { booking_id: 2 } }, 409],
     [
       {

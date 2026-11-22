@@ -6,6 +6,9 @@ const names = ['Admin Demo', 'Manager Demo', 'Operator Demo', 'Garage Demo', 'Dr
 const users = names.map((full_name, i) => ({ user_id: i + 1, role_id: [1,2,3,4,5,5,6,6,6][i], full_name, email: `demo${i + 1}@example.com`, phone: `090000000${i + 1}`, password_hash, status: 'active', created_at: date('2026-11-01T00:00:00Z') }));
 const driver_profiles = [5,6].map((user_id, i) => ({ driver_id: i + 1, user_id, license_number: `DEMO-LICENSE-${i + 1}`, license_expiry: date('2030-12-31T00:00:00Z'), availability_status: i ? 'busy' : 'available', approved_at: date('2026-11-02T00:00:00Z') }));
 const vehicles = [['51A-DEMO01','Toyota','Vios',5,800000,'available'],['51A-DEMO02','Mitsubishi','Xpander',7,1100000,'in_use'],['51A-DEMO03','Ford','Transit',16,1800000,'available'],['51A-DEMO04','Hyundai','Solati',16,2000000,'maintenance'],['51A-DEMO05','Kia','Carnival',7,1600000,'available']].map(([plate_number,brand,model,seat_count,price_per_day,status], i) => ({ vehicle_id:i+1, plate_number,brand,model,seat_count,price_per_day,status }));
+for (const vehicle of vehicles) {
+  vehicle.schedule_version = 0;
+}
 const definitions = [
  [7,null,'2026-12-01',1,0,'pending',0],
  [8,1,'2026-12-03',2,1600000,'confirmed',0],

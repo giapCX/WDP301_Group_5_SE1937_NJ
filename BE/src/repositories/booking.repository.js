@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const { Booking, TripStop, Vehicle } = require('../models');
 
 const USER_FIELDS = 'user_id full_name email phone -_id';
@@ -62,12 +63,13 @@ async function findBookings({ status, page = 1, limit = 10 } = {}) {
 }
 
 /** Returns null when the numeric booking_id does not exist. */
-async function findBookingById(bookingId) {
+async function findBookingById(bookingId, session = null) {
   if (!Number.isSafeInteger(bookingId) || bookingId < 1) {
     throw new RangeError('bookingId must be a positive integer');
   }
 
   const booking = await Booking.findOne({ booking_id: bookingId })
+    .session(session)
     .select('-_id')
     .populate({
       path: 'renter',
@@ -89,6 +91,7 @@ async function findBookingById(bookingId) {
   }
 
   const tripStops = await TripStop.find({ booking_id: bookingId })
+    .session(session)
     .select('-_id')
     .sort({ stop_order: 1, stop_id: 1 })
     .lean()
@@ -101,10 +104,7 @@ async function findBookingById(bookingId) {
 }
 
 async function findVehicleById(vehicleId) {
-  return Vehicle.findOne({ vehicle_id: vehicleId })
-    .select('-_id')
-    .lean()
-    .exec();
+  return Vehicle.findOne({ vehicle_id: vehicleId }).select('-_id').lean().exec();
 }
 
 // Adjacent trips may share an endpoint; only actual overlap is a conflict.
@@ -113,6 +113,7 @@ async function findOverlappingVehicleBooking({
   pickupTime,
   estimatedEndTime,
   excludeBookingId,
+  session = null,
 }) {
   return Booking.findOne({
     booking_id: { $ne: excludeBookingId },
@@ -121,15 +122,15 @@ async function findOverlappingVehicleBooking({
     pickup_time: { $lt: estimatedEndTime },
     estimated_end_time: { $gt: pickupTime },
   })
+    .session(session)
     .select('-_id')
     .lean()
     .exec();
 }
 
 // The service must validate permissions and availability before calling this.
-// This condition prevents two decisions on the SAME booking; it does not lock
-// the vehicle across different bookings being approved concurrently.
-async function approvePendingBooking({ bookingId, vehicleId, reviewedBy }) {
+// Call inside runInTransaction after lockVehicleSchedule for cross-booking safety.
+async function approvePendingBooking({ bookingId, vehicleId, reviewedBy, session }) {
   return Booking.findOneAndUpdate(
     {
       booking_id: bookingId,
@@ -147,6 +148,7 @@ async function approvePendingBooking({ bookingId, vehicleId, reviewedBy }) {
     {
       returnDocument: 'after',
       runValidators: true,
+      session,
     },
   )
     .select('-_id')
@@ -178,7 +180,32 @@ async function rejectPendingBooking({ bookingId, reviewedBy, rejectionReason }) 
     .exec();
 }
 
+async function runInTransaction(work) {
+  return mongoose.connection.transaction(work, {
+    readConcern: { level: 'snapshot' },
+    writeConcern: { w: 'majority' },
+    readPreference: 'primary',
+  });
+}
+
+// Every schedule-changing workflow must write the same vehicle in its transaction.
+async function lockVehicleSchedule(vehicleId, session) {
+  if (!session || !session.inTransaction()) {
+    throw new Error('A vehicle schedule lock requires an active transaction');
+  }
+
+  return Vehicle.findOneAndUpdate(
+    { vehicle_id: vehicleId },
+    { $inc: { schedule_version: 1 } },
+    { session, returnDocument: 'after', runValidators: true },
+  )
+    .lean()
+    .exec();
+}
+
 module.exports = {
+  runInTransaction,
+  lockVehicleSchedule,
   findBookings,
   findBookingById,
   findVehicleById,

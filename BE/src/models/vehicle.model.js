@@ -45,6 +45,15 @@ module.exports = createModel(
         message: 'Must be finite',
       },
     },
+    schedule_version: {
+      type: Number,
+      default: 0,
+      min: 0,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
     status: {
       type: String,
       required: true,
