@@ -203,7 +203,60 @@ async function lockVehicleSchedule(vehicleId, session) {
     .exec();
 }
 
+// Availability is advisory; approval rechecks it inside the vehicle transaction.
+async function findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime }) {
+  const statuses =
+    pickupTime.getTime() > Date.now() ? ['available', 'in_use'] : ['available'];
+
+  return Vehicle.aggregate([
+    {
+      $match: {
+        status: { $in: statuses },
+      },
+    },
+    {
+      $lookup: {
+        from: Booking.collection.name,
+        let: { vehicleId: '$vehicle_id' },
+        pipeline: [
+          {
+            $match: {
+              booking_id: { $ne: bookingId },
+              booking_status: { $in: ['confirmed', 'in_progress'] },
+              pickup_time: { $lt: estimatedEndTime },
+              estimated_end_time: { $gt: pickupTime },
+              $expr: { $eq: ['$vehicle_id', '$$vehicleId'] },
+            },
+          },
+          { $limit: 1 },
+          { $project: { _id: 1 } },
+        ],
+        as: 'conflicting_bookings',
+      },
+    },
+    {
+      $match: {
+        'conflicting_bookings.0': { $exists: false },
+      },
+    },
+    { $sort: { vehicle_id: 1 } },
+    {
+      $project: {
+        _id: 0,
+        vehicle_id: 1,
+        plate_number: 1,
+        brand: 1,
+        model: 1,
+        seat_count: 1,
+        price_per_day: 1,
+        status: 1,
+      },
+    },
+  ]).exec();
+}
+
 module.exports = {
+  findAvailableVehicles,
   runInTransaction,
   lockVehicleSchedule,
   findBookings,

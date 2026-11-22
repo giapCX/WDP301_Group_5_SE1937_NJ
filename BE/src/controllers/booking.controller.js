@@ -60,7 +60,21 @@ async function rejectBooking(req, res, next) {
   }
 }
 
+async function getAvailableVehicles(req, res, next) {
+  try {
+    const result = await bookingService.getAvailableVehicles(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
+  getAvailableVehicles,
   getBookings,
   getBookingById,
   approveBooking,

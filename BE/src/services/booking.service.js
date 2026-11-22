@@ -174,7 +174,37 @@ async function rejectBooking(id, input = {}, reviewedBy) {
   return updated;
 }
 
+async function getAvailableVehicles(id) {
+  const booking = await getPendingBooking(id);
+  const pickupTime = new Date(booking.pickup_time);
+  const estimatedEndTime = new Date(booking.estimated_end_time);
+
+  if (
+    booking.pickup_time == null ||
+    booking.estimated_end_time == null ||
+    !Number.isFinite(pickupTime.getTime()) ||
+    !Number.isFinite(estimatedEndTime.getTime()) ||
+    estimatedEndTime <= pickupTime
+  ) {
+    throw new HttpError(400, 'Thời gian chuyến đi không hợp lệ');
+  }
+
+  const vehicles = await bookingRepository.findAvailableVehicles({
+    bookingId: booking.booking_id,
+    pickupTime,
+    estimatedEndTime,
+  });
+
+  return {
+    booking_id: booking.booking_id,
+    pickup_time: pickupTime,
+    estimated_end_time: estimatedEndTime,
+    vehicles,
+  };
+}
+
 module.exports = {
+  getAvailableVehicles,
   getBookings,
   getBookingById,
   approveBooking,
