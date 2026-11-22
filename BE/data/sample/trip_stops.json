@@ -1,0 +1,86 @@
+[
+  {
+    "stop_id": 1,
+    "booking_id": 1,
+    "stop_order": 1,
+    "location": "Demo: Tram dung Long Thanh",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 2,
+    "booking_id": 1,
+    "stop_order": 2,
+    "location": "Demo: Bai Sau, Vung Tau",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 3,
+    "booking_id": 2,
+    "stop_order": 1,
+    "location": "Demo: Tram dung Long Thanh",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 4,
+    "booking_id": 2,
+    "stop_order": 2,
+    "location": "Demo: Bai Sau, Vung Tau",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 5,
+    "booking_id": 3,
+    "stop_order": 1,
+    "location": "Demo: Tram dung Long Thanh",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 6,
+    "booking_id": 3,
+    "stop_order": 2,
+    "location": "Demo: Bai Sau, Vung Tau",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 7,
+    "booking_id": 4,
+    "stop_order": 1,
+    "location": "Demo: Tram dung Long Thanh",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 8,
+    "booking_id": 4,
+    "stop_order": 2,
+    "location": "Demo: Bai Sau, Vung Tau",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 9,
+    "booking_id": 5,
+    "stop_order": 1,
+    "location": "Demo: Tram dung Long Thanh",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 10,
+    "booking_id": 5,
+    "stop_order": 2,
+    "location": "Demo: Bai Sau, Vung Tau",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 11,
+    "booking_id": 6,
+    "stop_order": 1,
+    "location": "Demo: Tram dung Long Thanh",
+    "note": "Du lieu gia lap"
+  },
+  {
+    "stop_id": 12,
+    "booking_id": 6,
+    "stop_order": 2,
+    "location": "Demo: Bai Sau, Vung Tau",
+    "note": "Du lieu gia lap"
+  }
+]

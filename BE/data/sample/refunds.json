@@ -1,0 +1,10 @@
+[
+  {
+    "refund_id": 1,
+    "payment_id": 4,
+    "amount": 1600000,
+    "reason": "Demo: Khach huy chuyen trong thoi han mien phi",
+    "refund_status": "completed",
+    "approved_by": 2
+  }
+]

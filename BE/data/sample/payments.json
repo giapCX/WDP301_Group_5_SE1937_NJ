@@ -1,0 +1,50 @@
+[
+  {
+    "payment_id": 1,
+    "booking_id": 2,
+    "amount": 1440000,
+    "payment_method": "bank_transfer",
+    "payment_status": "pending",
+    "paid_at": null
+  },
+  {
+    "payment_id": 2,
+    "booking_id": 3,
+    "amount": 2200000,
+    "payment_method": "bank_transfer",
+    "payment_status": "paid",
+    "paid_at": {
+      "$date": "2026-11-01T01:00:00Z"
+    }
+  },
+  {
+    "payment_id": 3,
+    "booking_id": 4,
+    "amount": 3440000,
+    "payment_method": "bank_transfer",
+    "payment_status": "paid",
+    "paid_at": {
+      "$date": "2026-11-01T01:00:00Z"
+    }
+  },
+  {
+    "payment_id": 4,
+    "booking_id": 5,
+    "amount": 1600000,
+    "payment_method": "bank_transfer",
+    "payment_status": "paid",
+    "paid_at": {
+      "$date": "2026-11-01T01:00:00Z"
+    }
+  },
+  {
+    "payment_id": 5,
+    "booking_id": 6,
+    "amount": 800000,
+    "payment_method": "bank_transfer",
+    "payment_status": "paid",
+    "paid_at": {
+      "$date": "2026-11-01T01:00:00Z"
+    }
+  }
+]
