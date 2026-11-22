@@ -1,4 +1,4 @@
-const { Booking, TripStop } = require('../models');
+const { Booking, TripStop, Vehicle } = require('../models');
 
 const USER_FIELDS = 'user_id full_name email phone -_id';
 const VEHICLE_FIELDS =
@@ -100,7 +100,89 @@ async function findBookingById(bookingId) {
   };
 }
 
+async function findVehicleById(vehicleId) {
+  return Vehicle.findOne({ vehicle_id: vehicleId })
+    .select('-_id')
+    .lean()
+    .exec();
+}
+
+// Adjacent trips may share an endpoint; only actual overlap is a conflict.
+async function findOverlappingVehicleBooking({
+  vehicleId,
+  pickupTime,
+  estimatedEndTime,
+  excludeBookingId,
+}) {
+  return Booking.findOne({
+    booking_id: { $ne: excludeBookingId },
+    vehicle_id: vehicleId,
+    booking_status: { $in: ['confirmed', 'in_progress'] },
+    pickup_time: { $lt: estimatedEndTime },
+    estimated_end_time: { $gt: pickupTime },
+  })
+    .select('-_id')
+    .lean()
+    .exec();
+}
+
+// The service must validate permissions and availability before calling this.
+// This condition prevents two decisions on the SAME booking; it does not lock
+// the vehicle across different bookings being approved concurrently.
+async function approvePendingBooking({ bookingId, vehicleId, reviewedBy }) {
+  return Booking.findOneAndUpdate(
+    {
+      booking_id: bookingId,
+      booking_status: 'pending',
+    },
+    {
+      $set: {
+        vehicle_id: vehicleId,
+        booking_status: 'confirmed',
+        reviewed_by: reviewedBy,
+        reviewed_at: new Date(),
+        rejection_reason: null,
+      },
+    },
+    {
+      returnDocument: 'after',
+      runValidators: true,
+    },
+  )
+    .select('-_id')
+    .lean()
+    .exec();
+}
+
+async function rejectPendingBooking({ bookingId, reviewedBy, rejectionReason }) {
+  return Booking.findOneAndUpdate(
+    {
+      booking_id: bookingId,
+      booking_status: 'pending',
+    },
+    {
+      $set: {
+        booking_status: 'rejected',
+        reviewed_by: reviewedBy,
+        reviewed_at: new Date(),
+        rejection_reason: rejectionReason,
+      },
+    },
+    {
+      returnDocument: 'after',
+      runValidators: true,
+    },
+  )
+    .select('-_id')
+    .lean()
+    .exec();
+}
+
 module.exports = {
   findBookings,
   findBookingById,
+  findVehicleById,
+  findOverlappingVehicleBooking,
+  approvePendingBooking,
+  rejectPendingBooking,
 };
