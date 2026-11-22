@@ -5,6 +5,7 @@ const corsMiddleware = require('./middlewares/cors.middleware');
 const notFoundMiddleware = require('./middlewares/not-found.middleware');
 const errorMiddleware = require('./middlewares/error.middleware');
 const bookingRoutes = require('./src/routes/booking.routes');
+const changeRequestRoutes = require('./src/routes/booking-change-request.routes');
 
 require('dotenv').config();
 
@@ -19,6 +20,7 @@ app.get('/api', (req, res) => {
 });
 
 app.use('/api/operator/bookings', bookingRoutes);
+app.use('/api/operator/booking-change-requests', changeRequestRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
