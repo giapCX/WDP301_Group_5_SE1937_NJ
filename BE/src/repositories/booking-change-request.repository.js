@@ -1,4 +1,5 @@
-const { BookingChangeRequest } = require('../models');
+const { randomInt } = require('node:crypto');
+const { BookingChangeRequest, Booking, TripStop, TripAssignment } = require('../models');
 
 const USER_FIELDS = 'user_id full_name email phone -_id';
 const BOOKING_FIELDS = [
@@ -116,7 +117,95 @@ async function findChangeRequestById(changeRequestId) {
     .exec();
 }
 
+async function findRequestForReview(id, session = null) {
+  return BookingChangeRequest.findOne({ change_request_id: id }).session(session).lean();
+}
+
+async function decidePendingRequest(
+  id,
+  status,
+  reviewerId,
+  reason = null,
+  session = null,
+) {
+  return BookingChangeRequest.findOneAndUpdate(
+    { change_request_id: id, request_status: 'pending' },
+    {
+      $set: {
+        request_status: status,
+        reviewed_by: reviewerId,
+        reviewed_at: new Date(),
+        rejection_reason: reason,
+      },
+    },
+    { session, returnDocument: 'after', runValidators: true },
+  )
+    .select('-_id')
+    .lean();
+}
+
+async function applyItinerary(bookingId, after, session) {
+  const { trip_stops: stops, ...fields } = after;
+  const updated = await Booking.findOneAndUpdate(
+    { booking_id: bookingId, booking_status: 'confirmed' },
+    { $set: fields },
+    { session, returnDocument: 'after', runValidators: true },
+  ).lean();
+  if (!updated) return null;
+  const existing = await TripStop.find({ booking_id: bookingId }).session(session).lean();
+  await TripStop.deleteMany({
+    booking_id: bookingId,
+    stop_order: { $nin: stops.map((stop) => stop.stop_order) },
+  }).session(session);
+  for (const stop of stops) {
+    const previous = existing.find((item) => item.stop_order === stop.stop_order);
+    if (previous) {
+      await TripStop.updateOne(
+        { stop_id: previous.stop_id },
+        { $set: stop },
+        { session, runValidators: true },
+      );
+    } else {
+      // Domain IDs are safe integers; uniqueness is enforced by the stop_id index.
+      await TripStop.create(
+        [{ ...stop, booking_id: bookingId, stop_id: randomInt(1, 2 ** 48 - 1) }],
+        { session },
+      );
+    }
+  }
+  return updated;
+}
+
+async function hasDriverConflict(bookingId, start, end, session) {
+  const assignments = await TripAssignment.find({
+    booking_id: bookingId,
+    assignment_status: 'assigned',
+  })
+    .session(session)
+    .lean();
+  if (!assignments.length) return false;
+  const others = await TripAssignment.find({
+    booking_id: { $ne: bookingId },
+    driver_id: { $in: assignments.map((item) => item.driver_id) },
+    assignment_status: 'assigned',
+  })
+    .session(session)
+    .lean();
+  return Boolean(
+    await Booking.exists({
+      booking_id: { $in: others.map((item) => item.booking_id) },
+      booking_status: { $in: ['confirmed', 'in_progress'] },
+      pickup_time: { $lt: end },
+      estimated_end_time: { $gt: start },
+    }).session(session),
+  );
+}
+
 module.exports = {
+  findRequestForReview,
+  decidePendingRequest,
+  applyItinerary,
+  hasDriverConflict,
   findChangeRequests,
   findChangeRequestById,
 };
