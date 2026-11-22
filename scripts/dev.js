@@ -5,7 +5,7 @@ import path from 'node:path';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const services = [
-  { name: 'Back end', directory: 'Back end', command: 'start' },
+  { name: 'BE', directory: 'BE', command: 'start' },
   { name: 'front end', directory: 'front end', command: 'run dev' },
 ];
 const children = [];

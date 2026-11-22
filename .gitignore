@@ -7,3 +7,6 @@
 **/node_modules/
 **/dist/
 **/coverage/
+
+# Local backend runtime data and private backups
+/BE/storage/
