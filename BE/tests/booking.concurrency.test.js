@@ -8,7 +8,7 @@ const sample = require('../src/config/sample-data');
 test('real replica transactions prevent overlapping approvals and roll back losing writes', async () => {
   const databaseName = `booking_concurrency_test_${process.pid}_${Date.now()}`;
   await mongoose.connect(
-    process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27017/?replicaSet=rentalLocal',
+    process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27018/?replicaSet=rentalLocal',
     { dbName: databaseName, serverSelectionTimeoutMS: 5000, autoIndex: false },
   );
   try {
