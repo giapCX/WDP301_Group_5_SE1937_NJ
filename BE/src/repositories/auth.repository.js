@@ -3,6 +3,26 @@ import { getModels } from '../models/index.js';
 import { createModelRepository } from './base.repository.js';
 
 const { ObjectId } = Types;
+const vietTourRoles = {
+  admin: 'ADMIN',
+  driver: 'DRIVER',
+  gara_staff: 'GARAGE_STAFF',
+  manager: 'MANAGER',
+  operator_staff: 'OPERATION_STAFF',
+  renter: 'RENTER',
+};
+
+function normalizeVietTourUser(user) {
+  return user && {
+    ...user,
+    account_status: user.account_status ?? user.status,
+    primary_role_id: user.primary_role_id ?? user.role_id,
+  };
+}
+
+function normalizeVietTourRole(role) {
+  return role && { ...role, code: role.code ?? vietTourRoles[role.name], display_name: role.display_name ?? role.name };
+}
 function escapeRegex(text) {
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
@@ -34,6 +54,9 @@ export function createAuthRepository(database) {
   const users = createModelRepository(models.User);
   const roles = createModelRepository(models.Role);
   const audits = createModelRepository(models.AuditLog);
+  const useVietTour = database.name === 'viet_tour';
+  const nativeUsers = database.db.collection('users');
+  const nativeRoles = database.db.collection('roles');
   return {
     async canViewOwnerGaragePhoto(ownerId, key) {
       const vehicles = await models.Vehicle.find({ owner_id: ownerId }).select('_id').lean();
@@ -45,10 +68,14 @@ export function createAuthRepository(database) {
       ]);
       return Boolean(inspection || intake || ownerReturn);
     },
-    findByAccount: account => users.findOne(buildAccountQuery(account)),
-    findById: id => users.findOne({
-      _id: new ObjectId(id)
-    }),
+    findByAccount: async account => {
+      const filter = buildAccountQuery(account);
+      return useVietTour ? normalizeVietTourUser(await nativeUsers.findOne(filter)) : users.findOne(filter);
+    },
+    findById: async id => {
+      const filter = { _id: new ObjectId(id) };
+      return useVietTour ? normalizeVietTourUser(await nativeUsers.findOne(filter)) : users.findOne(filter);
+    },
     updatePassword: (id, passwordHash) => users.updateOne({
       _id: id
     }, {
@@ -57,9 +84,10 @@ export function createAuthRepository(database) {
         updated_at: new Date()
       }
     }),
-    findRoleById: id => roles.findOne({
-      _id: id
-    }),
+    findRoleById: async id => {
+      const filter = { _id: id };
+      return useVietTour ? normalizeVietTourRole(await nativeRoles.findOne(filter)) : roles.findOne(filter);
+    },
     findRolesByIds: ids => roles.find({
       _id: {
         $in: ids

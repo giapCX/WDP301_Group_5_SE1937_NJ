@@ -1,6 +1,7 @@
 import { postRenter } from '../../renter/api/renterApi';
 import EmailOtp from './EmailOtp';
 import { postApi } from '../../../services/httpClient';
+import Icon from '../../../components/Icon';
 import '../../renter/styles/renter.css';
 import React, { useState } from 'react';
 import './LoginPage.css';
@@ -22,7 +23,9 @@ const LoginPage = () => {
   const [resetBusy, setResetBusy] = useState(false);
   const [registerBusy,setRegisterBusy]=useState(false);
   const [authTab, setAuthTab] = useState('login'); // 'login' | 'register'
-  const [userRole, setUserRole] = useState('renter'); // 'renter' | 'host'
+  const [loginMethod, setLoginMethod] = useState('password');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginOtp, setLoginOtp] = useState({});
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
@@ -60,7 +63,13 @@ const LoginPage = () => {
     }));
   };
 
-  const { isLoading, handleLoginSubmit } = useLogin({ loginData, setFormStatus, setStatusType });
+  const useOtp = loginMethod === 'otp';
+  const { isLoading, handleLoginSubmit } = useLogin({
+    loginData,
+    otpCredentials: useOtp ? { email: loginEmail, ...loginOtp } : null,
+    setFormStatus,
+    setStatusType,
+  });
 
   const selectDemoAccount = (account) => {
     setLoginData((previous) => ({ ...previous, account, password: '123456' }));
@@ -70,7 +79,6 @@ const LoginPage = () => {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     if(registerBusy)return;
-    if(userRole!=='renter'){setStatusType('error');setFormStatus('Đăng ký chủ xe chưa thuộc phạm vi chức năng renter.');return;}
     setRegisterBusy(true);setFormStatus('');
     try {
       if (!registrationOtp.challenge_id || !/^\d{6}$/.test(registrationOtp.otp || '')) throw new Error('Vui lòng gửi và nhập mã OTP email gồm 6 số.');
@@ -95,20 +103,24 @@ const LoginPage = () => {
 
   return (
     <main className="xedi-login-card w-full overflow-hidden bg-background text-on-background">
-      <aside className="xedi-login-visual" aria-label="Giới thiệu XeDi">
+      <aside className="xedi-login-visual" aria-label="Giới thiệu VietTour">
         <a className="xedi-auth-brand" href="/#trang-chu">
           <span className="material-symbols-outlined" aria-hidden="true">directions_car</span>
-          XeDi
+          VietTour
         </a>
         <div>
+          <span className="xedi-auth-visual-badge">
+            <span className="material-symbols-outlined" aria-hidden="true">verified</span>
+            Dịch vụ VietTour
+          </span>
           <h2 className="xedi-auth-visual-title">Khởi đầu hành trình tinh tế &amp; an tâm</h2>
-          <p>Chọn xe tự lái phù hợp với lịch trình của bạn. Xe được kiểm tra và bàn giao tại gara, với chi phí rõ ràng trước khi đặt.</p>
+          <p>Quản lý lịch đặt xe, theo dõi hành trình và xem lại thông tin chuyến đi trong tài khoản của bạn.</p>
         </div>
         <figure className="xedi-auth-photo">
           <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMT-9LHyTi6sVXvZmQnX_bqW6DoG3ZksyEd8see0MeAVdHr9qEvWMk9e3LrMCFuVR0kXC_3y6D_ZV8ybxtIzDVqzB_6jNEoNC2m7idE2I89dW61ACjEAbqqy0eIGZE8-0-R2xs7Ybn-hWCrsTXV09im2o_M4KedTAFH75fcNYH3OEePgzYADj5SFFiza7uHbF5Voo0jx8Z491gklo-3W6A7BdjYUl2xIIgFeQWU34" alt="Xe du lịch đón khách trước khu nghỉ dưỡng" />
           <figcaption>
             <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
-            Ảnh minh họa dịch vụ
+            Xe du lịch VietTour · Ảnh minh họa
           </figcaption>
         </figure>
         <ul className="xedi-auth-benefits">
@@ -159,7 +171,7 @@ const LoginPage = () => {
               headset_mic
             </span>
             <span>
-              Hotline: <strong className="text-on-surface font-semibold">1900 6868</strong>
+              <a href="tel:19006886" className="text-on-surface font-semibold">1900 6886</a>
             </span>
           </div>
         </div>
@@ -177,12 +189,7 @@ const LoginPage = () => {
                   : 'bg-surface-container-low text-primary'
               }`}
             >
-              <span
-                className="material-symbols-outlined text-lg leading-tight mt-0.5"
-                data-icon={statusType === 'success' ? 'check_circle' : 'info'}
-              >
-                {statusType === 'success' ? 'check_circle' : 'info'}
-              </span>
+              <Icon name={statusType === 'success' ? 'check' : 'info'} size={18} className="shrink-0 mt-0.5" />
               <span>{formStatus}</span>
             </div>
           )}
@@ -191,14 +198,19 @@ const LoginPage = () => {
             <div className="transition-all duration-300">
               <div className="mb-8">
                 <h2 className="text-headline-xl font-headline-xl text-on-surface tracking-tight mb-2">
-                  Mừng bạn trở lại với XeDi
+                  Mừng bạn trở lại với VietTour
                 </h2>
                 <p className="text-body-md font-body-md text-secondary">
-                  Đăng nhập để tiếp tục quản lý hành trình, lịch đặt xe và ưu đãi thành viên XeDi.
+                  Đăng nhập để tiếp tục quản lý lịch đặt xe và hành trình của bạn.
                 </p>
               </div>
 
-              {process.env.NODE_ENV === 'development' && (
+              <div className="xedi-auth-methods" role="group" aria-label="Phương thức đăng nhập">
+                <button type="button" aria-pressed={!useOtp} disabled={isLoading} onClick={() => { setLoginMethod('password'); setFormStatus(''); }}>Mật khẩu</button>
+                <button type="button" aria-pressed={useOtp} disabled={isLoading} onClick={() => { setLoginMethod('otp'); setFormStatus(''); }}>Mã OTP</button>
+              </div>
+
+              {!useOtp && process.env.NODE_ENV === 'development' && (
                 <details className="mb-6 rounded-xl border border-outline-variant/60 bg-surface-container-low p-4">
                   <summary className="font-semibold text-on-surface">Tài khoản mẫu</summary>
                   <p className="mb-3 mt-1 text-body-sm text-secondary">Chọn vai trò để điền thông tin, sau đó bấm Đăng nhập.</p>
@@ -221,6 +233,17 @@ const LoginPage = () => {
               )}
 
               <form className="space-y-4" onSubmit={handleLoginSubmit}>
+                {useOtp ? (
+                  <div>
+                    <label className="renter-field">
+                      Email đã đăng ký
+                      <input type="email" autoComplete="email" required value={loginEmail}
+                        onChange={(event) => setLoginEmail(event.target.value)} />
+                    </label>
+                    <EmailOtp email={loginEmail} login onChange={setLoginOtp} />
+                  </div>
+                ) : (
+                <>
                 {/* Email / Phone Input */}
                 <div>
                   <label
@@ -243,6 +266,7 @@ const LoginPage = () => {
                       onChange={handleLoginChange}
                       placeholder="Ví dụ: 0912 345 678 hoặc ban@email.com"
                       type="text"
+                      autoComplete="username"
                       required
                     />
                   </div>
@@ -279,6 +303,7 @@ const LoginPage = () => {
                       onChange={handleLoginChange}
                       placeholder="Nhập mật khẩu của bạn"
                       type={showLoginPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
                       required
                     />
                     <button
@@ -294,6 +319,8 @@ const LoginPage = () => {
                   </div>
                 </div>
 
+                </>
+                )}
                 {/* Remember me checkbox */}
                 <div className="flex items-center justify-between pt-1">
                   <label className="flex items-center space-x-2.5 cursor-pointer">
@@ -312,18 +339,26 @@ const LoginPage = () => {
 
                 {/* Primary Action Button */}
                 <button
-                  disabled={isLoading}
+                  disabled={isLoading || (useOtp && !/^\d{6}$/.test(loginOtp.otp || ''))}
                   className={`w-full mt-2 py-3.5 px-4 bg-primary-container hover:bg-primary text-on-primary font-headline-sm text-body-lg rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] flex items-center justify-center space-x-2 ${
                     isLoading ? 'opacity-70 cursor-not-allowed' : ''
                   }`}
                   type="submit"
                 >
                   <span>{isLoading ? 'Đang xác thực...' : 'Đăng nhập'}</span>
-                  <span className="material-symbols-outlined" data-icon="arrow_forward">
+                  <span className="material-symbols-outlined" aria-hidden="true" data-icon="arrow_forward">
                     arrow_forward
                   </span>
                 </button>
               </form>
+
+              <div className="xedi-auth-providers">
+                <p>Đăng nhập qua Google hoặc Apple ID chưa khả dụng.</p>
+                <div>
+                  <button type="button" disabled>Google</button>
+                  <button type="button" disabled>Apple ID</button>
+                </div>
+              </div>
 
             </div>
           )}
@@ -344,109 +379,14 @@ const LoginPage = () => {
             <div className="transition-all duration-300">
               <div className="mb-6">
                 <h2 className="text-headline-xl font-headline-xl text-on-surface tracking-tight mb-2">
-                  Đăng ký tài khoản XeDi
+                  Tạo tài khoản thành viên VietTour
                 </h2>
                 <p className="text-body-md font-body-md text-secondary">
-                  Gia nhập cộng đồng xe tự lái văn minh và chủ động hàng đầu Việt Nam.
+                  Tài khoản người thuê dùng để đặt xe và quản lý chuyến đi.
                 </p>
               </div>
 
-              {/* User Intent / Role Selector */}
-              <div className="mb-5">
-                <label className="block text-body-sm font-body-sm font-medium text-on-surface-variant mb-2">
-                  Mục đích chính của bạn:
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Option 1: Renter */}
-                  <label
-                    onClick={() => setUserRole('renter')}
-                    className={`relative flex flex-col p-3.5 rounded-xl cursor-pointer transition-all ${
-                      userRole === 'renter'
-                        ? 'border-2 border-primary-container bg-surface-container-low/50'
-                        : 'border border-outline-variant/60 bg-surface-container-lowest hover:border-outline-variant'
-                    }`}
-                  >
-                    <input
-                      checked={userRole === 'renter'}
-                      onChange={() => setUserRole('renter')}
-                      className="sr-only"
-                      name="user_role"
-                      type="radio"
-                      value="renter"
-                    />
-                    <div className="flex items-center justify-between mb-1">
-                      <span
-                        className={`material-symbols-outlined ${
-                          userRole === 'renter' ? 'text-primary-container' : 'text-secondary'
-                        }`}
-                        data-icon="commute"
-                      >
-                        commute
-                      </span>
-                      {userRole === 'renter' && (
-                        <span
-                          className="material-symbols-outlined text-primary-container text-base"
-                          data-icon="check_circle"
-                        >
-                          check_circle
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-headline-sm text-body-md text-on-surface">
-                      Tôi muốn thuê xe
-                    </span>
-                    <span className="text-body-sm font-body-sm text-secondary">
-                      Tìm và lái xe mọi lúc
-                    </span>
-                  </label>
-
-                  {/* Option 2: Host */}
-                  <label
-                    onClick={() => setUserRole('host')}
-                    className={`relative flex flex-col p-3.5 rounded-xl cursor-pointer transition-all ${
-                      userRole === 'host'
-                        ? 'border-2 border-primary-container bg-surface-container-low/50'
-                        : 'border border-outline-variant/60 bg-surface-container-lowest hover:border-outline-variant'
-                    }`}
-                  >
-                    <input
-                      checked={userRole === 'host'}
-                      onChange={() => setUserRole('host')}
-                      className="sr-only"
-                      name="user_role"
-                      type="radio"
-                      value="host"
-                    />
-                    <div className="flex items-center justify-between mb-1">
-                      <span
-                        className={`material-symbols-outlined ${
-                          userRole === 'host' ? 'text-primary-container' : 'text-secondary'
-                        }`}
-                        data-icon="garage"
-                      >
-                        garage
-                      </span>
-                      {userRole === 'host' && (
-                        <span
-                          className="material-symbols-outlined text-primary-container text-base"
-                          data-icon="check_circle"
-                        >
-                          check_circle
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-headline-sm text-body-md text-on-surface">
-                      Cho thuê xe
-                    </span>
-                    <span className="text-body-sm font-body-sm text-secondary">
-                      Tăng thu nhập 15tr+/tháng
-                    </span>
-                  </label>
-                </div>
-              </div>
-
               <form className="space-y-3.5" onSubmit={handleRegisterSubmit}>
-                {registerBusy && <p role="status">Đang tạo tài khoản...</p>}
                 {/* Full Name */}
                 <div>
                   <label
@@ -625,7 +565,7 @@ const LoginPage = () => {
                       <a className="text-primary-container hover:underline" href="#/login/privacy">
                         Chính sách bảo mật
                       </a>{' '}
-                      của XeDi Việt Nam.
+                      của VietTour.
                     </span>
                   </label>
                 </div>
@@ -639,7 +579,7 @@ const LoginPage = () => {
                   <span className="material-symbols-outlined" data-icon="person_add">
                     person_add
                   </span>
-                  <span>Tạo tài khoản XeDi</span>
+                  <span>Tạo tài khoản VietTour</span>
                 </button>
               </form>
             </div>
@@ -664,10 +604,16 @@ const LoginPage = () => {
               Bảo mật MIC
             </a>
             <span>•</span>
-            <span>© 2025 XeDi</span>
+            <span>© 2025 VietTour</span>
           </div>
         </div>
       </div>
+      <ul className="xedi-auth-value-strip" aria-label="Thông tin dịch vụ">
+        <li><span className="material-symbols-outlined" aria-hidden="true">route</span><strong>Lộ trình linh hoạt</strong></li>
+        <li><span className="material-symbols-outlined" aria-hidden="true">directions_car</span><strong>Đội xe đa dạng</strong></li>
+        <li><span className="material-symbols-outlined" aria-hidden="true">receipt_long</span><strong>Chi phí rõ ràng</strong></li>
+        <li><span className="material-symbols-outlined" aria-hidden="true">support_agent</span><strong>Hỗ trợ hành trình</strong></li>
+      </ul>
     </main>
   );
 };

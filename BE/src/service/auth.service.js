@@ -83,6 +83,21 @@ export function createAuthService(repository) {
       console.warn('Unable to record login audit event:', error.message);
     }
   }
+  async function completeLogin(user, metadata) {
+    const rolesInfo = await populateUserRoles(repository, user);
+    const safeUser = sanitizeUser(user, rolesInfo);
+    const token = jwt.sign({
+      sub: user._id.toString(),
+      email: user.email,
+      phone: user.phone,
+      role: rolesInfo.primaryRole?.code || 'RENTER',
+      roles: rolesInfo.roleCodes,
+      permissions: rolesInfo.permissions
+    }, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
+    await recordLoginAudit({ actorId: user._id, action: 'auth.login_success', roles: safeUser.roles, ip: metadata.ip });
+    return { data: { token, user: safeUser }, message: 'Đăng nhập thành công.' };
+  }
+
   return {
     async login(body, metadata = {}) {
       const rawAccount = body?.account ?? body?.email ?? body?.phone;
@@ -112,7 +127,7 @@ export function createAuthService(repository) {
         let isPasswordValid = false;
         if (user.password_hash) {
           isPasswordValid = await bcrypt.compare(password, user.password_hash);
-        } else if (!user.google_only) {
+        } else if (!user.google_only && !user.role_id) {
         // Seeded mock users have password_hash: null in MongoDB
           if (ALLOWED_DEFAULT_PASSWORDS.has(password)) {
             isPasswordValid = true;
@@ -129,33 +144,18 @@ export function createAuthService(repository) {
           throw httpError(401, 'Email/Số điện thoại hoặc mật khẩu không chính xác.');
         }
 
-      // Load roles and permissions
-        const rolesInfo = await populateUserRoles(repository, user);
-        const safeUser = sanitizeUser(user, rolesInfo);
-
-      // Create JWT token
-        const token = jwt.sign({
-        sub: user._id.toString(),
-        email: user.email,
-        phone: user.phone,
-        role: rolesInfo.primaryRole?.code || 'RENTER',
-        roles: rolesInfo.roleCodes,
-        permissions: rolesInfo.permissions
-        }, env.jwtSecret, {
-          expiresIn: env.jwtExpiresIn
-        });
-        await recordLoginAudit({ actorId: user._id, action: 'auth.login_success', roles: safeUser.roles, ip: metadata.ip });
-        return {
-          data: {
-            token,
-            user: safeUser
-          },
-          message: 'Đăng nhập thành công.'
-        };
+        return await completeLogin(user, metadata);
       } catch (error) {
         if ([401, 403].includes(error.status)) await recordLoginAudit({ action: 'auth.login_failed', account, ip: metadata.ip });
         throw error;
       }
+    },
+    async loginWithOtp(challenge, metadata = {}) {
+      const user = challenge.user_id && await repository.findById(challenge.user_id);
+      if (!user || user.email !== challenge.account_email || user.account_status !== 'active') {
+        throw httpError(401, 'Tài khoản đã thay đổi. Vui lòng yêu cầu mã mới.');
+      }
+      return completeLogin(user, metadata);
     },
     async getCurrentUser(authHeaderValue) {
       const authHeader = authHeaderValue;

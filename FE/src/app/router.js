@@ -54,7 +54,7 @@ export default function AppRouter() {
       : isOwner
       ? 'Cổng chủ xe — XeDi'
       : isLogin
-      ? 'Đăng nhập & Đăng ký — XeDi'
+      ? 'Đăng nhập & Đăng ký — VietTour'
       : isAdmin
         ? 'Quản trị hệ thống — XeDi'
         : isManager

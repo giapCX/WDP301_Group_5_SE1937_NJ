@@ -9,6 +9,17 @@
 .viettour-home :focus-visible { outline: 3px solid #75a8ff; outline-offset: 3px; }
 .viettour-home header { z-index: 50; }
 
+.viettour-home .vt-brand-mark {
+  display: inline-grid;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 9px;
+  color: #fff;
+  background: #001d37;
+}
+
 .viettour-home .material-symbols-outlined {
   display: inline-block;
   font-family: 'Material Symbols Outlined', sans-serif;
@@ -46,22 +57,31 @@
 .viettour-home .vt-search-results h2 { margin-bottom: 8px; font-size: 1.25rem; font-weight: 700; }
 .viettour-home .vt-search-results p + p { margin-top: 6px; }
 .vt-result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 10px; margin-top: 12px; }
-.vt-result-grid a { display: grid; gap: 4px; background: #f2f4f7; border-radius: 8px; padding: 12px; }
+.vt-result-grid :is(a, article) { display: grid; gap: 4px; background: #f2f4f7; border-radius: 8px; padding: 12px; }
 .vt-result-grid a:hover { background: #dbe1ff; }
 .viettour-home .vt-live-fleet-link { display: inline-block; margin-top: 12px; color: #0051d5; font-weight: 700; }
 
-.viettour-home .vt-detail-dialog {
-  width: min(420px, 100% - 32px);
-  margin: auto;
-  padding: 24px;
-  border-radius: 12px;
+.viettour-home .vt-home-overview {
+  margin-bottom: 20px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #ffffff26;
 }
 
-.vt-detail-dialog::backdrop { background: #001d3780; }
-.vt-detail-dialog h2 { font-weight: 800; font-size: 1.2rem; }
-.vt-detail-dialog p { margin: 10px 0; }
-.vt-detail-dialog a { color: #0051d5; font-weight: 700; }
-.vt-detail-dialog button { margin-left: 16px; }
+.vt-fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 20px;
+}
+.vt-fleet-card { overflow: hidden; border-radius: 12px; background: #fff; box-shadow: 0 4px 20px #16324f14; }
+.vt-fleet-photo { display: grid; place-items: center; aspect-ratio: 16 / 10; background: #e6e8eb; color: #43474d; }
+.vt-fleet-photo img { width: 100%; height: 100%; object-fit: cover; }
+.vt-fleet-info { display: grid; justify-items: start; gap: 8px; padding: 16px; }
+.viettour-home .vt-fleet-info h3 { font-size: 1.1rem; font-weight: 700; }
+.vt-fleet-info > p, .vt-fleet-empty { color: #43474d; }
+.vt-fleet-empty { padding: 24px; border-radius: 12px; background: #fff; }
+.viettour-home #danh-sach-xe [data-filter] { white-space: nowrap; }
+.viettour-home #danh-sach-xe div:has(> [data-filter]) { flex-wrap: wrap; }
 
 @media (max-width: 650px) {
   .viettour-home header > div { padding-inline: 14px; gap: 8px; }

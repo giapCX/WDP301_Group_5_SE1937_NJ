@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { postApi } from '../../../services/httpClient';
 
-export default function EmailOtp({ email, reset = false, onChange, children }) {
+export default function EmailOtp({ email, reset = false, login = false, onChange, children }) {
   const [challenge, setChallenge] = useState(null);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -12,7 +12,7 @@ export default function EmailOtp({ email, reset = false, onChange, children }) {
     generation.current += 1;
     setChallenge(null); setCode(''); setMessage(''); setBusy(false); onChange({});
     return () => { generation.current += 1; };
-  }, [email, reset, onChange]);
+  }, [email, reset, login, onChange]);
   useEffect(() => {
     if (!remaining) return undefined;
     const timer = setTimeout(() => setRemaining(value => value - 1), 1000);
@@ -22,11 +22,14 @@ export default function EmailOtp({ email, reset = false, onChange, children }) {
     const current = generation.current;
     setBusy(true); setMessage('');
     try {
-      const result = await postApi(reset ? '/auth/forgot-password/otp' : '/renter/register/otp', { email });
+      const endpoint = login ? '/auth/login/otp' : reset ? '/auth/forgot-password/otp' : '/renter/register/otp';
+      const result = await postApi(endpoint, { email });
       if (current !== generation.current) return;
       setChallenge(result.data); setCode(''); setRemaining(60);
       onChange({ challenge_id: result.data.challenge_id, otp: '' });
-      setMessage('Đã gửi OTP qua email. Hãy kiểm tra cả thư rác. Mã có hiệu lực 5 phút.');
+      setMessage(login
+        ? 'Nếu email có tài khoản đang hoạt động, bạn sẽ nhận được mã có hiệu lực trong 5 phút.'
+        : 'Đã gửi OTP qua email. Hãy kiểm tra cả thư rác. Mã có hiệu lực 5 phút.');
     } catch (error) { if (current === generation.current) setMessage(error.message); }
     finally { if (current === generation.current) setBusy(false); }
   }

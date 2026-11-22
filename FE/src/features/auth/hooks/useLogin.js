@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { login } from '../api/authApi';
+import { login, loginWithOtp } from '../api/authApi';
 import { getLoginDestination, saveSession } from '../session';
 
-export default function useLogin({ loginData, setFormStatus, setStatusType }) {
+export default function useLogin({ loginData, otpCredentials, setFormStatus, setStatusType }) {
   const [isLoading, setIsLoading] = useState(false);
   const redirectTimer = useRef();
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
@@ -13,7 +13,7 @@ export default function useLogin({ loginData, setFormStatus, setStatusType }) {
     setStatusType('info');
 
     try {
-      const response = await login({
+      const response = otpCredentials ? await loginWithOtp(otpCredentials) : await login({
         account: loginData.account,
         password: loginData.password,
       });

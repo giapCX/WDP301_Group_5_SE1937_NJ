@@ -80,7 +80,7 @@ export default function VehicleCard({ listing, index, onDetails }) {
       <div className="vehicle-content">
         <div className="vehicle-location">
           <Icon name="pin" size={14} />
-          <span>{listing.pickup_location.city}</span>
+          <span>{listing.pickup_location?.city || 'Địa điểm theo lịch hẹn'}</span>
           <span className="verified-label">
             <Icon name="check" size={12} /> Tại gara
           </span>

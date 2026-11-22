@@ -506,7 +506,66 @@
 .login-page .xedi-auth-content { width: 100%; padding: 28px 0; }
 .login-page .xedi-auth-content summary { cursor: pointer; }
 
+.login-page .xedi-auth-visual-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #ffffff24;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.login-page .xedi-auth-methods,
+.login-page .xedi-auth-providers > div { display: flex; gap: 8px; }
+
+.login-page .xedi-auth-methods { margin: 12px 0 18px; }
+.login-page .xedi-auth-methods button,
+.login-page .xedi-auth-providers button {
+  padding: 6px 13px;
+  border-radius: 8px;
+  background: #edf1f6;
+  color: #43474d;
+  font-size: .875rem;
+  font-weight: 600;
+}
+
+.login-page .xedi-auth-methods button { border-radius: 999px; }
+.login-page .xedi-auth-methods button[aria-pressed='true'] { background: #d2e4ff; color: #001d37; }
+.login-page .xedi-auth-content form button[type='submit'] { background-color: #0051d5; color: #fff; }
+.login-page .xedi-auth-content form button[type='submit']:hover:not(:disabled) { background-color: #003ea8; }
+.login-page .xedi-auth-content form button:disabled { opacity: .65; }
+
+.login-page .xedi-auth-providers {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid #e0e3e6;
+  text-align: center;
+}
+.login-page .xedi-auth-providers > div { margin-top: 10px; }
+.login-page .xedi-auth-providers button { flex: 1; cursor: default; }
+.login-page .xedi-auth-providers p { color: #4e6175; font-size: .875rem; }
+
+.login-page .xedi-auth-value-strip {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 18px clamp(20px, 4vw, 48px);
+  background: #eef4fb;
+  list-style: none;
+  color: #001d37;
+}
+.login-page .xedi-auth-value-strip li { display: flex; align-items: center; gap: 8px; }
+.login-page .xedi-auth-value-strip .material-symbols-outlined { color: #0051d5; }
+
 @media (max-width: 900px) {
   .login-page .xedi-login-card { grid-template-columns: 1fr; min-height: 0; }
   .login-page .xedi-login-panel { grid-row: 1; }
+  .login-page .xedi-auth-value-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

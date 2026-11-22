@@ -1,12 +1,17 @@
 import { publicListingPipeline } from './listing.repository.js';
 import { getModels } from '../models/index.js';
 import { createModelRepository } from './base.repository.js';
+import { visibleVietTourVehicles } from './viet-tour-listing.repository.js';
 export function createHomepageRepository(database) {
   const models = getModels(database);
   const listings = createModelRepository(models.VehicleListing);
   const policiesRepository = createModelRepository(models.PlatformPolicy);
   return {
     async getOverview(now) {
+      if (database.name === 'viet_tour') {
+        const totalListings = await database.db.collection('vehicles').countDocuments(visibleVietTourVehicles);
+        return { listingInfo: [{ totalListings, cities: [] }], policies: [] };
+      }
       const [listingInfo, policies] = await Promise.all([listings.aggregate([...publicListingPipeline({
         status: 'published'
       }), {

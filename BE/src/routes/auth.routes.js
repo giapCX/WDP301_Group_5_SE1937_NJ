@@ -12,6 +12,8 @@ export function createAuthRouter(database, options = {}) {
   router.post('/forgot-password/otp', controller.requestPasswordReset);
   router.post('/reset-password', controller.resetPassword);
   router.post('/login', controller.login);
+  router.post('/login/otp', controller.requestLoginOtp);
+  router.post('/login/otp/verify', controller.loginWithOtp);
   router.get('/me', controller.me);
   router.post('/logout', controller.logout);
   return router;

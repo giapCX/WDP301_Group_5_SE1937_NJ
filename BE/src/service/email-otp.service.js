@@ -16,6 +16,7 @@ export function createEmailOtpService(connection, { sendEmail } = {}) {
   };
   const digest = (id, code) => createHmac('sha256', env.jwtSecret).update(`${id}:${code}`).digest('hex');
   const account = email => users.findOne({ email: { $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' } });
+  const purposeLabel = { register: 'đăng ký', reset: 'đặt lại mật khẩu', login: 'đăng nhập' };
   const deliver = sendEmail || (async ({ email, code, purpose }) => {
     const SMTP_HOST = process.env.SMTP_HOST?.trim() || 'smtp.gmail.com';
     const SMTP_PORT = process.env.SMTP_PORT?.trim() || '587';
@@ -25,7 +26,7 @@ export function createEmailOtpService(connection, { sendEmail } = {}) {
     if (!SMTP_USER || !SMTP_PASS?.trim()) throw httpError(503, 'Chưa có tài khoản gửi email: cần điền SMTP_USER và SMTP_PASS (mật khẩu ứng dụng) trong BE/.env, sau đó khởi động lại backend.');
     const transport = nodemailer.createTransport({ host: SMTP_HOST, port: Number(SMTP_PORT), secure: Number(SMTP_PORT) === 465, requireTLS: Number(SMTP_PORT) !== 465, auth: { user: SMTP_USER, pass: SMTP_PASS }, connectionTimeout: 10000, socketTimeout: 15000 });
     try {
-      const result = await transport.sendMail({ from: MAIL_FROM, to: email, subject: `XeDi - Mã xác nhận ${purpose === 'register' ? 'đăng ký' : 'đặt lại mật khẩu'}`, text: `Mã OTP của bạn là ${code}. Mã có hiệu lực 5 phút. Không chia sẻ mã này với bất kỳ ai.` });
+      const result = await transport.sendMail({ from: MAIL_FROM, to: email, subject: `XeDi - Mã xác nhận ${purposeLabel[purpose]}`, text: `Mã OTP của bạn là ${code}. Mã có hiệu lực 5 phút. Không chia sẻ mã này với bất kỳ ai.` });
       if (!result.accepted?.length) throw new Error('Email rejected');
     } catch (error) {
       if (error.code === 'EAUTH') throw httpError(503, 'Máy chủ email từ chối đăng nhập SMTP. Nếu dùng Gmail, hãy điền App Password vào SMTP_PASS (không dùng mật khẩu đăng nhập Gmail), kiểm tra SMTP_USER rồi khởi động lại backend.');
@@ -39,6 +40,8 @@ export function createEmailOtpService(connection, { sendEmail } = {}) {
       const user = await account(email);
       if (purpose === 'register' && user) throw httpError(409, 'Email đã có tài khoản.');
       if (purpose === 'reset' && (!user || user.account_status !== 'active')) throw httpError(400, 'Không tìm thấy tài khoản đang hoạt động với email này.');
+      const status = user?.account_status ?? (connection.name === 'viet_tour' ? user?.status : undefined);
+      const canDeliver = purpose !== 'login' || status === 'active';
       await (ready ||= Promise.all([codes.createIndex({ expires_at: 1 }, { expireAfterSeconds: 0 }), limits.createIndex({ expires_at: 1 }, { expireAfterSeconds: 0 })]).catch(error => { ready = undefined; throw error; }));
       const now = new Date(), key = `${purpose}:${email}`, id = new Types.ObjectId();
       try {
@@ -47,8 +50,10 @@ export function createEmailOtpService(connection, { sendEmail } = {}) {
       const code = String(randomInt(100000, 1000000)), expires_at = new Date(+now + 300000);
       await codes.insertOne({ _id: id, email, purpose, user_id: user?._id, account_email: user?.email, code_hash: digest(id, code), attempts: 0, used: false, delivered: false, expires_at });
       try {
-        await deliver({ email, code, purpose });
-        await codes.updateOne({ _id: id }, { $set: { delivered: true } });
+        if (canDeliver) {
+          await deliver({ email, code, purpose });
+          await codes.updateOne({ _id: id }, { $set: { delivered: true } });
+        }
       } catch (error) {
         await codes.deleteOne({ _id: id });
         await limits.deleteOne({ _id: key, request_id: id });
