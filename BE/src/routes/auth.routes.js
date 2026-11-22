@@ -14,6 +14,8 @@ export function createAuthRouter(database, options = {}) {
   router.post('/login', controller.login);
   router.post('/login/otp', controller.requestLoginOtp);
   router.post('/login/otp/verify', controller.loginWithOtp);
+  router.post('/renter/login', controller.renterLogin);
+  router.post('/renter/login/otp/verify', controller.renterLoginWithOtp);
   router.get('/me', controller.me);
   router.post('/logout', controller.logout);
   return router;

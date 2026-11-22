@@ -7,16 +7,7 @@ import React, { useState } from 'react';
 import './LoginPage.css';
 import useLogin from '../hooks/useLogin';
 
-const demoAccounts = [
-  ['Renter · Nguyễn Thành Long', 'renter08@example.com'],
-  ['Car Owner', 'owner01@example.com'],
-  ['Operation Staff', 'operation17@example.com'],
-  ['Garage Staff', 'garage15@example.com'],
-  ['Manager', 'manager19@example.com'],
-  ['Admin', 'admin20@example.com'],
-];
-
-const LoginPage = () => {
+const LoginPage = ({ staff = false }) => {
   const [registrationOtp,setRegistrationOtp]=useState({});
   const [resetOtp, setResetOtp] = useState({});
   const [resetData, setResetData] = useState({ email: '', password: '', confirm_password: '' });
@@ -67,14 +58,10 @@ const LoginPage = () => {
   const { isLoading, handleLoginSubmit } = useLogin({
     loginData,
     otpCredentials: useOtp ? { email: loginEmail, ...loginOtp } : null,
+    renterOnly: !staff,
     setFormStatus,
     setStatusType,
   });
-
-  const selectDemoAccount = (account) => {
-    setLoginData((previous) => ({ ...previous, account, password: '123456' }));
-    setFormStatus('');
-  };
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
@@ -150,7 +137,7 @@ const LoginPage = () => {
             >
               Đăng nhập
             </button>
-            <button
+            {!staff && <button
               className={`px-5 py-2 rounded-lg text-body-md font-headline-sm transition-all duration-200 ${
                 authTab === 'register'
                   ? 'bg-surface-container-lowest text-primary shadow-sm'
@@ -164,7 +151,7 @@ const LoginPage = () => {
               type="button"
             >
               Đăng ký
-            </button>
+            </button>}
           </div>
           <div className="hidden sm:flex items-center space-x-2 text-secondary text-body-sm font-body-sm">
             <span className="material-symbols-outlined text-base" data-icon="headset_mic">
@@ -198,7 +185,7 @@ const LoginPage = () => {
             <div className="transition-all duration-300">
               <div className="mb-8">
                 <h2 className="text-headline-xl font-headline-xl text-on-surface tracking-tight mb-2">
-                  Mừng bạn trở lại với VietTour
+                  {staff ? 'Đăng nhập nhân viên' : 'Mừng bạn trở lại với VietTour'}
                 </h2>
                 <p className="text-body-md font-body-md text-secondary">
                   Đăng nhập để tiếp tục quản lý lịch đặt xe và hành trình của bạn.
@@ -209,28 +196,6 @@ const LoginPage = () => {
                 <button type="button" aria-pressed={!useOtp} disabled={isLoading} onClick={() => { setLoginMethod('password'); setFormStatus(''); }}>Mật khẩu</button>
                 <button type="button" aria-pressed={useOtp} disabled={isLoading} onClick={() => { setLoginMethod('otp'); setFormStatus(''); }}>Mã OTP</button>
               </div>
-
-              {!useOtp && process.env.NODE_ENV === 'development' && (
-                <details className="mb-6 rounded-xl border border-outline-variant/60 bg-surface-container-low p-4">
-                  <summary className="font-semibold text-on-surface">Tài khoản mẫu</summary>
-                  <p className="mb-3 mt-1 text-body-sm text-secondary">Chọn vai trò để điền thông tin, sau đó bấm Đăng nhập.</p>
-                  <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {demoAccounts.map(([role, account]) => (
-                      <li key={account}>
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          onClick={() => selectDemoAccount(account)}
-                          className="w-full rounded-lg border border-outline-variant/60 bg-surface-container-lowest px-3 py-2 text-left text-body-sm hover:border-primary-container disabled:opacity-60"
-                        >
-                          <span className="block font-semibold text-on-surface">{role}</span>
-                          <span className="block break-all text-secondary">{account}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
 
               <form className="space-y-4" onSubmit={handleLoginSubmit}>
                 {useOtp ? (
@@ -359,6 +324,9 @@ const LoginPage = () => {
                   <button type="button" disabled>Apple ID</button>
                 </div>
               </div>
+              <a className="xedi-auth-staff-link" href={staff ? '/login' : '/#/staff-login'}>
+                {staff ? 'Đăng nhập người thuê' : 'Đăng nhập nhân viên'}
+              </a>
 
             </div>
           )}

@@ -93,7 +93,9 @@ export function parseListingsQuery(query) {
   const brand = text(query, 'brand', 60);
   if (brand) vehicleMatch['vehicle.brand'] = exact(brand);
   const seats = number(query, 'seats', undefined, 1, 50);
+  const minSeats = number(query, 'minSeats', undefined, 1, 50);
   if (seats !== undefined) vehicleMatch['vehicle.seats'] = seats;
+  else if (minSeats !== undefined) vehicleMatch['vehicle.seats'] = { $gte: minSeats };
   const minYear = number(query, 'minYear', undefined, 1900, 2100);
   if (minYear !== undefined)
     vehicleMatch['vehicle.manufacture_year'] = { $gte: minYear };

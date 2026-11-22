@@ -505,6 +505,7 @@
 .login-page .xedi-auth-tabs button[aria-pressed='true'] { background-color: white; }
 .login-page .xedi-auth-content { width: 100%; padding: 28px 0; }
 .login-page .xedi-auth-content summary { cursor: pointer; }
+.login-page .xedi-auth-staff-link { display: inline-block; margin-top: 16px; color: #0051d5; font-weight: 600; }
 
 .login-page .xedi-auth-visual-badge {
   display: inline-flex;

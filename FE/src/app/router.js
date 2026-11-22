@@ -1,4 +1,6 @@
 import RenterPage from '../features/renter/pages/RenterPage';
+import VietTourRenterDashboard from '../features/renter/pages/VietTourRenterDashboard';
+import VietTourTripSearch from '../features/renter/pages/VietTourTripSearch';
 import { useEffect, useState } from 'react';
 import HomePage from '../features/home/pages/HomePage';
 import TravelHomePage from '../features/home/pages/TravelHomePage';
@@ -14,12 +16,16 @@ import OperatorPage from '../features/operator/pages/OperatorPage';
 import VehicleDetailPage from '../features/listings/pages/VehicleDetailPage';
 
 const isHashRoute = (hash, route) => new RegExp(`^#/${route}(?:/|$)`).test(hash);
+const isStaffLoginRoute = () => window.location.hash === '#/staff-login';
 const isLoginRoute = () => isHashRoute(window.location.hash, 'login') ||
+  isHashRoute(window.location.hash, 'staff-login') ||
   (!window.location.hash && /^\/login\/?$/.test(window.location.pathname));
 
 export default function AppRouter() {
-  const [isRenter,setIsRenter]=useState(()=>window.location.hash.startsWith('#/renter'));
+  const [renterRoute, setRenterRoute] = useState(() => isHashRoute(window.location.hash, 'renter') ? window.location.hash : '');
+  const isRenter = Boolean(renterRoute);
   const [isLogin, setIsLogin] = useState(isLoginRoute);
+  const [isStaffLogin, setIsStaffLogin] = useState(isStaffLoginRoute);
   const [isGarage, setIsGarage] = useState(() => window.location.pathname.startsWith('/garage') || window.location.hash.startsWith('#/garage'));
   const [isOwner, setIsOwner] = useState(() => window.location.pathname.startsWith('/owner') || window.location.hash.startsWith('#/owner'));
   const [isManager, setIsManager] = useState(() => window.location.hash.startsWith('#/manager'));
@@ -32,8 +38,9 @@ export default function AppRouter() {
 
   useEffect(() => {
     const onHashChange = () => {
-      setIsRenter(window.location.hash.startsWith('#/renter'));
+      setRenterRoute(isHashRoute(window.location.hash, 'renter') ? window.location.hash : '');
       setIsLogin(isLoginRoute());
+      setIsStaffLogin(isStaffLoginRoute());
       setIsManager(window.location.hash.startsWith('#/manager'));
       setIsGarage(window.location.hash.startsWith('#/garage'));
       setIsOwner(window.location.hash.startsWith('#/owner'));
@@ -49,7 +56,7 @@ export default function AppRouter() {
   }, []);
 
   useEffect(() => {
-    document.title = isRenter ? 'Khách thuê — XeDi' : isContracts ? 'Hợp đồng — XeDi' : isOperator || isOperations || isOperation ? 'Nhân viên vận hành — XeDi' : isGarage
+    document.title = renterRoute.startsWith('#/renter/dat-chuyen') ? 'Đặt chuyến — VietTour' : isRenter ? 'Khách thuê — VietTour' : isContracts ? 'Hợp đồng — XeDi' : isOperator || isOperations || isOperation ? 'Nhân viên vận hành — XeDi' : isGarage
       ? 'Garage Staff — XeDi'
       : isOwner
       ? 'Cổng chủ xe — XeDi'
@@ -63,9 +70,10 @@ export default function AppRouter() {
             ? 'XeDi — Thuê xe tự lái, vi vu mọi nẻo đường'
             : 'VietTour — Thuê xe du lịch';
     window.scrollTo(0, 0);
-  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isOperator, isContracts, isOperation, isRenter]);
+  }, [isLogin, isManager, isAdmin, isGarage, isOwner, isOperations, isOperator, isContracts, isOperation, isRenter, renterRoute]);
 
-  if (isRenter) return <RenterPage />;
+  if (/^#\/renter\/dat-chuyen(?:\?|$)/.test(renterRoute)) return <VietTourTripSearch key={renterRoute} route={renterRoute} />;
+  if (isRenter) return /^#\/renter\/?$/.test(renterRoute) ? <VietTourRenterDashboard /> : <RenterPage />;
   if (vehicleId) return <VehicleDetailPage listingId={vehicleId} />;
   if (isContracts) return <ContractsPage />;
   if (isGarage) return <GarageAccess>{(user) => <GaragePage user={user} />}</GarageAccess>;
@@ -76,7 +84,7 @@ export default function AppRouter() {
 
   return isLogin ? (
     <div className="login-page">
-      <Login />
+      <Login key={isStaffLogin ? 'staff' : 'renter'} staff={isStaffLogin} />
     </div>
   ) : (
     window.location.pathname === '/xe-tu-lai' ? <HomePage /> : <TravelHomePage />

@@ -85,6 +85,9 @@ export function createAuthService(repository) {
   }
   async function completeLogin(user, metadata) {
     const rolesInfo = await populateUserRoles(repository, user);
+    if (metadata.renterOnly && !rolesInfo.roleCodes.includes('RENTER')) {
+      throw httpError(403, 'Giao diện VietTour này chỉ dành cho tài khoản người thuê.');
+    }
     const safeUser = sanitizeUser(user, rolesInfo);
     const token = jwt.sign({
       sub: user._id.toString(),

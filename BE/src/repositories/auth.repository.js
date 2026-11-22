@@ -88,11 +88,11 @@ export function createAuthRepository(database) {
       const filter = { _id: id };
       return useVietTour ? normalizeVietTourRole(await nativeRoles.findOne(filter)) : roles.findOne(filter);
     },
-    findRolesByIds: ids => roles.find({
-      _id: {
-        $in: ids
-      }
-    }).exec(),
+    findRolesByIds: async ids => {
+      const filter = { _id: { $in: ids } };
+      if (!useVietTour) return roles.find(filter).exec();
+      return (await nativeRoles.find(filter).toArray()).map(normalizeVietTourRole);
+    },
     findRoleWithPermission: (ids, permission) => roles.findOne({
       _id: { $in: ids }, permissions: permission,
     }, { projection: { _id: 1 } }),

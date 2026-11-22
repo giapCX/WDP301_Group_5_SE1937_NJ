@@ -1,13 +1,15 @@
-import { createRenterRepository } from '../repositories/renter.repository.js';
+import { createAuthRepository } from '../repositories/auth.repository.js';
 import { httpError } from '../utils/http-error.js';
 
 export function createRenterRoleMiddleware(database) {
-  const repository = createRenterRepository(database);
+  const repository = createAuthRepository(database);
   return async function requireRenterRole(request, _response, next) {
     try {
       const ids = [request.user.primary_role_id, ...(request.user.additional_role_ids || [])].filter(Boolean);
-      const role = await repository.one('roles', { _id: { $in: ids }, code: 'RENTER' });
-      if (!role) return next(httpError(403, 'Chức năng này dành cho tài khoản renter.'));
+      const roles = await repository.findRolesByIds(ids);
+      if (!roles.some((role) => role.code === 'RENTER')) {
+        return next(httpError(403, 'Giao diện VietTour này chỉ dành cho tài khoản người thuê.'));
+      }
       next();
     } catch (error) {
       next(error);
