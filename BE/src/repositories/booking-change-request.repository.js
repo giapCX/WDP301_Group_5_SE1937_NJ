@@ -201,7 +201,25 @@ async function hasDriverConflict(bookingId, start, end, session) {
   );
 }
 
+async function findPendingForBooking(bookingId, session) {
+  return BookingChangeRequest.findOne({
+    booking_id: bookingId,
+    request_status: 'pending',
+  })
+    .session(session)
+    .lean();
+}
+
+async function createChangeRequest(data, session) {
+  const [request] = await BookingChangeRequest.create([data], { session });
+  const result = request.toObject({ virtuals: false });
+  delete result._id;
+  return result;
+}
+
 module.exports = {
+  findPendingForBooking,
+  createChangeRequest,
   findRequestForReview,
   decidePendingRequest,
   applyItinerary,
