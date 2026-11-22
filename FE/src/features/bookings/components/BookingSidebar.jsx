@@ -14,7 +14,7 @@ export default function BookingSidebar() {
       </NavLink>
       <div className="sidebar-label">KHÔNG GIAN LÀM VIỆC</div>
       <nav aria-label="Điều hướng điều hành">
-        <a href="#overview">
+        <a href="/operator/bookings#overview">
           <Icon name="grid" />
           Tổng quan điều hành
         </a>
@@ -22,11 +22,15 @@ export default function BookingSidebar() {
           <Icon name="route" />
           Điều phối chuyến đi
         </NavLink>
-        <a href="#booking-list">
+        <NavLink to="/operator/booking-change-requests" aria-label="Thay đổi lịch trình">
+          <Icon name="calendar" />
+          Thay đổi lịch trình
+        </NavLink>
+        <a href="/operator/bookings#booking-list">
           <Icon name="list" />
           Quản lý đặt xe
         </a>
-        <a href="#available-vehicles">
+        <a href="/operator/bookings#available-vehicles">
           <Icon name="car" />
           Xe sẵn sàng
         </a>
