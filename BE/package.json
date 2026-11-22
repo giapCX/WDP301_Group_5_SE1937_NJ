@@ -8,7 +8,8 @@
     "start": "nodemon server",
     "seed": "node scripts/seed.js",
     "seed:check": "node scripts/seed.js --check",
-    "db:booking-review-fields": "node scripts/add-booking-review-fields.js"
+    "db:booking-review-fields": "node scripts/add-booking-review-fields.js",
+    "test:models": "node --test tests/models.test.js"
   },
   "keywords": [],
   "author": "",

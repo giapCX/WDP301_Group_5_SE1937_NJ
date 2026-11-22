@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+require('../src/models');
 
 const connectDb = async(uri = process.env.MONGO_URI) => {
     if(!uri)
