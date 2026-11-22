@@ -4,6 +4,7 @@ const { connectDb, disconnectDb } = require('./dal/database');
 const corsMiddleware = require('./middlewares/cors.middleware');
 const notFoundMiddleware = require('./middlewares/not-found.middleware');
 const errorMiddleware = require('./middlewares/error.middleware');
+const bookingRoutes = require('./src/routes/booking.routes');
 
 require('dotenv').config();
 
@@ -16,6 +17,8 @@ app.use(morgan('dev'));
 app.get('/api', (req, res) => {
   res.status(200).json({ message: 'Welcome Express server' });
 });
+
+app.use('/api/operator/bookings', bookingRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
