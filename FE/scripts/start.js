@@ -12,4 +12,5 @@ require.cache[webpackDevServerConfigPath].exports = (proxy, allowedHost) => {
 process.env.HOST = 'localhost';
 process.env.PORT = '3000';
 
+require('./configure-webpack')('development');
 require('react-scripts/scripts/start');

@@ -521,12 +521,10 @@
   text-transform: uppercase;
 }
 
-.login-page .xedi-auth-methods,
-.login-page .xedi-auth-providers > div { display: flex; gap: 8px; }
+.login-page .xedi-auth-methods { display: flex; gap: 8px; }
 
 .login-page .xedi-auth-methods { margin: 12px 0 18px; }
-.login-page .xedi-auth-methods button,
-.login-page .xedi-auth-providers button {
+.login-page .xedi-auth-methods button {
   padding: 6px 13px;
   border-radius: 8px;
   background: #edf1f6;
@@ -541,15 +539,6 @@
 .login-page .xedi-auth-content form button[type='submit']:hover:not(:disabled) { background-color: #003ea8; }
 .login-page .xedi-auth-content form button:disabled { opacity: .65; }
 
-.login-page .xedi-auth-providers {
-  margin-top: 20px;
-  padding-top: 14px;
-  border-top: 1px solid #e0e3e6;
-  text-align: center;
-}
-.login-page .xedi-auth-providers > div { margin-top: 10px; }
-.login-page .xedi-auth-providers button { flex: 1; cursor: default; }
-.login-page .xedi-auth-providers p { color: #4e6175; font-size: .875rem; }
 
 .login-page .xedi-auth-value-strip {
   grid-column: 1 / -1;

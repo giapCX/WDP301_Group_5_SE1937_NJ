@@ -317,13 +317,6 @@ const LoginPage = ({ staff = false }) => {
                 </button>
               </form>
 
-              <div className="xedi-auth-providers">
-                <p>Đăng nhập qua Google hoặc Apple ID chưa khả dụng.</p>
-                <div>
-                  <button type="button" disabled>Google</button>
-                  <button type="button" disabled>Apple ID</button>
-                </div>
-              </div>
               <a className="xedi-auth-staff-link" href={staff ? '/login' : '/#/staff-login'}>
                 {staff ? 'Đăng nhập người thuê' : 'Đăng nhập nhân viên'}
               </a>
