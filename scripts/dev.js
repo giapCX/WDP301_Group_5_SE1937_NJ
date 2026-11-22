@@ -6,7 +6,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const services = [
   { name: 'BE', directory: 'BE', command: 'start' },
-  { name: 'front end', directory: 'front end', command: 'run dev' },
+  { name: 'FE', directory: 'FE', command: 'run dev' },
 ];
 const children = [];
 let stopping = false;

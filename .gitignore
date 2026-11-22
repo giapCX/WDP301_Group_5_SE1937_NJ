@@ -10,3 +10,6 @@
 
 # Local backend runtime data and private backups
 /BE/storage/
+
+# Local frontend build output
+/FE/build/
