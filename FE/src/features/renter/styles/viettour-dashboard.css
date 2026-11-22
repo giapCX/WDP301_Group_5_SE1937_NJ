@@ -1,0 +1,131 @@
+.vt-dashboard {
+  min-height: 100vh;
+  color: #001d37;
+  background: #f5f8fc;
+  font-family: Inter, system-ui, sans-serif;
+}
+.vt-dashboard * { box-sizing: border-box; }
+.vt-dashboard a { text-decoration: none; }
+.vt-dashboard :focus-visible { outline: 3px solid #78a7ff; outline-offset: 3px; }
+.vt-dashboard-header {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; min-height: 80px;
+  padding: 12px max(20px, calc((100% - 1216px) / 2));
+  background: #f7f9fcee; backdrop-filter: blur(16px);
+  box-shadow: 0 1px 8px #16324f12;
+}
+.vt-dashboard-header nav, .vt-dashboard-brand, .vt-dashboard-account { display: flex; align-items: center; gap: 14px; }
+.vt-dashboard-header button {
+  font: inherit; font-weight: 600; color: #43474d; background: none; border: 0; padding: 8px; cursor: pointer;
+}
+.vt-dashboard-header button:hover { color: #0051d5; }
+.vt-dashboard-brand { color: #001d37; font-size: 1.2rem; font-weight: 800; }
+.vt-dashboard-brand-mark, .vt-dashboard-avatar {
+  display: grid; place-items: center; width: 38px; height: 38px; flex: none;
+  border-radius: 9px; background: #001d37; color: #fff;
+}
+.vt-dashboard-avatar { border-radius: 50%; background: #dbe1ff; color: #001d37; font-weight: 800; }
+.vt-dashboard-brand small, .vt-dashboard-account small { display: block; color: #4e6175; font-size: .7rem; }
+.vt-dashboard-brand small { text-transform: uppercase; letter-spacing: .06em; }
+.vt-dashboard-account-name { text-align: right; font-size: .875rem; font-weight: 700; }
+.vt-dashboard-account button { border-radius: 8px; background: #e6e8eb; white-space: nowrap; }
+.vt-dashboard-content { width: min(1216px, 100% - 40px); margin: 0 auto; padding: 24px 0 50px; display: grid; gap: 26px; }
+.vt-dashboard-content [id] { scroll-margin-top: 100px; }
+.vt-dashboard h1, .vt-dashboard h2, .vt-dashboard h3, .vt-dashboard p { margin: 0; }
+.vt-dashboard-hero {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 20px; padding: clamp(20px, 5vw, 44px);
+  color: #fff; border-radius: 16px;
+  background: radial-gradient(ellipse at 92% 0%, #28558c, transparent 50%),
+    radial-gradient(ellipse at 72% 100%, #184954, transparent 40%), linear-gradient(90deg, #001d37, #16324f, #001d37);
+  box-shadow: 0 14px 28px #001d3724;
+}
+.vt-dashboard-hero h1 { margin: 5px 0 8px; font-size: clamp(1.7rem, 3.8vw, 2.6rem); }
+.vt-dashboard-hero p { color: #d2e4ff; }
+.vt-dashboard-member { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 99px; background: #9cf2e833; color: #9cf2e8; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.vt-dashboard-progress { display: grid; gap: 5px; margin-top: 18px; color: #d2e4ff; }
+.vt-dashboard-progress progress { width: 100%; height: 9px; accent-color: #80d5cb; }
+.vt-dashboard-button {
+  display: inline-flex; align-items: center; justify-content: center; width: fit-content;
+  padding: 11px 16px; border: 0; border-radius: 8px; color: white; background: #0051d5; font: inherit; font-weight: 700;
+  cursor: pointer;
+}
+.vt-dashboard-button:hover { background: #003ea8; }
+.vt-dashboard-metrics, .vt-dashboard-shortcuts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.vt-dashboard-metrics article, .vt-dashboard-panel {
+  background: white; border: 1px solid #dce6f1; border-radius: 12px; padding: clamp(15px, 3vw, 24px);
+  box-shadow: 0 4px 16px #153e610b;
+}
+.vt-dashboard-metrics article { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.vt-dashboard-metrics article > div { display: grid; gap: 5px; }
+.vt-dashboard-metrics svg, .vt-dashboard-shortcuts svg { color: #0051d5; }
+.vt-dashboard-metrics strong { font-size: 1.8rem; }
+.vt-dashboard-metrics article > div > span { color: #4e6175; font-size: .8rem; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.vt-dashboard-metric-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: none; border-radius: 10px; background: #dbe1ff80; }
+.vt-dashboard-metrics article:nth-child(2) .vt-dashboard-metric-icon, #uu-dai .vt-dashboard-section-heading::before { background: #9cf2e880; }
+.vt-dashboard-section-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.vt-dashboard-section-heading::before { content: ''; flex: none; width: 8px; height: 23px; border-radius: 8px; background: #0051d5; }
+.vt-dashboard-section-heading h2 { font-size: 1.15rem; }
+.vt-dashboard-section-heading > .vt-dashboard-pill { margin-left: auto; }
+.vt-dashboard-trip { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); overflow: hidden; border: 1px solid #dce6f1; border-radius: 16px; background: #fff; box-shadow: 0 4px 16px #153e6112; }
+.vt-dashboard-trip-summary, .vt-dashboard-itinerary { display: grid; align-content: start; justify-items: start; gap: 8px; padding: 18px; }
+.vt-dashboard-trip-summary { background: radial-gradient(#aec9ed80 1px, transparent 1px) 0 0 / 16px 16px, #f2f4f7; }
+.vt-dashboard-trip-code { padding: 4px 8px; border-radius: 6px; color: #fff; background: #001d37; font: 700 .82rem monospace; }
+.vt-dashboard-trip-photo { position: relative; width: 100%; margin: 0; aspect-ratio: 16 / 8; overflow: hidden; border-radius: 10px; background: #dbe1ff; }
+.vt-dashboard-trip-photo img { width: 100%; height: 100%; object-fit: cover; }
+.vt-dashboard-trip-photo figcaption { position: absolute; right: 7px; bottom: 7px; padding: 3px 7px; border-radius: 6px; color: #fff; background: #001d37d9; font-size: .75rem; }
+.vt-dashboard-inline-link { color: #0051d5; font-weight: 700; margin-top: 8px; }
+.vt-dashboard-pill { display: inline-block; width: fit-content; padding: 3px 8px; border-radius: 999px; color: #00504a; background: #d6f5ef; font-size: .82rem; font-weight: 700; }
+.vt-dashboard-timeline { display: grid; gap: 12px; margin: 12px 0 0 6px; padding-left: 18px; list-style: none; border-left: 2px solid #dbe1ff; }
+.vt-dashboard-timeline li { position: relative; }
+.vt-dashboard-timeline li::before { content: ''; position: absolute; left: -24px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: #0051d5; }
+.vt-dashboard-itinerary small { display: block; color: #4e6175; }
+.vt-dashboard-history { list-style: none; padding: 0; margin: 0; }
+.vt-dashboard-history li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 13px 0; border-top: 1px solid #dce6f1; }
+.vt-dashboard-history li div { display: grid; justify-items: start; gap: 5px; }
+.vt-dashboard-history p, .vt-dashboard-empty { color: #4e6175; }
+.vt-dashboard-empty a { margin-top: 10px; }
+.vt-dashboard-shortcuts a { display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid #e3e9f0; border-radius: 12px; color: #001d37; background: #fff; }
+.vt-dashboard-shortcuts a:hover { border-color: #9bbcf1; }
+.vt-dashboard-shortcuts p { flex: 1; color: #4e6175; font-size: .875rem; line-height: 1.5; }
+.vt-dashboard-shortcut-link { display: flex; justify-content: space-between; align-items: center; color: #0051d5; font-size: .875rem; font-weight: 700; }
+.vt-dashboard-columns { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; }
+.vt-dashboard-section-note { margin-left: auto; color: #0051d5; font-size: .8rem; }
+.vt-dashboard-offers { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.vt-dashboard-offers li { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 12px; border-radius: 10px; background: #eff6f7; }
+.vt-dashboard-offers p { color: #4e6175; font-size: .85rem; }
+.vt-dashboard-concierge, .vt-dashboard-insurance {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 12px; padding: 16px; border-radius: 12px;
+}
+.vt-dashboard-concierge { background: #001d37; color: #fff; }
+.vt-dashboard-concierge span { color: #9cf2e8; font-size: .8rem; }
+.vt-dashboard-concierge h3 { margin-top: 3px; font-size: 1.25rem; }
+.vt-dashboard-insurance { justify-content: flex-start; background: #e6e8eb; }
+.vt-dashboard-insurance svg { flex: none; color: #0051d5; }
+.vt-dashboard-insurance p { color: #4e6175; font-size: .875rem; }
+.vt-dashboard-trip-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.vt-dashboard-history li .vt-dashboard-history-actions { flex: 0 0 100%; justify-items: end; margin-top: 4px; }
+.vt-dashboard-secondary-button {
+  display: inline-flex; align-items: center; padding: 7px 11px;
+  border-radius: 8px; background: #e6e8eb; color: #001d37; font-weight: 650; font-size: .85rem;
+}
+.vt-dashboard-secondary-button:hover { background: #dbe1ff; }
+.vt-dashboard-footer { padding: 28px max(20px, calc((100% - 1216px) / 2)); background: #eaf0f6; }
+.vt-dashboard-footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+.vt-dashboard-footer-grid > div { display: grid; gap: 8px; align-content: start; justify-items: start; }
+.vt-dashboard-footer-grid h3 { color: #001d37; font-size: .86rem; letter-spacing: .04em; text-transform: uppercase; }
+.vt-dashboard-footer-grid p, .vt-dashboard-footer-grid a:not(.vt-dashboard-brand), .vt-dashboard-footer-grid button {
+  color: #4e6175; font: inherit; font-size: .875rem;
+}
+.vt-dashboard-footer-grid button { border: 0; background: none; padding: 0; cursor: pointer; }
+.vt-dashboard-footer-grid a:hover, .vt-dashboard-footer-grid button:hover { color: #0051d5; }
+.vt-dashboard .vt-dashboard-footer-bottom { margin-top: 24px; padding-top: 14px; border-top: 1px solid #dce6f1; color: #4e6175; font-size: .8rem; }
+.vt-dashboard-access { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 45px 20px; text-align: center; }
+@media (max-width: 760px) {
+  .vt-dashboard-header nav, .vt-dashboard-account-name { display: none; }
+  .vt-dashboard-metrics, .vt-dashboard-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vt-dashboard-trip, .vt-dashboard-columns { grid-template-columns: 1fr; }
+  .vt-dashboard-footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

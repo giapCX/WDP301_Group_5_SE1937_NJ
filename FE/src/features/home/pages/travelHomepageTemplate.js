@@ -2,7 +2,7 @@ import { createElement as h } from "react";
 import Icon from "../../../components/Icon";
 
 // Sections and utility classes from the supplied homepage design.
-export default function renderTravelHomepage({ mode, fleetFilter, account, overview, results, fleet, onClick, onSubmit }) {
+export default function renderTravelHomepage({ mode, initialVehicle, fleetFilter, account, overview, results, fleet, onClick, onSubmit }) {
   return h("div", { className: "viettour-home bg-surface font-body-md text-on-surface antialiased", onClick, onSubmit },
     h("header", { className: "fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(22,50,79,0.05)]" },
       h("div", { className: "h-20 max-w-[1280px] mx-auto px-margin flex items-center justify-between gap-space-lg" },
@@ -38,7 +38,7 @@ export default function renderTravelHomepage({ mode, fleetFilter, account, overv
           ),
         ),
         h("div", { className: "flex items-center gap-space-md" },
-          h("a", { className: "hidden sm:inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container-high text-on-surface font-label-lg text-label-lg hover:bg-surface-container-highest hover:text-on-surface transition-colors", href: "/#/renter/bookings" },
+          h("a", { className: "hidden sm:inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container-high text-on-surface font-label-lg text-label-lg hover:bg-surface-container-highest hover:text-on-surface transition-colors", href: "/#/renter" },
             "Tra cứu đơn đặt",
           ),
           account,
@@ -158,7 +158,7 @@ export default function renderTravelHomepage({ mode, fleetFilter, account, overv
                     h("span", { className: "material-symbols-outlined text-secondary text-[16px]" }, "directions_car"),
                     " Hạng xe & Số người ",
                   ),
-                  h("select", { className: "w-full bg-transparent font-title-sm text-title-sm text-on-surface outline-none cursor-pointer", name: "vehicle", "aria-label": "Hạng xe", required: true, defaultValue: "limo9" },
+                  h("select", { className: "w-full bg-transparent font-title-sm text-title-sm text-on-surface outline-none cursor-pointer", name: "vehicle", "aria-label": "Hạng xe", required: true, defaultValue: initialVehicle || "limo9" },
                     h("option", { value: "suv7" }, "SUV 7 Chỗ (Gia đình 4-6 người)"),
                     h("option", { value: "sedan4" }, "Sedan 4 Chỗ (1-3 người VIP)"),
                     h("option", { value: "limo9" }, "DCar Limousine 9 Chỗ VIP"),
@@ -222,7 +222,7 @@ export default function renderTravelHomepage({ mode, fleetFilter, account, overv
                     h("span", { className: "material-symbols-outlined text-secondary text-[16px]" }, "airport_shuttle"),
                     " Phương tiện ",
                   ),
-                  h("select", { className: "w-full bg-transparent font-title-sm text-title-sm text-on-surface outline-none cursor-pointer", name: "vehicle", "aria-label": "Hạng xe", required: true, defaultValue: "limo9" },
+                  h("select", { className: "w-full bg-transparent font-title-sm text-title-sm text-on-surface outline-none cursor-pointer", name: "vehicle", "aria-label": "Hạng xe", required: true, defaultValue: initialVehicle || "limo9" },
                     h("option", { value: "limo9" }, "DCar Limousine 9 Chỗ (VIP Sang Trọng)"),
                     h("option", { value: "suv7" }, "Ford Everest Titanium 7 Chỗ"),
                     h("option", { value: "solati16" }, "Hyundai Solati 16 Chỗ"),
