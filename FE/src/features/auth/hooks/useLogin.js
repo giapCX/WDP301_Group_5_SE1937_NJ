@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { login, loginWithOtp } from '../api/authApi';
 import { getLoginDestination, saveSession } from '../session';
 
-export default function useLogin({ loginData, otpCredentials, renterOnly, setFormStatus, setStatusType }) {
+export default function useLogin({ loginData, otpCredentials, setFormStatus, setStatusType }) {
   const [isLoading, setIsLoading] = useState(false);
   const redirectTimer = useRef();
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
@@ -13,13 +13,15 @@ export default function useLogin({ loginData, otpCredentials, renterOnly, setFor
     setStatusType('info');
 
     try {
-      const response = otpCredentials ? await loginWithOtp(otpCredentials, renterOnly) : await login({
+      const response = otpCredentials ? await loginWithOtp(otpCredentials) : await login({
         account: loginData.account,
         password: loginData.password,
-      }, renterOnly);
+      });
 
       const user = response.data?.user;
       const token = response.data?.token;
+      if (!token || !user) throw new Error('Phiên đăng nhập không hợp lệ.');
+      const destination = getLoginDestination(user);
 
       saveSession(token, user, loginData.rememberMe);
 
@@ -29,9 +31,7 @@ export default function useLogin({ loginData, otpCredentials, renterOnly, setFor
       );
 
       redirectTimer.current = setTimeout(() => {
-        const destination = renterOnly ? '/#/renter' : getLoginDestination(user);
-        if (destination === '/garage' || destination === '/owner') window.location.assign(destination);
-        else window.location.hash = destination.slice(1);
+        window.location.assign(destination);
       }, 1000);
     } catch (err) {
       setStatusType('error');

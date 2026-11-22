@@ -47,6 +47,7 @@ function sanitizeUser(user, rolesInfo) {
     email: user.email,
     phone: user.phone,
     account_status: user.account_status,
+    ...(user.role_id && { workspace_schema: 'viet_tour' }),
     primary_role_id: user.primary_role_id ? user.primary_role_id.toString() : null,
     role: rolesInfo.primaryRole ? {
       id: rolesInfo.primaryRole._id.toString(),
@@ -85,6 +86,7 @@ export function createAuthService(repository) {
   }
   async function completeLogin(user, metadata) {
     const rolesInfo = await populateUserRoles(repository, user);
+    if (!rolesInfo.roleCodes.length) throw httpError(403, 'Tài khoản chưa được gán vai trò.');
     if (metadata.renterOnly && !rolesInfo.roleCodes.includes('RENTER')) {
       throw httpError(403, 'Giao diện VietTour này chỉ dành cho tài khoản người thuê.');
     }
@@ -93,7 +95,7 @@ export function createAuthService(repository) {
       sub: user._id.toString(),
       email: user.email,
       phone: user.phone,
-      role: rolesInfo.primaryRole?.code || 'RENTER',
+      role: rolesInfo.primaryRole?.code || rolesInfo.roleCodes[0],
       roles: rolesInfo.roleCodes,
       permissions: rolesInfo.permissions
     }, env.jwtSecret, { expiresIn: env.jwtExpiresIn });

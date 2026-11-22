@@ -5,6 +5,7 @@ import { notFound, errorHandler } from './middleware/error.middleware.js';
 import { env } from './config/env.js';
 import { createListingsRouter } from './routes/listing.routes.js';
 import { createHomepageRouter } from './routes/homepage.routes.js';
+import { createRoleWorkspaceRouter } from './routes/role-workspace.routes.js';
 import { createAuthRouter } from './routes/auth.routes.js';
 import { createGarageIntakesRouter } from './routes/garage-intake.routes.js';
 import { createGarageInspectionsRouter } from './routes/garage-inspection.routes.js';
@@ -50,6 +51,7 @@ export function createApp(database, options = {}) {
   app.use('/api/auth', createAuthRouter(database, { sendEmail: options.sendEmail }));
   app.use('/api/listings', createListingsRouter(database, options.ownerFileRepository || privateFileRepository));
   app.use('/api/homepage', createHomepageRouter(database));
+  app.use('/api/workspaces', createRoleWorkspaceRouter(database));
   app.use('/api/garage', createGarageIntakesRouter(database));
   app.use('/api/garage', createGarageInspectionsRouter(database, options.ownerFileRepository || privateFileRepository));
   app.use('/api/garage', createGarageHandoverRouter(database));

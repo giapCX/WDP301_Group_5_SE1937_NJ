@@ -150,7 +150,7 @@ export default function TravelHomePage() {
     mode,
     initialVehicle: new URLSearchParams(window.location.search).get('vehicle') === 'limo9' ? 'limo9' : undefined,
     fleetFilter,
-    account: h('a', { className: 'vt-account-link', href: account?.roles?.includes('RENTER') ? '/#/renter' : account ? getLoginDestination(account) : '/login' },
+    account: h('a', { className: 'vt-account-link', href: account ? getLoginDestination(account) : '/login' },
       account ? 'Tài khoản' : 'Đăng nhập',
     ),
     overview: homepage?.totalListings > 0

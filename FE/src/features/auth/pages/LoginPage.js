@@ -58,7 +58,6 @@ const LoginPage = ({ staff = false }) => {
   const { isLoading, handleLoginSubmit } = useLogin({
     loginData,
     otpCredentials: useOtp ? { email: loginEmail, ...loginOtp } : null,
-    renterOnly: !staff,
     setFormStatus,
     setStatusType,
   });

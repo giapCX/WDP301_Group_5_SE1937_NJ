@@ -26,7 +26,21 @@ export function createEmailOtpService(connection, { sendEmail } = {}) {
     if (!SMTP_USER || !SMTP_PASS?.trim()) throw httpError(503, 'Chưa có tài khoản gửi email: cần điền SMTP_USER và SMTP_PASS (mật khẩu ứng dụng) trong BE/.env, sau đó khởi động lại backend.');
     const transport = nodemailer.createTransport({ host: SMTP_HOST, port: Number(SMTP_PORT), secure: Number(SMTP_PORT) === 465, requireTLS: Number(SMTP_PORT) !== 465, auth: { user: SMTP_USER, pass: SMTP_PASS }, connectionTimeout: 10000, socketTimeout: 15000 });
     try {
-      const result = await transport.sendMail({ from: MAIL_FROM, to: email, subject: `XeDi - Mã xác nhận ${purposeLabel[purpose]}`, text: `Mã OTP của bạn là ${code}. Mã có hiệu lực 5 phút. Không chia sẻ mã này với bất kỳ ai.` });
+      const action = purposeLabel[purpose];
+      const result = await transport.sendMail({
+        from: { name: 'VietTour', address: MAIL_FROM },
+        to: email,
+        subject: `VietTour | Mã xác nhận ${action}`,
+        text: [
+          'Xin chào,',
+          '',
+          `Mã xác nhận ${action} tài khoản VietTour của bạn là ${code}.`,
+          'Mã có hiệu lực trong 5 phút. Vui lòng giữ mã này cho riêng bạn.',
+          'Nếu bạn không yêu cầu mã, bạn có thể bỏ qua email này.',
+          '',
+          'VietTour',
+        ].join('\n'),
+      });
       if (!result.accepted?.length) throw new Error('Email rejected');
     } catch (error) {
       if (error.code === 'EAUTH') throw httpError(503, 'Máy chủ email từ chối đăng nhập SMTP. Nếu dùng Gmail, hãy điền App Password vào SMTP_PASS (không dùng mật khẩu đăng nhập Gmail), kiểm tra SMTP_USER rồi khởi động lại backend.');
