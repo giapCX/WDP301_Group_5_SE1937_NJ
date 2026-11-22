@@ -15,6 +15,11 @@ const definitions = [
  [9,1,'2026-11-15',1,800000,'completed',0]
 ];
 const bookings = definitions.map(([renter_id,vehicle_id,day,days,estimated_price,booking_status,additional_charge],i) => ({ booking_id:i+1,renter_id,vehicle_id,pickup_location:'Demo: Quan 1, TP.HCM',dropoff_location:'Demo: Vung Tau',pickup_time:date(`${day}T01:00:00Z`),estimated_end_time:new Date(date(`${day}T01:00:00Z`).getTime()+days*86400000),estimated_price,additional_charge,booking_status,created_at:date('2026-11-01T01:00:00Z') }));
+for (const booking of bookings) {
+  booking.reviewed_by = null;
+  booking.reviewed_at = null;
+  booking.rejection_reason = null;
+}
 const trip_stops = bookings.flatMap(b => [1,2].map(n => ({stop_id:(b.booking_id-1)*2+n,booking_id:b.booking_id,stop_order:n,location:n===1?'Demo: Tram dung Long Thanh':'Demo: Bai Sau, Vung Tau',note:'Du lieu gia lap'})));
 const trip_assignments = [2,3,4,6].map((booking_id,i) => ({assignment_id:i+1,booking_id,driver_id:booking_id===3?2:1,assigned_by:3,assigned_at:date('2026-11-02T00:00:00Z'),assignment_status:booking_id>=4?'completed':'assigned'}));
 const trip_status_updates = bookings.filter(b=>b.booking_id!==1).map((b,i) => ({update_id:i+1,booking_id:b.booking_id,updated_by:3,trip_status:b.booking_status,updated_at:b.booking_status==='completed'?b.estimated_end_time:b.pickup_time}));

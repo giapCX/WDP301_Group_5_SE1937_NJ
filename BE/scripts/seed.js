@@ -2,6 +2,7 @@ const path = require('node:path');
 require('dotenv').config({ path: path.join(__dirname, '../.env'), quiet: true });
 const mongoose = require('mongoose');
 const data = require('../src/config/sample-data');
+const { addBookingReviewFields } = require('./add-booking-review-fields');
 const keys = ['role_id','user_id','driver_id','vehicle_id','booking_id','stop_id','assignment_id','update_id','promotion_id','booking_id','payment_id','refund_id','inspection_id','maintenance_id','incident_id','review_id'];
 const unique = {roles:['role_name'],users:['email'],driver_profiles:['user_id','license_number'],vehicles:['plate_number'],promotions:['code'],reviews:['booking_id']};
 async function main() {
@@ -23,6 +24,7 @@ async function main() {
     const result = await collection.bulkWrite(rows.map(row=>({updateOne:{filter:{[key]:row[key]},update:{$setOnInsert:row},upsert:true}})));
     console.log(`${name}: inserted ${result.upsertedCount}, existing ${result.matchedCount}`);
   }
+  await addBookingReviewFields(db);
   console.log(`Seed completed: ${db.databaseName}`);
 }
 main().catch(error=>{console.error(error.message);process.exitCode=1;}).finally(()=>mongoose.disconnect());
