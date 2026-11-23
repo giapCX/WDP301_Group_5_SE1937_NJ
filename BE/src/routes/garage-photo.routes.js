@@ -4,8 +4,8 @@ import { requireGarageStaff } from '../middleware/garage-auth.middleware.js';
 import { requireGaragePhotoViewer } from '../middleware/garage-photo-auth.middleware.js';
 import { createGaragePhotoRepository } from '../repositories/garage-photo.repository.js';
 import { createCloudinaryGaragePhotoRepository } from '../repositories/cloudinary-garage-photo.repository.js';
-import { createGaragePhotoService } from '../service/garage-photo.service.js';
-import { createGaragePhotoController } from '../controller/garage-photo.controller.js';
+import { createGaragePhotoService } from '../services/garage-photo.service.js';
+import { createGaragePhotoController } from '../controllers/garage-photo.controller.js';
 
 export function createGaragePhotoRouter(connection, directory, { useLocalFileStorage = false } = {}) {
   const router = Router();

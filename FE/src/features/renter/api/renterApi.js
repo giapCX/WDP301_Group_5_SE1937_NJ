@@ -1,4 +1,4 @@
-import { getApi, postApi, putApi, getBlobApi } from '../../../services/httpClient';
+import { getApi, postApi, putApi, getBlobApi } from '../../../api/client';
 export const getRenter = (path, options) => getApi('/renter' + path, options);
 export const postRenter = (path, body) => postApi('/renter' + path, body);
 export const putRenter = (path, body) => putApi('/renter' + path, body);

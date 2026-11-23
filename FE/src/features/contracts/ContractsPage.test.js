@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import ContractsPage from './ContractsPage';
 import { saveSession } from '../auth/session';
-import { getApi, postApi } from '../../services/httpClient';
+import { getApi, postApi } from '../../api/client';
 import { renderAsync } from 'docx-preview';
 
-jest.mock('../../services/httpClient', () => ({ getApi: jest.fn(), postApi: jest.fn() }));
+jest.mock('../../api/client', () => ({ getApi: jest.fn(), postApi: jest.fn() }));
 jest.mock('docx-preview', () => ({ renderAsync: jest.fn() }));
 const row = {
   id: 'agreement-1', type: 'management', number: 'MGMT-TEST-1', status: 'pending_signatures',

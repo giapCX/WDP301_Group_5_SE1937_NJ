@@ -23,7 +23,7 @@ const isLoginRoute = () => isHashRoute(window.location.hash, 'login') ||
   isHashRoute(window.location.hash, 'staff-login') ||
   (!window.location.hash && /^\/login\/?$/.test(window.location.pathname));
 
-export default function AppRouter() {
+export default function AppRoutes() {
   const [renterRoute, setRenterRoute] = useState(() => isHashRoute(window.location.hash, 'renter') ? window.location.hash : '');
   const isRenter = Boolean(renterRoute);
   const [isLogin, setIsLogin] = useState(isLoginRoute);

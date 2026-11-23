@@ -11,7 +11,7 @@ Hướng dẫn dành cho thành viên phát triển API XeDi. Backend chạy tr�
 
 ## Kiến trúc theo tầng
 
-- src/server.js khởi động server và kết nối DB. src/app.js gắn middleware, router theo tiền tố /api và endpoint /api/health.
+- server.js khởi động server và kết nối DB. src/app.js gắn middleware, router theo tiền tố /api và endpoint /api/health.
 - Routes khai báo endpoint và ghép middleware với controller. Controller đọc tham số HTTP, gọi service rồi trả response. Service kiểm tra quyền nghiệp vụ, trạng thái và điều phối giao dịch.
 - Repository tập trung truy vấn và ghi dữ liệu. Model định nghĩa schema, kiểu dữ liệu và ràng buộc. Middleware xử lý xác thực và lỗi dùng chung. Validator kiểm tra dữ liệu đầu vào.
 - src/database quản lý danh sách collection, index và seed. BE/data chứa dữ liệu khởi tạo. BE/scripts chứa lệnh setup, seed và các tác vụ vận hành.

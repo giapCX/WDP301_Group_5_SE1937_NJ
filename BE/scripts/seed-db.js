@@ -1,4 +1,4 @@
-import { connectDatabase, closeDatabase } from '../src/config/database.js';
+import { connectDatabase, closeDatabase } from '../dal/database.js';
 import { readSeedDatasets, seedDatabase } from '../src/database/seed.js';
 
 try {

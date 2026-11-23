@@ -1,4 +1,4 @@
-import { getApi, postApi } from '../../../services/httpClient';
+import { getApi, postApi } from '../../../api/client';
 
 const agreementPath = (type, id) => `/contracts/${type}/${encodeURIComponent(id)}`;
 

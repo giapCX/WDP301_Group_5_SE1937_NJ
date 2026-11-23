@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { createAuthRepository } from '../repositories/auth.repository.js';
-import { createAuthService } from '../service/auth.service.js';
-import { createAuthController } from '../controller/auth.controller.js';
-import { createEmailOtpService } from '../service/email-otp.service.js';
+import { createAuthService } from '../services/auth.service.js';
+import { createAuthController } from '../controllers/auth.controller.js';
+import { createEmailOtpService } from '../services/email-otp.service.js';
 
 export function createAuthRouter(database, options = {}) {
   const emailOtp = createEmailOtpService(database, options);

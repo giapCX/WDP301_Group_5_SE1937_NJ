@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { requireGarageStaff } from '../middleware/garage-auth.middleware.js';
-import { createVehicleInspectionController } from '../controller/garage-inspection.controller.js';
+import { createVehicleInspectionController } from '../controllers/garage-inspection.controller.js';
 import { createVehicleInspectionRepository } from '../repositories/garage-inspection.repository.js';
-import { createVehicleInspectionService } from '../service/garage-inspection.service.js';
+import { createVehicleInspectionService } from '../services/garage-inspection.service.js';
 
 export function createGarageInspectionsRouter(database, ownerFiles) {
   const router = Router();

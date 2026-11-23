@@ -3,7 +3,7 @@ import { formatDisplayValue, humanizeField } from './dataDisplay';
 import { useState } from 'react';
 import IncidentConditionComparison from './IncidentConditionComparison';
 import GaragePhotoPreview from '../../garage/components/GaragePhotoPreview';
-import { getBlobApi } from '../../../services/httpClient';
+import { getBlobApi } from '../../../api/client';
 import { incidentMilestones } from '../../operator/components/IncidentResponseFields';
 
 const money = (value) => new Intl.NumberFormat('vi-VN').format(value || 0);

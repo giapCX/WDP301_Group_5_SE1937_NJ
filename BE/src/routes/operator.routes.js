@@ -1,15 +1,15 @@
 import { Router } from 'express';
-import { createOperatorController } from '../controller/operator.controller.js';
+import { createOperatorController } from '../controllers/operator.controller.js';
 import { createAuthMiddleware } from '../middleware/auth.middleware.js';
 import { createOperatorPermissionMiddleware } from '../middleware/operator-auth.middleware.js';
 import { createOperatorRepository } from '../repositories/operator.repository.js';
-import { createOperatorService } from '../service/operator.service.js';
+import { createOperatorService } from '../services/operator.service.js';
 import { createContractRepository } from '../repositories/contract.repository.js';
-import { createContractService } from '../service/contract.service.js';
+import { createContractService } from '../services/contract.service.js';
 import { createManagerRepository } from '../repositories/manager.repository.js';
-import { createRentalOperationsService } from '../service/rental-operations.service.js';
-import { createManagerApprovalService } from '../service/manager-approval.service.js';
-import { createRentalOperationsController } from '../controller/rental-operations.controller.js';
+import { createRentalOperationsService } from '../services/rental-operations.service.js';
+import { createManagerApprovalService } from '../services/manager-approval.service.js';
+import { createRentalOperationsController } from '../controllers/rental-operations.controller.js';
 
 export function createOperatorRouter(connection, files) {
   const router = Router();

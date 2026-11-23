@@ -1,4 +1,4 @@
-import { getApi, getBlobApi, patchApi, postApi } from '../../../services/httpClient';
+import { getApi, getBlobApi, patchApi, postApi } from '../../../api/client';
 
 function queryString(params = {}) {
   const query = new URLSearchParams(Object.entries(params)

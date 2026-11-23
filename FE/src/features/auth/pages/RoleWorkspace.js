@@ -1,5 +1,5 @@
 import { createElement as h, useEffect, useState } from 'react';
-import { getApi } from '../../../services/httpClient';
+import { getApi } from '../../../api/client';
 import { clearSession } from '../session';
 import '../../renter/styles/viettour-dashboard.css';
 

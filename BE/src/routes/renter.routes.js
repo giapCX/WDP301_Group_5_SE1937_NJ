@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { createAuthMiddleware } from '../middleware/auth.middleware.js';
 import { createRenterRepository } from '../repositories/renter.repository.js';
-import { createRenterService } from '../service/renter.service.js';
-import { createRenterController } from '../controller/renter.controller.js';
+import { createRenterService } from '../services/renter.service.js';
+import { createRenterController } from '../controllers/renter.controller.js';
 import { createRenterRoleMiddleware } from '../middleware/renter-role.middleware.js';
 import { httpError } from '../utils/http-error.js';
-import { createEmailOtpService } from '../service/email-otp.service.js';
+import { createEmailOtpService } from '../services/email-otp.service.js';
 import { createRenterDashboardRepository } from '../repositories/renter-dashboard.repository.js';
 import { createPublicListingRepository } from './listing.routes.js';
-import { createListingService } from '../service/listing.service.js';
+import { createListingService } from '../services/listing.service.js';
 export function createRenterRouter(database, options = {}) {
   const emailOtp = createEmailOtpService(database, options);
   const router = Router(),

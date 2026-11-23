@@ -1,6 +1,6 @@
-import { createApp } from './app.js';
-import { env } from './config/env.js';
-import { connectDatabase, closeDatabase } from './config/database.js';
+import { createApp } from './src/app.js';
+import { env } from './src/config/env.js';
+import { connectDatabase, closeDatabase } from './dal/database.js';
 
 try {
   const database = await connectDatabase();

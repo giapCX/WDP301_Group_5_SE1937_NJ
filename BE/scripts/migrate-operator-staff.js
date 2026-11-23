@@ -1,4 +1,4 @@
-import { connectDatabase, closeDatabase } from '../src/config/database.js';
+import { connectDatabase, closeDatabase } from '../dal/database.js';
 import { getModels } from '../src/models/index.js';
 
 const operations = {

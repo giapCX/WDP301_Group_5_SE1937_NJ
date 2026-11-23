@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { createContractController } from '../controller/contract.controller.js';
+import { createContractController } from '../controllers/contract.controller.js';
 import { createAuthMiddleware } from '../middleware/auth.middleware.js';
 import { createContractRepository } from '../repositories/contract.repository.js';
-import { createContractService } from '../service/contract.service.js';
+import { createContractService } from '../services/contract.service.js';
 import { getModels } from '../models/index.js';
 import { httpError } from '../utils/http-error.js';
 

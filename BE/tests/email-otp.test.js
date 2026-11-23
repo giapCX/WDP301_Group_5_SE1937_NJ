@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { connectTestDatabase, closeTestDatabase } from '../test-support/seeded-database.js';
 import { createApp } from '../src/app.js';
-import { createEmailOtpService } from '../src/service/email-otp.service.js';
+import { createEmailOtpService } from '../src/services/email-otp.service.js';
 
 let db, server, base;
 const mailbox = new Map();

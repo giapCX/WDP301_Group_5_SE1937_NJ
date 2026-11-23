@@ -1,7 +1,7 @@
 import ManagerActionForm from './ManagerActionForm';
 import Pagination from "../../../components/ui/Pagination";
 import { useState } from 'react';
-import { getBlobApi } from '../../../services/httpClient';
+import { getBlobApi } from '../../../api/client';
 import useManagerActions from '../hooks/useManagerActions';
 import useManagerCollection from '../hooks/useManagerCollection';
 import InspectionReviewDetails from './InspectionReviewDetails';

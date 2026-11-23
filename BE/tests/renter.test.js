@@ -1,5 +1,5 @@
 import { createGarageHandoverRepository } from '../src/repositories/garage-handover.repository.js';
-import { createGarageHandoverService } from '../src/service/garage-handover.service.js';
+import { createGarageHandoverService } from '../src/services/garage-handover.service.js';
 import assert from 'node:assert/strict';
 import { before, after, test } from 'node:test';
 import jwt from 'jsonwebtoken';
@@ -7,10 +7,10 @@ import { env } from '../src/config/env.js';
 import { Types } from 'mongoose';
 import { connectTestDatabase, closeTestDatabase } from '../test-support/seeded-database.js';
 import { createRenterRepository } from '../src/repositories/renter.repository.js';
-import { createRenterService, selectPolicies, rentalDates, cancellationDecision } from '../src/service/renter.service.js';
+import { createRenterService, selectPolicies, rentalDates, cancellationDecision } from '../src/services/renter.service.js';
 import { createListingRepository } from '../src/repositories/listing.repository.js';
 import { createApp } from '../src/app.js';
-import { createEmailOtpService } from '../src/service/email-otp.service.js';
+import { createEmailOtpService } from '../src/services/email-otp.service.js';
 import { once } from 'node:events';
 async function contractRequest(path, account, body, expected = 200) {
   const response = await fetch(base + '/api' + path, {

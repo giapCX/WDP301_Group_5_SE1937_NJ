@@ -3,7 +3,7 @@ import {
   patchApi,
   postApi,
   putApi,
-} from "../../../services/httpClient";
+} from "../../../api/client";
 
 const resourcePaths = {
   vehicles: "/vehicles?status=pending",

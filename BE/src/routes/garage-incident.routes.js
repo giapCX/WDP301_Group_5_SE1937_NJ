@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { requireGarageStaff } from '../middleware/garage-auth.middleware.js';
 import { createGarageIncidentRepository } from '../repositories/garage-incident.repository.js';
-import { createGarageIncidentService } from '../service/garage-incident.service.js';
-import { createGarageIncidentController } from '../controller/garage-incident.controller.js';
+import { createGarageIncidentService } from '../services/garage-incident.service.js';
+import { createGarageIncidentController } from '../controllers/garage-incident.controller.js';
 
 export function createGarageIncidentRouter(connection) {
   const router = Router();

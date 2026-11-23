@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { createManagerApprovalService } from '../service/manager-approval.service.js';
+import { createManagerApprovalService } from '../services/manager-approval.service.js';
 import { createAuthMiddleware } from '../middleware/auth.middleware.js';
 import { createManagerRepository } from '../repositories/manager.repository.js';
-import { createManagerService } from '../service/manager.service.js';
-import { createManagerController } from '../controller/manager.controller.js';
+import { createManagerService } from '../services/manager.service.js';
+import { createManagerController } from '../controllers/manager.controller.js';
 import { attachManagerRoles, requireManagerRoles } from '../middleware/manager-auth.middleware.js';
 import { createContractRepository } from '../repositories/contract.repository.js';
-import { createContractService } from '../service/contract.service.js';
+import { createContractService } from '../services/contract.service.js';
 
 
 export function createManagerRouter(database, { fileRepository } = {}) {

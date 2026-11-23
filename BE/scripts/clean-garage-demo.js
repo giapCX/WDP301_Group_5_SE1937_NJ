@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import mongoose from 'mongoose';
-import { connectDatabase, closeDatabase } from '../src/config/database.js';
+import { connectDatabase, closeDatabase } from '../dal/database.js';
 import { env } from '../src/config/env.js';
 import { readSeedDatasets } from '../src/database/seed.js';
 import { getModels, modelDefinitions } from '../src/models/index.js';

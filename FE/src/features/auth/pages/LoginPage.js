@@ -1,6 +1,6 @@
 import { postRenter } from '../../renter/api/renterApi';
 import EmailOtp from './EmailOtp';
-import { postApi } from '../../../services/httpClient';
+import { postApi } from '../../../api/client';
 import Icon from '../../../components/Icon';
 import '../../renter/styles/renter.css';
 import React, { useState } from 'react';

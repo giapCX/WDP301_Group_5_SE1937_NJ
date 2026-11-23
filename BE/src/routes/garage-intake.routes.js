@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { requireGarageStaff } from '../middleware/garage-auth.middleware.js';
-import { createVehicleIntakeController } from '../controller/garage-intake.controller.js';
+import { createVehicleIntakeController } from '../controllers/garage-intake.controller.js';
 import { createVehicleIntakeRepository } from '../repositories/garage-intake.repository.js';
-import { createVehicleIntakeService } from '../service/garage-intake.service.js';
+import { createVehicleIntakeService } from '../services/garage-intake.service.js';
 
 export function createGarageIntakesRouter(database) {
   const router = Router();

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createListingRepository } from '../repositories/listing.repository.js';
-import { createListingService } from '../service/listing.service.js';
-import { createListingController } from '../controller/listing.controller.js';
+import { createListingService } from '../services/listing.service.js';
+import { createListingController } from '../controllers/listing.controller.js';
 import { createVietTourListingRepository } from '../repositories/viet-tour-listing.repository.js';
 export function createPublicListingRepository(database) {
   return database.name === 'viet_tour'

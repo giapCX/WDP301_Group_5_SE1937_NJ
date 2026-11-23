@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { requireGarageStaff } from '../middleware/garage-auth.middleware.js';
 import { createGarageHandoverRepository } from '../repositories/garage-handover.repository.js';
-import { createGarageHandoverService } from '../service/garage-handover.service.js';
-import { createGarageHandoverController } from '../controller/garage-handover.controller.js';
+import { createGarageHandoverService } from '../services/garage-handover.service.js';
+import { createGarageHandoverController } from '../controllers/garage-handover.controller.js';
 
 export function createGarageHandoverRouter(connection) {
   const router = Router();

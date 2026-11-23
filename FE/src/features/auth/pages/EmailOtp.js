@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { postApi } from '../../../services/httpClient';
+import { postApi } from '../../../api/client';
 
 export default function EmailOtp({ email, reset = false, login = false, onChange, children }) {
   const [challenge, setChallenge] = useState(null);

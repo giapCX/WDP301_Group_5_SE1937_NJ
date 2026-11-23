@@ -1,4 +1,4 @@
-import { getApi, postApi, patchApi } from '../../../services/httpClient';
+import { getApi, postApi, patchApi } from '../../../api/client';
 
 export const getOwnerDashboard = (options) => getApi('/owner/dashboard', options);
 export const registerOwnerVehicle = (body) => postApi('/owner/vehicles', body);

@@ -1,4 +1,4 @@
-import { getApi, getBlobApi, patchApi, postApi } from '../../../services/httpClient';
+import { getApi, getBlobApi, patchApi, postApi } from '../../../api/client';
 
 export const getGarageWorkspace = (options) => getApi('/garage/workspace', options);
 export const getOwnerSubmission = (id, options) => getApi(`/garage/inspections/${encodeURIComponent(id)}/owner-submission`, options);

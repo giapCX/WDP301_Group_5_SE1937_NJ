@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { env } from './env.js';
-import { getModels } from '../models/index.js';
+import { env } from '../src/config/env.js';
+import { getModels } from '../src/models/index.js';
 
 let connection;
 export async function connectDatabase() {

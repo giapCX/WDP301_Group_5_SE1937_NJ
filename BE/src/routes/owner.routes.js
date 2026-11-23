@@ -1,16 +1,16 @@
 import { Router } from 'express';
 import { createAuthMiddleware } from '../middleware/auth.middleware.js';
-import { createOwnerController } from '../controller/owner.controller.js';
+import { createOwnerController } from '../controllers/owner.controller.js';
 import { env } from '../config/env.js';
 import { createCloudinaryOwnerFileRepository } from '../repositories/cloudinary-owner-file.repository.js';
 import { createGridFsOwnerFileRepository } from '../repositories/gridfs-owner-file.repository.js';
 import { createOwnerRepository } from '../repositories/owner.repository.js';
-import { createOwnerService } from '../service/owner.service.js';
-import { createContractService } from '../service/contract.service.js';
+import { createOwnerService } from '../services/owner.service.js';
+import { createContractService } from '../services/contract.service.js';
 import { createContractRepository } from '../repositories/contract.repository.js';
 
 import { createGarageHandoverRepository } from '../repositories/garage-handover.repository.js';
-import { createGarageHandoverService } from '../service/garage-handover.service.js';
+import { createGarageHandoverService } from '../services/garage-handover.service.js';
 
 export function createOwnerRouter(connection, { useLocalFileStorage = false, fileRepository } = {}) {
   const router = Router();

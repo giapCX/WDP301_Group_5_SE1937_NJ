@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import App from '../../../app/App';
+import App from '../../../App';
 import { clearSession, saveSession } from '../../auth/session';
 
 jest.mock('../api/garageApi', () => ({

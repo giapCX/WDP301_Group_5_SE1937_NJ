@@ -1,5 +1,5 @@
 import { createAuthRepository } from '../repositories/auth.repository.js';
-import { createAuthService } from '../service/auth.service.js';
+import { createAuthService } from '../services/auth.service.js';
 import { httpError } from '../utils/http-error.js';
 
 export function requireGaragePhotoViewer(connection) {
