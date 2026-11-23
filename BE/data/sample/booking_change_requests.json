@@ -1,0 +1,191 @@
+[
+  {
+    "change_request_id": 1,
+    "booking_id": 2,
+    "requested_by": 8,
+    "requested_at": {
+      "$date": "2026-11-17T02:00:00Z"
+    },
+    "reason": "Muốn chuyển điểm trả sang Đà Lạt và kéo dài chuyến đi một ngày.",
+    "before": {
+      "pickup_location": "Demo: Quan 1, TP.HCM",
+      "dropoff_location": "Demo: Vung Tau",
+      "pickup_time": {
+        "$date": "2026-12-02T01:00:00Z"
+      },
+      "estimated_end_time": {
+        "$date": "2026-12-04T01:00:00Z"
+      },
+      "estimated_price": 1600000,
+      "trip_stops": [
+        {
+          "stop_order": 1,
+          "location": "Demo: Tram dung Long Thanh",
+          "note": "Du lieu gia lap"
+        },
+        {
+          "stop_order": 2,
+          "location": "Demo: Bai Sau, Vung Tau",
+          "note": "Du lieu gia lap"
+        }
+      ]
+    },
+    "after": {
+      "pickup_location": "Demo: Quan 1, TP.HCM",
+      "dropoff_location": "Demo: Da Lat",
+      "pickup_time": {
+        "$date": "2026-12-02T01:00:00Z"
+      },
+      "estimated_end_time": {
+        "$date": "2026-12-05T01:00:00Z"
+      },
+      "estimated_price": 2400000,
+      "trip_stops": [
+        {
+          "stop_order": 1,
+          "location": "Demo: Tram dung Long Thanh",
+          "note": "Du lieu gia lap"
+        },
+        {
+          "stop_order": 2,
+          "location": "Demo: Bai Sau, Vung Tau",
+          "note": "Du lieu gia lap"
+        }
+      ]
+    },
+    "price_difference": 800000,
+    "request_status": "rejected",
+    "reviewed_by": 3,
+    "reviewed_at": {
+      "$date": "2026-11-18T02:00:00Z"
+    },
+    "rejection_reason": "Không đáp ứng được lịch xe cho ngày thuê bổ sung."
+  },
+  {
+    "change_request_id": 2,
+    "booking_id": 2,
+    "requested_by": 8,
+    "requested_at": {
+      "$date": "2026-11-19T02:00:00Z"
+    },
+    "reason": "Lùi ngày khởi hành một ngày, giữ nguyên hành trình và thời lượng.",
+    "before": {
+      "pickup_location": "Demo: Quan 1, TP.HCM",
+      "dropoff_location": "Demo: Vung Tau",
+      "pickup_time": {
+        "$date": "2026-12-02T01:00:00Z"
+      },
+      "estimated_end_time": {
+        "$date": "2026-12-04T01:00:00Z"
+      },
+      "estimated_price": 1600000,
+      "trip_stops": [
+        {
+          "stop_order": 1,
+          "location": "Demo: Tram dung Long Thanh",
+          "note": "Du lieu gia lap"
+        },
+        {
+          "stop_order": 2,
+          "location": "Demo: Bai Sau, Vung Tau",
+          "note": "Du lieu gia lap"
+        }
+      ]
+    },
+    "after": {
+      "pickup_location": "Demo: Quan 1, TP.HCM",
+      "dropoff_location": "Demo: Vung Tau",
+      "pickup_time": {
+        "$date": "2026-12-03T01:00:00Z"
+      },
+      "estimated_end_time": {
+        "$date": "2026-12-05T01:00:00Z"
+      },
+      "estimated_price": 1600000,
+      "trip_stops": [
+        {
+          "stop_order": 1,
+          "location": "Demo: Tram dung Long Thanh",
+          "note": "Du lieu gia lap"
+        },
+        {
+          "stop_order": 2,
+          "location": "Demo: Bai Sau, Vung Tau",
+          "note": "Du lieu gia lap"
+        }
+      ]
+    },
+    "price_difference": 0,
+    "request_status": "approved",
+    "reviewed_by": 3,
+    "reviewed_at": {
+      "$date": "2026-11-20T02:00:00Z"
+    },
+    "rejection_reason": null
+  },
+  {
+    "change_request_id": 3,
+    "booking_id": 2,
+    "requested_by": 8,
+    "requested_at": {
+      "$date": "2026-11-22T02:00:00Z"
+    },
+    "reason": "Xin đón muộn hơn hai giờ và thêm điểm tham quan Hải đăng Vũng Tàu.",
+    "before": {
+      "pickup_location": "Demo: Quan 1, TP.HCM",
+      "dropoff_location": "Demo: Vung Tau",
+      "pickup_time": {
+        "$date": "2026-12-03T01:00:00Z"
+      },
+      "estimated_end_time": {
+        "$date": "2026-12-05T01:00:00Z"
+      },
+      "estimated_price": 1600000,
+      "trip_stops": [
+        {
+          "stop_order": 1,
+          "location": "Demo: Tram dung Long Thanh",
+          "note": "Du lieu gia lap"
+        },
+        {
+          "stop_order": 2,
+          "location": "Demo: Bai Sau, Vung Tau",
+          "note": "Du lieu gia lap"
+        }
+      ]
+    },
+    "after": {
+      "pickup_location": "Demo: Quan 1, TP.HCM",
+      "dropoff_location": "Demo: Vung Tau",
+      "pickup_time": {
+        "$date": "2026-12-03T03:00:00Z"
+      },
+      "estimated_end_time": {
+        "$date": "2026-12-05T03:00:00Z"
+      },
+      "estimated_price": 1800000,
+      "trip_stops": [
+        {
+          "stop_order": 1,
+          "location": "Demo: Tram dung Long Thanh",
+          "note": "Du lieu gia lap"
+        },
+        {
+          "stop_order": 2,
+          "location": "Demo: Bai Sau, Vung Tau",
+          "note": "Du lieu gia lap"
+        },
+        {
+          "stop_order": 3,
+          "location": "Demo: Hai dang Vung Tau",
+          "note": "Tham quan 45 phút"
+        }
+      ]
+    },
+    "price_difference": 200000,
+    "request_status": "pending",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "rejection_reason": null
+  }
+]

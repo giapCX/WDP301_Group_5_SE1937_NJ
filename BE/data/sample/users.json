@@ -1,0 +1,110 @@
+[
+  {
+    "user_id": 1,
+    "role_id": 1,
+    "full_name": "Admin Demo",
+    "email": "demo1@example.com",
+    "phone": "0900000001",
+    "password_hash": "scrypt$demo-rental-salt$ff7147dfec694c5f2d46a79d469b53695d1456f0471ff737a3d92017a5108d89588ab7c05bab162550b90348b31dd91fb56c1db47297ef539ad6025bbc51abf6",
+    "status": "active",
+    "created_at": {
+      "$date": "2026-11-01T00:00:00Z"
+    }
+  },
+  {
+    "user_id": 2,
+    "role_id": 2,
+    "full_name": "Manager Demo",
+    "email": "demo2@example.com",
+    "phone": "0900000002",
+    "password_hash": "scrypt$demo-rental-salt$ff7147dfec694c5f2d46a79d469b53695d1456f0471ff737a3d92017a5108d89588ab7c05bab162550b90348b31dd91fb56c1db47297ef539ad6025bbc51abf6",
+    "status": "active",
+    "created_at": {
+      "$date": "2026-11-01T00:00:00Z"
+    }
+  },
+  {
+    "user_id": 3,
+    "role_id": 3,
+    "full_name": "Operator Demo",
+    "email": "demo3@example.com",
+    "phone": "0900000003",
+    "password_hash": "scrypt$demo-rental-salt$ff7147dfec694c5f2d46a79d469b53695d1456f0471ff737a3d92017a5108d89588ab7c05bab162550b90348b31dd91fb56c1db47297ef539ad6025bbc51abf6",
+    "status": "active",
+    "created_at": {
+      "$date": "2026-11-01T00:00:00Z"
+    }
+  },
+  {
+    "user_id": 4,
+    "role_id": 4,
+    "full_name": "Garage Demo",
+    "email": "demo4@example.com",
+    "phone": "0900000004",
+    "password_hash": "scrypt$demo-rental-salt$ff7147dfec694c5f2d46a79d469b53695d1456f0471ff737a3d92017a5108d89588ab7c05bab162550b90348b31dd91fb56c1db47297ef539ad6025bbc51abf6",
+    "status": "active",
+    "created_at": {
+      "$date": "2026-11-01T00:00:00Z"
+    }
+  },
+  {
+    "user_id": 5,
+    "role_id": 5,
+    "full_name": "Driver An",
+    "email": "demo5@example.com",
+    "phone": "0900000005",
+    "password_hash": "scrypt$demo-rental-salt$ff7147dfec694c5f2d46a79d469b53695d1456f0471ff737a3d92017a5108d89588ab7c05bab162550b90348b31dd91fb56c1db47297ef539ad6025bbc51abf6",
+    "status": "active",
+    "created_at": {
+      "$date": "2026-11-01T00:00:00Z"
+    }
+  },
+  {
+    "user_id": 6,
+    "role_id": 5,
+    "full_name": "Driver Binh",
+    "email": "demo6@example.com",
+    "phone": "0900000006",
+    "password_hash": "scrypt$demo-rental-salt$ff7147dfec694c5f2d46a79d469b53695d1456f0471ff737a3d92017a5108d89588ab7c05bab162550b90348b31dd91fb56c1db47297ef539ad6025bbc51abf6",
+    "status": "active",
+    "created_at": {
+      "$date": "2026-11-01T00:00:00Z"
+    }
+  },
+  {
+    "user_id": 7,
+    "role_id": 6,
+    "full_name": "Renter Chi",
+    "email": "demo7@example.com",
+    "phone": "0900000007",
+    "password_hash": "scrypt$demo-rental-salt$ff7147dfec694c5f2d46a79d469b53695d1456f0471ff737a3d92017a5108d89588ab7c05bab162550b90348b31dd91fb56c1db47297ef539ad6025bbc51abf6",
+    "status": "active",
+    "created_at": {
+      "$date": "2026-11-01T00:00:00Z"
+    }
+  },
+  {
+    "user_id": 8,
+    "role_id": 6,
+    "full_name": "Renter Dung",
+    "email": "demo8@example.com",
+    "phone": "0900000008",
+    "password_hash": "scrypt$demo-rental-salt$ff7147dfec694c5f2d46a79d469b53695d1456f0471ff737a3d92017a5108d89588ab7c05bab162550b90348b31dd91fb56c1db47297ef539ad6025bbc51abf6",
+    "status": "active",
+    "created_at": {
+      "$date": "2026-11-01T00:00:00Z"
+    }
+  },
+  {
+    "user_id": 9,
+    "role_id": 6,
+    "full_name": "Renter Ha",
+    "email": "demo9@example.com",
+    "phone": "0900000009",
+    "password_hash": "scrypt$demo-rental-salt$ff7147dfec694c5f2d46a79d469b53695d1456f0471ff737a3d92017a5108d89588ab7c05bab162550b90348b31dd91fb56c1db47297ef539ad6025bbc51abf6",
+    "status": "active",
+    "created_at": {
+      "$date": "2026-11-01T00:00:00Z"
+    }
+  }
+]

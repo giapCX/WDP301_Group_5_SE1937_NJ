@@ -1,0 +1,20 @@
+[
+  {
+    "incident_id": 1,
+    "booking_id": 4,
+    "reported_by": 5,
+    "description": "Demo: Khach yeu cau doi lo trinh, phu thu 200000 VND",
+    "incident_status": "resolved",
+    "resolution_note": "Khach dong y phu thu; da tinh vao additional_charge",
+    "resolved_by": 3
+  },
+  {
+    "incident_id": 2,
+    "booking_id": 3,
+    "reported_by": 6,
+    "description": "Demo: Cham lich trinh do ket xe",
+    "incident_status": "open",
+    "resolution_note": null,
+    "resolved_by": null
+  }
+]

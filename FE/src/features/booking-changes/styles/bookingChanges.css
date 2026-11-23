@@ -1,0 +1,366 @@
+.dispatch-app .change-intro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(110deg, #eaf1ff, #f0f7fc);
+  border: 1px solid #e0eafb;
+  border-radius: 10px;
+  padding: 21px;
+  margin-bottom: 24px;
+}
+.change-intro-icon {
+  color: #2471c6;
+  background: #ffffffaa;
+  border-radius: 10px;
+  padding: 13px;
+}
+.change-intro strong {
+  font-size: 14px;
+  color: #2b5076;
+}
+.change-intro p {
+  font-size: 11px;
+  color: #7790aa;
+  margin: 6px 0 0;
+  max-width: 660px;
+}
+.change-intro-badge {
+  margin-left: auto;
+  color: #7b9cc2;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+}
+.change-filter-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 13px;
+  flex-wrap: wrap;
+}
+.change-filter-form .booking-search {
+  max-width: 400px;
+}
+.change-page-size {
+  margin-left: auto;
+  color: #8d9aaf;
+  font-size: 10px;
+  padding: 0 5px;
+}
+.change-filter-error {
+  font-size: 11px;
+  color: #c23f50;
+  margin: 10px 0 0;
+}
+.change-table .change-reason {
+  max-width: 320px;
+  min-width: 180px;
+  line-height: 1.8;
+  color: #6d8096;
+}
+.change-table tr.selected-change {
+  background: #eef5ff;
+}
+.change-increase {
+  color: #ca6547 !important;
+  white-space: nowrap;
+}
+.change-decrease {
+  color: #148b85 !important;
+  white-space: nowrap;
+}
+.change-selection-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px 16px;
+  color: #8296ad;
+  border: 1px dashed #d8e2ef;
+  border-radius: 10px;
+  margin-top: 23px;
+  font-size: 11px;
+}
+.change-detail {
+  margin-top: 25px;
+  scroll-margin-top: 20px;
+  background: #fff;
+  border: 1px solid #e7edf5;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.change-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 22px;
+}
+.change-detail-meta > div {
+  flex: 1;
+  min-width: 140px;
+}
+.change-detail-meta > div > span {
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: #8a9bb1;
+  display: block;
+  margin-bottom: 5px;
+}
+.change-detail-meta strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.change-reason-box {
+  margin: 0 22px 22px;
+  background: #f6f9fd;
+  border: 1px solid #eaf0f8;
+  border-radius: 7px;
+  padding: 15px;
+  display: flex;
+  gap: 12px;
+}
+.change-reason-box > svg {
+  flex-shrink: 0;
+  color: #5983b1;
+  margin-top: 3px;
+}
+.change-reason-box strong {
+  font-size: 11px;
+}
+.change-reason-box p {
+  font-size: 12px;
+  color: #6a819b;
+  line-height: 1.8;
+  margin: 5px 0 0;
+}
+.comparison-scroll {
+  overflow-x: auto;
+  margin: 0 22px;
+  border: 1px solid #e8eef6;
+  border-radius: 7px;
+}
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 570px;
+  table-layout: fixed;
+}
+.comparison-table th,
+.comparison-table td {
+  padding: 17px 18px;
+  border-bottom: 1px solid #edf1f7;
+  vertical-align: top;
+  white-space: pre-line;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.comparison-table thead th {
+  background: #f5f8fc;
+  color: #5a7698;
+  font-size: 12px;
+  font-weight: 600;
+}
+.comparison-table th:first-child {
+  width: 24%;
+}
+.comparison-table tbody th {
+  color: #71869e;
+  font-weight: 500;
+  font-size: 11px;
+}
+.comparison-table tbody th small {
+  display: block;
+  font-size: 8px;
+  color: #2572c6;
+  margin-top: 5px;
+}
+.comparison-table td {
+  color: #637a93;
+}
+.comparison-table td:last-child {
+  border-left: 1px solid #edf1f7;
+}
+.comparison-table tr.comparison-changed td:last-child {
+  background: #edf6ff;
+  color: #1e5b98;
+  font-weight: 500;
+}
+.comparison-table tr:last-child > * {
+  border-bottom: 0;
+}
+.comparison-label {
+  display: block;
+  letter-spacing: 1px;
+  font-size: 8px;
+  color: #97a9bd;
+  font-weight: 400;
+  margin-bottom: 4px;
+}
+.change-price-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 20px 22px;
+  padding: 17px 20px;
+  background: #f6f9fc;
+  border-radius: 7px;
+}
+.change-price-summary span {
+  font-weight: 600;
+  font-size: 12px;
+}
+.change-price-summary p {
+  font-size: 10px;
+  color: #899bb0;
+  margin: 5px 0 0;
+}
+.change-price-summary > strong {
+  font-size: 22px;
+  font-weight: 650;
+}
+.change-review-info {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 5px 22px 23px;
+  color: #7292a7;
+  font-size: 11px;
+}
+.change-review-info strong {
+  font-weight: 600;
+}
+.change-message {
+  margin: 20px 22px;
+}
+.change-message p {
+  margin: 7px 0 0;
+}
+.change-decisions {
+  border-top: 1px solid #eaf0f6;
+  background: #fcfdff;
+  padding: 20px 22px;
+}
+.change-decision-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8095ad;
+  font-size: 10px;
+  margin: 0 0 17px;
+}
+.change-decision-hint svg {
+  flex-shrink: 0;
+}
+.change-action-row {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+.change-confirm {
+  padding: 15px;
+  background: #edf5ff;
+  border: 1px solid #dae9fd;
+  border-radius: 6px;
+  color: #376c9d;
+  font-size: 12px;
+  margin-bottom: 17px;
+  line-height: 1.8;
+}
+.change-reject-form {
+  margin-bottom: 18px;
+}
+.change-reject-form label {
+  font-size: 12px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 9px;
+}
+.change-reject-form label span {
+  color: #d34857;
+}
+.change-reject-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #dce5ef;
+  border-radius: 6px;
+  background: #fff;
+  color: #375571;
+  resize: vertical;
+}
+.change-reject-form small {
+  display: block;
+  text-align: right;
+  color: #8d9fb3;
+  font-size: 9px;
+  margin-top: 5px;
+}
+@media (max-width: 900px) {
+  .change-intro-badge {
+    display: none;
+  }
+  .change-detail-meta {
+    gap: 15px;
+  }
+  .change-price-summary > strong {
+    font-size: 18px;
+  }
+}
+@media (max-width: 600px) {
+  .dispatch-app .change-intro {
+    padding: 15px;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .change-intro-icon {
+    padding: 9px;
+  }
+  .change-intro strong {
+    font-size: 12px;
+  }
+  .change-intro p {
+    font-size: 10px;
+  }
+  .change-filter-form .booking-search {
+    flex-basis: 100%;
+  }
+  .change-page-size {
+    font-size: 9px;
+  }
+  .change-detail-meta {
+    padding: 17px;
+  }
+  .change-detail-meta > div {
+    min-width: 110px;
+  }
+  .change-reason-box,
+  .comparison-scroll {
+    margin-left: 13px;
+    margin-right: 13px;
+  }
+  .change-price-summary {
+    margin: 17px 13px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .change-decisions {
+    padding: 17px 13px;
+  }
+  .change-action-row {
+    flex-wrap: wrap;
+  }
+  .change-action-row button {
+    flex: 1;
+  }
+  .change-message {
+    margin: 15px 13px;
+  }
+  .change-selection-hint {
+    line-height: 1.8;
+  }
+  .change-selection-hint svg {
+    flex-shrink: 0;
+  }
+}

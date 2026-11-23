@@ -1,0 +1,134 @@
+[
+  {
+    "booking_id": 1,
+    "renter_id": 7,
+    "vehicle_id": null,
+    "pickup_location": "Demo: Quan 1, TP.HCM",
+    "dropoff_location": "Demo: Vung Tau",
+    "pickup_time": {
+      "$date": "2026-12-01T01:00:00Z"
+    },
+    "estimated_end_time": {
+      "$date": "2026-12-02T01:00:00Z"
+    },
+    "estimated_price": 0,
+    "additional_charge": 0,
+    "booking_status": "pending",
+    "created_at": {
+      "$date": "2026-11-01T01:00:00Z"
+    },
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "rejection_reason": null
+  },
+  {
+    "booking_id": 2,
+    "renter_id": 8,
+    "vehicle_id": 1,
+    "pickup_location": "Demo: Quan 1, TP.HCM",
+    "dropoff_location": "Demo: Vung Tau",
+    "pickup_time": {
+      "$date": "2026-12-03T01:00:00Z"
+    },
+    "estimated_end_time": {
+      "$date": "2026-12-05T01:00:00Z"
+    },
+    "estimated_price": 1600000,
+    "additional_charge": 0,
+    "booking_status": "confirmed",
+    "created_at": {
+      "$date": "2026-11-01T01:00:00Z"
+    },
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "rejection_reason": null
+  },
+  {
+    "booking_id": 3,
+    "renter_id": 9,
+    "vehicle_id": 2,
+    "pickup_location": "Demo: Quan 1, TP.HCM",
+    "dropoff_location": "Demo: Vung Tau",
+    "pickup_time": {
+      "$date": "2026-11-22T01:00:00Z"
+    },
+    "estimated_end_time": {
+      "$date": "2026-11-24T01:00:00Z"
+    },
+    "estimated_price": 2200000,
+    "additional_charge": 0,
+    "booking_status": "in_progress",
+    "created_at": {
+      "$date": "2026-11-01T01:00:00Z"
+    },
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "rejection_reason": null
+  },
+  {
+    "booking_id": 4,
+    "renter_id": 7,
+    "vehicle_id": 3,
+    "pickup_location": "Demo: Quan 1, TP.HCM",
+    "dropoff_location": "Demo: Vung Tau",
+    "pickup_time": {
+      "$date": "2026-11-10T01:00:00Z"
+    },
+    "estimated_end_time": {
+      "$date": "2026-11-12T01:00:00Z"
+    },
+    "estimated_price": 3600000,
+    "additional_charge": 200000,
+    "booking_status": "completed",
+    "created_at": {
+      "$date": "2026-11-01T01:00:00Z"
+    },
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "rejection_reason": null
+  },
+  {
+    "booking_id": 5,
+    "renter_id": 8,
+    "vehicle_id": 5,
+    "pickup_location": "Demo: Quan 1, TP.HCM",
+    "dropoff_location": "Demo: Vung Tau",
+    "pickup_time": {
+      "$date": "2026-11-12T01:00:00Z"
+    },
+    "estimated_end_time": {
+      "$date": "2026-11-13T01:00:00Z"
+    },
+    "estimated_price": 1600000,
+    "additional_charge": 0,
+    "booking_status": "cancelled",
+    "created_at": {
+      "$date": "2026-11-01T01:00:00Z"
+    },
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "rejection_reason": null
+  },
+  {
+    "booking_id": 6,
+    "renter_id": 9,
+    "vehicle_id": 1,
+    "pickup_location": "Demo: Quan 1, TP.HCM",
+    "dropoff_location": "Demo: Vung Tau",
+    "pickup_time": {
+      "$date": "2026-11-15T01:00:00Z"
+    },
+    "estimated_end_time": {
+      "$date": "2026-11-16T01:00:00Z"
+    },
+    "estimated_price": 800000,
+    "additional_charge": 0,
+    "booking_status": "completed",
+    "created_at": {
+      "$date": "2026-11-01T01:00:00Z"
+    },
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "rejection_reason": null
+  }
+]

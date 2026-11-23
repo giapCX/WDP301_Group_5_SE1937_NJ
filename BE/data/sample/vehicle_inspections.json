@@ -1,0 +1,50 @@
+[
+  {
+    "inspection_id": 1,
+    "vehicle_id": 2,
+    "booking_id": 3,
+    "staff_id": 4,
+    "inspection_type": "pickup",
+    "condition_note": "Demo: Xe sach, du nhien lieu, khong hu hong",
+    "result": "passed",
+    "inspected_at": {
+      "$date": "2026-11-22T01:00:00Z"
+    }
+  },
+  {
+    "inspection_id": 2,
+    "vehicle_id": 3,
+    "booking_id": 4,
+    "staff_id": 4,
+    "inspection_type": "pickup",
+    "condition_note": "Demo: Xe sach, du nhien lieu, khong hu hong",
+    "result": "passed",
+    "inspected_at": {
+      "$date": "2026-11-10T01:00:00Z"
+    }
+  },
+  {
+    "inspection_id": 3,
+    "vehicle_id": 1,
+    "booking_id": 6,
+    "staff_id": 4,
+    "inspection_type": "pickup",
+    "condition_note": "Demo: Xe sach, du nhien lieu, khong hu hong",
+    "result": "passed",
+    "inspected_at": {
+      "$date": "2026-11-15T01:00:00Z"
+    }
+  },
+  {
+    "inspection_id": 4,
+    "vehicle_id": 4,
+    "booking_id": null,
+    "staff_id": 4,
+    "inspection_type": "periodic",
+    "condition_note": "Demo: Can thay ma phanh",
+    "result": "failed",
+    "inspected_at": {
+      "$date": "2026-11-20T02:00:00Z"
+    }
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "vehicle_id": 1,
+    "plate_number": "51A-DEMO01",
+    "brand": "Toyota",
+    "model": "Vios",
+    "seat_count": 5,
+    "price_per_day": 800000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 2,
+    "plate_number": "51A-DEMO02",
+    "brand": "Mitsubishi",
+    "model": "Xpander",
+    "seat_count": 7,
+    "price_per_day": 1100000,
+    "status": "in_use",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 3,
+    "plate_number": "51A-DEMO03",
+    "brand": "Ford",
+    "model": "Transit",
+    "seat_count": 16,
+    "price_per_day": 1800000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 4,
+    "plate_number": "51A-DEMO04",
+    "brand": "Hyundai",
+    "model": "Solati",
+    "seat_count": 16,
+    "price_per_day": 2000000,
+    "status": "maintenance",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 5,
+    "plate_number": "51A-DEMO05",
+    "brand": "Kia",
+    "model": "Carnival",
+    "seat_count": 7,
+    "price_per_day": 1600000,
+    "status": "available",
+    "schedule_version": 0
+  }
+]
