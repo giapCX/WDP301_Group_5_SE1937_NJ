@@ -12,9 +12,9 @@ Hướng dẫn dành cho thành viên phát triển giao diện XeDi. Mỗi ch�
 
 ## Kiến trúc theo chức năng
 
-- src/app/App.js và src/app/router.js ghép ứng dụng và điều hướng theo hash. Thêm đường dẫn ở router khi bổ sung màn hình cấp ứng dụng.
+- index.html và src/main.js khởi động frontend bằng Vite. src/App.js ghép ứng dụng và src/routes/AppRoutes.js điều hướng theo hash.
 - src/features nhóm chức năng theo vai trò hoặc nghiệp vụ. Page ghép màn hình, component xử lý trình bày, hook quản lý dữ liệu và thao tác, API client gọi endpoint. Tạo thư mục con khi có mã cần đặt trong đó.
-- src/services/httpClient.js xử lý request API và gắn JWT. src/features/auth/session.js quản lý phiên. src/components chứa giao diện dùng chung, src/hooks chứa hook dùng chung.
+- src/api/client.js xử lý request API và gắn JWT. src/features/auth/session.js quản lý phiên. src/components chứa giao diện dùng chung, src/hooks chứa hook dùng chung.
 - public/contract-templates chứa mẫu Word được tải khi xem hợp đồng. Tên file được khai báo trong src/features/contracts/contractPresentation.js.
 
 ## Quy tắc phát triển
@@ -27,7 +27,7 @@ Hướng dẫn dành cho thành viên phát triển giao diện XeDi. Mỗi ch�
 
 ## Chạy và kiểm tra
 
-- Chạy tại thư mục gốc repo. Frontend mặc định ở localhost:3000 và proxy API tới backend ở 127.0.0.1:5000.
+- Chạy tại thư mục gốc repo. Vite chạy frontend ở localhost:3000 và proxy API tới backend ở 127.0.0.1:5000. Nếu backend đổi cổng, đặt VITE_API_TARGET trong FE/.env theo mẫu FE/.env.example.
 
 ```bash
 npm run install:all

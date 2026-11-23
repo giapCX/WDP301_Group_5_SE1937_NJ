@@ -1,5 +1,5 @@
 // Scope the login design utilities so they cannot override homepage styles.
-module.exports = {
+export default {
   darkMode: 'class',
   theme: {
     extend: {
