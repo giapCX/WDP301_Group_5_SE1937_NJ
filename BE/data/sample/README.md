@@ -4,6 +4,12 @@
 
 Ngày dùng Extended JSON dạng { "$date": "2026-12-03T01:00:00Z" } để MongoDB import thành Date. Không chuyển các object $date thành chuỗi bằng JSON.parse rồi insert trực tiếp; dùng công cụ hiểu MongoDB Extended JSON hoặc BSON.EJSON.parse.
 
+## Seed bằng script
+
+Từ thư mục gốc repository chạy `npm run db:seed:sample`, hoặc từ `BE` chạy `npm run db:seed:sample`. Script đọc `MONGODB_URI` trong `BE/.env`, tạo database `tourist_car_rental_demo` nếu chưa có, rồi nạp 17 collection/71 document. Có thể đổi database đích bằng `SAMPLE_DB_NAME` hoặc `SEED_DB_NAME`.
+
+Seed tạo unique index và chỉ thêm các ID chưa có, không ghi đè bản ghi cũ. Bộ dữ liệu dùng các ID nghiệp vụ số như `user_id`, `role_id`, `booking_id` và được sử dụng độc lập trong database `tourist_car_rental_demo`.
+
 ## MongoDB Compass
 
 Kết nối mongodb://127.0.0.1:27018/?replicaSet=rentalLocal. Tạo database demo mới, tạo collection trùng tên file (ví dụ users), chọn Add Data > Import JSON or CSV file và chọn file tương ứng. Lặp lại cho các collection còn lại. Nên import vào database rỗng; import lặp có thể tạo trùng ID nghiệp vụ.
@@ -19,8 +25,10 @@ Get-ChildItem -LiteralPath .\data\sample -Filter *.json | ForEach-Object {
 }
 ```
 
-Import JSON không tự tạo unique index hay validator. Dùng npm run seed nếu muốn tạo index và chỉ thêm ID chưa có; seed không ghi đè dữ liệu hiện hữu. Không import JSON lặp lại vào database đã có dữ liệu seed.
+Import JSON không tự tạo unique index hay validator. Dùng `npm run db:seed:sample` nếu muốn tạo index và chỉ thêm ID chưa có; seed không ghi đè dữ liệu hiện hữu.
 
 Tạo lại các file: node scripts/export-sample-json.js.
 
-Tài khoản demo: demo1@example.com đến demo9@example.com, mật khẩu Demo@12345 (hash scrypt). Auth thật vẫn cần tích hợp. Các yêu cầu đổi lịch chỉ là lịch sử giả lập, không tự áp dụng thay đổi vào booking.
+Operator-only API đọc trực tiếp các collection nghiệp vụ trong database này. Màn hình operator không yêu cầu đăng nhập.
+
+Các yêu cầu đổi lịch chỉ là lịch sử giả lập, không tự áp dụng thay đổi vào booking.
