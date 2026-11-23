@@ -8,8 +8,11 @@ const chargeRoutes = require('./src/routes/additional-charge.routes');
 const renterChangeRoutes = require('./src/routes/renter-booking-change.routes');
 const bookingRoutes = require('./src/routes/booking.routes');
 const changeRequestRoutes = require('./src/routes/booking-change-request.routes');
+const homepageRoutes = require('./src/routes/homepage.routes');
+const renterDashboardRoutes = require('./src/routes/renter-dashboard.routes');
 
-require('dotenv').config();
+require('dotenv').config({ path: require('node:path').join(__dirname, '.env'), quiet: true });
+const { router: authRoutes, attachUser } = require('./src/routes/auth.routes');
 
 const app = express();
 app.use(corsMiddleware);
@@ -20,6 +23,10 @@ app.use(morgan('dev'));
 app.get('/api', (req, res) => {
   res.status(200).json({ message: 'Welcome Express server' });
 });
+app.use('/api/homepage', homepageRoutes);
+app.use('/api/auth', authRoutes);
+app.use(['/api/operator', '/api/renter'], attachUser);
+app.use('/api/renter/dashboard', renterDashboardRoutes);
 
 app.use('/api/renter/bookings', renterChangeRoutes);
 app.use('/api/renter/bookings', chargeRoutes.renterBookingRoutes);
