@@ -31,7 +31,7 @@ Cả hai yêu cầu req.user từ xác thực Operator đang hoạt động; hi�
 
 Duyệt chỉ áp dụng booking confirmed, chưa đến giờ đón; người yêu cầu phải là Renter của booking. Service kiểm tra snapshot, thứ tự điểm dừng, chênh lệch giá, tình trạng/lịch xe và lịch tài xế đã phân công. Transaction tăng schedule_version trên xe, cập nhật booking và các trip_stops, rồi đánh dấu yêu cầu approved. Điểm dừng giữ ID theo stop_order; điểm mới dùng ID số ngẫu nhiên an toàn, có unique index. Không thay đổi thanh toán, hoàn tiền hay tự tạo additional_charges; price_difference vẫn là chênh lệch đề xuất. Kiểm tra lịch tài xế chưa thay thế cơ chế khóa khi các module khác phân công tài xế đồng thời; module phân công sau này phải phối hợp transaction/khóa tài xế.
 
-Test tích hợp: node --test tests/booking-change-request.decision.test.js (replica set local 27018).
+Test tích hợp: node --test tests/booking-change-request.decision.test.js (replica set local 27017).
 
 ## Renter tạo yêu cầu
 

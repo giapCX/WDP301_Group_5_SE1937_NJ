@@ -11,7 +11,7 @@ test('available vehicles API filters actual conflicts and returns useful errors'
   const databaseName = `available_vehicles_test_${process.pid}_${Date.now()}`;
   let server;
   await mongoose.connect(
-    process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27018/?replicaSet=rentalLocal',
+    process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27017/?replicaSet=rentalLocal',
     { dbName: databaseName, autoIndex: false, serverSelectionTimeoutMS: 5000 },
   );
   try {

@@ -6,7 +6,7 @@ Ngày dùng Extended JSON dạng { "$date": "2026-12-03T01:00:00Z" } để Mongo
 
 ## MongoDB Compass
 
-Kết nối mongodb://127.0.0.1:27018/?replicaSet=rentalLocal. Tạo database demo mới, tạo collection trùng tên file (ví dụ users), chọn Add Data > Import JSON or CSV file và chọn file tương ứng. Lặp lại cho các collection còn lại. Nên import vào database rỗng; import lặp có thể tạo trùng ID nghiệp vụ.
+Kết nối mongodb://127.0.0.1:27017/?replicaSet=rentalLocal. Tạo database demo mới, tạo collection trùng tên file (ví dụ users), chọn Add Data > Import JSON or CSV file và chọn file tương ứng. Lặp lại cho các collection còn lại. Nên import vào database rỗng; import lặp có thể tạo trùng ID nghiệp vụ.
 
 ## mongoimport
 
@@ -14,7 +14,7 @@ Nếu có MongoDB Database Tools, chạy từ thư mục BE:
 
 ```powershell
 Get-ChildItem -LiteralPath .\data\sample -Filter *.json | ForEach-Object {
-  mongoimport --uri "mongodb://127.0.0.1:27018/tourist_car_rental_demo?replicaSet=rentalLocal" --collection $_.BaseName --file $_.FullName --jsonArray --stopOnError
+  mongoimport --uri "mongodb://127.0.0.1:27017/tourist_car_rental_demo?replicaSet=rentalLocal" --collection $_.BaseName --file $_.FullName --jsonArray --stopOnError
   if ($LASTEXITCODE -ne 0) { throw "Import failed: $($_.Name)" }
 }
 ```
