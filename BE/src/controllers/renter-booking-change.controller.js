@@ -13,4 +13,17 @@ async function createChangeRequest(req, res, next) {
   }
 }
 
-module.exports = { createChangeRequest };
+async function getChangeRequestHistory(req, res, next) {
+  try {
+    const result = await service.getChangeRequestHistory(
+      req.params.id,
+      req.query,
+      req.user.user_id,
+    );
+    return res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { createChangeRequest, getChangeRequestHistory };

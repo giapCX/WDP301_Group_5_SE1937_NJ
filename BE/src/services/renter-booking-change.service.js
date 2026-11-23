@@ -148,4 +148,40 @@ async function createChangeRequest(id, input, renterId) {
   });
 }
 
-module.exports = { createChangeRequest };
+async function getChangeRequestHistory(id, query = {}, renterId) {
+  const bookingId = positiveId(id, 'booking_id');
+  const requesterId = positiveId(renterId, 'requested_by');
+  if (!query || typeof query !== 'object' || Array.isArray(query)) {
+    throw new HttpError(400, 'Tham số tìm kiếm không hợp lệ');
+  }
+  const page = query.page === undefined ? 1 : positiveId(query.page, 'page');
+  const limit = query.limit === undefined ? 10 : positiveId(query.limit, 'limit');
+  if (limit > 10 || !Number.isSafeInteger((page - 1) * limit)) {
+    throw new HttpError(400, 'Phân trang không hợp lệ; tối đa 10 bản ghi mỗi trang');
+  }
+  let status;
+  if (query.status !== undefined) {
+    if (
+      typeof query.status !== 'string' ||
+      !BookingChangeRequest.schema
+        .path('request_status')
+        .enumValues.includes(query.status.trim())
+    ) {
+      throw new HttpError(400, 'Trạng thái yêu cầu không hợp lệ');
+    }
+    status = query.status.trim();
+  }
+  const booking = await bookingRepository.findBookingById(bookingId);
+  if (!booking) throw new HttpError(404, 'Không tìm thấy booking');
+  if (booking.renter_id !== requesterId)
+    throw new HttpError(403, 'Bạn không sở hữu booking này');
+  return requestRepository.findRenterHistory({
+    bookingId,
+    renterId: requesterId,
+    status,
+    page,
+    limit,
+  });
+}
+
+module.exports = { createChangeRequest, getChangeRequestHistory };

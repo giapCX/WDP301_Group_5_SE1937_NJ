@@ -217,7 +217,33 @@ async function createChangeRequest(data, session) {
   return result;
 }
 
+async function findRenterHistory({ bookingId, renterId, status, page, limit }) {
+  validateId(bookingId, 'bookingId');
+  validateId(renterId, 'renterId');
+  validateId(page, 'page');
+  validateId(limit, 'limit');
+  if (limit > 10 || !Number.isSafeInteger((page - 1) * limit)) {
+    throw new RangeError('Invalid pagination');
+  }
+  const filter = { booking_id: bookingId, requested_by: renterId };
+  if (status !== undefined) filter.request_status = status;
+  const [items, total] = await Promise.all([
+    BookingChangeRequest.find(filter)
+      .select(
+        'change_request_id booking_id requested_at reason before after price_difference request_status reviewed_at rejection_reason -_id',
+      )
+      .sort({ requested_at: -1, change_request_id: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean()
+      .exec(),
+    BookingChangeRequest.countDocuments(filter).exec(),
+  ]);
+  return { items, total, page, limit, total_pages: Math.ceil(total / limit) };
+}
+
 module.exports = {
+  findRenterHistory,
   findPendingForBooking,
   createChangeRequest,
   findRequestForReview,

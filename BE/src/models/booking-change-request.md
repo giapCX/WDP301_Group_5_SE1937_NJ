@@ -54,3 +54,13 @@ req.user phải do module xác thực cung cấp, có user_id, role_name=renter,
 Giá đề xuất tạm tính: giá cũ + (số ngày mới - số ngày cũ) * vehicles.price_per_day, ngày tính bằng ceil(thời lượng / 24 giờ). Giữ giá cũ cho thời lượng ngày không đổi. Chưa định giá theo km, điểm dừng, phí chờ, chưa tính lại khuyến mãi và chưa thu/hoàn tiền. Cần thống nhất với module Pricing khi có pricing_rules. Không nhận estimated_price từ frontend. ID yêu cầu mới là số nguyên an toàn ngẫu nhiên với unique index.
 
 Lỗi 400 dữ liệu sai; 401 chưa đăng nhập; 403 sai quyền/chủ booking; 404 không có booking; 409 booking không đủ điều kiện hoặc đã có yêu cầu chờ. API này chưa có form phía Renter.
+
+## Renter xem lịch sử yêu cầu
+
+GET /api/renter/bookings/:id/change-requests?page=1&limit=10&status=pending
+
+Cần req.user Renter active từ xác thực. Chỉ chủ booking được truy cập; requested_by và booking_id gửi trong query không thể đổi phạm vi dữ liệu. Trả các yêu cầu do Renter đó gửi cho booking, mới nhất trước (requested_at, change_request_id giảm dần). Không yêu cầu booking vẫn confirmed nên có thể xem lịch sử chuyến đã hoàn thành/hủy.
+
+Response 200: { success: true, data: { items, total, page, limit, total_pages } }. Mặc định và tối đa 10 bản ghi/trang. status tùy chọn: pending, approved, rejected, cancelled. Mỗi item gồm snapshot before/after, reason, price_difference, trạng thái, thời điểm gửi/xử lý và rejection_reason. Không trả hồ sơ người xử lý, email, password_hash hoặc MongoDB _id. Không có yêu cầu thì items=[], total=0.
+
+Lỗi 400 tham số sai, 401 chưa đăng nhập, 403 sai role/chủ booking, 404 booking không tồn tại. Chưa có form Renter trong thay đổi này.
