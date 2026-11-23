@@ -1,0 +1,90 @@
+.vt-login { background: #f5f6f8; }
+.vt-login-header { background: #fafbfc; border-bottom: 1px solid #e5e8ee; }
+.vt-login-nav, .vt-login-nav nav, .vt-login-brand, .vt-login-account {
+  display: flex; align-items: center; gap: 14px;
+}
+.vt-login-nav { min-height: 76px; justify-content: space-between; padding-block: 10px; }
+.vt-login-nav nav { justify-content: space-between; flex: 1; max-width: 700px; }
+.vt-login-nav a, .vt-login-footer a { color: var(--navy); }
+.vt-login-nav nav a { font-size: .85rem; font-weight: 600; }
+.vt-login-brand { font-weight: 800; line-height: 1.1; }
+.vt-login-brand .vt-h-icon { width: auto; padding: 8px; background: #082b50; color: white; border-radius: 8px; }
+.vt-login-brand small { display: block; margin-top: 3px; font-size: .59rem; text-transform: uppercase; letter-spacing: .05em; }
+.vt-login-booking { border-radius: 7px; background: #e9edf2; padding: 8px 12px; font-size: .82rem; font-weight: 700; }
+.vt-login-account { font-size: .85rem; font-weight: 700; }
+.vt-login-card {
+  display: grid; grid-template-columns: 42% minmax(0, 1fr);
+  margin-top: 32px; min-height: 600px; overflow: hidden; border-radius: 12px;
+  background: white; box-shadow: 0 6px 20px #16324f20;
+}
+.vt-login-intro {
+  display: grid; align-content: center; gap: 12px; padding: clamp(20px, 3vw, 42px);
+  background: radial-gradient(ellipse at top right, #164270, transparent 80%), #092741; color: white;
+}
+.vt-login-intro h1 { margin: 0; font-size: clamp(1.6rem, 3.1vw, 2.5rem); font-weight: 800; letter-spacing: -.035em; }
+.vt-login-intro p { color: #cadaed; font-size: .87rem; margin-bottom: 10px; }
+.vt-login-pill, .vt-login-intro figcaption { display: flex; align-items: center; gap: 6px; font-size: .72rem; font-weight: 700; }
+.vt-login-pill { width: fit-content; background: #ffffff20; border-radius: 20px; padding: 5px 10px; }
+.vt-login-intro .vt-h-icon { color: #a2ede4; font-size: 1.15rem; }
+.vt-login-intro figure { position: relative; margin: 10px 0 0; overflow: hidden; border-radius: 9px; background: #123653; }
+.vt-login-intro img { display: block; width: 100%; aspect-ratio: 2.05; object-fit: cover; }
+.vt-login-intro figcaption {
+  position: absolute; inset: auto 0 0; padding: 10px;
+  background: linear-gradient(transparent, #001427e8); color: white;
+}
+.vt-login-intro-details {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+  margin-top: 24px; padding-top: 16px; border-top: 1px solid #ffffff30; font-size: .72rem;
+}
+.vt-login-intro-details span:not(.vt-h-icon) { display: grid; justify-items: center; text-align: center; gap: 5px; }
+.vt-login-form { align-self: center; min-width: 0; padding: clamp(20px, 3.2vw, 48px); }
+.vt-login-form-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px; font-size: .78rem; }
+.vt-login-form-top span:not(.vt-h-icon) { padding: 6px 24px; background: #f1f3f6; border: 1px solid #e8ecf1; border-radius: 6px; font-weight: 700; }
+.vt-login-form-top a { display: inline-flex; align-items: center; gap: 5px; }
+.vt-login-form .vt-h-icon { font-size: 1.15rem; }
+.vt-login-form h2 { font-size: 1.28rem; font-weight: 750; }
+.vt-login-form p { font-size: .85rem; }
+.vt-login-form form { display: grid; margin-top: 18px; gap: 6px; }
+.vt-login-form label { font-size: .83rem; font-weight: 650; }
+.vt-login-input { position: relative; margin-bottom: 9px; }
+.vt-login-input > .vt-h-icon { position: absolute; inset: 50% auto auto 10px; transform: translateY(-50%); pointer-events: none; color: var(--muted); }
+.vt-login-input input { width: 100%; min-height: 38px; border: 1px solid #e3e8ef; border-radius: 6px; background: #f4f5f8; padding: 8px 10px 8px 34px; font-size: .85rem; }
+.vt-login-password input { padding-right: 45px; }
+.vt-login-password button { position: absolute; inset: 0 3px 0 auto; display: grid; place-items: center; border: 0; background: transparent; padding: 0 9px; }
+.vt-login-form .vt-login-remember { display: flex; align-items: center; gap: 6px; font-weight: 400; margin-block: 4px 10px; }
+.vt-login-remember input { accent-color: var(--blue); }
+.vt-login-form button[type=submit] { width: 100%; gap: 8px; font-size: .85rem; }
+.vt-login-form .vt-login-error { color: #a31326; }
+.vt-auth-switch { display: flex; border-radius: 6px; background: #edf0f4; padding: 2px; }
+.vt-auth-switch button { border: 0; border-radius: 5px; background: transparent; padding: 5px 14px; color: var(--navy); }
+.vt-auth-switch button[aria-pressed='true'] { background: white; font-weight: 700; }
+.vt-register-fields { display: grid; gap: 6px; margin-bottom: 8px; }
+.vt-register-fields .form-control { font-size: .85rem; background: #f4f5f8; }
+.vt-register-actions { display: flex; justify-content: space-between; flex-wrap: wrap; }
+.vt-register-actions .btn-link { padding-inline: 0; font-size: .8rem; }
+.vt-login-form .vt-auth-success { color: #147044; }
+.vt-login-benefits, .vt-login-footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.vt-login-benefits { margin-block: 24px 35px; }
+.vt-login-benefits article { display: flex; align-items: flex-start; gap: 10px; background: white; border-radius: 8px; padding: 13px; }
+.vt-login-benefits .vt-h-icon { box-sizing: content-box; background: #edf2fa; border-radius: 5px; padding: 5px; font-size: 1.1rem; }
+.vt-login-benefits h2, .vt-login-footer h2 { font-size: .87rem; font-weight: 750; margin-bottom: 6px; }
+.vt-login-benefits p, .vt-login-footer p, .vt-login-footer a { font-size: .79rem; margin: 0; }
+.vt-login-footer { background: #edf0f4; padding-block: 28px 18px; }
+.vt-login-footer-grid { padding-bottom: 24px; }
+.vt-login-footer-grid > div { display: grid; align-content: start; gap: 4px; }
+.vt-login-footer .vt-h-brand { font-size: 1rem; }
+.vt-login-footer .vt-login-copyright { margin-inline: auto; }
+@media (max-width: 850px) {
+  .vt-login-nav { flex-wrap: wrap; }
+  .vt-login-nav nav { order: 1; flex-basis: 100%; overflow-x: auto; padding-bottom: 4px; }
+  .vt-login-nav nav a { white-space: nowrap; }
+  .vt-login-card { min-height: 0; }
+  .vt-login-benefits, .vt-login-footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .vt-login-card { grid-template-columns: 1fr; margin-top: 18px; }
+  .vt-login-intro-details { margin-top: 8px; }
+}
+@media (max-width: 380px) {
+  .vt-login-benefits, .vt-login-footer-grid { grid-template-columns: 1fr; }
+}

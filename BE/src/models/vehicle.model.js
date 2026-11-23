@@ -29,6 +29,8 @@ module.exports = createModel(
       required: true,
       maxlength: 60,
     },
+    photos: { type: [String], default: undefined },
+    illustration_photos: { type: [String], default: undefined },
     seat_count: {
       type: Number,
       required: true,
