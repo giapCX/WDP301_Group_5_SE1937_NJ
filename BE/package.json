@@ -13,7 +13,9 @@
     "db:local": "node scripts/start-local-db.js",
     "db:vehicle-schedule-version": "node scripts/add-vehicle-schedule-version.js",
     "test:booking": "node --test tests/booking.service.test.js tests/booking.routes.test.js",
-    "test:booking-concurrency": "node --test tests/booking.concurrency.test.js"
+    "test:booking-concurrency": "node --test tests/booking.concurrency.test.js",
+    "db:embedded-charges": "node scripts/add-embedded-charges.js",
+    "test:charges": "node --test tests/additional-charge.test.js"
   },
   "keywords": [],
   "author": "",

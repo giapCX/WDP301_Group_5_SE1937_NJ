@@ -1,6 +1,7 @@
 const path = require('node:path');
 require('dotenv').config({ path: path.join(__dirname, '../.env'), quiet: true });
 const mongoose = require('mongoose');
+const { addEmbeddedCharges } = require('./add-embedded-charges');
 const data = require('../src/config/sample-data');
 const { addVehicleScheduleVersion } = require('./add-vehicle-schedule-version');
 const { addBookingReviewFields } = require('./add-booking-review-fields');
@@ -73,6 +74,7 @@ async function main() {
       `${name}: inserted ${result.upsertedCount}, existing ${result.matchedCount}`,
     );
   }
+  await addEmbeddedCharges(db);
   await addBookingReviewFields(db);
   await addVehicleScheduleVersion(db);
   console.log(`Seed completed: ${db.databaseName}`);

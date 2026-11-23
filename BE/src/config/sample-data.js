@@ -37,4 +37,7 @@ const incidents = [{incident_id:1,booking_id:4,reported_by:5,description:'Demo: 
 const reviews = [4,6].map((booking_id,i)=>({review_id:i+1,booking_id,renter_id:bookings[booking_id-1].renter_id,driver_rating:5,service_rating:i?4:5,comment:'Demo: Tai xe dung gio, xe sach se',created_at:new Date(bookings[booking_id-1].estimated_end_time.getTime()+3600000)}));
 const { createSampleChangeRequests } = require('./sample-booking-change-requests');
 const booking_change_requests = createSampleChangeRequests(bookings, trip_stops);
+for (const booking of bookings) {
+  booking.additional_charges = [];
+}
 module.exports = {booking_change_requests,roles,users,driver_profiles,vehicles,bookings,trip_stops,trip_assignments,trip_status_updates,promotions,booking_promotions,payments,refunds,vehicle_inspections,maintenance_records,incidents,reviews};

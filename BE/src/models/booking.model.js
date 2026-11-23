@@ -1,3 +1,4 @@
+const { additionalChargeSchema } = require('./additional-charge.schema');
 const { createModel } = require('./model-factory');
 
 module.exports = createModel(
@@ -55,6 +56,10 @@ module.exports = createModel(
         message: 'Must be finite',
       },
       default: 0,
+    },
+    additional_charges: {
+      type: [additionalChargeSchema],
+      default: [],
     },
     additional_charge: {
       type: Number,

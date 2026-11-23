@@ -4,6 +4,7 @@ const { connectDb, disconnectDb } = require('./dal/database');
 const corsMiddleware = require('./middlewares/cors.middleware');
 const notFoundMiddleware = require('./middlewares/not-found.middleware');
 const errorMiddleware = require('./middlewares/error.middleware');
+const chargeRoutes = require('./src/routes/additional-charge.routes');
 const renterChangeRoutes = require('./src/routes/renter-booking-change.routes');
 const bookingRoutes = require('./src/routes/booking.routes');
 const changeRequestRoutes = require('./src/routes/booking-change-request.routes');
@@ -21,7 +22,10 @@ app.get('/api', (req, res) => {
 });
 
 app.use('/api/renter/bookings', renterChangeRoutes);
+app.use('/api/renter/bookings', chargeRoutes.renterBookingRoutes);
 app.use('/api/operator/bookings', bookingRoutes);
+app.use('/api/operator/bookings', chargeRoutes.operatorBookingRoutes);
+app.use('/api/operator/additional-charges', chargeRoutes.operatorChargeRoutes);
 app.use('/api/operator/booking-change-requests', changeRequestRoutes);
 
 app.use(notFoundMiddleware);

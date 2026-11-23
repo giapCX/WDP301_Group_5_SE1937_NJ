@@ -36,7 +36,7 @@ async function findBookings({ status, page = 1, limit = 10 } = {}) {
 
   const [items, total] = await Promise.all([
     Booking.find(filter)
-      .select('-_id')
+      .select('-_id -additional_charges')
       .sort({ created_at: -1, booking_id: -1 })
       .skip(skip)
       .limit(limit)
@@ -70,7 +70,7 @@ async function findBookingById(bookingId, session = null) {
 
   const booking = await Booking.findOne({ booking_id: bookingId })
     .session(session)
-    .select('-_id')
+    .select('-_id -additional_charges')
     .populate({
       path: 'renter',
       select: USER_FIELDS,
