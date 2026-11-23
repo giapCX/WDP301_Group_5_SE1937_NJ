@@ -10,7 +10,7 @@ npm run seed:check
 npm run seed
 ```
 
-Script doc MONGO_URI tu BE/.env va mac dinh ghi vao database tourist_car_rental_demo. Co the doi ten bang bien SEED_DB_NAME. De API doc du lieu nay, dat ten database trong MONGO_URI cua API thanh tourist_car_rental_demo.
+Script seed va API cung doc MONGO_URI tu BE/.env. Dat duong dan database trong URI la tourist_car_rental_demo.
 
 Seed tao unique index theo schema, chi insert ID chua ton tai, khong xoa hay ghi de document cu. Nen dung database demo rieng de tranh trung ID voi du lieu khac. Script khong dung transaction; neu loi giua chung, sua loi va chay lai.
 
@@ -26,7 +26,7 @@ Bookings bo sung reviewed_by (Number/user_id hoac null), reviewed_at (BSON Date 
 npm run db:booking-review-fields
 ```
 
-Migration dung MONGO_URI va SEED_DB_NAME giong seed (mac dinh tourist_car_rental_demo). Chi them field chua ton tai voi gia tri null, giu nguyen field da co va booking_status. npm run seed cung tu dong ap dung migration nay.
+Migration dung cung MONGO_URI voi seed. Chi them field chua ton tai voi gia tri null, giu nguyen field da co va booking_status. npm run seed cung tu dong ap dung migration nay.
 
 Quy uoc cho API se trien khai: pending -> confirmed/rejected. Khi quyet dinh, luu reviewed_by va reviewed_at; khi rejected phai co rejection_reason. Thay doi nay chi bo sung du lieu, chua trien khai API duyet/tu choi.
 

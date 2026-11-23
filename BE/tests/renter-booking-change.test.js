@@ -10,7 +10,7 @@ const errors = require('../middlewares/error.middleware');
 
 test('renter submissions validate ownership, price and serialize pending requests', async () => {
   const dbName = `renter_change_test_${process.pid}_${Date.now()}`;
-  await mongoose.connect('mongodb://127.0.0.1:27017/?replicaSet=rentalLocal', {
+  await mongoose.connect(process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27017/?replicaSet=rentalLocal', {
     dbName,
     autoIndex: false,
   });

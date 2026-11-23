@@ -10,7 +10,7 @@ const errorMiddleware = require('../middlewares/error.middleware');
 
 test('change decisions are atomic, detect stale snapshots and enforce Operator access', async () => {
   const dbName = `change_decision_test_${process.pid}_${Date.now()}`;
-  await mongoose.connect('mongodb://127.0.0.1:27017/?replicaSet=rentalLocal', {
+  await mongoose.connect(process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27017/?replicaSet=rentalLocal', {
     dbName,
     autoIndex: false,
   });

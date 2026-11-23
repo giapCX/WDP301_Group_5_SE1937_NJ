@@ -42,7 +42,6 @@ async function main() {
   if (!process.env.MONGO_URI) throw new Error('Missing MONGO_URI in BE/.env');
   await mongoose.connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 5000,
-    dbName: process.env.SEED_DB_NAME || 'tourist_car_rental_demo',
   });
   const db = mongoose.connection.db;
   for (const [i, [name, rows]] of Object.entries(data).entries()) {
