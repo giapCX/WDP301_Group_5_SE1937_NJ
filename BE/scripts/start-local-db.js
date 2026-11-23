@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const mongoose = require('mongoose');
-const uri = 'mongodb://127.0.0.1:27018/admin?directConnection=true';
+const uri = 'mongodb://127.0.0.1:27017/admin?directConnection=true';
 async function connect() {
   return mongoose.createConnection(uri, { serverSelectionTimeoutMS: 1000 }).asPromise();
 }
@@ -32,7 +32,7 @@ async function main() {
         '--dbpath',
         directory,
         '--port',
-        '27018',
+        '27017',
         '--bind_ip',
         '127.0.0.1',
         '--replSet',
@@ -68,25 +68,25 @@ async function main() {
         await connection.db.admin().command({
           replSetInitiate: {
             _id: 'rentalLocal',
-            members: [{ _id: 0, host: '127.0.0.1:27018' }],
+            members: [{ _id: 0, host: '127.0.0.1:27017' }],
           },
         });
       } catch (error) {
         if (error.codeName === 'NoReplicationEnabled') {
           throw new Error(
-            'Port 27018 is occupied by a standalone MongoDB. Use a dedicated replica set on this port before retrying npm run db:local.',
+            'Port 27017 is occupied by a standalone MongoDB. Stop it, then retry npm run db:local.',
           );
         }
         if (error.codeName !== 'AlreadyInitialized') throw error;
       }
     } else if (hello.setName !== 'rentalLocal') {
-      throw new Error('Port 27018 belongs to another replica set');
+      throw new Error('Port 27017 belongs to another replica set');
     }
     for (let attempt = 0; attempt < 60; attempt += 1) {
       const state = await connection.db.admin().command({ hello: 1 });
       if (state.isWritablePrimary && state.setName === 'rentalLocal') {
         console.log(
-          'Replica ready: mongodb://127.0.0.1:27018/tourist_car_rental_demo?replicaSet=rentalLocal',
+          'Replica ready: mongodb://127.0.0.1:27017/tourist_car_rental_demo?replicaSet=rentalLocal',
         );
         return;
       }

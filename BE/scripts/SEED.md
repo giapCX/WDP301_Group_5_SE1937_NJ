@@ -30,7 +30,7 @@ Migration dung MONGO_URI va SEED_DB_NAME giong seed (mac dinh tourist_car_rental
 
 Quy uoc cho API se trien khai: pending -> confirmed/rejected. Khi quyet dinh, luu reviewed_by va reviewed_at; khi rejected phai co rejection_reason. Thay doi nay chi bo sung du lieu, chua trien khai API duyet/tu choi.
 
-Vehicle schedule_version defaults to 0 in new sample documents. Seed also adds the field to existing vehicles where missing; it does not reset existing versions. Use npm run db:vehicle-schedule-version for migration only. Booking approval now requires a replica set; see the root README for npm run db:local and the port 27018 connection string.
+Vehicle schedule_version defaults to 0 in new sample documents. Seed also adds the field to existing vehicles where missing; it does not reset existing versions. Use npm run db:vehicle-schedule-version for migration only. Booking approval now requires a replica set; see the root README for npm run db:local and the port 27017 connection string.
 
 
 Collection booking_change_requests co 3 yeu cau mau (rejected, approved, pending) cho booking_id=2. Chi luu snapshot truoc/sau va thong tin xu ly, khong thay doi booking. Xem BE/src/models/booking-change-request.md.
