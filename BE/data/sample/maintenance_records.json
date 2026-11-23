@@ -1,0 +1,13 @@
+[
+  {
+    "maintenance_id": 1,
+    "vehicle_id": 4,
+    "reported_by": 4,
+    "description": "Demo: Thay ma phanh va kiem tra he thong phanh",
+    "maintenance_status": "in_progress",
+    "started_at": {
+      "$date": "2026-11-20T03:00:00Z"
+    },
+    "completed_at": null
+  }
+]

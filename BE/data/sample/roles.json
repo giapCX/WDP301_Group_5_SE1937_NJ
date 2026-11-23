@@ -1,0 +1,26 @@
+[
+  {
+    "role_id": 1,
+    "role_name": "admin"
+  },
+  {
+    "role_id": 2,
+    "role_name": "manager"
+  },
+  {
+    "role_id": 3,
+    "role_name": "operator"
+  },
+  {
+    "role_id": 4,
+    "role_name": "garage_staff"
+  },
+  {
+    "role_id": 5,
+    "role_name": "driver"
+  },
+  {
+    "role_id": 6,
+    "role_name": "renter"
+  }
+]

@@ -1,33 +1,33 @@
 {
-  "name": "xedi-backend",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "description": "XeDi Node.js API and MongoDB database initialization",
-  "engines": {
-    "node": ">=20.19.0"
-  },
+  "name": "4_mongoose_odm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server",
+    "seed": "node scripts/seed.js",
+    "seed:check": "node scripts/seed.js --check",
+    "db:booking-review-fields": "node scripts/add-booking-review-fields.js",
+    "test:models": "node --test tests/models.test.js",
     "db:local": "node scripts/start-local-db.js",
-    "db:setup": "node scripts/setup-db.js",
-    "db:seed": "node scripts/seed-db.js",
-    "db:grant:operator-contract-access": "node scripts/grant-operator-contract-access.js",
-    "db:grant:operator-workflow-access": "node scripts/grant-operator-workflow-access.js",
-    "db:migrate:operator-staff": "node scripts/migrate-operator-staff.js up",
-    "db:rollback:operator-staff": "node scripts/migrate-operator-staff.js down",
-    "db:demo-cleanup": "node scripts/clean-garage-demo.js",
-    "test": "node --test"
+    "db:vehicle-schedule-version": "node scripts/add-vehicle-schedule-version.js",
+    "test:booking": "node --test tests/booking.service.test.js tests/booking.routes.test.js",
+    "test:booking-concurrency": "node --test tests/booking.concurrency.test.js",
+    "db:embedded-charges": "node scripts/add-embedded-charges.js",
+    "test:charges": "node --test tests/additional-charge.test.js"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cloudinary": "^2.11.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^9.12.0",
-    "nodemailer": "^10.5.0"
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "mongoose": "^9.11.1",
+    "morgan": "^1.12.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }

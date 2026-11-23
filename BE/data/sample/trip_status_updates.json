@@ -1,0 +1,47 @@
+[
+  {
+    "update_id": 1,
+    "booking_id": 2,
+    "updated_by": 3,
+    "trip_status": "confirmed",
+    "updated_at": {
+      "$date": "2026-12-03T01:00:00Z"
+    }
+  },
+  {
+    "update_id": 2,
+    "booking_id": 3,
+    "updated_by": 3,
+    "trip_status": "in_progress",
+    "updated_at": {
+      "$date": "2026-11-22T01:00:00Z"
+    }
+  },
+  {
+    "update_id": 3,
+    "booking_id": 4,
+    "updated_by": 3,
+    "trip_status": "completed",
+    "updated_at": {
+      "$date": "2026-11-12T01:00:00Z"
+    }
+  },
+  {
+    "update_id": 4,
+    "booking_id": 5,
+    "updated_by": 3,
+    "trip_status": "cancelled",
+    "updated_at": {
+      "$date": "2026-11-12T01:00:00Z"
+    }
+  },
+  {
+    "update_id": 5,
+    "booking_id": 6,
+    "updated_by": 3,
+    "trip_status": "completed",
+    "updated_at": {
+      "$date": "2026-11-16T01:00:00Z"
+    }
+  }
+]

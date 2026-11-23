@@ -1,4 +1,0 @@
-import { getApi } from '../../../api/client';
-
-export const getListings = (params, options) => getApi('/listings?' + new URLSearchParams(params), options);
-export const getListing = (id, options) => getApi('/listings/' + encodeURIComponent(id), options);

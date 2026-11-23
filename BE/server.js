@@ -1,33 +1,57 @@
-import { createApp } from './src/app.js';
-import { env } from './src/config/env.js';
-import { connectDatabase, closeDatabase } from './dal/database.js';
+const express = require('express');
+const morgan = require('morgan');
+const { connectDb, disconnectDb } = require('./dal/database');
+const corsMiddleware = require('./middlewares/cors.middleware');
+const notFoundMiddleware = require('./middlewares/not-found.middleware');
+const errorMiddleware = require('./middlewares/error.middleware');
+const chargeRoutes = require('./src/routes/additional-charge.routes');
+const renterChangeRoutes = require('./src/routes/renter-booking-change.routes');
+const bookingRoutes = require('./src/routes/booking.routes');
+const changeRequestRoutes = require('./src/routes/booking-change-request.routes');
 
-try {
-  const database = await connectDatabase();
-  const server = createApp(database).listen(env.port, env.host, () => {
-    console.log(`XeDi BE: http://${env.host}:${env.port}`);
-    console.log(`MongoDB database: ${database.name}`);
-  });
-  server.on('error', async error => {
-    console.error(`Server failed: ${error.message}`);
-    await closeDatabase();
-    process.exitCode = 1;
-  });
-  let shuttingDown = false;
-  const shutdown = () => {
-    if (shuttingDown) return;
-    shuttingDown = true;
-    const timeout = setTimeout(() => process.exit(1), 10000);
-    timeout.unref();
-    server.close(async () => {
-      await closeDatabase();
-      clearTimeout(timeout);
+require('dotenv').config();
+
+const app = express();
+app.use(corsMiddleware);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
+
+app.get('/api', (req, res) => {
+  res.status(200).json({ message: 'Welcome Express server' });
+});
+
+app.use('/api/renter/bookings', renterChangeRoutes);
+app.use('/api/renter/bookings', chargeRoutes.renterBookingRoutes);
+app.use('/api/operator/bookings', bookingRoutes);
+app.use('/api/operator/bookings', chargeRoutes.operatorBookingRoutes);
+app.use('/api/operator/additional-charges', chargeRoutes.operatorChargeRoutes);
+app.use('/api/operator/booking-change-requests', changeRequestRoutes);
+
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
+
+async function startServer() {
+  try {
+    await connectDb();
+    const port = Number(process.env.PORT) || 9999;
+    const server = app.listen(port, () => {
+      console.log(`API chạy tại http://localhost:${port}/api`);
     });
-  };
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
-} catch (error) {
-  console.error(`Cannot start backend: ${error.message}`);
-  await closeDatabase();
-  process.exitCode = 1;
+
+    for (const signal of ['SIGINT', 'SIGTERM']) {
+      process.once(signal, () => {
+        server.close(async () => {
+          await disconnectDb();
+          process.exit(0);
+        });
+      });
+    }
+  } catch (error) {
+    console.error('Không khởi động được server:', error.message);
+    await disconnectDb().catch(() => {});
+    process.exitCode = 1;
+  }
 }
+
+startServer();

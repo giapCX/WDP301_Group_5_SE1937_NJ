@@ -1,0 +1,42 @@
+[
+  {
+    "assignment_id": 1,
+    "booking_id": 2,
+    "driver_id": 1,
+    "assigned_by": 3,
+    "assigned_at": {
+      "$date": "2026-11-02T00:00:00Z"
+    },
+    "assignment_status": "assigned"
+  },
+  {
+    "assignment_id": 2,
+    "booking_id": 3,
+    "driver_id": 2,
+    "assigned_by": 3,
+    "assigned_at": {
+      "$date": "2026-11-02T00:00:00Z"
+    },
+    "assignment_status": "assigned"
+  },
+  {
+    "assignment_id": 3,
+    "booking_id": 4,
+    "driver_id": 1,
+    "assigned_by": 3,
+    "assigned_at": {
+      "$date": "2026-11-02T00:00:00Z"
+    },
+    "assignment_status": "completed"
+  },
+  {
+    "assignment_id": 4,
+    "booking_id": 6,
+    "driver_id": 1,
+    "assigned_by": 3,
+    "assigned_at": {
+      "$date": "2026-11-02T00:00:00Z"
+    },
+    "assignment_status": "completed"
+  }
+]

@@ -1,72 +1,63 @@
-import { Schema } from 'mongoose';
-import { createSchema, embedded, arrayOf } from './schema.js';
+const { createModel } = require('./model-factory');
 
-const { ObjectId } = Schema.Types;
-
-export const userSchema = createSchema({
-  full_name: String,
-  email: { type: String, required: true },
-  email_verified_at: Date,
-  phone: String,
-  department: String,
-  job_title: String,
-  work_scope: String,
-  password_hash: String,
-  google_only: Boolean,
-  primary_role_id: { type: ObjectId, ref: 'Role' },
-  additional_role_ids: arrayOf({ type: ObjectId, ref: 'Role' }),
-  account_status: { type: String, enum: ["active", "suspended", "pending", "inactive", "locked"], required: true },
-  identity_kyc: embedded({
-    status: String,
-    id_masked: String,
-    verified_at: Date,
-    evidence_key: String,
-    document_type: String,
-    submitted_at: Date,
-    reviewed_at: Date,
-    reviewed_by_user_id: { type: ObjectId, ref: 'User' },
-    review_note: String,
-    provider: String,
-    evidence_keys: arrayOf(String),
-    verification_environment: String,
-  }),
-  driver_license: embedded({
-    class: String,
-    license_masked: String,
-    expires_at: Date,
-    verification_status: String,
-    evidence_keys: arrayOf(String),
-    evidence_key: String,
-    submitted_at: Date,
-    reviewed_at: Date,
-    reviewed_by_user_id: { type: ObjectId, ref: 'User' },
-    review_note: String,
-    provider: String,
-  }),
-  verification_history: arrayOf(embedded({
-    action: String,
-    at: Date,
-    by_user_id: { type: ObjectId, ref: 'User' },
-    note: String,
-    identity_evidence_key: String,
-    license_evidence_key: String,
-  })),
-  operator_identity_precheck: embedded({
-    status: String,
-    note: String,
-    checked_at: Date,
-    checked_by_user_id: { type: ObjectId, ref: 'User' },
-  }),
-  contact_profile: embedded({
-    city: String,
-    address: String,
-    avatar_key: String,
-  }),
-  payout_profile: embedded({
-    bank_name: String,
-    account_token: String,
-    account_masked: String,
-  }),
-  created_at: Date,
-  updated_at: Date,
-});
+module.exports = createModel(
+  'User',
+  'users',
+  {
+    user_id: {
+      type: Number,
+      required: true,
+      unique: true,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
+    role_id: {
+      type: Number,
+      required: true,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
+    full_name: {
+      type: String,
+      required: true,
+      maxlength: 120,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      maxlength: 150,
+    },
+    phone: {
+      type: String,
+      default: null,
+      maxlength: 20,
+    },
+    password_hash: {
+      type: String,
+      required: true,
+      maxlength: 255,
+    },
+    status: {
+      type: String,
+      required: true,
+      maxlength: 20,
+    },
+    created_at: {
+      type: Date,
+      required: true,
+    },
+  },
+  [
+    {
+      name: 'role',
+      model: 'Role',
+      localField: 'role_id',
+      foreignField: 'role_id',
+    },
+  ],
+);

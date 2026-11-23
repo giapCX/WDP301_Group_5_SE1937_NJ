@@ -1,0 +1,20 @@
+[
+  {
+    "promotion_id": 1,
+    "code": "DEMO10",
+    "discount_percent": 10,
+    "valid_until": {
+      "$date": "2027-12-31T23:59:59Z"
+    },
+    "status": "active"
+  },
+  {
+    "promotion_id": 2,
+    "code": "EXPIRED5",
+    "discount_percent": 5,
+    "valid_until": {
+      "$date": "2026-10-31T23:59:59Z"
+    },
+    "status": "expired"
+  }
+]

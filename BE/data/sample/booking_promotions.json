@@ -1,0 +1,12 @@
+[
+  {
+    "booking_id": 2,
+    "promotion_id": 1,
+    "discount_amount": 160000
+  },
+  {
+    "booking_id": 4,
+    "promotion_id": 1,
+    "discount_amount": 360000
+  }
+]

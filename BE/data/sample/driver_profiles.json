@@ -1,0 +1,26 @@
+[
+  {
+    "driver_id": 1,
+    "user_id": 5,
+    "license_number": "DEMO-LICENSE-1",
+    "license_expiry": {
+      "$date": "2030-12-31T00:00:00Z"
+    },
+    "availability_status": "available",
+    "approved_at": {
+      "$date": "2026-11-02T00:00:00Z"
+    }
+  },
+  {
+    "driver_id": 2,
+    "user_id": 6,
+    "license_number": "DEMO-LICENSE-2",
+    "license_expiry": {
+      "$date": "2030-12-31T00:00:00Z"
+    },
+    "availability_status": "busy",
+    "approved_at": {
+      "$date": "2026-11-02T00:00:00Z"
+    }
+  }
+]

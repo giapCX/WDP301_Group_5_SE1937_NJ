@@ -1,39 +1,79 @@
-import { Schema } from 'mongoose';
-import { createSchema, embedded, arrayOf, integer } from './schema.js';
+const { createModel } = require('./model-factory');
 
-const { ObjectId } = Schema.Types;
-
-export const vehicleInspectionSchema = createSchema({
-  vehicle_id: { type: ObjectId, ref: 'Vehicle', required: true },
-  garage_staff_id: { type: ObjectId, ref: 'User', required: true },
-  reviewed_by_manager_id: { type: ObjectId, ref: 'User' },
-  inspection_type: { type: String, enum: ["onboarding", "periodic", "return"], required: true },
-  inspected_at: Date,
-  condition_report: embedded({
-    exterior: String,
-    interior: String,
-    engine: String,
-    tires: String,
-    odometer_km: integer({ min: 0, max: 10000000 }),
-    fuel_level_pct: integer({ min: 0, max: 100 }),
-    photo_keys: arrayOf(String),
-    note: String,
-    checklist: { type: [embedded({ key: String, result: String, note: String, photo_key: String })], default: undefined },
-  }),
-  recommendation: { type: String, enum: ["pass", "requires_repair", "fail"] },
-  approval_status: { type: String, enum: ["draft", "pending", "approved", "revision_required", "rejected"], required: true },
-  decision_reason: String,
-  owner_review: embedded({ status: String, note: String, reviewed_at: Date, owner_id: ObjectId, reviewed_version: Number }),
-  operator_review: embedded({ status: String, note: String, reviewed_at: Date, operator_id: ObjectId, reviewed_version: Number }),
-  decided_at: Date,
-  created_at: Date,
-  version: integer({ min: 0 }),
-  submitted_from_version: integer({ min: 0 }),
-  submitted_at: Date,
-  updated_at: Date,
-  scheduled_for: Date,
-  arrival_review: embedded({ status: String, note: String, reviewed_at: Date }),
-  schedule_note: String,
-  assigned_by_operation_staff_id: { type: ObjectId, ref: 'User' },
-  assigned_by_operator_staff_id: { type: ObjectId, ref: 'User' },
-});
+module.exports = createModel(
+  'VehicleInspection',
+  'vehicle_inspections',
+  {
+    inspection_id: {
+      type: Number,
+      required: true,
+      unique: true,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
+    vehicle_id: {
+      type: Number,
+      required: true,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
+    booking_id: {
+      type: Number,
+      default: null,
+      validate: {
+        validator: (value) => value === null || Number.isSafeInteger(value),
+        message: 'Must be a safe integer',
+      },
+    },
+    staff_id: {
+      type: Number,
+      required: true,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
+    inspection_type: {
+      type: String,
+      required: true,
+      maxlength: 30,
+    },
+    condition_note: {
+      type: String,
+      default: null,
+    },
+    result: {
+      type: String,
+      required: true,
+      maxlength: 30,
+    },
+    inspected_at: {
+      type: Date,
+      required: true,
+    },
+  },
+  [
+    {
+      name: 'vehicle',
+      model: 'Vehicle',
+      localField: 'vehicle_id',
+      foreignField: 'vehicle_id',
+    },
+    {
+      name: 'booking',
+      model: 'Booking',
+      localField: 'booking_id',
+      foreignField: 'booking_id',
+    },
+    {
+      name: 'staff',
+      model: 'User',
+      localField: 'staff_id',
+      foreignField: 'user_id',
+    },
+  ],
+);

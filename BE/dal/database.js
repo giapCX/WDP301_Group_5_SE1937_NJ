@@ -1,23 +1,16 @@
-import mongoose from 'mongoose';
-import { env } from '../src/config/env.js';
-import { getModels } from '../src/models/index.js';
+const mongoose = require("mongoose");
+require('../src/models');
 
-let connection;
-export async function connectDatabase() {
-  if (!connection || connection.readyState === 0) {
-    connection = mongoose.createConnection(env.mongoUri, {
-      dbName: env.databaseName,
-      serverSelectionTimeoutMS: 5000,
-      autoIndex: false,
-      autoCreate: false,
-    });
-  }
-  await connection.asPromise();
-  getModels(connection);
-  await connection.db.command({ ping: 1 });
-  return connection;
+const connectDb = async(uri = process.env.MONGO_URI) => {
+    if(!uri)
+        throw new Error("Thiếu biến môi trường MONGO_URI (xem .env file)");
+    await mongoose.connect(uri);
+    console.log(`Đã kết nối CSDL: `, mongoose.connection.name);
+    return mongoose.connection;
 }
 
-export async function closeDatabase() {
-  if (connection) await connection.close();
+const disconnectDb = async () => {
+    await mongoose.disconnect();
 }
+
+module.exports = {connectDb, disconnectDb};

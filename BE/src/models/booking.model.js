@@ -1,74 +1,119 @@
-import { Schema } from 'mongoose';
-import { createSchema, embedded, arrayOf, integer } from './schema.js';
+const { additionalChargeSchema } = require('./additional-charge.schema');
+const { createModel } = require('./model-factory');
 
-const { ObjectId } = Schema.Types;
-
-export const bookingSchema = createSchema({
-  hold_expires_at: Date,
-  policy_snapshot: Schema.Types.Mixed,
-  request_key: String,
-  discount_code: String,
-  discount_amount: Number,
-  booking_code: { type: String, required: true },
-  renter_id: { type: ObjectId, ref: 'User', required: true },
-  vehicle_id: { type: ObjectId, ref: 'Vehicle', required: true },
-  listing_id: { type: ObjectId, ref: 'VehicleListing' },
-  management_agreement_id: { type: ObjectId, ref: 'ManagementAgreement' },
-  start_at: { type: Date, required: true },
-  end_at: { type: Date, required: true },
-  actual_start_at: Date,
-  actual_end_at: Date,
-  pickup_location: embedded({
-    branch: String,
-  }),
-  return_location: embedded({
-    branch: String,
-  }),
-  rental_fee_amount: Number,
-  deposit_amount_snapshot: Number,
-  pricing_snapshot: embedded({
-    daily_price: Number,
-    charged_days: integer({ min: 0 }),
-    currency: String,
-    commission_rate_pct: Number,
-    fuel_policy: String,
-    late_fee_per_hour: Number,
-  }),
-  review_info: embedded({
-    required: Boolean,
-    reviewer_role: String,
-    decision: String,
-    reviewed_by: ObjectId,
-    reviewed_at: Date,
-    reason: String,
-  }),
-  review_deadline_at: Date,
-  payment_deadline_at: Date,
-  operation_overdue_escalated_at: Date,
-  operation_overdue_escalated_by: { type: ObjectId, ref: 'User' },
-  operation_overdue_note: String,
-  cancellation_info: embedded({
-    cancelled_by: { type: ObjectId, ref: 'User' },
-    cancelled_at: Date,
-    reason: String,
-    refund_decision: String,
-    refund_amount: Number,
-    refund_status: String,
-    policy_version: Number,
-    note: String,
-  }),
-  status_history: arrayOf(embedded({
-    from: String,
-    to: String,
-    at: Date,
-    actor: String,
-    reason: String,
-  })),
-  operation_overdue_handled_at: Date,
-  operation_overdue_handled_by: { type: ObjectId, ref: 'User' },
-  status: { type: String, enum: ["pending", "awaiting_payment", "confirmed", "ongoing", "completed", "cancelled", "rejected", "expired"], required: true },
-  created_at: Date,
-  updated_at: Date,
-  payment_deadline_at: Date,
-  contract_workflow_version: integer({ min: 0 }),
-});
+module.exports = createModel(
+  'Booking',
+  'bookings',
+  {
+    booking_id: {
+      type: Number,
+      required: true,
+      unique: true,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
+    renter_id: {
+      type: Number,
+      required: true,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
+    vehicle_id: {
+      type: Number,
+      default: null,
+      validate: {
+        validator: (value) => value === null || Number.isSafeInteger(value),
+        message: 'Must be a safe integer',
+      },
+    },
+    pickup_location: {
+      type: String,
+      required: true,
+      maxlength: 255,
+    },
+    dropoff_location: {
+      type: String,
+      required: true,
+      maxlength: 255,
+    },
+    pickup_time: {
+      type: Date,
+      required: true,
+    },
+    estimated_end_time: {
+      type: Date,
+      required: true,
+    },
+    estimated_price: {
+      type: Number,
+      required: true,
+      validate: {
+        validator: Number.isFinite,
+        message: 'Must be finite',
+      },
+      default: 0,
+    },
+    additional_charges: {
+      type: [additionalChargeSchema],
+      default: [],
+    },
+    additional_charge: {
+      type: Number,
+      required: true,
+      validate: {
+        validator: Number.isFinite,
+        message: 'Must be finite',
+      },
+      default: 0,
+    },
+    booking_status: {
+      type: String,
+      required: true,
+      maxlength: 30,
+    },
+    created_at: {
+      type: Date,
+      required: true,
+    },
+    reviewed_by: {
+      type: Number,
+      default: null,
+      validate: {
+        validator: (value) => value === null || Number.isSafeInteger(value),
+        message: 'Must be a safe integer',
+      },
+    },
+    reviewed_at: {
+      type: Date,
+      default: null,
+    },
+    rejection_reason: {
+      type: String,
+      default: null,
+    },
+  },
+  [
+    {
+      name: 'renter',
+      model: 'User',
+      localField: 'renter_id',
+      foreignField: 'user_id',
+    },
+    {
+      name: 'vehicle',
+      model: 'Vehicle',
+      localField: 'vehicle_id',
+      foreignField: 'vehicle_id',
+    },
+    {
+      name: 'reviewer',
+      model: 'User',
+      localField: 'reviewed_by',
+      foreignField: 'user_id',
+    },
+  ],
+);

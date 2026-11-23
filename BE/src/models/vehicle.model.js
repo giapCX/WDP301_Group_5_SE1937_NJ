@@ -1,76 +1,64 @@
-import { Schema } from 'mongoose';
-import { createSchema, embedded, arrayOf, integer } from './schema.js';
+const { createModel } = require('./model-factory');
 
-const { ObjectId } = Schema.Types;
-
-export const vehicleSchema = createSchema({
-  renter_calendar_version: Number,
-  owner_id: { type: ObjectId, ref: 'User', required: true },
-  license_plate: { type: String, required: true },
-  vin: String,
-  brand: String,
-  model: String,
-  manufacture_year: integer({ min: 0 }),
-  seats: integer({ min: 0 }),
-  fuel_type: String,
-  transmission: String,
-  vehicle_type: String,
-  description: String,
-  condition_declaration: String,
-  owner_contact_address: String,
-  daily_price: integer({ min: 0 }),
-  mileage_policy: embedded({ included_km_per_day: integer({ min: 0 }), extra_km_fee: integer({ min: 0 }) }),
-  photos: arrayOf(String),
-  publish_vehicle_photos: Boolean,
-  physical_status: { type: String, enum: ["with_owner", "at_garage", "rented", "returned_to_owner", "maintenance"] },
-  onboarding_status: { type: String, enum: ["draft", "submitted", "pending_review", "approved", "revision_required", "rejected"] },
-  documents: embedded({
-    registration: embedded({
-      number_masked: String,
-      file_key: String,
-      verified: Boolean,
-      review_status: String,
-      review_note: String,
-      reviewed_at: Date,
-    }),
-    inspection_certificate: embedded({
-      valid_until: Date,
-      file_key: String,
-      verified: Boolean,
-      review_status: String,
-      review_note: String,
-      reviewed_at: Date,
-    }),
-    insurance: embedded({ file_key: String, verified: Boolean, review_status: String, review_note: String, reviewed_at: Date }),
-  }),
-  registration_history: arrayOf(embedded({
-    action: String,
-    by_user_id: { type: ObjectId, ref: 'User' },
-    at: Date,
-    note: String,
-  })),
-  operational_status_history: arrayOf(embedded({
-    from: String,
-    to: String,
-    note: String,
-    changed_by_user_id: { type: ObjectId, ref: 'User' },
-    changed_at: Date,
-  })),
-  created_at: Date,
-  updated_at: Date,
-  inspection_workflow_version: integer({ min: 0 }),
-  operator_document_review: embedded({ status: String, note: String, reviewed_at: Date, operator_id: ObjectId }),
-  inspection_schedule_request: embedded({
-    status: { type: String, enum: ['pending', 'confirmed'] },
-    requested_for: Date,
-    note: String,
-    requested_at: Date,
-    confirmed_at: Date,
-    confirmed_by_operator_id: { type: ObjectId, ref: 'User' },
-    scheduled_for: Date,
-    response_note: String,
-  }),
-  contract_workflow_version: integer({ min: 0 }),
-  reviewed_by_manager_id: { type: ObjectId, ref: 'User' },
-  review_note: String,
-});
+module.exports = createModel(
+  'Vehicle',
+  'vehicles',
+  {
+    vehicle_id: {
+      type: Number,
+      required: true,
+      unique: true,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
+    plate_number: {
+      type: String,
+      required: true,
+      unique: true,
+      maxlength: 20,
+    },
+    brand: {
+      type: String,
+      required: true,
+      maxlength: 60,
+    },
+    model: {
+      type: String,
+      required: true,
+      maxlength: 60,
+    },
+    seat_count: {
+      type: Number,
+      required: true,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
+    price_per_day: {
+      type: Number,
+      required: true,
+      validate: {
+        validator: Number.isFinite,
+        message: 'Must be finite',
+      },
+    },
+    schedule_version: {
+      type: Number,
+      default: 0,
+      min: 0,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer',
+      },
+    },
+    status: {
+      type: String,
+      required: true,
+      maxlength: 30,
+    },
+  },
+  [],
+);
