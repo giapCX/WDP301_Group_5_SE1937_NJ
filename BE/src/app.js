@@ -20,6 +20,7 @@ import { createIdentityVerificationRouter } from './routes/identity-verification
 import { createCloudinaryOwnerFileRepository } from './repositories/cloudinary-owner-file.repository.js';
 import { createGridFsOwnerFileRepository } from './repositories/gridfs-owner-file.repository.js';
 import { createOperationRouter } from './routes/operation.routes.js';
+import { createSampleOperatorRouter } from './routes/operator-sample.routes.js';
 
 export function createApp(database, options = {}) {
   const app = express();
@@ -64,6 +65,7 @@ export function createApp(database, options = {}) {
   app.use('/api/operations', createOperationIncidentRouter(database));
   app.use('/api/contracts', createContractRouter(database));
   app.use('/api/operation', createOperationRouter(database, options.ownerFileRepository || privateFileRepository));
+  app.use('/api/operator', createSampleOperatorRouter(database));
   app.use(notFound);
   app.use(errorHandler);
   return app;

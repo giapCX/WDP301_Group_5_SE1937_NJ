@@ -19,6 +19,7 @@ export function createSampleOperatorRouter(connection) {
   const bookings = database.collection('bookings');
   const users = database.collection('users');
   const vehicles = database.collection('vehicles');
+  const changeRequests = database.collection('booking_change_requests');
 
   async function presentBooking(booking) {
     if (!booking) return null;
@@ -61,6 +62,76 @@ export function createSampleOperatorRouter(connection) {
         database.collection('incidents').countDocuments({ incident_status: { $in: ['open', 'investigating', 'in_progress'] } }),
       ]);
       response.json({ data: { totalBookings, pendingBookings, confirmedBookings, activeTrips, completedTrips, availableVehicles: availableVehiclesCount, openIncidents } });
+    } catch (error) { routeError(response, error); }
+  });
+
+  router.get('/vehicles/available', async (_request, response) => {
+    try {
+      const items = await vehicles.find({ status: 'available' }, { projection: { _id: 0 } })
+        .sort({ seat_count: 1, vehicle_id: 1 }).toArray();
+      response.json({ data: { items, total: items.length } });
+    } catch (error) { routeError(response, error); }
+  });
+
+  router.get('/booking-change-requests', async (request, response) => {
+    try {
+      const page = request.query.page === undefined ? 1 : positiveInteger(request.query.page, 'page');
+      const limit = request.query.limit === undefined ? 10 : positiveInteger(request.query.limit, 'limit');
+      if (limit > 100) throw Object.assign(new Error('limit tối đa là 100.'), { status: 400 });
+      const status = typeof request.query.status === 'string' ? request.query.status.trim() : '';
+      if (status && !['pending', 'approved', 'rejected'].includes(status)) throw Object.assign(new Error('Trạng thái yêu cầu không hợp lệ.'), { status: 400 });
+      const filter = {};
+      if (status) filter.request_status = status;
+      if (request.query.booking_id !== undefined) filter.booking_id = positiveInteger(request.query.booking_id, 'booking_id');
+      const [items, total] = await Promise.all([
+        changeRequests.find(filter).sort({ requested_at: -1, change_request_id: -1 }).skip((page - 1) * limit).limit(limit).toArray(),
+        changeRequests.countDocuments(filter),
+      ]);
+      response.json({ data: { items, total, page, limit, total_pages: Math.ceil(total / limit) } });
+    } catch (error) { routeError(response, error); }
+  });
+
+  router.get('/booking-change-requests/:id', async (request, response) => {
+    try {
+      const id = positiveInteger(request.params.id, 'change_request_id');
+      const item = await changeRequests.findOne({ change_request_id: id });
+      if (!item) throw Object.assign(new Error('Không tìm thấy yêu cầu thay đổi.'), { status: 404 });
+      response.json({ data: item });
+    } catch (error) { routeError(response, error); }
+  });
+
+  router.patch('/booking-change-requests/:id/reject', async (request, response) => {
+    try {
+      const id = positiveInteger(request.params.id, 'change_request_id');
+      const reason = typeof request.body?.rejection_reason === 'string' ? request.body.rejection_reason.trim() : '';
+      if (!reason) throw Object.assign(new Error('Cần nhập lý do từ chối.'), { status: 400 });
+      const result = await changeRequests.updateOne(
+        { change_request_id: id, request_status: 'pending' },
+        { $set: { request_status: 'rejected', reviewed_by: OPERATOR_USER_ID, reviewed_at: new Date(), rejection_reason: reason } },
+      );
+      if (!result.modifiedCount) throw Object.assign(new Error('Yêu cầu không còn chờ xử lý.'), { status: 409 });
+      response.json({ data: await changeRequests.findOne({ change_request_id: id }) });
+    } catch (error) { routeError(response, error); }
+  });
+
+  router.patch('/booking-change-requests/:id/approve', async (request, response) => {
+    try {
+      const id = positiveInteger(request.params.id, 'change_request_id');
+      const change = await changeRequests.findOne({ change_request_id: id, request_status: 'pending' });
+      if (!change) throw Object.assign(new Error('Yêu cầu không còn chờ xử lý.'), { status: 409 });
+      const booking = await bookings.findOne({ booking_id: change.booking_id, booking_status: 'confirmed' });
+      if (!booking) throw Object.assign(new Error('Booking không còn ở trạng thái có thể đổi lịch.'), { status: 409 });
+      const updated = await bookings.updateOne(
+        { booking_id: booking.booking_id, booking_status: 'confirmed', pickup_time: change.before.pickup_time, estimated_end_time: change.before.estimated_end_time },
+        { $set: { pickup_location: change.after.pickup_location, dropoff_location: change.after.dropoff_location, pickup_time: change.after.pickup_time, estimated_end_time: change.after.estimated_end_time, estimated_price: change.after.estimated_price, trip_stops: change.after.trip_stops || [] } },
+      );
+      if (!updated.modifiedCount) throw Object.assign(new Error('Lịch booking đã thay đổi. Tải lại yêu cầu.'), { status: 409 });
+      const decision = await changeRequests.updateOne(
+        { change_request_id: id, request_status: 'pending' },
+        { $set: { request_status: 'approved', reviewed_by: OPERATOR_USER_ID, reviewed_at: new Date(), rejection_reason: null } },
+      );
+      if (!decision.modifiedCount) throw Object.assign(new Error('Yêu cầu vừa được xử lý.'), { status: 409 });
+      response.json({ data: await changeRequests.findOne({ change_request_id: id }) });
     } catch (error) { routeError(response, error); }
   });
 

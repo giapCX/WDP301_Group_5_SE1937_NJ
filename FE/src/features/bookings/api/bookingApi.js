@@ -35,5 +35,5 @@ export function getBookingError(error) {
   if (error.response?.status === 401) {
     return 'Bạn cần đăng nhập bằng tài khoản Operator để duyệt hoặc từ chối booking.';
   }
-  return error.response?.data?.message || 'Không thể kết nối máy chủ. Vui lòng thử lại.';
+  return error.response?.data?.error?.message || error.response?.data?.message || 'Không thể kết nối máy chủ. Vui lòng thử lại.';
 }

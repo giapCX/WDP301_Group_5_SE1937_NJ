@@ -28,5 +28,5 @@ export function changeRequestError(error) {
   if (error.response?.status === 401) {
     return 'Bạn cần đăng nhập tài khoản Operator để xử lý yêu cầu đổi lịch.';
   }
-  return error.response?.data?.message || 'Không thể tải dữ liệu. Vui lòng thử lại.';
+  return error.response?.data?.error?.message || error.response?.data?.message || 'Không thể tải dữ liệu. Vui lòng thử lại.';
 }

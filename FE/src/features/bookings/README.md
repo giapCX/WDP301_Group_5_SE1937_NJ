@@ -19,11 +19,11 @@ Màn chính: `/operator/bookings`. Đường dẫn `/` chuyển đến màn này
 
 ## Kết nối
 
-`VITE_API_BASE_URL` trong `FE/.env` phải trỏ đúng API đang chạy. Mặc định của client là `http://localhost:9999/api`; nếu backend dùng port 5000, đặt `VITE_API_BASE_URL=http://localhost:5000/api` rồi khởi động lại Vite. Không có dữ liệu giả thay thế khi API lỗi.
+Màn operator dùng chung API client tại `src/api/client.js`. Mặc định `/api` được Vite proxy tới backend cổng 5000. Chạy `npm run dev:operator` từ thư mục gốc để khởi động backend với database `tourist_car_rental_demo` và giao diện Vite.
 
 Bộ lọc trạng thái và phân trang thực hiện trên server. Tìm mã/tên/số điện thoại và lọc số chỗ chỉ áp dụng trên trang hiện tại, đã ghi rõ trên giao diện. Thống kê là tổng theo trạng thái, không phải thống kê theo ngày vì API chưa có bộ lọc ngày.
 
-Không tự gán Operator hay giả lập đăng nhập. PATCH duyệt/từ chối trả thông báo đăng nhập nếu API phản hồi 401; cần nối module auth trước khi dùng thực tế. Lỗi 409 yêu cầu tải lại xe trước khi duyệt lại. API GET hiện chưa bảo vệ bằng auth.
+Auth chưa được bật trong giai đoạn operator này. API dùng operator mẫu có `user_id=3` để ghi nhận người xử lý; khi tích hợp auth, thay giá trị này bằng người dùng đã xác thực. Lỗi 409 yêu cầu tải lại xe trước khi duyệt lại.
 
 Không hiển thị loại dịch vụ, tên tài xế hay đánh giá giả vì backend chưa cung cấp. Chỉ gợi ý xe, chưa phân công tài xế. Nút làm mới thay cho nút tạo lệnh trong ảnh do chức năng tạo lệnh chưa có API.
 

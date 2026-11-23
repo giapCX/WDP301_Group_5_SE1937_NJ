@@ -5,7 +5,7 @@ import { connectDatabase, closeDatabase } from './config/database.js';
 try {
   const database = await connectDatabase();
   const server = createApp(database).listen(env.port, env.host, () => {
-    console.log(`XeDi BE: http://${env.host}:${env.port}`);
+    console.log(`Backend API: http://${env.host}:${env.port}`);
     console.log(`MongoDB database: ${database.name}`);
   });
   server.on('error', async error => {
