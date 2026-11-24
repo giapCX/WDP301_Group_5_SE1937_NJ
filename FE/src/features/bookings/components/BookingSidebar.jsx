@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import SignOutButton from '../../auth/components/SignOutButton.js';
 import Icon from './BookingIcon';
 
 export default function BookingSidebar() {
@@ -47,6 +48,7 @@ export default function BookingSidebar() {
           <Icon name="car" />
           Xe sẵn sàng
         </NavLink>
+        <SignOutButton />
       </nav>
       <div className="sidebar-bottom">
         <div className="sidebar-help">
