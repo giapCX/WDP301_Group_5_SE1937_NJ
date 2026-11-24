@@ -44,6 +44,7 @@
   background: #fff;
   color: var(--ink);
 }
+.garage-date small { color:#8a97a8; font-size:9px; font-weight:400; }
 
 .garage-table {
   min-width: 550px;

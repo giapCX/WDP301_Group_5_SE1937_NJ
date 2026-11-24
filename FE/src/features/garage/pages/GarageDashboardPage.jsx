@@ -10,7 +10,6 @@ import '../../bookings/styles/bookings.css';
 import '../styles/garage.css';
 import '../../trip-workflow/styles/workflow.css';
 
-const dateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 const TASK_TYPES = { ALL: 'Tất cả', HANDOVER_OUT: 'Bàn giao xe', RETURN_IN: 'Tiếp nhận xe', MAINTENANCE: 'Bảo dưỡng' };
 const STATUS = {
   pending: { label: 'Chờ thực hiện', tone: 'red' },
@@ -21,8 +20,7 @@ const STATUS = {
 export default function GarageDashboardPage() {
   const user = useOutletContext();
   const navigate = useNavigate();
-  const today = dateFormatter.format(new Date());
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState('');
   const [type, setType] = useState('ALL');
   const [query, setQuery] = useState('');
   const [tasks, setTasks] = useState([]);
@@ -64,7 +62,7 @@ export default function GarageDashboardPage() {
     catch (failure) { setError(garageError(failure)); }
     finally { setBusy(''); }
   }
-  function reset() { setDate(today); setType('ALL'); setQuery(''); }
+  function reset() { setDate(''); setType('ALL'); setQuery(''); }
   async function signOut() {
     setSigningOut(true); setError('');
     try { await logout(); navigate('/login', { replace: true }); }
@@ -80,7 +78,7 @@ export default function GarageDashboardPage() {
     <div className="dispatch-workspace">
       <header className="dispatch-topbar"><div className="dispatch-breadcrumb">Gara <Icon name="chevron" size={11} /><strong>Tổng quan</strong></div><div className="garage-user-actions"><div className="operator-profile"><span className="profile-avatar"><Icon name="user" /></span><span><strong>{user?.full_name || 'Garage Staff'}</strong><small>Nhân viên Gara</small></span></div><button className="dispatch-button subtle compact" disabled={signingOut} onClick={signOut}>{signingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}</button></div></header>
       <main className="dispatch-content">
-        <header className="dispatch-page-heading"><div><span className="garage-live-label">NHIỆM VỤ TỪ HỆ THỐNG</span><h1>Nhiệm vụ gara</h1><p>Kiểm tra trước chuyến, bàn giao cho tài xế và tiếp nhận xe sau hành trình.</p></div><div className="garage-page-actions"><button className="dispatch-button subtle" onClick={load} disabled={Boolean(busy)}><Icon name="refresh" size={15} />Làm mới</button><label className="garage-date">Ngày làm việc<input type="date" value={date} onChange={(event) => setDate(event.target.value || today)} /></label></div></header>
+        <header className="dispatch-page-heading"><div><span className="garage-live-label">NHIỆM VỤ TỪ HỆ THỐNG</span><h1>Nhiệm vụ gara</h1><p>Kiểm tra trước chuyến, bàn giao cho tài xế và tiếp nhận xe sau hành trình.</p></div><div className="garage-page-actions"><button className="dispatch-button subtle" onClick={load} disabled={Boolean(busy)}><Icon name="refresh" size={15} />Làm mới</button><label className="garage-date">Lọc theo ngày<input type="date" value={date} onChange={(event) => setDate(event.target.value)} /><small>{date ? 'Đang lọc ngày đã chọn' : 'Đang hiển thị mọi nhiệm vụ đang chờ'}</small></label></div></header>
         <DispatchStats cards={cards} label="Thống kê nhiệm vụ Gara" />
         {error && <div className="dispatch-alert" role="alert">{error}</div>}
         <section className="dispatch-filters" aria-label="Lọc nhiệm vụ gara"><div className="booking-tabs" role="group" aria-label="Loại nhiệm vụ">{Object.entries(TASK_TYPES).map(([key, label]) => <button key={key} className={type === key ? 'is-active' : ''} aria-pressed={type === key} onClick={() => setType(key)}>{label}</button>)}</div><div className="booking-filter-fields"><label className="booking-search"><Icon name="search" size={17} /><input aria-label="Tìm nhiệm vụ gara" placeholder="Tìm booking, xe, biển số hoặc tài xế…" value={query} onChange={(event) => setQuery(event.target.value)} /></label>{query && <button className="dispatch-button subtle compact" onClick={() => setQuery('')}>Xóa tìm kiếm</button>}</div></section>

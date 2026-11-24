@@ -1,7 +1,7 @@
 import api from '../../../api/client';
 
 export async function getGarageTasks(date, signal) {
-  return (await api.get('/garage/tasks', { params: { date }, signal })).data.data;
+  return (await api.get('/garage/tasks', { params: date ? { date } : {}, signal })).data.data;
 }
 export async function submitGarageInspection(input) {
   return (await api.post('/garage/inspections', input)).data.data;

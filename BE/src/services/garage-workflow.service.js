@@ -24,10 +24,10 @@ function pushHistory(workflow, action, actorId, detail) {
 }
 
 async function tasks(query = {}) {
-  const localDate = query.date || new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(now());
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(localDate) || !Number.isFinite(new Date(`${localDate}T00:00:00+07:00`).getTime())) throw new HttpError(400, 'Ngày lọc không hợp lệ');
-  const startUtc = new Date(`${localDate}T00:00:00+07:00`);
-  const endUtc = new Date(startUtc.getTime() + 86400000);
+  const localDate = query.date || null;
+  if (localDate && (!/^\d{4}-\d{2}-\d{2}$/.test(localDate) || !Number.isFinite(new Date(`${localDate}T00:00:00+07:00`).getTime()))) throw new HttpError(400, 'Ngày lọc không hợp lệ');
+  const startUtc = localDate ? new Date(`${localDate}T00:00:00+07:00`) : null;
+  const endUtc = startUtc ? new Date(startUtc.getTime() + 86400000) : null;
   const workflows = await TripWorkflow.find({ stage: { $nin: ['completed'] } }).sort({ updated_at: -1 }).lean();
   const bookingIds = workflows.map((item) => item.booking_id);
   const inspections = await VehicleInspection.find().sort({ inspected_at: -1, inspection_id: -1 }).lean();
@@ -76,7 +76,7 @@ async function tasks(query = {}) {
       latest_inspection: task.latest_inspection || null,
       note: task.inspection?.condition_note || task.maintenance?.description || null,
     };
-  }).filter((item) => item.type === 'MAINTENANCE' || !item.due_at || (item.due_at >= startUtc && item.due_at < endUtc));
+  }).filter((item) => !startUtc || item.type === 'MAINTENANCE' || !item.due_at || (item.due_at >= startUtc && item.due_at < endUtc));
 }
 
 async function inspectAndHandover(input, staffId) {
