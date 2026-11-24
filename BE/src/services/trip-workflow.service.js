@@ -176,6 +176,12 @@ async function mutateDriver(bookingId, actorId, action, input = {}) {
     return workflow.toObject();
   } else if (action === 'vehicle_received') {
     if (workflow.driver_response !== 'accepted' || workflow.stage !== 'awaiting_vehicle') throw new HttpError(409, 'Cần chấp nhận phân công trước');
+    const pickupTime = new Date(booking?.pickup_time).getTime();
+    if (!Number.isFinite(pickupTime)) throw new HttpError(409, 'Booking chưa có giờ khởi hành hợp lệ');
+    const receiveFrom = pickupTime - 24 * 60 * 60 * 1000;
+    const currentTime = now().getTime();
+    if (currentTime < receiveFrom) throw new HttpError(409, `Chỉ có thể nhận xe trong 24 giờ trước giờ khởi hành. Bạn có thể nhận từ ${new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(receiveFrom))}`);
+    if (currentTime >= pickupTime) throw new HttpError(409, 'Đã đến hoặc quá giờ khởi hành; vui lòng liên hệ Operator');
     const inspection = await VehicleInspection.findOne({ booking_id: id, vehicle_id: workflow.vehicle_id, inspection_type: 'handover' }).sort({ inspected_at: -1, inspection_id: -1 }).lean();
     if (!inspection || !['passed', 'pass'].includes(inspection.result)) throw new HttpError(409, 'Gara chưa ghi nhận kiểm tra xe đạt cho booking này');
     if (!Number.isFinite(inspection.odometer)) throw new HttpError(409, 'Gara cần ghi số km trên biên bản bàn giao');
