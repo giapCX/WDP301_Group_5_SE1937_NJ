@@ -146,7 +146,7 @@ Các trang theo vai trò hiện có:
 
 ### Đăng ký tài khoản mới
 
-Tại `http://localhost:3000/login`, chọn **Đăng ký mới**, nhập họ tên, số điện thoại, email và mật khẩu. Ứng dụng gửi mã OTP 6 chữ số tới email; mã hết hạn sau 10 phút và có thể gửi lại sau 60 giây. Tài khoản đăng ký mới có vai trò Người thuê.
+Trang khởi động `/` là trang chủ dịch vụ. Trên thanh đầu trang có nút **Đăng nhập** và **Đăng ký**; cũng có thể mở trực tiếp `http://localhost:3000/login` hoặc `http://localhost:3000/register`. Trang `/register` mở thẳng biểu mẫu đăng ký. Nhập họ tên, số điện thoại, email và mật khẩu. Ứng dụng gửi mã OTP 6 chữ số tới email; mã hết hạn sau 10 phút và có thể gửi lại sau 60 giây. Tài khoản đăng ký mới có vai trò Người thuê.
 
 Backend hiện gửi OTP qua Gmail. Để đăng ký hoạt động, điền tài khoản Gmail và **Google App Password** vào `BE/.env`:
 

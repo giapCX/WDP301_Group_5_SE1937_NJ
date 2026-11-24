@@ -1,5 +1,5 @@
 import { createElement as h, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getSession, login, logout } from '../api/authApi.js';
 import RegistrationForm from './RegistrationForm.js';
 import { dashboardForRole } from '../dashboardRoutes.js';
@@ -25,12 +25,13 @@ function loginErrorMessage(error) {
 }
 
 export default function LoginPage() {
+  const location = useLocation();
   const session = useHomeResource(getSession);
   const [showPassword, setShowPassword] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-  const [registering, setRegistering] = useState(false);
+  const [registering, setRegistering] = useState(() => new URLSearchParams(location.search).get('mode') === 'register');
   const [notice, setNotice] = useState('');
   const navigate = useNavigate();
   const user = signedOut ? null : session.data;

@@ -90,6 +90,7 @@
 }
 
 .vt-h-header-actions, .vt-h-service-action { display: flex; align-items: center; gap: 10px; }
+.vt-h-auth-links { display: flex; align-items: center; gap: 8px; }
 .vt-h-header-hotline { color: var(--navy); font-weight: 700; white-space: nowrap; }
 .vt-h-hero .vt-h-hero-label {
   width: fit-content; margin: 0 auto 12px; padding: 5px 12px;
