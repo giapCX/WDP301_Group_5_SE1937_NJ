@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import useBookingReview from '../hooks/useBookingReview';
 import BookingStatus from './BookingStatus';
+import BookingQuoteForm from './BookingQuoteForm.jsx';
 import Icon from './BookingIcon';
 import { bookingCode, dateTime, money } from '../bookingConstants';
 
@@ -10,6 +11,9 @@ export default function BookingReview({ id, onClose, onUpdated }) {
   const [rejecting, setRejecting] = useState(false);
   const dialog = useRef(null);
   const { booking } = review;
+  const canQuote = booking?.quote_requested_at && ['pending', 'quoted'].includes(booking.booking_status);
+  const canComplete = booking?.quote_offer?.accepted_at && ['confirmed', 'in_progress'].includes(booking.booking_status) &&
+    Date.parse(booking.estimated_end_time) <= Date.now();
 
   useEffect(() => {
     const previousFocus = document.activeElement;
@@ -26,7 +30,7 @@ export default function BookingReview({ id, onClose, onUpdated }) {
     if (event.key === 'Escape' && !review.saving) onClose();
     if (event.key === 'Tab') {
       const buttons = dialog.current.querySelectorAll(
-        'button:not(:disabled), select:not(:disabled), textarea',
+        'button:not(:disabled), select:not(:disabled), input:not(:disabled), textarea',
       );
       const first = buttons[0];
       const last = buttons[buttons.length - 1];
@@ -117,6 +121,8 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                   <Icon name="route" />
                   Lộ trình & thời gian
                 </h3>
+                {booking.passenger_count && <p>{booking.passenger_count} hành khách</p>}
+                {booking.special_requests && <p>Yêu cầu bổ sung: {booking.special_requests}</p>}
                 <div className="review-route">
                   <div>
                     <span>ĐIỂM ĐÓN</span>
@@ -127,6 +133,8 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                     <div key={stop.stop_id}>
                       <span>ĐIỂM DỪNG {stop.stop_order}</span>
                       <strong>{stop.location}</strong>
+                      {stop.arrival_at && <p>Đến {dateTime(stop.arrival_at)}</p>}
+                      {stop.departure_at && <p>Rời {dateTime(stop.departure_at)}</p>}
                       {stop.note && <p>{stop.note}</p>}
                     </div>
                   ))}
@@ -142,7 +150,10 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                   <Icon name="car" />
                   Xe phụ trách
                 </h3>
-                {booking.booking_status === 'pending' ? (
+                {booking.booking_status === 'pending' && booking.requested_seats && !booking.quote_requested_at && (
+                  <p>Yêu cầu xe từ {booking.requested_seats} chỗ. Hệ thống sẽ tự phân xe đủ chỗ và còn lịch khi duyệt.</p>
+                )}
+                {booking.booking_status === 'pending' && !booking.requested_seats && !booking.quote_requested_at && (
                   <>
                     <label className="review-label" htmlFor="review-vehicle">
                       Chọn xe phù hợp
@@ -183,7 +194,8 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                       </div>
                     )}
                   </>
-                ) : (
+                )}
+                {booking.booking_status !== 'pending' && (
                   <p>
                     {booking.vehicle
                       ? `${booking.vehicle.brand} ${booking.vehicle.model} · ${booking.vehicle.plate_number}`
@@ -191,7 +203,7 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                   </p>
                 )}
               </section>
-              <section className="review-section">
+              {(!booking.quote_requested_at || booking.pricing_breakdown) && <section className="review-section">
                 <h3>Chi phí dự kiến</h3>
                 <div className="cost-line">
                   <span>Giá chuyến đi</span>
@@ -207,7 +219,9 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                     {money(booking.estimated_price + booking.additional_charge)}
                   </strong>
                 </div>
-              </section>
+              </section>}
+              {canQuote && !rejecting && <BookingQuoteForm booking={booking} busy={review.saving}
+                onSend={async (route) => { if (await review.decide('quote', route)) onClose(); }}/>}
               {booking.reviewed_at && (
                 <section className="review-section">
                   <h3>Thông tin xử lý</h3>
@@ -268,23 +282,27 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                 >
                   Từ chối
                 </button>
-                <button
+                {!booking.quote_requested_at && <button
                   className="dispatch-button primary"
                   disabled={
                     review.saving ||
                     review.loading ||
-                    !review.vehicleId ||
+                    (!booking.requested_seats && !review.vehicleId) ||
                     Boolean(review.vehiclesError)
                   }
                   onClick={() => submit('approve')}
                 >
                   <Icon name="check" />
-                  {review.saving ? 'Đang xử lý…' : 'Duyệt booking'}
-                </button>
+                  {review.saving ? 'Đang xử lý…' : booking.requested_seats ? 'Duyệt và phân xe' : 'Duyệt booking'}
+                </button>}
               </>
             )}
           </footer>
         )}
+        {canComplete && <footer className="review-actions">
+          <button className="dispatch-button primary" type="button" disabled={review.saving}
+            onClick={() => submit('complete')}>Hoàn tất chuyến và mở thanh toán còn lại</button>
+        </footer>}
       </section>
     </div>
   );

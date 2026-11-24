@@ -31,6 +31,14 @@ export async function rejectBooking(id, reason) {
   return response.data.data;
 }
 
+export async function sendBookingQuote(id, route) {
+  return (await apiClient.patch(`/operator/bookings/${id}/quote`, route)).data.data;
+}
+
+export async function completeBooking(id) {
+  return (await apiClient.patch(`/operator/bookings/${id}/complete`, {})).data.data;
+}
+
 export function getBookingError(error) {
   if (error.response?.status === 401) {
     return 'Bạn cần đăng nhập bằng tài khoản Operator để duyệt hoặc từ chối booking.';

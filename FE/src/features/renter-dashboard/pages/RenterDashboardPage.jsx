@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
-import { logout } from '../../auth/api/authApi.js';
+import { Link, Navigate, useLocation, useOutletContext } from 'react-router-dom';
 import Icon from '../../home/components/HomeIcon.js';
 import { hotline } from '../../home/homeContent.js';
 import useHomeResource from '../../home/hooks/useHomeResource.js';
 import { loadRenterDashboard } from '../api/renterDashboardApi.js';
-import '../styles/renterDashboard.css';
+import RenterLayout from '../components/RenterLayout.jsx';
 
 const date = new Intl.DateTimeFormat('vi-VN', {
   dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh',
@@ -15,12 +14,6 @@ const statusLabels = new Map([
   ['confirmed', 'Đã xác nhận'], ['in_progress', 'Đang thực hiện'], ['completed', 'Hoàn thành'],
   ['cancelled', 'Đã hủy'], ['rejected', 'Đã từ chối'],
 ]);
-const navigation = [
-  ['tong-quan', 'Tổng quan', 'dashboard'],
-  ['chuyen-di', 'Chuyến đi hiện tại', 'route'],
-  ['lich-su', 'Lịch sử chuyến đi', 'history'],
-  ['uu-dai', 'Ưu đãi', 'redeem'],
-];
 const metrics = [
   ['total', 'Tổng chuyến đã đặt', 'receipt_long', 'blue'],
   ['completed', 'Chuyến đã hoàn thành', 'verified', 'teal'],
@@ -28,10 +21,10 @@ const metrics = [
   ['offers', 'Ưu đãi đang có', 'redeem', 'orange'],
 ];
 const shortcuts = [
-  ['flight_land', 'Đưa đón sân bay', 'Chọn điểm đón và giờ hẹn.', '/?service=roundtrip#tim-xe'],
-  ['route', 'Thuê xe theo tour', 'Lên lịch qua nhiều điểm dừng.', '/?service=tour#tim-xe'],
-  ['airport_shuttle', 'Limousine và xe đoàn', 'Xem đội xe từ 7 chỗ trở lên.', '/#doi-xe'],
-  ['edit_road', 'Lộ trình tự thiết kế', 'Chọn điểm đến cho chuyến đi riêng.', '/#diem-den'],
+  ['flight_land', 'Đưa đón sân bay', 'Chọn điểm đón và giờ hẹn.', '/renter/bookings/new?service=roundtrip'],
+  ['route', 'Thuê xe theo tour', 'Lên lịch qua nhiều điểm dừng.', '/renter/bookings/new?service=tour'],
+  ['airport_shuttle', 'Limousine và xe đoàn', 'Đặt xe từ 7 chỗ trở lên.', '/renter/bookings/new?minSeats=7'],
+  ['edit_road', 'Lộ trình tự thiết kế', 'Chọn điểm đến cho chuyến đi riêng.', '/renter/bookings/new?service=tour'],
 ];
 
 function formatDate(value) {
@@ -41,30 +34,6 @@ function formatDate(value) {
 
 function StatusBadge({ status }) {
   return <span className="vt-r-badge" data-status={status}>{statusLabels.get(status) || 'Đang cập nhật'}</span>;
-}
-
-function Sidebar() {
-  const { hash } = useLocation();
-  const active = hash || '#tong-quan';
-
-  return (
-    <aside className="vt-r-sidebar">
-      <Link to="/" className="vt-r-brand" aria-label="Trang chủ VietTour">
-        <span className="vt-r-brand-mark">V</span>
-        <span><strong>VietTour</strong><small>Khu vực người thuê</small></span>
-      </Link>
-      <nav aria-label="Điều hướng người thuê">
-        {navigation.map(([id, label, icon]) => (
-          <Link key={id} to={`#${id}`} aria-current={active === `#${id}` ? 'location' : undefined} aria-label={label} title={label}>
-            <Icon name={icon}/><span>{label}</span>
-          </Link>
-        ))}
-      </nav>
-      <a className="vt-r-support" href={hotline.href} aria-label={`Hỗ trợ hành trình, ${hotline.label}`} title="Hỗ trợ hành trình">
-        <Icon name="support_agent"/><span>Hỗ trợ hành trình<strong>{hotline.label}</strong></span>
-      </a>
-    </aside>
-  );
 }
 
 function TripDetails({ trip }) {
@@ -182,58 +151,32 @@ function RenterContent({ data }) {
 export default function RenterDashboardPage() {
   const user = useOutletContext();
   const { hash } = useLocation();
-  const navigate = useNavigate();
   const [revision, setRevision] = useState(0);
   const result = useHomeResource(loadRenterDashboard, revision);
-  const [signOutError, setSignOutError] = useState('');
-  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
   }, [hash, result.data]);
 
-  async function signOut() {
-    setSigningOut(true);
-    setSignOutError('');
-    try {
-      await logout();
-      navigate('/login', { replace: true });
-    } catch {
-      setSignOutError('Chưa thể đăng xuất. Vui lòng thử lại.');
-      setSigningOut(false);
-    }
-  }
-
   if (result.error?.response?.status === 401) return <Navigate to="/login" replace/>;
 
   return (
-    <div className="vt-r-dashboard">
-      <Sidebar/>
-      <div className="vt-r-workspace">
-        <header className="vt-r-topbar">
-          <div className="vt-r-breadcrumb">Người thuê <span aria-hidden="true">/</span> <strong>Tổng quan</strong></div>
-          <div className="vt-r-account">
-            <span className="vt-r-avatar" aria-hidden="true">{user.full_name?.slice(0, 1).toUpperCase()}</span>
-            <strong>{user.full_name}</strong>
-            <button type="button" className="vt-r-button" disabled={signingOut} onClick={signOut}>Đăng xuất</button>
-          </div>
-        </header>
-        <main className="vt-r-main">
-          <section id="tong-quan" className="vt-r-panel vt-r-heading">
-            <div><h1>Quản lý chuyến đi</h1><p>Xin chào, {user.full_name}.</p></div>
-            <Link to="/#tim-xe" className="vt-r-button vt-r-primary"><Icon name="add_circle"/>Đặt chuyến đi mới</Link>
-          </section>
-          {signOutError && <p role="alert" className="vt-r-panel vt-r-error">{signOutError}</p>}
-          {result.loading && <p role="status" className="vt-r-panel">Đang tải chuyến đi…</p>}
-          {result.error && (
-            <div role="alert" className="vt-r-panel vt-r-error">
-              <span>Chưa thể tải dữ liệu chuyến đi.</span>
-              <button type="button" className="vt-r-button" onClick={() => setRevision((value) => value + 1)}>Thử lại</button>
-            </div>
-          )}
-          {result.data && <RenterContent data={result.data}/>}
-        </main>
-      </div>
-    </div>
+    <RenterLayout user={user}>
+      <section id="tong-quan" className="vt-r-panel vt-r-heading">
+        <div><h1>Quản lý chuyến đi</h1><p>Xin chào, {user.full_name}.</p></div>
+        <div className="vt-r-booking-actions">
+          <Link to="/renter/bookings" className="vt-r-button">My Bookings</Link>
+          <Link to="/renter/bookings/new" className="vt-r-button vt-r-primary"><Icon name="add_circle"/>Đặt chuyến đi mới</Link>
+        </div>
+      </section>
+      {result.loading && <p role="status" className="vt-r-panel">Đang tải chuyến đi…</p>}
+      {result.error && (
+        <div role="alert" className="vt-r-panel vt-r-error">
+          <span>Chưa thể tải dữ liệu chuyến đi.</span>
+          <button type="button" className="vt-r-button" onClick={() => setRevision((value) => value + 1)}>Thử lại</button>
+        </div>
+      )}
+      {result.data && <RenterContent data={result.data}/>}
+    </RenterLayout>
   );
 }

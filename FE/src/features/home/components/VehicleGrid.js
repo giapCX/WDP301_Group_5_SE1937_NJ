@@ -1,4 +1,5 @@
 import { createElement as h, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from './HomeIcon.js';
 
 const currency = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
@@ -54,7 +55,9 @@ export default function VehicleGrid({ vehicles, hotline }) {
           h('div', { className: 'vt-h-car-bottom' },
             Number.isFinite(vehicle.dailyPrice) && h('div', null,
               h('strong', null, currency.format(vehicle.dailyPrice)), h('small', null, ' / ngày')),
-            h('a', { className: 'vt-h-button', href: hotline }, 'Liên hệ đặt xe'),
+            vehicle.vehicle_id
+              ? h(Link, { className: 'vt-h-button', to: '/vehicles/' + vehicle.vehicle_id }, 'Xem và đặt xe')
+              : h('a', { className: 'vt-h-button', href: hotline }, 'Liên hệ đặt xe'),
           ),
         ),
       );

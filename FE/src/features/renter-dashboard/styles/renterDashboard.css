@@ -75,6 +75,7 @@
 .vt-r-main { display: grid; gap: 16px; padding: 18px clamp(14px, 2vw, 32px) 32px; }
 .vt-r-panel { min-width: 0; margin: 0; padding: 16px; border: 1px solid var(--r-border); border-radius: 9px; background: white; }
 .vt-r-heading, .vt-r-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.vt-r-booking-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .vt-r-heading h1 { margin: 0; font-size: clamp(1.4rem, 2vw, 1.8rem); font-weight: 750; }
 .vt-r-heading p, .vt-r-muted { margin: 4px 0 0; color: var(--r-muted); }
 .vt-r-main h2 { margin: 0 0 12px; font-size: 1.0625rem; font-weight: 700; }

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
   approveBooking,
+  completeBooking,
   fetchAvailableVehicles,
   fetchBooking,
   getBookingError,
   rejectBooking,
+  sendBookingQuote,
 } from '../api/bookingApi';
 
 export default function useBookingReview(id, onUpdated) {
@@ -31,7 +33,7 @@ export default function useBookingReview(id, onUpdated) {
         const detail = await fetchBooking(id, controller.signal);
         if (controller.signal.aborted) return;
         setBooking(detail);
-        if (detail.booking_status === 'pending') {
+        if (detail.booking_status === 'pending' && !detail.requested_seats && !detail.quote_requested_at) {
           try {
             const available = await fetchAvailableVehicles(id, controller.signal);
             if (controller.signal.aborted) return;
@@ -52,18 +54,20 @@ export default function useBookingReview(id, onUpdated) {
     return () => controller.abort();
   }, [id, revision]);
 
-  async function decide(action, reason) {
+  async function decide(action, payload) {
     if (saving) return false;
     setSaving(true);
     setError('');
     try {
-      if (action === 'approve') await approveBooking(id, Number(vehicleId));
-      else await rejectBooking(id, reason.trim());
+      if (action === 'approve') await approveBooking(id, booking?.requested_seats ? undefined : Number(vehicleId));
+      else if (action === 'quote') await sendBookingQuote(id, payload);
+      else if (action === 'complete') await completeBooking(id);
+      else await rejectBooking(id, payload.trim());
       onUpdated();
       return true;
     } catch (failure) {
       setError(getBookingError(failure));
-      if (failure.response?.status === 409) {
+      if (failure.response?.status === 409 && !booking?.requested_seats) {
         setVehicles([]);
         setVehicleId('');
         setVehiclesError('Dữ liệu đã thay đổi. Vui lòng tải lại trước khi duyệt.');
