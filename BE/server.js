@@ -9,6 +9,7 @@ const renterChangeRoutes = require('./src/routes/renter-booking-change.routes');
 const bookingRoutes = require('./src/routes/booking.routes');
 const changeRequestRoutes = require('./src/routes/booking-change-request.routes');
 const operatorOverviewRoutes = require('./src/routes/operator-overview.routes');
+const driverDashboardRoutes = require('./src/routes/driver-dashboard.routes');
 const homepageRoutes = require('./src/routes/homepage.routes');
 const renterDashboardRoutes = require('./src/routes/renter-dashboard.routes');
 
@@ -26,7 +27,8 @@ app.get('/api', (req, res) => {
 });
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
-app.use(['/api/operator', '/api/renter'], attachUser);
+app.use(['/api/operator', '/api/renter', '/api/driver'], attachUser);
+app.use('/api/driver', driverDashboardRoutes);
 app.use('/api/renter/dashboard', renterDashboardRoutes);
 app.use('/api/operator', operatorOverviewRoutes);
 

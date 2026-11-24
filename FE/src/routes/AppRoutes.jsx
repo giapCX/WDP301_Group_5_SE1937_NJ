@@ -13,6 +13,8 @@ import CartPage from '../pages/CartPage.jsx';
 import OperatorDashboard from '../pages/operator/OperatorDashboard.jsx';
 import AvailableVehiclesPage from '../pages/operator/AvailableVehiclesPage.jsx';
 
+import DriverDashboardPage from '../features/driver/pages/DriverDashboardPage.jsx';
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -27,6 +29,9 @@ export default function AppRoutes() {
           path="/admin/permissions"
           element={<Navigate to="/admin/roles-permissions" replace />}
         />
+      </Route>
+      <Route element={<RequireRole role="driver" />}>
+        <Route path="/driver/dashboard" element={<DriverDashboardPage />} />
       </Route>
       <Route element={<RequireRole role="renter" />}>
         <Route path="/renter/dashboard" element={<RenterDashboardPage />} />
