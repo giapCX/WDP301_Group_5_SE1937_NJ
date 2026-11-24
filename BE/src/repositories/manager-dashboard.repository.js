@@ -106,6 +106,67 @@ function buildFleetRows({ vehicles, activeBookings, assignments, drivers, users 
   });
 }
 
+function latestAssignmentsByBooking(assignments) {
+  const latest = new Map();
+  for (const assignment of assignments) {
+    const current = latest.get(assignment.booking_id);
+    if (!current || new Date(assignment.assigned_at || 0) > new Date(current.assigned_at || 0)) {
+      latest.set(assignment.booking_id, assignment);
+    }
+  }
+  return latest;
+}
+
+function buildDriverRows({ drivers, users, assignments, reviews }) {
+  const usersById = new Map(users.map((user) => [user.user_id, user]));
+  const reviewsByBooking = new Map(reviews.map((review) => [review.booking_id, review]));
+  const assignmentsByBooking = latestAssignmentsByBooking(assignments);
+  const totalsByDriver = new Map();
+
+  for (const assignment of assignmentsByBooking.values()) {
+    const status = String(assignment.assignment_status || '').toLowerCase();
+    if (['rejected', 'cancelled', 'canceled'].includes(status)) continue;
+    const totals = totalsByDriver.get(assignment.driver_id) || {
+      tripCount: 0,
+      completedTripCount: 0,
+      activeTripCount: 0,
+      ratingTotal: 0,
+      reviewCount: 0,
+    };
+    totals.tripCount += 1;
+    if (status === 'completed') totals.completedTripCount += 1;
+    if (['assigned', 'active', 'in_progress', 'ongoing'].includes(status)) totals.activeTripCount += 1;
+    const rating = Number(reviewsByBooking.get(assignment.booking_id)?.driver_rating);
+    if (Number.isFinite(rating) && rating > 0) {
+      totals.ratingTotal += rating;
+      totals.reviewCount += 1;
+    }
+    totalsByDriver.set(assignment.driver_id, totals);
+  }
+
+  return drivers.map((driver) => {
+    const totals = totalsByDriver.get(driver.driver_id) || {
+      tripCount: 0,
+      completedTripCount: 0,
+      activeTripCount: 0,
+      ratingTotal: 0,
+      reviewCount: 0,
+    };
+    return {
+      id: driver.driver_id,
+      name: usersById.get(driver.user_id)?.full_name || null,
+      availability: driver.availability_status || 'unknown',
+      licenseExpiry: driver.license_expiry || null,
+      tripCount: totals.tripCount,
+      completedTripCount: totals.completedTripCount,
+      activeTripCount: totals.activeTripCount,
+      rating: totals.reviewCount ? Math.round((totals.ratingTotal / totals.reviewCount) * 100) / 100 : null,
+      reviewCount: totals.reviewCount,
+      completionRate: totals.tripCount ? Math.round((totals.completedTripCount / totals.tripCount) * 1000) / 10 : 0,
+    };
+  });
+}
+
 function buildAlerts(maintenance, incidents) {
   const alertItems = [
     ...maintenance.map((record) => ({
@@ -134,7 +195,7 @@ async function findManagerDashboard({ year, month, vehicleStatus, search } = {})
   const selectedYear = Number.isInteger(year) ? year : now.getFullYear();
   const selectedMonth = Number.isInteger(month) ? month : now.getMonth() + 1;
   const range = createMonthRange(selectedYear, selectedMonth);
-  const [vehicles, vehicleSummary, periodBookings, periodPayments, allActiveBookings, drivers, openMaintenance, openIncidents] = await Promise.all([
+  const [vehicles, vehicleSummary, periodBookings, periodPayments, allActiveBookings, drivers, openMaintenance, openIncidents, pendingBookings, assignments, completedRefunds] = await Promise.all([
     db.collection('vehicles').find({}, { projection: {
       vehicle_id: 1, plate_number: 1, brand: 1, model: 1, year: 1, vehicle_year: 1, vehicle_type: 1, seats: 1, seat_count: 1, photos: 1,
       base_price_per_day: 1, price_per_day: 1, odometer_km: 1, odometer: 1, status: 1, operational_status: 1, approval_status: 1,
@@ -173,14 +234,25 @@ async function findManagerDashboard({ year, month, vehicleStatus, search } = {})
     db.collection('driver_profiles').find({}, { projection: { driver_id: 1, user_id: 1, availability_status: 1, approved_at: 1, license_expiry: 1 } }).toArray(),
     db.collection('maintenance_records').find({ maintenance_status: { $nin: [...CLOSED_MAINTENANCE_STATUSES] } }, { projection: { maintenance_id: 1, vehicle_id: 1, description: 1, maintenance_status: 1, started_at: 1 } }).sort({ started_at: -1, maintenance_id: -1 }).limit(MAX_ALERTS).toArray(),
     db.collection('incidents').find({ incident_status: { $nin: [...CLOSED_INCIDENT_STATUSES] } }, { projection: { incident_id: 1, booking_id: 1, description: 1, incident_status: 1, created_at: 1 } }).sort({ created_at: -1, incident_id: -1 }).limit(MAX_ALERTS).toArray(),
+    db.collection('bookings').find({ $or: [{ booking_status: 'pending' }, { status: 'pending' }] }, { projection: {
+      booking_id: 1, renter_id: 1, vehicle_id: 1, requested_seat_count: 1, pickup_time: 1,
+      estimated_price: 1, created_at: 1, booking_status: 1, status: 1,
+    } }).sort({ created_at: -1, booking_id: -1 }).limit(100).toArray(),
+    db.collection('trip_assignments').find({}, { projection: {
+      booking_id: 1, driver_id: 1, assignment_status: 1, assigned_at: 1,
+    } }).toArray(),
+    db.collection('refunds').find({ refund_status: 'completed' }, { projection: {
+      refund_id: 1, amount: 1, refund_status: 1,
+    } }).toArray(),
   ]);
 
   const activeBookings = allActiveBookings.filter(isActiveBooking);
-  const bookingIds = activeBookings.map((booking) => booking.booking_id).filter(Number.isSafeInteger);
-  const assignments = bookingIds.length ? await db.collection('trip_assignments').find({ booking_id: { $in: bookingIds } }, { projection: { booking_id: 1, driver_id: 1, assignment_status: 1, assigned_at: 1 } }).toArray() : [];
+  const assignmentBookingIds = [...new Set(assignments.map((assignment) => assignment.booking_id).filter(Number.isSafeInteger))];
+  const reviews = assignmentBookingIds.length ? await db.collection('reviews').find({ booking_id: { $in: assignmentBookingIds } }, { projection: { booking_id: 1, driver_rating: 1 } }).toArray() : [];
   const userIds = new Set([
     ...drivers.map((driver) => driver.user_id),
     ...activeBookings.map((booking) => booking.renter_id),
+    ...pendingBookings.map((booking) => booking.renter_id),
   ].filter(Number.isSafeInteger));
   const users = userIds.size ? await db.collection('users').find({ user_id: { $in: [...userIds] } }, { projection: { user_id: 1, full_name: 1 } }).toArray() : [];
 
@@ -195,12 +267,35 @@ async function findManagerDashboard({ year, month, vehicleStatus, search } = {})
 
   const vehicleTotals = vehicleSummary[0]?.totals[0] || { count: 0, available: 0 };
   const usersById = new Map(users.map((user) => [user.user_id, user]));
+  const vehiclesById = new Map(vehicles.map((vehicle) => [vehicle.vehicle_id, vehicle]));
+  const driverRows = buildDriverRows({ drivers, users, assignments, reviews });
+  const pendingBookingRows = pendingBookings.map((booking) => {
+    const vehicle = vehiclesById.get(booking.vehicle_id);
+    return {
+      id: booking.booking_id,
+      renterName: usersById.get(booking.renter_id)?.full_name || null,
+      vehicleName: [vehicle?.brand, vehicle?.model].filter(Boolean).join(' ') || null,
+      plateNumber: vehicle?.plate_number || null,
+      requestedSeatCount: booking.requested_seat_count ?? null,
+      pickupAt: booking.pickup_time || null,
+      estimatedPrice: Number(booking.estimated_price) || 0,
+      createdAt: booking.created_at || null,
+      status: booking.status || booking.booking_status || 'pending',
+    };
+  });
   const runningCount = (vehicleSummary[0]?.statuses || [])
     .filter(({ _id }) => ['in_use', 'ongoing'].includes(_id))
     .reduce((total, item) => total + item.count, 0);
   const availableVehicles = vehicleTotals.available;
   const revenue = periodPayments.reduce((total, payment) => total + Number(payment.amount || 0), 0);
   const paidPaymentCount = periodPayments.length;
+  const validRatings = reviews.map((review) => Number(review.driver_rating)).filter((rating) => Number.isFinite(rating) && rating > 0);
+  const averageDriverRating = validRatings.length
+    ? Math.round((validRatings.reduce((total, rating) => total + rating, 0) / validRatings.length) * 100) / 100
+    : null;
+  const activeDriverCount = driverRows.filter((driver) => ['busy', 'on_trip', 'in_use', 'ongoing'].includes(String(driver.availability).toLowerCase())).length;
+  const driverTripCount = driverRows.reduce((total, driver) => total + driver.tripCount, 0);
+  const completedDriverTripCount = driverRows.reduce((total, driver) => total + driver.completedTripCount, 0);
   const revenueTrend = buildWeeklyTrend(selectedYear, selectedMonth, periodBookings, periodPayments);
   const fleetStatus = (vehicleSummary[0]?.statuses || []).map(({ _id, count }) => ({ status: _id || 'unknown', count }));
 
@@ -217,16 +312,23 @@ async function findManagerDashboard({ year, month, vehicleStatus, search } = {})
       bookingCount: periodBookings.filter((booking) => !CLOSED_BOOKING_STATUSES.has(booking.status || booking.booking_status)).length,
       activeBookingCount: activeBookings.length,
       driverCount: drivers.length,
+      availableDriverCount: driverRows.filter((driver) => String(driver.availability).toLowerCase() === 'available').length,
+      activeDriverCount,
+      driverTripCount,
+      completedDriverTripCount,
+      driverCompletionRate: driverTripCount ? Math.round((completedDriverTripCount / driverTripCount) * 1000) / 10 : 0,
+      averageDriverRating,
     },
     revenueTrend,
     fleetStatus,
     vehicles: fleet,
-    drivers: drivers.map((driver) => ({
-      id: driver.driver_id,
-      name: usersById.get(driver.user_id)?.full_name || null,
-      availability: driver.availability_status || 'unknown',
-      licenseExpiry: driver.license_expiry || null,
-    })),
+    drivers: driverRows,
+    pendingBookings: pendingBookingRows,
+    financials: {
+      completedRefundCount: completedRefunds.length,
+      completedRefundAmount: completedRefunds.reduce((total, refund) => total + Number(refund.amount || 0), 0),
+      refundPeriod: 'all_time',
+    },
     pendingApprovals: vehicles.filter((vehicle) => ['pending', 'pending_review'].includes(vehicle.approval_status || vehicle.status)),
     alerts: buildAlerts(openMaintenance, openIncidents),
     totalVehicles: vehicleTotals.count,

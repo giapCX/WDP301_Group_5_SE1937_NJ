@@ -20,8 +20,8 @@ export default function AccessControlMetrics({ accounts, roles, matrix }) {
 
   return (
     <section className="acl-metrics" aria-label="Tổng quan hệ thống">
-      <MetricCard icon="users" label="TÀI KHOẢN MẪU" value={accounts.length} detail={`${activeAccounts} tài khoản đang hoạt động`} color="metric-blue"><div className="metric-spark spark-blue"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></div></MetricCard>
-      <MetricCard icon="shield" label="VAI TRÒ" value={roles.length} detail="vai trò cấu hình trong bản xem trước" color="metric-teal"><div className="metric-spark spark-teal"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></div></MetricCard>
+      <MetricCard icon="users" label="TÀI KHOẢN NHÂN SỰ" value={accounts.length} detail={`${activeAccounts} tài khoản đang hoạt động`} color="metric-blue"><div className="metric-spark spark-blue"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></div></MetricCard>
+      <MetricCard icon="shield" label="VAI TRÒ" value={roles.length} detail="vai trò đang cấu hình" color="metric-teal"><div className="metric-spark spark-teal"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></div></MetricCard>
       <MetricCard icon="lock" label="QUYỀN ĐÃ GÁN" value={totalAssignedPermissions} detail={`trên ${definedPermissions} quyền khả dụng`} color="metric-indigo"><div className="metric-spark spark-indigo"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></div></MetricCard>
       <MetricCard icon="chart" label="TÀI KHOẢN HOẠT ĐỘNG" value={`${activeRate}%`} detail="tính từ danh sách đang hiển thị" color="metric-green"><div className="metric-progress"><span style={{ width: `${activeRate}%` }}/></div></MetricCard>
     </section>

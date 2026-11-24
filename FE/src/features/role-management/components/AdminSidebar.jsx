@@ -11,8 +11,8 @@ export default function AdminSidebar({ activeItem, onNavigate }) {
       <div className="acl-workspace"><span className="workspace-dot"/> Không gian quản trị <span className="workspace-chevron">⌄</span></div>
       <div className="acl-nav-label">KHÔNG GIAN LÀM VIỆC</div>
       <nav className="acl-nav" aria-label="Điều hướng quản trị">
-        {ADMIN_NAVIGATION.map(({ label, icon }) => (
-          <button key={label} type="button" onClick={() => onNavigate(label)} className={`acl-nav-item ${activeItem === label ? 'is-active' : ''}`}>
+        {ADMIN_NAVIGATION.map(({ label, icon, workspace }) => (
+          <button key={workspace} type="button" onClick={() => onNavigate(workspace)} className={`acl-nav-item ${activeItem === workspace ? 'is-active' : ''}`}>
             <AccessControlIcon name={icon} size={17}/><span>{label}</span>{activeItem === label && <i/>}
           </button>
         ))}

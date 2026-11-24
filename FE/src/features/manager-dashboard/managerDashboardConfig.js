@@ -1,9 +1,13 @@
 export const MANAGER_NAVIGATION = [
-  { label: 'Tổng quan & Báo cáo', href: '#manager-overview', icon: 'grid' },
-  { label: 'Quản lý đội xe', href: '#manager-fleet', icon: 'car' },
-  { label: 'Hiệu suất tài xế', href: '#manager-driver-performance', icon: 'users' },
-  { label: 'Doanh thu & Tài chính', href: '#manager-revenue', icon: 'chart' },
-  { label: 'Phê duyệt & Định mức', href: '#manager-approvals', icon: 'check' },
+  { label: 'Tổng quan & Báo cáo', href: '/manager/dashboard', icon: 'grid' },
+  { label: 'Quản lý đội xe', href: '/manager/fleet', icon: 'car' },
+  { label: 'Hiệu suất tài xế', href: '/manager/drivers', icon: 'users' },
+  { label: 'Doanh thu & Tài chính', href: '/manager/revenue', icon: 'chart' },
+  { label: 'Phê duyệt & Định mức', href: '/manager/approvals', icon: 'check' },
+  { label: 'Bảng giá dịch vụ', href: '/manager/pricing', icon: 'chart' },
+  { label: 'Chính sách dịch vụ', href: '/manager/policies', icon: 'settings' },
+  { label: 'Khuyến mãi', href: '/manager/promotions', icon: 'chart' },
+  { label: 'Nhật ký hoạt động', href: '/manager/audit', icon: 'check' },
 ];
 
 export const VEHICLE_STATUS_META = {

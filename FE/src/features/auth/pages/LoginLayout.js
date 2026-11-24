@@ -17,20 +17,17 @@ const benefits = [
   ...standards.slice(1),
 ];
 
-export function LoginHeader({ user }) {
-  return h('header', { className: 'vt-login-header' },
-    h('div', { className: 'vt-h-wrap vt-login-nav' },
-      h(Link, { to: '/', className: 'vt-login-brand' },
-        h(Icon, { name: 'directions_car' }),
-        h('span', null, 'VietTour', h('small', null, 'Mobility Platform')),
-      ),
+export function LoginHeader() {
+  return h('header', { className: 'vt-h-header' },
+    h('div', { className: 'vt-h-wrap vt-h-header-inner' },
+      h(Link, { className: 'vt-h-brand', to: '/' }, h(Icon, { name: 'directions_car' }), 'VietTour'),
       h('nav', { 'aria-label': 'Điều hướng chính' },
-        links.map(([label, to]) => h(Link, { key: label, to }, label)),
-        h('a', { href: hotline.href }, 'Hotline ', hotline.label),
-      ),
-      h(Link, { to: '/#tim-xe', className: 'vt-login-booking' }, 'Tìm chuyến đi'),
-      user && h('span', { className: 'vt-login-account' }, user.full_name,
-        h(Icon, { name: 'account_circle' })),
+        links.map(([label, to]) => h(Link, { key: label, to }, label))),
+      h('div', { className: 'vt-h-header-actions' },
+        h('div', { className: 'vt-h-auth-links' },
+          h(Link, { to: '/login', className: 'vt-h-outline' }, 'Đăng nhập'),
+          h(Link, { to: '/register', className: 'vt-h-outline' }, 'Đăng ký')),
+        h(Link, { to: '/#tim-xe', className: 'vt-h-button' }, 'Tìm xe')),
     ),
   );
 }

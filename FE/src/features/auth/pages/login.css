@@ -1,17 +1,5 @@
 .vt-login { background: #f5f6f8; }
-.vt-login-header { background: #fafbfc; border-bottom: 1px solid #e5e8ee; }
-.vt-login-nav, .vt-login-nav nav, .vt-login-brand, .vt-login-account {
-  display: flex; align-items: center; gap: 14px;
-}
-.vt-login-nav { min-height: 76px; justify-content: space-between; padding-block: 10px; }
-.vt-login-nav nav { justify-content: space-between; flex: 1; max-width: 700px; }
-.vt-login-nav a, .vt-login-footer a { color: var(--navy); }
-.vt-login-nav nav a { font-size: .85rem; font-weight: 600; }
-.vt-login-brand { font-weight: 800; line-height: 1.1; }
-.vt-login-brand .vt-h-icon { width: auto; padding: 8px; background: #082b50; color: white; border-radius: 8px; }
-.vt-login-brand small { display: block; margin-top: 3px; font-size: .59rem; text-transform: uppercase; letter-spacing: .05em; }
-.vt-login-booking { border-radius: 7px; background: #e9edf2; padding: 8px 12px; font-size: .82rem; font-weight: 700; }
-.vt-login-account { font-size: .85rem; font-weight: 700; }
+.vt-login-footer a { color: var(--navy); }
 .vt-login-card {
   display: grid; grid-template-columns: 42% minmax(0, 1fr);
   margin-top: 32px; min-height: 600px; overflow: hidden; border-radius: 12px;
