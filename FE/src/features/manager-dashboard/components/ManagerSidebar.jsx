@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import { MANAGER_NAVIGATION } from '../managerDashboardConfig';
 import ManagerIcon from './ManagerIcon';
 
-export default function ManagerSidebar({ activeHref }) {
-  const [activeItem, setActiveItem] = useState(activeHref);
+export default function ManagerSidebar() {
   return (
     <aside className="manager-sidebar">
       <a className="manager-brand" href="/" aria-label="VietTour Mobility">
@@ -12,11 +11,9 @@ export default function ManagerSidebar({ activeHref }) {
       </a>
       <div className="manager-nav-caption">PHÂN HỆ ĐIỀU HÀNH</div>
       <nav className="manager-nav" aria-label="Điều hướng Manager">
-        {MANAGER_NAVIGATION.map((item) => <a key={item.href} className={`manager-nav-link ${activeItem === item.href ? 'active' : ''}`} aria-current={activeItem === item.href ? 'page' : undefined}
-          href={!activeHref.startsWith('#') && item.href.startsWith('#') ? '/manager/dashboard' + item.href : item.href}
-          onClick={() => setActiveItem(item.href)}>
-          <ManagerIcon name={item.icon} size={16}/><span>{item.label}</span>{activeItem === item.href && <i/>}
-        </a>)}
+        {MANAGER_NAVIGATION.map((item) => <NavLink key={item.href} className={({ isActive }) => `manager-nav-link ${isActive ? 'active' : ''}`} end to={item.href}>
+          {({ isActive }) => <><ManagerIcon name={item.icon} size={16}/><span>{item.label}</span>{isActive && <i/>}</>}
+        </NavLink>)}
       </nav>
       <div className="manager-sidebar-bottom">
         <div className="manager-online"><i/> Đang kết nối hệ thống</div>

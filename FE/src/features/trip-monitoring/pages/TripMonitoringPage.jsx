@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import BookingSidebar from '../../bookings/components/BookingSidebar';
 import Icon from '../../bookings/components/BookingIcon';
 import DriverTripDetail from '../../driver/components/DriverTripDetail';
+import OperatorTopbar from '../../../pages/operator/OperatorTopbar';
 import MonitoringTable from '../components/MonitoringTable';
 import useTripMonitoring from '../hooks/useTripMonitoring';
 import { fetchMonitoredTrip } from '../api/tripMonitoringApi';
@@ -20,24 +21,7 @@ export default function TripMonitoringPage() {
     <div className="dispatch-app">
       <BookingSidebar />
       <div className="dispatch-workspace">
-        <header className="dispatch-topbar">
-          <div className="dispatch-breadcrumb">
-            Trang chủ
-            <Icon name="chevron" size={11} />
-            Điều hành
-            <Icon name="chevron" size={11} />
-            <strong>Theo dõi chuyến</strong>
-          </div>
-          <div className="operator-profile">
-            <span className="profile-avatar">
-              <Icon name="user" size={18} />
-            </span>
-            <span>
-              <strong>{user?.full_name || 'Tài khoản điều hành'}</strong>
-              <small>Trung tâm điều hành</small>
-            </span>
-          </div>
-        </header>
+        <OperatorTopbar title="Theo dõi chuyến" user={user} />
         <main className="dispatch-content">
           <section className="dispatch-page-heading">
             <div>

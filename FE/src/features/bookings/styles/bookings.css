@@ -191,6 +191,12 @@
   align-items: center;
   gap: 10px;
 }
+.operator-topbar-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
 .profile-avatar {
   width: 33px;
   height: 33px;

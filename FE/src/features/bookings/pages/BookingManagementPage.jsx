@@ -8,6 +8,7 @@ import BookingReview from '../components/BookingReview';
 import AvailableVehicleCards from '../components/AvailableVehicleCards';
 import Icon from '../components/BookingIcon';
 import { BOOKING_TABS, bookingCode } from '../bookingConstants';
+import OperatorTopbar from '../../../pages/operator/OperatorTopbar';
 import '../styles/bookings.css';
 
 export default function BookingManagementPage({
@@ -59,24 +60,10 @@ export default function BookingManagementPage({
     <div className="dispatch-app">
       <BookingSidebar />
       <div className="dispatch-workspace">
-        <header className="dispatch-topbar">
-          <div className="dispatch-breadcrumb">
-            Trang chủ <Icon name="chevron" size={11} /> Điều hành{' '}
-            <Icon name="chevron" size={11} />
-            <strong>
-              {screen === 'management' ? 'Quản lý đặt xe' : 'Điều phối chuyến đi'}
-            </strong>
-          </div>
-          <div className="operator-profile">
-            <span className="profile-avatar">
-              <Icon name="user" size={18} />
-            </span>
-            <span>
-              <strong>{user?.full_name || 'Tài khoản điều hành'}</strong>
-              <small>Trung tâm điều hành</small>
-            </span>
-          </div>
-        </header>
+        <OperatorTopbar
+          title={screen === 'management' ? 'Quản lý đặt xe' : 'Điều phối chuyến đi'}
+          user={user}
+        />
         <main className="dispatch-content" id="overview">
           <section className="dispatch-page-heading">
             <div>

@@ -34,7 +34,7 @@ async function publicUser(user) {
   if (user?.status !== 'active') return null;
   const role = await mongoose.connection.db.collection('roles').findOne({ role_id: user.role_id });
   if (!role?.role_name) return null;
-  return { user_id: user.user_id, full_name: user.full_name, status: user.status, role_name: role.role_name };
+  return { user_id: user.user_id, role_id: user.role_id, full_name: user.full_name, status: user.status, role_name: role.role_name };
 }
 
 function readCookie(req, name) {

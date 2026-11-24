@@ -43,6 +43,8 @@ export default function AppRoutes() {
       <Route element={<RequireRole role="manager" />}>
         <Route path="/manager/dashboard" element={<ManagerDashboardPage />} />
         <Route path={MAINTENANCE_APPROVALS_PATH} element={<MaintenanceApprovalsPage />} />
+        <Route path="/manager" element={<Navigate to="/manager/dashboard" replace />} />
+        <Route path="/manager/:section" element={<ManagerDashboardPage />} />
       </Route>
       <Route element={<RequireRole role="renter" />}>
         <Route path="/renter/dashboard" element={<RenterDashboardPage />} />

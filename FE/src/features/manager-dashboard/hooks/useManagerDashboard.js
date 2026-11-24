@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchManagerDashboard, managerDashboardError } from '../api/managerDashboardApi';
 
-export default function useManagerDashboard() {
+export default function useManagerDashboard(enabled = true) {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -12,6 +12,10 @@ export default function useManagerDashboard() {
   const normalizedSearch = useMemo(() => search.trim(), [search]);
 
   useEffect(() => {
+    if (!enabled) {
+      setState({ loading: false, data: null, error: '' });
+      return undefined;
+    }
     const controller = new AbortController();
     setState((current) => ({ ...current, loading: true, error: '' }));
     fetchManagerDashboard({ year, month, status: vehicleStatus || undefined, search: normalizedSearch || undefined }, controller.signal)
@@ -22,7 +26,7 @@ export default function useManagerDashboard() {
         if (!controller.signal.aborted) setState((current) => ({ ...current, loading: false, error: managerDashboardError(error) }));
       });
     return () => controller.abort();
-  }, [year, month, vehicleStatus, normalizedSearch, revision]);
+  }, [enabled, year, month, vehicleStatus, normalizedSearch, revision]);
 
   return {
     ...state,

@@ -1,13 +1,8 @@
-export const ACCESS_CONTROL_STORAGE_KEY = 'viettour-rbac-matrix';
-export const ACCESS_CONTROL_ROLES_STORAGE_KEY = 'viettour-rbac-roles';
-
 export const ADMIN_NAVIGATION = [
-  { label: 'Tổng quan', icon: 'grid' },
-  { label: 'Quản lý người dùng', icon: 'users' },
-  { label: 'Quản lý vai trò & quyền', icon: 'shield' },
-  { label: 'Danh sách xe', icon: 'car' },
-  { label: 'Đặt xe & hợp đồng', icon: 'calendar' },
-  { label: 'Báo cáo & thống kê', icon: 'chart' },
+  { label: 'Tổng quan', icon: 'grid', workspace: 'dashboard' },
+  { label: 'Quản lý người dùng', icon: 'users', workspace: 'users' },
+  { label: 'Vai trò & quyền', icon: 'shield', workspace: 'permissions' },
+  { label: 'Nhật ký', icon: 'lock', workspace: 'audit' },
 ];
 
 export const PERMISSION_GROUPS = [
@@ -25,10 +20,29 @@ export const PERMISSION_GROUPS = [
     id: 'vehicles',
     title: 'QUẢN LÝ XE & ĐIỀU PHỐI',
     permissions: [
+      { id: 'vehicle.read', label: 'Xem hồ sơ và tình trạng phương tiện' },
       { id: 'vehicle.write', label: 'Đăng ký xe mới và cập nhật hồ sơ xe' },
       { id: 'vehicle.review', label: 'Duyệt hồ sơ xe và xác nhận kiểm định' },
       { id: 'listing.manage', label: 'Quản lý danh sách xe cho thuê' },
       { id: 'garage.manage', label: 'Tiếp nhận và bàn giao xe tại gara' },
+    ],
+  },
+  {
+    id: 'drivers',
+    title: 'HỒ SƠ TÀI XẾ',
+    permissions: [
+      { id: 'driver.read', label: 'Xem hồ sơ và hiệu suất tài xế' },
+      { id: 'driver.write', label: 'Tạo và cập nhật hồ sơ giấy phép' },
+      { id: 'driver.review', label: 'Phê duyệt tài xế nhận chuyến' },
+    ],
+  },
+  {
+    id: 'pricing',
+    title: 'BẢNG GIÁ & CHÍNH SÁCH',
+    permissions: [
+      { id: 'pricing.manage', label: 'Tạo và cập nhật bảng giá dịch vụ' },
+      { id: 'policy.manage', label: 'Quản lý chính sách hủy và phụ phí' },
+      { id: 'promotion.manage', label: 'Tạo và quản lý chương trình khuyến mãi' },
     ],
   },
   {
@@ -53,23 +67,15 @@ export const PERMISSION_GROUPS = [
   },
 ];
 
-export const ROLE_PERMISSION_DEFAULTS = {
-  admin: ['account.read', 'account.write', 'account.lock', 'role.assign', 'vehicle.write', 'vehicle.review', 'listing.manage', 'garage.manage', 'booking.read.all', 'booking.review', 'booking.change.read', 'contract.sign', 'report.read', 'payment.manage', 'audit.read'],
-  manager: ['account.read', 'account.write', 'account.lock', 'role.assign', 'vehicle.write', 'vehicle.review', 'listing.manage', 'booking.read.all', 'booking.review', 'booking.change.read', 'contract.sign', 'report.read', 'payment.manage', 'audit.read'],
-  operator: ['account.read', 'account.write', 'vehicle.write', 'vehicle.review', 'listing.manage', 'garage.manage', 'booking.read.all', 'booking.review', 'booking.change.read', 'contract.sign', 'audit.read'],
-  garage: ['vehicle.review', 'garage.manage', 'audit.read'],
-  renter: ['booking.change.read', 'contract.sign', 'booking.read.own'],
-};
-
 export const ACCESS_TABS = ['Ma trận phân quyền', 'Vai trò', 'Quyền truy cập'];
-export const ACCOUNT_FILTERS = ['Tất cả', 'Hoạt động', 'Chờ xác minh'];
+export const ACCOUNT_FILTERS = ['Tất cả', 'Hoạt động', 'Đã khóa', 'Ngừng hoạt động'];
 
 export function createDefaultMatrix(roles) {
   const matrix = {};
   for (const group of PERMISSION_GROUPS) {
     for (const permission of group.permissions) {
       matrix[permission.id] = Object.fromEntries(
-        roles.map((role) => [role.id, ROLE_PERMISSION_DEFAULTS[role.id]?.includes(permission.id) ?? false]),
+        roles.map((role) => [role.id, role.permissions?.includes(permission.id) ?? false]),
       );
     }
   }

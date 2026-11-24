@@ -24,7 +24,7 @@
 .workspace-dot, .system-status i, .acl-footer i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #38c995; box-shadow: 0 0 0 3px rgba(56,201,149,.13); }
 .workspace-chevron { margin-left: auto; color: #94a8c2; font-size: 17px; }
 .acl-nav-label { padding: 0 11px 10px; color: #7690ad; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
-.acl-nav { display: grid; gap: 5px; }
+.acl-nav { display: grid; gap: 5px; overflow-y: auto; }
 .acl-nav-item { position: relative; display: flex; width: 100%; align-items: center; gap: 12px; min-height: 42px; padding: 0 11px; border: 0; border-radius: 7px; color: #adc0d7; background: transparent; text-align: left; font-size: 11.5px; cursor: pointer; transition: background .16s ease, color .16s ease; }
 .acl-nav-item:hover { color: #fff; background: rgba(255,255,255,.07); }
 .acl-nav-item.is-active { color: #fff; background: #1a4570; font-weight: 700; }

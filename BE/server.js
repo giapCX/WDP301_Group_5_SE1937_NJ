@@ -19,6 +19,7 @@ const { webhook: paymentWebhook } = require('./src/services/renter-payment.servi
 const managerMaintenanceRoutes = require('./src/routes/manager-maintenance.routes');
 const tripWorkflowRoutes = require('./src/routes/trip-workflow.routes');
 const garageWorkflowRoutes = require('./src/routes/garage-workflow.routes');
+const managementRoutes = require('./src/routes/management.routes');
 
 require('dotenv').config({ path: require('node:path').join(__dirname, '.env'), quiet: true });
 const { router: authRoutes, attachUser } = require('./src/routes/auth.routes');
@@ -36,9 +37,10 @@ app.get('/api', (req, res) => {
 });
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
-app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver'], attachUser);
+app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver', '/api/admin'], attachUser);
 app.use('/api/manager/dashboard', managerDashboardRoutes);
 app.use('/api/manager/maintenance-approvals', managerMaintenanceRoutes);
+app.use(['/api/admin/management', '/api/manager/management'], managementRoutes);
 app.use('/api/driver', driverDashboardRoutes);
 app.use('/api/renter/dashboard', renterDashboardRoutes);
 app.use('/api/operator', operatorOverviewRoutes);

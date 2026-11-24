@@ -5,6 +5,7 @@ import BookingSidebar from '../../features/bookings/components/BookingSidebar';
 import Icon from '../../features/bookings/components/BookingIcon';
 import BookingStatus from '../../features/bookings/components/BookingStatus';
 import { bookingCode, dateTime, money } from '../../features/bookings/bookingConstants';
+import OperatorTopbar from './OperatorTopbar';
 import '../../features/bookings/styles/bookings.css';
 import './operator-dashboard.css';
 
@@ -79,22 +80,7 @@ export default function OperatorDashboard() {
     <div className="dispatch-app">
       <BookingSidebar />
       <div className="dispatch-workspace">
-        <header className="dispatch-topbar">
-          <div className="dispatch-breadcrumb">
-            Trang chủ <Icon name="chevron" size={11} /> Điều hành{' '}
-            <Icon name="chevron" size={11} />
-            <strong>Tổng quan điều hành</strong>
-          </div>
-          <div className="operator-profile">
-            <span className="profile-avatar">
-              <Icon name="user" size={18} />
-            </span>
-            <span>
-              <strong>{user?.full_name || 'Tài khoản điều hành'}</strong>
-              <small>Trung tâm điều hành</small>
-            </span>
-          </div>
-        </header>
+        <OperatorTopbar title="Tổng quan điều hành" user={user} />
         <main className="dispatch-content">
           <section className="dispatch-page-heading">
             <div>
