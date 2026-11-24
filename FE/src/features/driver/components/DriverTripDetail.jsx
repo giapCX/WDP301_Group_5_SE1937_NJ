@@ -4,7 +4,12 @@ import Icon from '../../bookings/components/BookingIcon';
 import BookingStatus from '../../bookings/components/BookingStatus';
 import { bookingCode, dateTime, BOOKING_STATUSES } from '../../bookings/bookingConstants';
 
-export default function DriverTripDetail({ id, onClose }) {
+export default function DriverTripDetail({
+  id,
+  onClose,
+  loadTrip = fetchDriverTrip,
+  eyebrow = 'HÀNH TRÌNH CỦA BẠN',
+}) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
@@ -23,7 +28,7 @@ export default function DriverTripDetail({ id, onClose }) {
     const controller = new AbortController();
     setData(null);
     setError('');
-    fetchDriverTrip(id, controller.signal)
+    loadTrip(id, controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) setData(result);
       })
@@ -31,7 +36,7 @@ export default function DriverTripDetail({ id, onClose }) {
         if (!controller.signal.aborted) setError(driverError(failure));
       });
     return () => controller.abort();
-  }, [id, revision]);
+  }, [id, revision, loadTrip]);
   function keys(event) {
     if (event.key === 'Escape') onClose();
     if (event.key === 'Tab') {
@@ -65,7 +70,7 @@ export default function DriverTripDetail({ id, onClose }) {
       >
         <header className="review-header">
           <div>
-            <span className="section-eyebrow">HÀNH TRÌNH CỦA BẠN</span>
+            <span className="section-eyebrow">{eyebrow}</span>
             <h2 id="driver-trip-title">{bookingCode(id)}</h2>
           </div>
           <button className="icon-button" aria-label="Đóng hành trình" onClick={onClose}>
@@ -88,6 +93,22 @@ export default function DriverTripDetail({ id, onClose }) {
                 <BookingStatus status={trip.booking_status} />
                 <span>Giao chuyến: {dateTime(data.assigned_at)}</span>
               </div>
+              {data.driver && (
+                <section className="review-section">
+                  <h3>
+                    <Icon name="user" />
+                    Tài xế phụ trách
+                  </h3>
+                  <strong>{data.driver.full_name}</strong>
+                  {data.driver.phone && (
+                    <p>
+                      <a className="driver-phone" href={`tel:${data.driver.phone}`}>
+                        {data.driver.phone}
+                      </a>
+                    </p>
+                  )}
+                </section>
+              )}
               <section className="review-section">
                 <h3>
                   <Icon name="user" />
