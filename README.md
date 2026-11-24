@@ -165,3 +165,11 @@ Sau khi đăng nhập Manager, ứng dụng chuyển tới `/manager/dashboard`.
 ### Booking báo cần replica set
 
 MongoDB standalone đủ để đăng nhập và xem dashboard. Một số thao tác booking dùng transaction và cần MongoDB replica set. Nếu MongoDB Server hiện tại là standalone, cần cấu hình replica set riêng; không chạy `db:local` trên cổng `27017` đang được instance khác sử dụng.
+
+### Đặt chuyến và thanh toán cho Người thuê
+
+- Mở `/renter/bookings/new` để đặt chuyến theo số chỗ và `/renter/bookings` để theo dõi yêu cầu. Khi Operator duyệt, hệ thống chọn xe đủ chỗ còn lịch có giá thuê ngày thấp nhất. Tổng tiền giữ theo báo giá đã chấp nhận. Cần MongoDB replica set trong `BE/.env` để gửi yêu cầu, duyệt đơn và ghi nhận thanh toán.
+- Nếu MongoDB standalone đang dùng cổng mặc định, chạy `npm --prefix BE run db:local -- 27018` để khởi tạo database local riêng. Đặt `MONGO_URI` theo URI script in ra rồi chạy `npm --prefix BE run seed` nếu cần tạo dữ liệu demo trong database đó.
+- Renter gửi lịch trình để chờ báo giá. Operator nhập giá trước ưu đãi và số tiền cọc trên chi tiết đơn. My Bookings hiển thị giá sau ưu đãi và tiền cần đặt cọc.
+- Để bật Stripe Checkout, cấu hình `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` và `CLIENT_ORIGIN` trong `BE/.env`. Stripe hiển thị phương thức phù hợp theo cấu hình tài khoản và giao dịch. Đăng ký endpoint `/api/payments/stripe/webhook` nhận `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded` và `checkout.session.async_payment_failed`. Dùng khóa test khi kiểm thử.
+- Khi Renter xác nhận báo giá, hệ thống kiểm tra và giữ xe để chờ đặt cọc. Sau khi chuyến đi kết thúc, Operator đánh dấu hoàn tất để Renter thanh toán phần còn lại, tính cả phụ phí đã xác nhận và trừ số tiền đã trả.

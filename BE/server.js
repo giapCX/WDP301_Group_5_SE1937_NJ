@@ -14,12 +14,15 @@ const driverDashboardRoutes = require('./src/routes/driver-dashboard.routes');
 const homepageRoutes = require('./src/routes/homepage.routes');
 const renterDashboardRoutes = require('./src/routes/renter-dashboard.routes');
 const managerDashboardRoutes = require('./src/routes/manager-dashboard.routes');
+const renterReservationRoutes = require('./src/routes/renter-reservation.routes');
+const { webhook: paymentWebhook } = require('./src/services/renter-payment.service');
 
 require('dotenv').config({ path: require('node:path').join(__dirname, '.env'), quiet: true });
 const { router: authRoutes, attachUser } = require('./src/routes/auth.routes');
 
 const app = express();
 app.use(corsMiddleware);
+app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' }), paymentWebhook);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
@@ -36,6 +39,7 @@ app.use('/api/renter/dashboard', renterDashboardRoutes);
 app.use('/api/operator', operatorOverviewRoutes);
 app.use('/api/operator/trips', tripMonitoringRoutes);
 
+app.use('/api/renter/bookings', renterReservationRoutes);
 app.use('/api/renter/bookings', renterChangeRoutes);
 app.use('/api/renter/bookings', chargeRoutes.renterBookingRoutes);
 app.use('/api/operator/bookings', bookingRoutes);

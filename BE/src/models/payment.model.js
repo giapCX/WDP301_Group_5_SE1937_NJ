@@ -43,6 +43,8 @@ module.exports = createModel(
       type: Date,
       default: null,
     },
+    provider_reference: String,
+    purpose: { type: String, enum: ['full', 'deposit', 'balance'] },
   },
   [
     {

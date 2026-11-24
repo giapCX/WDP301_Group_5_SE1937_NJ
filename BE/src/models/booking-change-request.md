@@ -51,7 +51,7 @@ Trả 201 và { success: true, data: request }. Body after chỉ cho phép picku
 
 req.user phải do module xác thực cung cấp, có user_id, role_name=renter, status=active. Backend tự lấy requested_by và snapshot before, không tin requested_by/before/status từ body. Chỉ chủ booking confirmed, chưa khởi hành được gửi; từ chối lịch không đổi và thời gian sai. Transaction dùng khóa lịch xe để tránh hai request pending đồng thời cho cùng booking. Booking/trip_stops giữ nguyên.
 
-Giá đề xuất tạm tính: giá cũ + (số ngày mới - số ngày cũ) * vehicles.price_per_day, ngày tính bằng ceil(thời lượng / 24 giờ). Giữ giá cũ cho thời lượng ngày không đổi. Chưa định giá theo km, điểm dừng, phí chờ, chưa tính lại khuyến mãi và chưa thu/hoàn tiền. Cần thống nhất với module Pricing khi có pricing_rules. Không nhận estimated_price từ frontend. ID yêu cầu mới là số nguyên an toàn ngẫu nhiên với unique index.
+Giá đề xuất tạm tính: giá cũ + (số ngày mới - số ngày cũ) * vehicles.price_per_day, ngày tính bằng ceil(thời lượng / 24 giờ). Giữ giá cũ cho thời lượng ngày không đổi. Chưa định giá theo km, điểm dừng, phí chờ, chưa tính lại khuyến mãi và chưa thu/hoàn tiền. Không nhận estimated_price từ frontend. ID yêu cầu mới là số nguyên an toàn ngẫu nhiên với unique index.
 
 Lỗi 400 dữ liệu sai; 401 chưa đăng nhập; 403 sai quyền/chủ booking; 404 không có booking; 409 booking không đủ điều kiện hoặc đã có yêu cầu chờ. API này chưa có form phía Renter.
 

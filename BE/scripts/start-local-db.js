@@ -2,13 +2,19 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const mongoose = require('mongoose');
-const uri = 'mongodb://127.0.0.1:27017/admin?directConnection=true';
+const port = Number(process.argv[2] || 27017);
+const host = '127.0.0.1';
+const replicaSet = 'rentalLocal';
+const uri = `mongodb://${host}:${port}/admin?directConnection=true`;
 async function connect() {
   return mongoose.createConnection(uri, { serverSelectionTimeoutMS: 1000 }).asPromise();
 }
 async function main() {
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error('Invalid MongoDB port');
+  }
   const root = path.resolve(__dirname, '..');
-  const directory = path.join(root, 'storage', 'mongodb-replica');
+  const directory = path.join(root, 'storage', port === 27017 ? 'mongodb-replica' : `mongodb-replica-${port}`);
   fs.mkdirSync(directory, { recursive: true });
   let connection;
   try {
@@ -32,11 +38,11 @@ async function main() {
         '--dbpath',
         directory,
         '--port',
-        '27017',
+        String(port),
         '--bind_ip',
-        '127.0.0.1',
+        host,
         '--replSet',
-        'rentalLocal',
+        replicaSet,
         '--logpath',
         path.join(directory, 'mongod.log'),
         '--logappend',
@@ -59,7 +65,7 @@ async function main() {
   }
   if (!connection)
     throw new Error(
-      'Replica process did not start; check BE/storage/mongodb-replica/mongod.log',
+          `Replica process did not start; check ${path.join(directory, 'mongod.log')}`,
     );
   try {
     const hello = await connection.db.admin().command({ hello: 1 });
@@ -67,26 +73,24 @@ async function main() {
       try {
         await connection.db.admin().command({
           replSetInitiate: {
-            _id: 'rentalLocal',
-            members: [{ _id: 0, host: '127.0.0.1:27017' }],
+            _id: replicaSet,
+            members: [{ _id: 0, host: `${host}:${port}` }],
           },
         });
       } catch (error) {
         if (error.codeName === 'NoReplicationEnabled') {
-          throw new Error(
-            'Port 27017 is occupied by a standalone MongoDB. Stop it, then retry npm run db:local.',
-          );
+          throw new Error(`Port ${port} is occupied by a standalone MongoDB. Choose a free port for npm run db:local.`);
         }
         if (error.codeName !== 'AlreadyInitialized') throw error;
       }
-    } else if (hello.setName !== 'rentalLocal') {
-      throw new Error('Port 27017 belongs to another replica set');
+    } else if (hello.setName !== replicaSet) {
+      throw new Error(`Port ${port} belongs to another replica set`);
     }
     for (let attempt = 0; attempt < 60; attempt += 1) {
       const state = await connection.db.admin().command({ hello: 1 });
-      if (state.isWritablePrimary && state.setName === 'rentalLocal') {
+      if (state.isWritablePrimary && state.setName === replicaSet) {
         console.log(
-          'Replica ready: mongodb://127.0.0.1:27017/tourist_car_rental_demo?replicaSet=rentalLocal',
+          `Replica ready: mongodb://${host}:${port}/tourist_car_rental_demo?replicaSet=${replicaSet}`,
         );
         return;
       }
