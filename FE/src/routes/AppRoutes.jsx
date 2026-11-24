@@ -10,25 +10,70 @@ import MainLayout from '../layouts/MainLayout.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import CartPage from '../pages/CartPage.jsx';
 
+import OperatorDashboard from '../pages/operator/OperatorDashboard.jsx';
+import AvailableVehiclesPage from '../pages/operator/AvailableVehiclesPage.jsx';
+
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<VietTourHomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<RequireRole role="admin" />}>
-        <Route path="/admin/roles-permissions" element={<RolePermissionManagementPage />} />
-        <Route path="/admin/permissions" element={<Navigate to="/admin/roles-permissions" replace />} />
+        <Route
+          path="/admin/roles-permissions"
+          element={<RolePermissionManagementPage />}
+        />
+        <Route
+          path="/admin/permissions"
+          element={<Navigate to="/admin/roles-permissions" replace />}
+        />
       </Route>
       <Route element={<RequireRole role="renter" />}>
         <Route path="/renter/dashboard" element={<RenterDashboardPage />} />
       </Route>
       <Route element={<RequireRole role="operator" />}>
+        <Route path="/operator/dashboard" element={<OperatorDashboard />} />
+        <Route path="/operator/vehicles" element={<AvailableVehiclesPage />} />
+        <Route
+          path="/operator/booking-management"
+          element={
+            <BookingManagementPage
+              key="management"
+              initialStatus=""
+              screen="management"
+            />
+          }
+        />
         <Route path="/operator/bookings" element={<BookingManagementPage />} />
-        <Route path="/operator/booking-change-requests" element={<BookingModificationPage />} />
+        <Route
+          path="/operator/booking-change-requests"
+          element={<BookingModificationPage />}
+        />
       </Route>
-      <Route path="/store" element={<MainLayout><HomePage /></MainLayout>} />
-      <Route path="/cart" element={<MainLayout><CartPage /></MainLayout>} />
-      <Route path="*" element={<main><h1 className="h3">Không tìm thấy trang</h1></main>} />
+      <Route
+        path="/store"
+        element={
+          <MainLayout>
+            <HomePage />
+          </MainLayout>
+        }
+      />
+      <Route
+        path="/cart"
+        element={
+          <MainLayout>
+            <CartPage />
+          </MainLayout>
+        }
+      />
+      <Route
+        path="*"
+        element={
+          <main>
+            <h1 className="h3">Không tìm thấy trang</h1>
+          </main>
+        }
+      />
     </Routes>
   );
 }

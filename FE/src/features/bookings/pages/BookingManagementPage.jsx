@@ -9,8 +9,11 @@ import Icon from '../components/BookingIcon';
 import { BOOKING_TABS, bookingCode } from '../bookingConstants';
 import '../styles/bookings.css';
 
-export default function BookingManagementPage() {
-  const bookings = useBookings();
+export default function BookingManagementPage({
+  initialStatus = 'pending',
+  screen = 'dispatch',
+}) {
+  const bookings = useBookings(initialStatus);
   const [query, setQuery] = useState('');
   const [seats, setSeats] = useState('');
   const [selectedId, setSelectedId] = useState(null);
@@ -54,7 +57,9 @@ export default function BookingManagementPage() {
           <div className="dispatch-breadcrumb">
             Trang chủ <Icon name="chevron" size={11} /> Điều hành{' '}
             <Icon name="chevron" size={11} />
-            <strong>Điều phối chuyến đi</strong>
+            <strong>
+              {screen === 'management' ? 'Quản lý đặt xe' : 'Điều phối chuyến đi'}
+            </strong>
           </div>
           <div className="operator-profile">
             <span className="profile-avatar">
@@ -74,8 +79,14 @@ export default function BookingManagementPage() {
                 <i />
                 Dữ liệu từ hệ thống
               </div>
-              <h1>Bàn Điều Phối Chuyến Xe</h1>
-              <p>Theo dõi lịch trình, xét duyệt và điều phối xe cho từng hành trình.</p>
+              <h1>
+                {screen === 'management' ? 'Quản Lý Đặt Xe' : 'Bàn Điều Phối Chuyến Xe'}
+              </h1>
+              <p>
+                {screen === 'management'
+                  ? 'Tra cứu toàn bộ booking và theo dõi trạng thái xử lý.'
+                  : 'Theo dõi lịch trình, xét duyệt và điều phối xe cho từng hành trình.'}
+              </p>
             </div>
             <div className="heading-actions">
               <span className="today-label">
