@@ -7,7 +7,9 @@ import VietTourHomePage from '../features/home/pages/VietTourHomePage.js';
 import RenterDashboardPage from '../features/renter-dashboard/pages/RenterDashboardPage.js';
 import RolePermissionManagementPage from '../features/role-management/pages/RolePermissionManagementPage.jsx';
 import ManagerDashboardPage from '../features/manager-dashboard/pages/ManagerDashboardPage.jsx';
+import GarageLayout from '../features/garage/components/GarageLayout.jsx';
 import GarageDashboardPage from '../features/garage/pages/GarageDashboardPage.jsx';
+import GarageTaskPage from '../features/garage/pages/GarageTaskPage.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import CartPage from '../pages/CartPage.jsx';
@@ -37,8 +39,11 @@ export default function AppRoutes() {
         <Route path="/renter/dashboard" element={<RenterDashboardPage />} />
       </Route>
       <Route element={<RequireRole role="garage_staff" />}>
-        <Route path="/garage" element={<Navigate to="/garage/tasks" replace />} />
-        <Route path="/garage/tasks" element={<GarageDashboardPage />} />
+        <Route path="/garage" element={<GarageLayout />}>
+          <Route index element={<Navigate to="tasks" replace />} />
+          <Route path="tasks" element={<GarageDashboardPage />} />
+          <Route path="tasks/:taskId/:vehicleId" element={<GarageTaskPage />} />
+        </Route>
       </Route>
       <Route element={<RequireRole role="operator" />}>
         <Route path="/operator/dashboard" element={<OperatorDashboard />} />
