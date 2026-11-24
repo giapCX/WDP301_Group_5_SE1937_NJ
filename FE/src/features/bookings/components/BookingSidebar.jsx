@@ -29,6 +29,10 @@ export default function BookingSidebar() {
           <Icon name="pin" />
           Theo dõi chuyến
         </NavLink>
+        <NavLink to="/operator/dispatch" aria-label="Phân công chuyến">
+          <Icon name="car" />
+          Phân công tài xế
+        </NavLink>
         <NavLink to="/operator/booking-change-requests" aria-label="Thay đổi lịch trình">
           <Icon name="calendar" />
           Thay đổi lịch trình

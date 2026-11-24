@@ -17,6 +17,7 @@ import AvailableVehiclesPage from '../pages/operator/AvailableVehiclesPage.jsx';
 import DriverDashboardPage from '../features/driver/pages/DriverDashboardPage.jsx';
 
 import TripMonitoringPage from '../features/trip-monitoring/pages/TripMonitoringPage.jsx';
+import TripDispatchPage from '../features/trip-workflow/pages/TripDispatchPage.jsx';
 
 export default function AppRoutes() {
   return (
@@ -46,6 +47,7 @@ export default function AppRoutes() {
       <Route element={<RequireRole role="operator" />}>
         <Route path="/operator/dashboard" element={<OperatorDashboard />} />
         <Route path="/operator/trip-monitoring" element={<TripMonitoringPage />} />
+        <Route path="/operator/dispatch" element={<TripDispatchPage />} />
         <Route path="/operator/vehicles" element={<AvailableVehiclesPage />} />
         <Route
           path="/operator/booking-management"

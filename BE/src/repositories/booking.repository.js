@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
+const { AsyncLocalStorage } = require('node:async_hooks');
+const { randomUUID } = require('node:crypto');
 const { Booking, TripStop, Vehicle } = require('../models');
+
+const standaloneScheduleContext = new AsyncLocalStorage();
 
 const USER_FIELDS = 'user_id full_name email phone -_id';
 const VEHICLE_FIELDS =
@@ -181,29 +185,64 @@ async function rejectPendingBooking({ bookingId, reviewedBy, rejectionReason }) 
 }
 
 async function runInTransaction(work) {
-  return mongoose.connection.transaction(work, {
-    readConcern: { level: 'snapshot' },
-    writeConcern: { w: 'majority' },
-    readPreference: 'primary',
-  });
-}
-
-// Every schedule-changing workflow must write the same vehicle in its transaction.
-async function lockVehicleSchedule(vehicleId, session) {
-  if (!session || !session.inTransaction()) {
-    throw new Error('A vehicle schedule lock requires an active transaction');
+  try {
+    return await mongoose.connection.transaction(work, {
+      readConcern: { level: 'snapshot' },
+      writeConcern: { w: 'majority' },
+      readPreference: 'primary',
+    });
+  } catch (error) {
+    if (!/Transaction numbers are only allowed on a replica set member or mongos/i.test(error.message)) throw error;
+    const context = { releases: [], lockedVehicles: new Set() };
+    return standaloneScheduleContext.run(context, async () => {
+      try {
+        return await work(null);
+      } finally {
+        for (const release of context.releases.reverse()) await release().catch((releaseError) => console.error('Could not release standalone schedule lock:', releaseError.message));
+      }
+    });
   }
-
-  return Vehicle.findOneAndUpdate(
-    { vehicle_id: vehicleId },
-    { $inc: { schedule_version: 1 } },
-    { session, returnDocument: 'after', runValidators: true },
-  )
-    .lean()
-    .exec();
 }
 
-// Availability is advisory; approval rechecks it inside the vehicle transaction.
+// Replica sets serialize this through a transaction write. Standalone MongoDB uses a
+// short-lived document lock so existing local Compass databases can still apply changes.
+async function lockVehicleSchedule(vehicleId, session) {
+  if (session?.inTransaction()) {
+    return Vehicle.findOneAndUpdate(
+      { vehicle_id: vehicleId },
+      { $inc: { schedule_version: 1 } },
+      { session, returnDocument: 'after', runValidators: true },
+    )
+      .lean()
+      .exec();
+  }
+  const context = standaloneScheduleContext.getStore();
+  if (!context) throw new Error('A vehicle schedule lock requires a transaction or standalone schedule context');
+  if (context.lockedVehicles.has(vehicleId)) return Vehicle.findOne({ vehicle_id: vehicleId }).lean().exec();
+  const token = randomUUID();
+  const staleBefore = new Date(Date.now() - 5 * 60 * 1000);
+  const vehicle = await Vehicle.findOneAndUpdate(
+    {
+      vehicle_id: vehicleId,
+      $or: [
+        { schedule_lock_token: { $exists: false } },
+        { schedule_lock_token: null },
+        { schedule_lock_at: { $lt: staleBefore } },
+      ],
+    },
+    { $inc: { schedule_version: 1 }, $set: { schedule_lock_token: token, schedule_lock_at: new Date() } },
+    { returnDocument: 'after', runValidators: true },
+  ).lean().exec();
+  if (!vehicle) throw new Error('Lịch xe đang được cập nhật bởi thao tác khác; vui lòng thử lại');
+  context.lockedVehicles.add(vehicleId);
+  context.releases.push(() => Vehicle.updateOne(
+    { vehicle_id: vehicleId, schedule_lock_token: token },
+    { $unset: { schedule_lock_token: '', schedule_lock_at: '' } },
+  ).exec());
+  return vehicle;
+}
+
+// Availability is advisory; approval rechecks it while holding the vehicle schedule lock.
 async function findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime }) {
   const statuses =
     pickupTime.getTime() > Date.now() ? ['available', 'in_use'] : ['available'];

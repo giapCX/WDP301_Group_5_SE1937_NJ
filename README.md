@@ -189,4 +189,4 @@ Khi đã đăng nhập, trang `/login` ẩn lựa chọn đăng nhập/đăng k�
 
 ### Booking báo cần replica set
 
-MongoDB standalone đủ để đăng nhập và xem dashboard. Một số thao tác booking dùng transaction và cần MongoDB replica set. Nếu MongoDB Server hiện tại là standalone, cần cấu hình replica set riêng; không chạy `db:local` trên cổng `27017` đang được instance khác sử dụng.
+Các thao tác booking ưu tiên transaction khi MongoDB hỗ trợ replica set. Với MongoDB standalone hiện có, backend tự chuyển sang khóa lịch xe ngắn hạn được lưu trên document `vehicles`, nên có thể tiếp tục duyệt và áp dụng lịch mà không đổi instance hoặc database trong Compass. Khóa được giải phóng khi thao tác kết thúc; khóa sót do backend dừng được xem là cũ sau 5 phút. Replica set vẫn được khuyến nghị nếu chạy nhiều backend instance hoặc cần transaction đa collection đầy đủ.
