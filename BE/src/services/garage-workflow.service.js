@@ -1,9 +1,10 @@
 const {
-  Booking, DriverProfile, MaintenanceRecord, TripWorkflow, Vehicle, VehicleInspection,
+  Booking, DriverProfile, MaintenanceRecord, TripWorkflow, Vehicle, VehicleHandover, VehicleInspection,
 } = require('../models');
 const HttpError = require('../utils/http-error');
-const { readPreTripDetails } = require('../utils/garage-inspection-details');
+const { readInspectionDetails } = require('../utils/garage-inspection-details');
 const { lockVehicleSchedule, runInTransaction } = require('../repositories/booking.repository');
+const damageReports = require('./garage-damage.service');
 
 const CLOSED_MAINTENANCE = ['completed', 'closed', 'cancelled'];
 const now = () => new Date();
@@ -37,6 +38,10 @@ async function tasks(query = {}) {
   const inspections = await VehicleInspection.find({ booking_id: { $in: bookingIds } })
     .sort({ inspected_at: -1, inspection_id: -1 }).lean();
   const inspectionsById = new Map(inspections.map((inspection) => [inspection.inspection_id, inspection]));
+  const handovers = await VehicleHandover.find({
+    inspection_id: { $in: workflows.map((workflow) => workflow.handover_inspection_id).filter(Number.isFinite) },
+  }).lean();
+  const handoversById = new Map(handovers.map((handover) => [handover.inspection_id, handover]));
   const existingByKey = new Map();
   for (const inspection of inspections) {
     const key = [inspection.booking_id, inspection.vehicle_id, inspection.inspection_type].join(':');
@@ -57,16 +62,20 @@ async function tasks(query = {}) {
       tasks.push({
         id: `handover-${workflow.booking_id}`, booking_id: workflow.booking_id, vehicle_id: workflow.vehicle_id,
         type: 'HANDOVER_OUT', inspection_type: 'handover',
-        status: blockedHandover ? 'failed' : handoverInspection ? 'completed' : 'pending',
+        status: blockedHandover ? 'failed' : handoverInspection ? 'in_progress' : 'pending',
         inspection: handoverInspection,
+        handover: handoversById.get(handoverInspection?.inspection_id),
       });
     }
     if (workflow.stage === 'awaiting_vehicle_return' || workflow.stage === 'vehicle_return_issue') {
       const key = [workflow.booking_id, workflow.vehicle_id, 'return'].join(':');
-      const inspection = existingByKey.get(key);
+      const inspection = workflow.return_inspection_id === undefined
+        ? existingByKey.get(key) : inspectionsById.get(workflow.return_inspection_id);
       tasks.push({
         id: `return-${workflow.booking_id}`, booking_id: workflow.booking_id, vehicle_id: workflow.vehicle_id,
-        type: 'RETURN_IN', inspection_type: 'return', status: !inspection ? 'pending' : ['passed', 'pass'].includes(inspection.result) ? 'completed' : 'in_progress', inspection,
+        type: 'RETURN_IN', inspection_type: 'return',
+        status: !inspection ? 'pending' : ['failed', 'fail'].includes(inspection.result) ? 'failed' : 'in_progress',
+        inspection,
       });
     }
   }
@@ -97,9 +106,70 @@ async function tasks(query = {}) {
   }).filter((item) => !startUtc || item.type === 'MAINTENANCE' || !item.due_at || (item.due_at >= startUtc && item.due_at < endUtc));
 }
 
-async function savePreTripInspection(input, bookingId, vehicleId, staffId) {
-  const details = readPreTripDetails(input);
-  const { result, odometer } = input;
+function findTripInspection(booking_id, vehicle_id, type, inspectionId, session = null) {
+  if (inspectionId === null) return null;
+  return VehicleInspection.findOne({
+    booking_id, vehicle_id, inspection_type: type,
+    ...(inspectionId !== undefined && { inspection_id: inspectionId }),
+    ...(type === 'handover' && { result: { $in: ['passed', 'pass'] } }),
+  }).sort({ inspected_at: -1, inspection_id: -1 }).session(session).lean();
+}
+
+async function returnTaskDetails(taskId, booking_id, vehicle_id, active) {
+  const workflow = await TripWorkflow.findOne({ booking_id }).lean();
+  const current = workflow?.vehicle_id === vehicle_id ? workflow : null;
+  const inspection = active ? active.inspection
+    : await findTripInspection(booking_id, vehicle_id, 'return', current?.return_inspection_id);
+  if (!active && !inspection) return null;
+  const beforeId = inspection?.before_inspection_id === undefined
+    ? current?.handover_inspection_id : inspection.before_inspection_id;
+  const before_inspection = await findTripInspection(booking_id, vehicle_id, 'handover', beforeId);
+  const task = active || {
+    id: taskId, booking_id, vehicle_id, type: 'RETURN_IN', status: 'completed', archived: true,
+    vehicle: await Vehicle.findOne({ vehicle_id }).select('plate_number brand model -_id').lean(),
+  };
+  return {
+    ...task, inspection, before_inspection,
+    reported_odometer: current?.end_odometer,
+    confirmed_at: current?.vehicle_returned_at,
+    damage_report: ['fail', 'failed'].includes(inspection?.result)
+      ? await damageReports.findForInspection(inspection.inspection_id) : null,
+  };
+}
+
+async function taskDetails(taskId, vehicleId) {
+  const vehicle_id = positive(vehicleId, 'vehicle_id');
+  const active = (await tasks()).find((task) => task.id === taskId && task.vehicle_id === vehicle_id);
+  if (active?.type === 'MAINTENANCE') {
+    const damage_sources = await VehicleInspection.find({
+      vehicle_id, maintenance_id: active.maintenance.maintenance_id,
+      inspection_type: 'return', result: { $in: ['fail', 'failed'] },
+    }).select('booking_id inspection_id -_id').sort({ inspection_id: -1 }).lean();
+    return { ...active, damage_sources };
+  }
+  if (active && active.type !== 'RETURN_IN') return active;
+  const match = /^(handover|return)-(\d+)$/.exec(taskId);
+  if (!match) return null;
+  const booking_id = positive(match[2], 'booking_id');
+  if (match[1] === 'return') return returnTaskDetails(taskId, booking_id, vehicle_id, active);
+  const handover = await VehicleHandover.findOne({ booking_id, vehicle_id })
+    .sort({ inspection_id: -1 }).lean();
+  if (!handover) return null;
+  const [inspection, vehicle] = await Promise.all([
+    VehicleInspection.findOne({ inspection_id: handover.inspection_id }).lean(),
+    Vehicle.findOne({ vehicle_id }).select('plate_number brand model -_id').lean(),
+  ]);
+  return {
+    id: taskId, booking_id, vehicle_id, type: 'HANDOVER_OUT', status: 'completed',
+    archived: true, handover, inspection, vehicle,
+  };
+}
+
+async function saveTripInspection(input, bookingId, vehicleId, staffId) {
+  const details = readInspectionDetails(input);
+  const { result, odometer, inspection_type: type } = input;
+  const returning = type === 'return';
+  const field = returning ? 'return_inspection_id' : 'handover_inspection_id';
   const conditionNote = note(input.condition_note);
   if (!Number.isFinite(odometer) || odometer < 0) {
     throw new HttpError(400, 'Số km không hợp lệ');
@@ -116,42 +186,56 @@ async function savePreTripInspection(input, bookingId, vehicleId, staffId) {
         if (!vehicle || !workflow || workflow.vehicle_id !== vehicleId) {
           throw new HttpError(409, 'Xe không khớp với phân công hiện tại');
         }
-        if (workflow.handover_inspection_id != null) {
+        if (workflow[field] != null) {
           throw new HttpError(409, 'Lần kiểm tra xe này đã được lưu');
         }
-        if (workflow.stage !== 'awaiting_vehicle' || workflow.driver_response !== 'accepted') {
+        if (returning) {
+          if (!['awaiting_vehicle_return', 'vehicle_return_issue'].includes(workflow.stage)
+            || workflow.vehicle_returned || workflow.end_odometer == null) {
+            throw new HttpError(409, 'Chuyến chưa có báo cáo để Gara tiếp nhận xe');
+          }
+        } else if (workflow.stage !== 'awaiting_vehicle' || workflow.driver_response !== 'accepted') {
           throw new HttpError(409, 'Chuyến chưa tới bước kiểm tra trước bàn giao');
         }
 
-        const maintenance = await MaintenanceRecord.exists({
+        const before = returning && await findTripInspection(
+          bookingId, vehicleId, 'handover', workflow.handover_inspection_id, session,
+        );
+        if (returning && odometer < (before?.odometer ?? workflow.start_odometer ?? 0)) {
+          throw new HttpError(400, 'Số km tiếp nhận không được thấp hơn lúc bàn giao');
+        }
+        const maintenance = await MaintenanceRecord.findOne({
           vehicle_id: vehicleId, maintenance_status: { $nin: CLOSED_MAINTENANCE },
-        }).session(session);
-        if (result === 'passed' && (maintenance || !['available', 'in_use'].includes(vehicle.status))) {
+        }).sort({ maintenance_id: -1 }).select('maintenance_id').session(session).lean();
+        if (!returning && result === 'passed' && (maintenance || !['available', 'in_use'].includes(vehicle.status))) {
           throw new HttpError(409, 'Xe đang bảo dưỡng hoặc không sẵn sàng để bàn giao');
         }
 
-        const inspectionId = await nextId(VehicleInspection, 'inspection_id', session);
-        const [inspection] = await VehicleInspection.create([{
-          inspection_id: inspectionId, booking_id: bookingId, vehicle_id: vehicleId, staff_id: staffId,
-          inspection_type: 'handover', condition_note: conditionNote, inspected_at: now(),
-          result, odometer, ...details,
-        }], { session });
-
+        let maintenanceId = maintenance?.maintenance_id;
         if (result === 'failed') {
-          workflow.resume_stage ||= 'to_pickup';
-          workflow.stage = 'vehicle_replacement_required';
+          workflow.resume_stage ||= returning ? 'awaiting_vehicle_return' : 'to_pickup';
+          workflow.stage = returning ? 'vehicle_return_issue' : 'vehicle_replacement_required';
           await Vehicle.updateOne({ vehicle_id: vehicleId }, { $set: { status: 'maintenance' } }, { session });
           if (!maintenance) {
+            maintenanceId = await nextId(MaintenanceRecord, 'maintenance_id', session);
             await MaintenanceRecord.create([{
-              maintenance_id: await nextId(MaintenanceRecord, 'maintenance_id', session),
+              maintenance_id: maintenanceId,
               vehicle_id: vehicleId, reported_by: staffId,
-              description: `Không đạt kiểm tra bàn giao booking VT-${String(bookingId).padStart(6, '0')}: ${conditionNote}`,
+              description: `Kiểm tra ${returning ? 'tiếp nhận' : 'bàn giao'} không đạt cho booking VT-${String(bookingId).padStart(6, '0')}: ${conditionNote}`,
               maintenance_status: 'in_progress', started_at: now(), completed_at: null,
             }], { session });
           }
         }
-        workflow.handover_inspection_id = inspectionId;
-        pushHistory(workflow, `handover_inspection_${result}`, staffId, conditionNote);
+        const inspectionId = await nextId(VehicleInspection, 'inspection_id', session);
+        const [inspection] = await VehicleInspection.create([{
+          inspection_id: inspectionId, booking_id: bookingId, vehicle_id: vehicleId, staff_id: staffId,
+          inspection_type: type, condition_note: conditionNote, inspected_at: now(),
+          ...(returning && { before_inspection_id: before?.inspection_id ?? null }),
+          ...(result === 'failed' && { maintenance_id: maintenanceId }),
+          result, odometer, ...details,
+        }], { session });
+        workflow[field] = inspectionId;
+        pushHistory(workflow, `${type}_inspection_${result}`, staffId, conditionNote);
         await workflow.save({ session });
 
         const { photos, ...publicInspection } = inspection.toObject();
@@ -179,33 +263,19 @@ async function inspectAndHandover(input, staffId) {
   const vehicleId = positive(input.vehicle_id, 'vehicle_id');
   if (!['handover', 'return', 'periodic'].includes(inspectionType)) throw new HttpError(400, 'Loại kiểm tra không hợp lệ');
   const bookingId = input.booking_id == null && inspectionType === 'periodic' ? null : positive(input.booking_id, 'booking_id');
-  if (inspectionType === 'handover') return savePreTripInspection(input, bookingId, vehicleId, staffId);
+  if (inspectionType !== 'periodic') return saveTripInspection(input, bookingId, vehicleId, staffId);
   const workflow = bookingId == null ? null : await TripWorkflow.findOne({ booking_id: bookingId });
-  if (inspectionType === 'return') {
-    if (!workflow || !['awaiting_vehicle_return', 'vehicle_return_issue'].includes(workflow.stage)) throw new HttpError(409, 'Chuyến chưa tới bước trả xe');
-    if (workflow.vehicle_id !== vehicleId) throw new HttpError(409, 'Xe không khớp với phân công hiện tại');
-  }
   const result = input.result;
   if (!['passed', 'failed'].includes(result)) throw new HttpError(400, 'Kết quả phải là đạt hoặc không đạt');
   const conditionNote = note(input.condition_note);
   const odometer = Number(input.odometer);
-  if (!Number.isFinite(odometer) || odometer < 0 || (inspectionType === 'return' && workflow.start_odometer != null && odometer < workflow.start_odometer)) throw new HttpError(400, 'Số km không hợp lệ');
+  if (!Number.isFinite(odometer) || odometer < 0) throw new HttpError(400, 'Số km không hợp lệ');
   const inspectionId = await nextId(VehicleInspection, 'inspection_id');
   const inspection = await VehicleInspection.create({
     inspection_id: inspectionId, booking_id: bookingId, vehicle_id: vehicleId, staff_id: staffId,
     inspection_type: inspectionType, condition_note: conditionNote, result, inspected_at: now(), odometer,
   });
-  if (inspectionType === 'return' && result === 'failed') {
-    workflow.resume_stage = 'awaiting_vehicle_return';
-    workflow.stage = 'vehicle_return_issue';
-    await Vehicle.updateOne({ vehicle_id: vehicleId }, { $set: { status: 'maintenance' } });
-    const open = await MaintenanceRecord.exists({ vehicle_id: vehicleId, maintenance_status: { $nin: CLOSED_MAINTENANCE } });
-    if (!open) await MaintenanceRecord.create({ maintenance_id: await nextId(MaintenanceRecord, 'maintenance_id'), vehicle_id: vehicleId, reported_by: staffId, description: `Phát hiện hư hỏng khi nhận xe booking VT-${String(bookingId).padStart(6, '0')}: ${conditionNote}`, maintenance_status: 'in_progress', started_at: now(), completed_at: null });
-  } else if (inspectionType === 'return') {
-    workflow.stage = 'awaiting_vehicle_return';
-    const openMaintenance = await MaintenanceRecord.exists({ vehicle_id: vehicleId, maintenance_status: { $nin: CLOSED_MAINTENANCE } });
-    if (!openMaintenance) await Vehicle.updateOne({ vehicle_id: vehicleId }, { $set: { status: 'available' } });
-  } else if (result === 'passed') {
+  if (result === 'passed') {
     const openMaintenance = await MaintenanceRecord.exists({ vehicle_id: vehicleId, maintenance_status: { $nin: CLOSED_MAINTENANCE } });
     if (!openMaintenance) await Vehicle.updateOne({ vehicle_id: vehicleId }, { $set: { status: 'available' } });
   } else {
@@ -236,4 +306,4 @@ async function updateMaintenance(id, input, staffId) {
   return { maintenance_id: maintenanceId, status: maintenance.maintenance_status, updated_by: staffId };
 }
 
-module.exports = { tasks, inspectAndHandover, inspectionPhoto, updateMaintenance };
+module.exports = { tasks, taskDetails, inspectAndHandover, inspectionPhoto, updateMaintenance };

@@ -163,6 +163,100 @@
   font-size: 13px;
 }
 
+.garage-compare {
+  display: grid;
+  gap: 12px;
+  color: #16324f;
+}
+
+.garage-compare h2, .garage-compare h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.garage-compare-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.garage-compare-table th, .garage-compare-table td {
+  padding: 8px;
+  border-bottom: 1px solid #e6e8eb;
+  overflow-wrap: anywhere;
+}
+
+.garage-compare-table thead th {
+  background: #f2f4f7;
+}
+
+.garage-compare-pass, .garage-compare-fail {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #9cf2e8;
+  color: #003733;
+  font-weight: 600;
+}
+
+.garage-compare-fail {
+  background: #ffdad6;
+  color: #93000a;
+}
+
+.garage-compare-evidence {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+}
+
+.garage-compare-evidence > section {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f2f4f7;
+}
+
+.garage-compare-evidence h3 {
+  font-size: 13px;
+}
+
+.garage-damage-report {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid #e6e8eb;
+}
+
+.garage-damage-report h2 {
+  margin: 0;
+  color: #16324f;
+  font-size: 16px;
+}
+
+.garage-damage-report p {
+  margin: 0;
+}
+
+.garage-damage-report form {
+  width: 100%;
+}
+
+.garage-damage-options label {
+  display: flex;
+  align-items: center;
+}
+
+.garage-damage-options input {
+  width: auto;
+}
+
 .garage-table td {
   padding-top: 14px;
   padding-bottom: 14px;

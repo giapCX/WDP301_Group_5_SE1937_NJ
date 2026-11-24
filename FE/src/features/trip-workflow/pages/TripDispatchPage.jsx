@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import BookingSidebar from '../../bookings/components/BookingSidebar';
+import DispatchIncidents from '../components/DispatchIncidents';
 import Icon from '../../bookings/components/BookingIcon';
 import { bookingCode, dateTime } from '../../bookings/bookingConstants';
 import {
@@ -88,6 +89,6 @@ export default function TripDispatchPage() {
         {row && !(row.booking.booking_status === 'confirmed' || ['reassignment_required', 'vehicle_replacement_required', 'return_reassignment_required'].includes(row.workflow?.stage)) && <p className="workflow-muted">Chuyến đang được thực hiện. Dùng <Link to="/operator/trip-monitoring">Theo dõi chuyến</Link> để xem tiến độ.</p>}
       </section>
       <section className="booking-list-panel"><div className="section-heading table-heading"><h2><Icon name="route" />Lịch sử điều phối</h2><span>{data?.bookings.length || 0} chuyến</span></div><div className="workflow-table-wrap"><table className="workflow-table"><thead><tr><th>Booking</th><th>Khách / lịch</th><th>Xe</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody>{data?.bookings.map(({ booking, assignment, workflow }) => <tr key={booking.booking_id}><td>{bookingCode(booking.booking_id)}<small>{booking.booking_status}</small></td><td>{booking.renter?.full_name || 'Khách'}<small>{dateTime(booking.pickup_time)}</small></td><td>{booking.vehicle?.plate_number || 'Chưa gán'}</td><td>{stageNames[workflow?.stage] || (assignment ? assignment.assignment_status : 'Chưa phân công')}<small>{workflow?.service_type || ''}</small></td><td><button className="workflow-link" onClick={() => chooseBooking(String(booking.booking_id))}>Chi tiết / điều phối</button></td></tr>)}</tbody></table>{!data?.bookings.length && <div className="dispatch-empty">Chưa có booking đã xác nhận cần điều phối.</div>}</div></section>
-      {data?.incidents?.length > 0 && <section className="workflow-assign-card"><h2>Sự cố cần xử lý</h2>{data.incidents.map((incident) => <div key={incident.incident_id} className="workflow-incident"><span>{bookingCode(incident.booking_id)} · {incident.description}</span>{incident.workflow_stage === 'routed_to_booking_changes' ? <Link to="/operator/booking-change-requests">Mở luồng 4</Link> : incident.workflow_stage === 'vehicle_replacement_required' ? <button onClick={() => chooseBooking(String(incident.booking_id))}>Điều phối xe thay thế</button> : <button disabled={busy} onClick={() => resolveIncident(incident)}>Ghi nhận xử lý</button>}</div>)}</section>}
+      <DispatchIncidents items={data?.incidents} busy={busy} onSelect={chooseBooking} onResolve={resolveIncident} />
     </main></div></div>;
 }

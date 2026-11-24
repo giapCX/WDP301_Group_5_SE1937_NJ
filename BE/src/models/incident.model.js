@@ -33,6 +33,7 @@ module.exports = createModel(
       type: String,
       required: true,
     },
+    garage_damage_inspection_id: { type: Number },
     incident_status: {
       type: String,
       required: true,

@@ -2,7 +2,19 @@ import { dateTime } from '../../bookings/bookingConstants';
 import { inspectionPhotoUrl } from '../api/garageApi';
 import { CHECKLIST_ITEMS, INSPECTION_RESULTS } from '../garageConstants';
 
-export default function GarageInspectionRecord({ inspection }) {
+export function InspectionPhotos({ inspection, photoUrl = inspectionPhotoUrl }) {
+  if (!inspection?.photo_count) return null;
+  return (
+    <ul className="garage-check-photos">
+      {Array.from({ length: inspection.photo_count }, (_, index) => {
+        const link = photoUrl(inspection.inspection_id, index + 1);
+        return <li key={link}><a href={link} target="_blank" rel="noreferrer">Xem ảnh {index + 1}</a></li>;
+      })}
+    </ul>
+  );
+}
+
+export default function GarageInspectionRecord({ inspection, photoUrl = inspectionPhotoUrl }) {
   return (
     <>
       <p className="garage-check-summary">
@@ -21,14 +33,7 @@ export default function GarageInspectionRecord({ inspection }) {
         </ul>
       ) : <p className="garage-check-hint">Hồ sơ này chưa ghi nhận từng hạng mục kiểm tra.</p>}
       {inspection.condition_note && <p className="garage-check-note">{inspection.condition_note}</p>}
-      {inspection.photo_count > 0 && (
-        <ul className="garage-check-photos">
-          {Array.from({ length: inspection.photo_count }, (_, index) => {
-            const link = inspectionPhotoUrl(inspection.inspection_id, index + 1);
-            return <li key={link}><a href={link} target="_blank" rel="noreferrer">Xem ảnh {index + 1}</a></li>;
-          })}
-        </ul>
-      )}
+      <InspectionPhotos inspection={inspection} photoUrl={photoUrl} />
     </>
   );
 }

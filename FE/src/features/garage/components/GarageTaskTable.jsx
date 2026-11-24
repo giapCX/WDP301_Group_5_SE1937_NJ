@@ -16,7 +16,9 @@ function TaskLink({ task }) {
 function handoverStatus(task) {
   if (task.workflow_stage === 'awaiting_driver') return 'Chờ tài xế nhận phân công';
   if (task.status === 'failed') return 'Chờ Operator đổi xe';
-  if (task.status === 'completed') return 'Chờ tài xế nhận xe';
+  if (task.handover?.status === 'declined') return 'Tài xế từ chối nhận xe';
+  if (task.handover?.status === 'pending') return 'Chờ tài xế nhận xe';
+  if (task.inspection) return 'Chờ Gara lập biên bản';
   return 'Chờ Gara kiểm tra xe';
 }
 
@@ -44,6 +46,9 @@ function TaskRow({ task }) {
       <td>
         <DispatchStatus label={status.label} tone={status.tone} />
         {preTrip && <small className="garage-subline">{handoverStatus(task)}</small>}
+        {task.type === 'RETURN_IN' && (
+          <small className="garage-subline">{task.inspection ? 'Chờ tài xế xác nhận trả xe' : 'Chờ Gara tiếp nhận xe'}</small>
+        )}
         {task.vehicle?.status && <small className="garage-subline">Xe: {task.vehicle.status}</small>}
       </td>
       <td className="garage-task-actions">

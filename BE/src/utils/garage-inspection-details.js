@@ -31,7 +31,14 @@ function readPhoto(photo) {
   return { content_type: contentType, data };
 }
 
-function readPreTripDetails(input) {
+function readInspectionPhotos(photos) {
+  if (!Array.isArray(photos) || photos.length < 1 || photos.length > MAX_PHOTOS) {
+    throw new HttpError(400, 'Cần đính kèm từ 1 đến 3 ảnh');
+  }
+  return photos.map(readPhoto);
+}
+
+function readInspectionDetails(input) {
   const { checklist, fuel_percent: fuelPercent, photos, result } = input;
   if (!checklist || Object.keys(checklist).length !== CHECKLIST_ITEMS.length
     || CHECKLIST_ITEMS.some((item) => !['passed', 'failed'].includes(checklist[item]))) {
@@ -45,15 +52,13 @@ function readPreTripDetails(input) {
   if (!Number.isInteger(fuelPercent) || fuelPercent < 0 || fuelPercent > 100) {
     throw new HttpError(400, 'Mức nhiên liệu phải là số nguyên từ 0 đến 100%');
   }
-  if (!Array.isArray(photos) || photos.length < 1 || photos.length > MAX_PHOTOS) {
-    throw new HttpError(400, 'Cần đính kèm từ 1 đến 3 ảnh kiểm tra');
-  }
+  const images = readInspectionPhotos(photos);
   return {
     checklist,
     fuel_percent: fuelPercent,
-    photos: photos.map(readPhoto),
-    photo_count: photos.length,
+    photos: images,
+    photo_count: images.length,
   };
 }
 
-module.exports = { CHECKLIST_ITEMS, readPreTripDetails };
+module.exports = { CHECKLIST_ITEMS, readInspectionDetails, readInspectionPhotos };

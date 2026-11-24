@@ -1,27 +1,28 @@
-import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { bookingCode } from '../../bookings/bookingConstants';
 import { submitGarageInspection } from '../api/garageApi';
+import GarageHandoverActions from '../components/GarageHandoverActions';
 import GarageInspectionForm from '../components/GarageInspectionForm';
 import GarageInspectionRecord from '../components/GarageInspectionRecord';
-import GarageVehicleActions from '../components/GarageVehicleActions';
+import GarageMaintenanceActions from '../components/GarageMaintenanceActions';
+import GarageReturnTask from '../components/GarageReturnTask';
 import { GARAGE_TASKS_PATH, TASK_TYPES } from '../garageConstants';
-import useGarageTasks from '../hooks/useGarageTasks';
+import useGarageTask from '../hooks/useGarageTask';
 
 export default function GarageTaskPage() {
   const { taskId, vehicleId } = useParams();
-  const { tasks, loading, error, refresh } = useGarageTasks();
-  const [saved, setSaved] = useState(null);
-  const matches = (task) => task?.id === taskId && task.vehicle_id === Number(vehicleId);
-  const task = matches(saved) ? saved : tasks.find(matches);
+  const { task, loading, error, refresh } = useGarageTask(taskId, vehicleId);
   const preTrip = task?.type === 'HANDOVER_OUT';
+  const returning = task?.type === 'RETURN_IN';
+  const passed = ['passed', 'pass'].includes(task?.inspection?.result);
 
   async function save(details) {
     try {
-      const { inspection } = await submitGarageInspection({
-        ...details, booking_id: task.booking_id, vehicle_id: task.vehicle_id, inspection_type: 'handover',
+      await submitGarageInspection({
+        ...details, booking_id: task.booking_id, vehicle_id: task.vehicle_id,
+        inspection_type: returning ? 'return' : 'handover',
       });
-      setSaved({ ...task, inspection });
+      refresh();
     } catch (failure) {
       if (failure.response?.status === 409) refresh();
       throw failure;
@@ -46,14 +47,16 @@ export default function GarageTaskPage() {
       {error && <p className="dispatch-alert" role="alert">{error}</p>}
       {!loading && !error && !task && <p>Nhiệm vụ này không còn trong danh sách đang xử lý.</p>}
       {task?.maintenance?.description && <p className="garage-check-note">{task.maintenance.description}</p>}
-      {task?.inspection && <GarageInspectionRecord inspection={task.inspection} />}
+      {preTrip && task.inspection && <GarageInspectionRecord inspection={task.inspection} />}
+      {preTrip && passed && <GarageHandoverActions key={task.inspection.inspection_id} task={task} onUpdate={refresh} />}
       {preTrip && !task.inspection && (
         task.workflow_stage === 'awaiting_vehicle'
           ? <GarageInspectionForm key={taskId + ':' + vehicleId} onSave={save} />
           : <p className="garage-check-hint">Chờ tài xế chấp nhận phân công để mở checklist.</p>
       )}
-      {task && !preTrip && task.status !== 'completed' && (
-        <GarageVehicleActions key={taskId + ':' + vehicleId} task={task} onUpdate={refresh} />
+      {returning && <GarageReturnTask key={taskId + ':' + vehicleId} task={task} onSave={save} onRefresh={refresh} />}
+      {task?.type === 'MAINTENANCE' && task.status !== 'completed' && (
+        <GarageMaintenanceActions key={taskId + ':' + vehicleId} task={task} onUpdate={refresh} />
       )}
     </section>
   );

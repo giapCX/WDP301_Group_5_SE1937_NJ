@@ -13,6 +13,14 @@ const fixtures = {
     created_at: workflowDate,
     updated_at: workflowDate,
   }],
+  vehicle_handovers: [{
+    inspection_id: 1, booking_id: 1, vehicle_id: 1, driver_id: 1,
+    prepared_by: 4, prepared_at: workflowDate,
+  }],
+  vehicle_damages: [{
+    inspection_id: 2, booking_id: 1, vehicle_id: 1, reported_by: 4, reported_at: workflowDate,
+    damaged_items: ['brakes'], description: 'Phanh phát tiếng lạ', evidence_source: 'inspection', photo_count: 1,
+  }],
 };
 
 test('all models preserve every field of their sample documents', async () => {

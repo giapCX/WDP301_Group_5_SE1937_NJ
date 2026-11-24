@@ -17,6 +17,7 @@ export const CHECKLIST_ITEMS = [
   ['exterior', 'Ngoại thất'], ['interior', 'Nội thất'], ['tires', 'Lốp xe'], ['lights', 'Đèn'],
   ['brakes', 'Phanh'], ['fuel', 'Nhiên liệu'], ['documents', 'Giấy tờ'], ['safety', 'Thiết bị an toàn'],
 ];
+export const CHECKLIST_LABELS = Object.fromEntries(CHECKLIST_ITEMS);
 
 export const INSPECTION_RESULTS = {
   passed: 'Đạt', pass: 'Đạt', failed: 'Không đạt', fail: 'Không đạt',
