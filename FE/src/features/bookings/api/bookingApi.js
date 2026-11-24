@@ -45,3 +45,10 @@ export function getBookingError(error) {
   }
   return error.response?.data?.message || 'Không thể kết nối máy chủ. Vui lòng thử lại.';
 }
+
+export async function previewBookingQuote(id, calculation) {
+  return (await apiClient.post(`/operator/bookings/${id}/quote-preview`, { calculation })).data.data;
+}
+export async function fetchQuoteRates() {
+  return (await apiClient.get('/operator/bookings/quote-rates')).data.data;
+}

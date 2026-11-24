@@ -6,7 +6,7 @@ import ReservationLayout from '../components/ReservationLayout.jsx';
 import TripForm from '../components/TripForm.jsx';
 import { errorMessage, services, toTripTime } from '../reservationFormat.js';
 
-const steps = ['Chọn dịch vụ', 'Lộ trình và thời gian', 'Kiểm tra và tính giá', 'Xác nhận đặt xe'];
+const steps = ['Chọn dịch vụ', 'Lộ trình và thời gian', 'Chờ xem xét'];
 
 function tripPayload(trip, promotionCode) {
   return {
@@ -103,10 +103,10 @@ function Planner({ seatOptions, state }) {
           {step === 1 && <form onSubmit={submitTrip}>
             <TripForm trip={trip} onChange={updateTrip} seatCount={trip.requestedSeats} onTimeError={setError}/>
             <label>Mã giảm giá (nếu có)<input name="promotionCode" maxLength="40"/></label>
-            <p>VietTour sẽ gửi báo giá trong My Bookings sau khi kiểm tra lịch trình.</p>
+            <p>Operator sẽ xem xét lịch trình và gửi báo giá trong My Bookings. Bạn chưa cần thanh toán ở bước này.</p>
             <div className="rv-actions">
               <button className="rv-button" type="button" disabled={busy} onClick={() => setStep(0)}>Quay lại</button>
-              <button className="rv-button rv-primary" type="submit" disabled={busy}>{busy ? 'Đang gửi…' : 'Kiểm tra và định giá'}</button>
+              <button className="rv-button rv-primary" type="submit" disabled={busy}>{busy ? 'Đang gửi…' : 'Gửi yêu cầu báo giá'}</button>
             </div>
           </form>}
         </section>

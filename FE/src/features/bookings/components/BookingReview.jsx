@@ -121,6 +121,8 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                   <Icon name="route" />
                   Lộ trình & thời gian
                 </h3>
+                <p>{booking.service_type === 'tour' ? 'Đồng hành du lịch' : booking.service_type === 'roundtrip' ? 'Đưa đi – đón về' : ''}</p>
+                {booking.return_pickup_time && <p>Đón về: {booking.return_pickup_location} · {dateTime(booking.return_pickup_time)}</p>}
                 {booking.passenger_count && <p>{booking.passenger_count} hành khách</p>}
                 {booking.special_requests && <p>Yêu cầu bổ sung: {booking.special_requests}</p>}
                 <div className="review-route">
@@ -225,6 +227,13 @@ export default function BookingReview({ id, onClose, onUpdated }) {
               </section>}
               {canQuote && !rejecting && <BookingQuoteForm booking={booking} busy={review.saving}
                 onSend={async (route) => { if (await review.decide('quote', route)) onClose(); }}/>}
+              {booking.quote_calculation && <section className="review-section">
+                <h3>Bảng tính đã gửi</h3>
+                {booking.quote_calculation.lines.map((line, index) => <div className="cost-line" key={index}>
+                  <span>{line.label} ({line.quantity} × {money(line.unit_price)})</span><strong>{money(line.amount)}</strong>
+                </div>)}
+                {booking.quote_calculation.inputs?.reason && <p>Lý do điều chỉnh / phụ phí: {booking.quote_calculation.inputs.reason}</p>}
+              </section>}
               {booking.reviewed_at && (
                 <section className="review-section">
                   <h3>Thông tin xử lý</h3>

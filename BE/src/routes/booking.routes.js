@@ -1,10 +1,17 @@
 const express = require('express');
 const bookingController = require('../controllers/booking.controller');
 const requireOperator = require('../middleware/require-operator.middleware');
-const { sendQuote, closeTrip } = require('../services/booking-quote.service');
+const { sendQuote, closeTrip, previewQuote } = require('../services/booking-quote.service');
 const { positiveId } = require('../services/renter-reservation.service');
 
+const { rates } = require('../services/quote-calculator');
 const router = express.Router();
+
+router.post('/:id/quote-preview', requireOperator, async (req, res) => {
+  const data = await previewQuote(positiveId(req.params.id), req.body);
+  res.json({ success: true, data });
+});
+router.get('/quote-rates', requireOperator, (req, res) => res.json({ success: true, data: rates }));
 
 router.get('/', requireOperator, bookingController.getBookings);
 router.get('/:id/available-vehicles', requireOperator, bookingController.getAvailableVehicles);

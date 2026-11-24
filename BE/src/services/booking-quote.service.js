@@ -4,6 +4,8 @@ const { runInTransaction, lockVehicleSchedule } = require('../repositories/booki
 const { findAssignableVehicle } = require('../repositories/renter-reservation.repository');
 const HttpError = require('../utils/http-error');
 
+const { calculateQuote } = require('./quote-calculator');
+
 const TERMS_VERSION = 'renter-reservation-v1';
 
 function readAmount(value, label) {
@@ -23,6 +25,15 @@ async function findVehicle(booking, session) {
   return vehicle;
 }
 
+async function previewQuote(bookingId, input) {
+  const booking = await Booking.findOne({ booking_id: bookingId }).lean();
+  if (!booking) throw new HttpError(404, 'Không tìm thấy booking.');
+  if (!booking.quote_requested_at || !['pending', 'quoted'].includes(booking.booking_status)) {
+    throw new HttpError(409, 'Booking không ở bước xem xét báo giá.');
+  }
+  return calculateQuote(booking.service_type, input?.calculation);
+}
+
 async function sendQuote(bookingId, input, operatorId) {
   const booking = await Booking.findOne({ booking_id: bookingId }).lean();
   if (!booking) throw new HttpError(404, 'Không tìm thấy booking.');
@@ -30,7 +41,8 @@ async function sendQuote(bookingId, input, operatorId) {
     throw new HttpError(409, 'Booking không ở bước gửi báo giá.');
   }
 
-  const subtotal = readAmount(input?.subtotal, 'Giá trước ưu đãi');
+  const calculation = calculateQuote(booking.service_type, input?.calculation);
+  const subtotal = calculation.subtotal;
   const deposit = readAmount(input?.deposit, 'Tiền đặt cọc');
   await findVehicle(booking, null);
   const promotion = booking.requested_promotion_code ? await Promotion.findOne({
@@ -47,6 +59,7 @@ async function sendQuote(bookingId, input, operatorId) {
   }, { $set: {
     booking_status: 'quoted', estimated_price: subtotal, additional_charge: 0,
     pricing_breakdown: { subtotal, surcharge: 0, discount, total },
+    quote_calculation: calculation,
     quote_offer: { id: randomUUID(), sent_by: operatorId, sent_at: new Date(),
       promotion_id: promotion?.promotion_id, promotion_code: promotion?.code },
     deposit_due: deposit,
@@ -100,5 +113,5 @@ async function closeTrip(bookingId) {
   return booking;
 }
 
-module.exports = { sendQuote, acceptQuote, closeTrip };
+module.exports = { sendQuote, acceptQuote, closeTrip, previewQuote };
 

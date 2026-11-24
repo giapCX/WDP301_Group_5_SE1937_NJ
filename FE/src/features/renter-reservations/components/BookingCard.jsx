@@ -16,7 +16,7 @@ export default function BookingCard({ booking, selected, onSelect }) {
   return (
     <article className="rv-panel rv-booking" data-selected={selected}>
       <header><h2>Đơn #{booking.booking_id}</h2><span className="rv-status" data-status={status}>
-        {status === 'pending' && booking.quote_requested_at ? 'Chờ báo giá' : statuses[status] || status}
+        {status === 'pending' && booking.quote_requested_at ? 'Chờ xem xét' : statuses[status] || status}
       </span></header>
       <div className="rv-booking-trip">
         {photo && <img src={photo} alt={vehicleName(vehicle)} loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }}/>}
@@ -29,7 +29,7 @@ export default function BookingCard({ booking, selected, onSelect }) {
         </div>
       </div>
       {status === 'rejected' && <p className="rv-error">{booking.rejection_reason || 'Yêu cầu đã bị từ chối.'} <Link to="/renter/bookings/new">Đặt chuyến khác</Link></p>}
-      {status === 'pending' && <p className="rv-notice">{booking.quote_requested_at ? 'Đang đợi VietTour gửi báo giá.' : 'VietTour đang kiểm tra lịch trình và khả năng phục vụ.'}</p>}
+      {status === 'pending' && <p className="rv-notice">{booking.quote_requested_at ? 'Operator đang xem xét lịch trình và chuẩn bị báo giá. Bạn chưa cần thanh toán.' : 'VietTour đang kiểm tra lịch trình và khả năng phục vụ.'}</p>}
       {status === 'awaiting_payment' && <p className="rv-notice">{booking.paymentDue?.purpose === 'deposit' ? 'Đã xác nhận báo giá. Vui lòng đặt cọc để giữ xe.' : 'Đơn đã được duyệt. Vui lòng thanh toán để xác nhận.'}</p>}
       {booking.deposit_paid_at && <p className="rv-notice">Đã đặt cọc {money(booking.deposit_due)}.</p>}
       <footer><strong>{status === 'pending' && booking.quote_requested_at ? 'Chưa có giá' : money(booking.pricing_breakdown?.total ?? booking.estimated_price)}</strong>

@@ -119,6 +119,11 @@ module.exports = createModel(
     deposit_due: Number,
     deposit_paid_at: Date,
     paid_total: Number,
+    quote_calculation: {
+      inputs: { type: require('mongoose').Schema.Types.Mixed },
+      lines: [{ _id: false, label: String, quantity: Number, unit_price: Number, amount: Number }],
+      subtotal: Number,
+    },
     pricing_breakdown: {
       subtotal: Number, surcharge: Number, discount: Number, total: Number,
     },

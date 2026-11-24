@@ -36,3 +36,11 @@ Chạy `npm run build` từ FE. Kiểm tra thủ công tab trạng thái, tìm k
 Booking.requested_seat_count biểu thị số chỗ chính xác. Ví dụ giá trị 7 chỉ trả xe 7 chỗ và được kiểm tra lại trong transaction khi duyệt. Đơn Renter gửi yêu cầu báo giá dùng requested_seats để lưu số chỗ tối thiểu. Khi khách xác nhận báo giá, hệ thống tự phân xe đủ chỗ và còn lịch.
 
 Booking cũ thiếu số chỗ bị chặn điều phối bằng lỗi 409; không hiển thị mọi xe làm phương án mặc định. Chạy node scripts/add-requested-seat-count.js từ BE để thêm field null còn thiếu; không đoán yêu cầu khách. Sau đó bổ sung thông tin thực tế khi xác nhận với Renter. Dữ liệu seed mới có số chỗ giả lập rõ ràng cho từng booking; booking mẫu #1 yêu cầu 7 chỗ. JSON bookings đã cập nhật tương ứng.
+
+## Operator xem xét và tính báo giá
+
+Renter gửi yêu cầu báo giá từ form lộ trình, đơn ở trạng thái pending và hiển thị Chờ xem xét, chưa thanh toán. Operator mở chi tiết đơn để xem lịch trình rồi nhập thông số và chọn Tính giá dự kiến. Backend tính lại khi gửi, không nhận tổng tiền do client tự tính. Bảng tính được lưu trong quote_calculation, không làm thay đổi cách áp dụng ưu đãi/thanh toán hiện có.
+
+Đơn giá tham khảo đồ án nằm trong BE/src/services/quote-calculator.js. Có mức 4/7/16/29/45 chỗ; số chỗ khác cần nhập đơn giá thủ công. Roundtrip tính km hai lượt và tỷ lệ điều xe. Tour nhập giờ phục vụ mỗi ngày bằng dấu phẩy (ví dụ 8, 10, 8), tính 100 km/ngày và 8 giờ/ngày; không lấy giờ nghỉ đêm làm giờ phục vụ. Operator nhập số đêm, phí cầu đường, đỗ xe và phụ phí. Điều chỉnh tăng/giảm hoặc phụ phí khác bắt buộc ghi lý do. Các khoản tiền được làm tròn đến VND trên từng dòng. Tiền cọc vẫn do Operator kiểm tra trước khi gửi.
+
+Test nhanh: gửi yêu cầu xe 7 chỗ; Operator nhập roundtrip 150 km mỗi lượt, 12.000đ/km, điều xe 20%, cầu đường 400.000đ, còn lại 0: tổng 4.720.000đ. Tour 3 ngày với giờ 8, 10, 8; 1.500.000đ/ngày; tổng 420 km; 12.000đ/km vượt; 100.000đ/giờ vượt; 2 đêm × 300.000đ; cầu đường 400.000đ và đỗ xe 150.000đ: tổng 7.290.000đ. Sửa thông số phải tính lại trước khi gửi. Mở lại đơn sau khi gửi để kiểm tra bảng tính đã lưu.
