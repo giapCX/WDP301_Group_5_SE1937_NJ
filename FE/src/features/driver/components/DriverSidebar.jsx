@@ -27,6 +27,10 @@ export default function DriverSidebar() {
           <Icon name="route" />
           Chuyến được phân công
         </a>
+        <a href="#driver-workflow" aria-label="Cập nhật thực hiện chuyến">
+          <Icon name="check" />
+          Thực hiện chuyến
+        </a>
         <a href="#driver-profile" aria-label="Thông tin tài xế">
           <Icon name="user" />
           Thông tin tài xế

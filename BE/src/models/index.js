@@ -15,6 +15,7 @@ const VehicleInspection = require('./vehicle-inspection.model');
 const MaintenanceRecord = require('./maintenance-record.model');
 const Incident = require('./incident.model');
 const Review = require('./review.model');
+const TripWorkflow = require('./trip-workflow.model');
 
 module.exports = {
   BookingChangeRequest,
@@ -34,4 +35,5 @@ module.exports = {
   MaintenanceRecord,
   Incident,
   Review,
+  TripWorkflow,
 };

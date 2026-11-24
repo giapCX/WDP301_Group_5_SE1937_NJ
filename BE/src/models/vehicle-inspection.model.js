@@ -51,6 +51,12 @@ module.exports = createModel(
       required: true,
       maxlength: 30,
     },
+    odometer: {
+      type: Number,
+      default: null,
+      min: 0,
+      validate: { validator: (value) => value === null || Number.isFinite(value), message: 'Must be a finite number' },
+    },
     inspected_at: {
       type: Date,
       required: true,

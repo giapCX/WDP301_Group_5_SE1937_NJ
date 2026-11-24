@@ -81,6 +81,17 @@ async function main() {
       }
     } else if (hello.setName !== 'rentalLocal') {
       throw new Error('Port 27017 belongs to another replica set');
+    } else if (!hello.isWritablePrimary && !hello.secondary) {
+      try {
+        await connection.db.admin().command({
+          replSetInitiate: {
+            _id: 'rentalLocal',
+            members: [{ _id: 0, host: '127.0.0.1:27017' }],
+          },
+        });
+      } catch (error) {
+        if (error.codeName !== 'AlreadyInitialized') throw error;
+      }
     }
     for (let attempt = 0; attempt < 60; attempt += 1) {
       const state = await connection.db.admin().command({ hello: 1 });

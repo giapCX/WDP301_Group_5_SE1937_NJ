@@ -31,8 +31,12 @@ export default function BookingStats({ counts }) {
       note: 'Đã kết thúc hành trình',
     },
   ];
+  return <DispatchStats cards={cards} label="Thống kê booking" />;
+}
+
+export function DispatchStats({ cards, label }) {
   return (
-    <section className="dispatch-stats" aria-label="Thống kê booking">
+    <section className="dispatch-stats" aria-label={label}>
       {cards.map((card) => (
         <article className={`stat-card tone-${card.tone}`} key={card.label}>
           <div>
@@ -42,10 +46,12 @@ export default function BookingStats({ counts }) {
           <span className="stat-icon">
             <Icon name={card.icon} size={21} />
           </span>
-          <span className="stat-note">
-            <i />
-            {card.note}
-          </span>
+          {card.note && (
+            <span className="stat-note">
+              <i />
+              {card.note}
+            </span>
+          )}
         </article>
       ))}
     </section>

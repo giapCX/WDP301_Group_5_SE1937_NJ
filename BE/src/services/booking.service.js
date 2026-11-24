@@ -79,17 +79,24 @@ async function getPendingBooking(id, session = null) {
   return booking;
 }
 
-function requestedSeats(booking) {
-  if (
-    !Number.isSafeInteger(booking.requested_seat_count) ||
-    booking.requested_seat_count < 1
-  ) {
+function requestedSeats(booking, previousVehicleSeats) {
+  const seatCount = booking.requested_seat_count ?? previousVehicleSeats;
+  if (!Number.isSafeInteger(seatCount) || seatCount < 1) {
     throw new HttpError(
       409,
       'Booking chưa có số chỗ khách yêu cầu. Cần bổ sung thông tin trước khi điều phối',
     );
   }
-  return booking.requested_seat_count;
+  return seatCount;
+}
+
+function assertVehicleSeats(vehicle, seatCount) {
+  if (vehicle.seat_count !== seatCount) {
+    throw new HttpError(
+      409,
+      `Khách yêu cầu xe ${seatCount} chỗ; không thể gán xe khác số chỗ`,
+    );
+  }
 }
 
 // reviewedBy must come from the authenticated Operator, never the request body.
@@ -113,12 +120,7 @@ async function approveBooking(id, input = {}, reviewedBy) {
       throw new HttpError(404, 'Không tìm thấy xe');
     }
 
-    if (vehicle.seat_count !== seatCount) {
-      throw new HttpError(
-        409,
-        `Khách yêu cầu xe ${seatCount} chỗ; không thể gán xe khác số chỗ`,
-      );
-    }
+    assertVehicleSeats(vehicle, seatCount);
 
     if (!['available', 'in_use'].includes(vehicle.status)) {
       throw new HttpError(409, 'Xe không đủ điều kiện vận hành');
@@ -228,6 +230,8 @@ async function getAvailableVehicles(id) {
 }
 
 module.exports = {
+  requestedSeats,
+  assertVehicleSeats,
   getAvailableVehicles,
   getBookings,
   getBookingById,

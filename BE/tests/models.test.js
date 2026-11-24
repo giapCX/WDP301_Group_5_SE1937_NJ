@@ -2,11 +2,23 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const models = require('../src/models');
 const data = require('../src/config/sample-data');
+const workflowDate = new Date('2026-11-24T00:00:00Z');
+const fixtures = {
+  ...data,
+  trip_workflows: [{
+    booking_id: 1,
+    service_type: 'one_way',
+    driver_id: 1,
+    vehicle_id: 1,
+    created_at: workflowDate,
+    updated_at: workflowDate,
+  }],
+};
 
-test('all 17 models preserve every sample field and validate all 71 documents', async () => {
-  assert.equal(Object.keys(models).length, 17);
+test('all models preserve every field of their sample documents', async () => {
+  assert.equal(Object.keys(models).length, Object.keys(fixtures).length);
   for (const Model of Object.values(models)) {
-    const rows = data[Model.collection.name];
+    const rows = fixtures[Model.collection.name];
     assert.ok(rows, Model.modelName);
     for (const row of rows) {
       for (const key of Object.keys(row))
@@ -41,7 +53,7 @@ test('booking defaults preserve numeric references and existing timestamps', () 
 
 test('DBML primary, one-to-one and compound uniqueness is declared', () => {
   for (const Model of Object.values(models)) {
-    const key = Object.keys(data[Model.collection.name][0])[0];
+    const key = Object.keys(fixtures[Model.collection.name][0])[0];
     assert.ok(
       Model.schema
         .indexes()
