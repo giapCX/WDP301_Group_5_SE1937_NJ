@@ -1,6 +1,6 @@
 import { createElement as h } from 'react';
 import { Link, Navigate, useOutletContext } from 'react-router-dom';
-import useSignOut from '../../auth/hooks/useSignOut.js';
+import SignOutButton from '../../auth/components/SignOutButton.js';
 import { LoginFooter } from '../../auth/pages/LoginLayout.js';
 import Icon from '../../home/components/HomeIcon.js';
 import { hotline } from '../../home/homeContent.js';
@@ -113,7 +113,6 @@ function RenterContent({ data, user }) {
 export default function RenterDashboardPage() {
   const user = useOutletContext();
   const result = useHomeResource(loadRenterDashboard);
-  const { error: signOutError, signingOut, signOut } = useSignOut();
 
   if (result.error?.response?.status === 401) return h(Navigate, { to: '/login', replace: true });
   return h('div', { className: 'vt-homepage vt-r-dashboard' },
@@ -122,9 +121,8 @@ export default function RenterDashboardPage() {
       h('nav', { 'aria-label': 'Điều hướng Người thuê' },
         navigation.map(([label, href]) => h('a', { key: href, href }, label))),
       h('div', { className: 'vt-r-account' }, h('span', null, user.full_name),
-        h('button', { type: 'button', className: 'vt-h-outline', disabled: signingOut, onClick: signOut }, 'Đăng xuất')),
+        h(SignOutButton)),
     )),
-    signOutError && h('p', { role: 'alert', className: 'vt-h-wrap vt-r-message' }, signOutError),
     result.loading ? h('main', { className: 'vt-h-wrap vt-r-message', role: 'status' }, 'Đang tải chuyến đi…')
       : result.error ? h('main', { className: 'vt-h-wrap vt-r-message', role: 'alert' }, 'Chưa thể tải dashboard. Vui lòng tải lại trang.')
         : h(RenterContent, { data: result.data, user }),

@@ -1,9 +1,8 @@
-import useSignOut from '../../auth/hooks/useSignOut.js';
+import SignOutButton from '../../auth/components/SignOutButton.js';
 import { DASHBOARD_PERIODS } from '../managerDashboardConfig';
 import ManagerIcon from './ManagerIcon';
 
 export default function ManagerTopbar({ month, year, onMonthChange, onYearChange, onRefresh, user, alertCount = 0 }) {
-  const { signingOut, error: signOutError, signOut } = useSignOut();
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 4 }, (_, index) => currentYear - 2 + index);
 
@@ -17,12 +16,9 @@ export default function ManagerTopbar({ month, year, onMonthChange, onYearChange
         <button className="manager-top-icon manager-notification" type="button" aria-label={`Làm mới dữ liệu, ${alertCount} cảnh báo`} onClick={onRefresh}><ManagerIcon name="bell" size={16}/>{alertCount > 0 && <i/>}</button>
         <span className="manager-top-divider"/>
         <div className="manager-user"><span className="manager-user-avatar">{user?.full_name?.slice(0, 1) || '—'}</span><span><b>{user?.full_name || 'Tài khoản quản lý'}</b><small>{user?.role_name || 'Quản lý'}</small></span></div>
-        <button className="manager-logout" type="button" onClick={signOut} disabled={signingOut} aria-label="Đăng xuất" title="Đăng xuất">
-          <ManagerIcon name="logout" size={15}/><span>{signingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
-        </button>
+        <SignOutButton />
       </div>
     </header>
-    {signOutError && <div className="manager-logout-error" role="alert">{signOutError}</div>}
     </>
   );
 }
