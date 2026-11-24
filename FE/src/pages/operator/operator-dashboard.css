@@ -1,0 +1,251 @@
+.dashboard-stats {
+  margin: 4px 0 22px;
+}
+.dashboard-lower {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(245px, 0.8fr);
+  gap: 16px;
+}
+.dashboard-panel {
+  background: #fff;
+  border: 1px solid #e8edf3;
+  border-radius: 10px;
+  padding: 19px 20px;
+  box-shadow: 0 2px 5px #10224405;
+  min-width: 0;
+}
+.dashboard-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.dashboard-panel-heading h2 {
+  font-size: 15px;
+  margin: 0;
+  color: #16324a;
+}
+.dashboard-panel-heading p {
+  font-size: 11px;
+  color: #8593a4;
+  margin: 5px 0 0;
+}
+.dashboard-panel-heading > a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #1765c4;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.dashboard-recent-list {
+  display: grid;
+}
+.dashboard-recent-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 0;
+  border-top: 1px solid #eff2f6;
+  color: inherit;
+  text-decoration: none;
+}
+.dashboard-recent-row:hover {
+  background: #fafcff;
+}
+.dashboard-booking-icon {
+  width: 33px;
+  height: 33px;
+  border-radius: 9px;
+  background: #edf3ff;
+  color: #3468cd;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.dashboard-recent-main {
+  min-width: 0;
+  flex: 1;
+}
+.dashboard-recent-main b,
+.dashboard-recent-main small,
+.dashboard-recent-price small {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dashboard-recent-main b {
+  font-size: 11px;
+  color: #314258;
+}
+.dashboard-recent-main small {
+  font-size: 9px;
+  color: #8b98a8;
+  margin-top: 4px;
+}
+.dashboard-recent-price {
+  text-align: right;
+  font-size: 10px;
+  font-weight: 700;
+  color: #314258;
+  white-space: nowrap;
+}
+.dashboard-recent-price small {
+  font-size: 9px;
+  font-weight: 400;
+  color: #929ead;
+  margin-top: 4px;
+}
+.dashboard-shortcuts > a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 0;
+  border-top: 1px solid #eff2f6;
+  color: #314258;
+  text-decoration: none;
+  font-size: 11px;
+}
+.dashboard-shortcuts > a > span {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #edf3ff;
+  color: #3468cd;
+}
+.dashboard-shortcuts > a > b {
+  flex: 1;
+}
+.dashboard-shortcuts > a > .op-icon {
+  color: #8d9aac;
+}
+.dashboard-empty {
+  padding: 25px 8px;
+  color: #8b98a8;
+  font-size: 11px;
+  text-align: center;
+}
+.dashboard-retry {
+  float: right;
+  margin-left: 12px;
+  background: transparent;
+  border: 0;
+  color: #2459c4;
+  text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
+}
+.vehicles-panel {
+  padding-bottom: 21px;
+}
+.available-vehicle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  margin-top: 17px;
+}
+.available-vehicle-card {
+  border: 1px solid #e8edf3;
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+}
+.vehicle-card-art {
+  height: 116px;
+  background: linear-gradient(145deg, #eef4fb, #e1eaf3);
+  color: #426b8e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.vehicle-card-art span {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border-radius: 15px;
+  background: #fff;
+  padding: 4px 8px;
+  color: #52677e;
+  font-size: 9px;
+}
+.vehicle-card-copy {
+  padding: 12px 13px 4px;
+}
+.vehicle-card-copy small {
+  color: #77869a;
+  font-size: 9px;
+}
+.vehicle-card-copy h3 {
+  font-size: 13px;
+  margin: 5px 0;
+  color: #23394e;
+}
+.vehicle-card-copy p {
+  font-size: 10px;
+  color: #8b98a8;
+  margin: 0;
+  min-height: 16px;
+}
+.available-vehicle-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #eef1f5;
+  padding: 10px 13px;
+  margin-top: 8px;
+}
+.available-vehicle-footer > span {
+  color: #308467;
+  font-size: 9px;
+}
+.available-vehicle-footer > span i {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #36b589;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+.available-vehicle-footer > b {
+  font-size: 10px;
+  color: #2b3b4f;
+}
+.available-vehicle-footer > b small {
+  font-weight: 400;
+  color: #8b98a8;
+  margin-left: 2px;
+}
+.dispatch-sidebar nav a.active {
+  background: #2361ab38;
+  color: #88beff;
+  box-shadow: inset 3px 0 #3b8cff;
+}
+@media (max-width: 960px) {
+  .dashboard-lower {
+    grid-template-columns: 1fr;
+  }
+  .available-vehicle-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  .dashboard-panel {
+    padding: 15px;
+  }
+  .dashboard-recent-row {
+    gap: 7px;
+  }
+  .dashboard-recent-price {
+    display: none;
+  }
+  .available-vehicle-grid {
+    grid-template-columns: 1fr;
+  }
+}

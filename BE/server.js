@@ -8,6 +8,9 @@ const chargeRoutes = require('./src/routes/additional-charge.routes');
 const renterChangeRoutes = require('./src/routes/renter-booking-change.routes');
 const bookingRoutes = require('./src/routes/booking.routes');
 const changeRequestRoutes = require('./src/routes/booking-change-request.routes');
+const tripMonitoringRoutes = require('./src/routes/trip-monitoring.routes');
+const operatorOverviewRoutes = require('./src/routes/operator-overview.routes');
+const driverDashboardRoutes = require('./src/routes/driver-dashboard.routes');
 const homepageRoutes = require('./src/routes/homepage.routes');
 const renterDashboardRoutes = require('./src/routes/renter-dashboard.routes');
 const managerDashboardRoutes = require('./src/routes/manager-dashboard.routes');
@@ -26,9 +29,16 @@ app.get('/api', (req, res) => {
 });
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
+<<<<<<< HEAD
 app.use(['/api/operator', '/api/renter', '/api/manager'], attachUser);
 app.use('/api/manager/dashboard', managerDashboardRoutes);
+=======
+app.use(['/api/operator', '/api/renter', '/api/driver'], attachUser);
+app.use('/api/driver', driverDashboardRoutes);
+>>>>>>> 843005267ed67a514bca289082e4252b6d5746be
 app.use('/api/renter/dashboard', renterDashboardRoutes);
+app.use('/api/operator', operatorOverviewRoutes);
+app.use('/api/operator/trips', tripMonitoringRoutes);
 
 app.use('/api/renter/bookings', renterChangeRoutes);
 app.use('/api/renter/bookings', chargeRoutes.renterBookingRoutes);

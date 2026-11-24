@@ -4,7 +4,7 @@ import Icon from './BookingIcon';
 export default function BookingSidebar() {
   return (
     <aside className="dispatch-sidebar">
-      <NavLink className="dispatch-brand" to="/operator/bookings">
+      <NavLink className="dispatch-brand" to="/operator/dashboard">
         <span className="brand-mark">
           <Icon name="car" size={24} />
         </span>
@@ -14,26 +14,39 @@ export default function BookingSidebar() {
       </NavLink>
       <div className="sidebar-label">KHÔNG GIAN LÀM VIỆC</div>
       <nav aria-label="Điều hướng điều hành">
-        <a href="/operator/bookings#overview">
+        <NavLink
+          to="/operator/dashboard"
+          className={({ isActive }) => (isActive ? 'active' : '')}
+        >
           <Icon name="grid" />
           Tổng quan điều hành
-        </a>
+        </NavLink>
         <NavLink to="/operator/bookings">
           <Icon name="route" />
           Điều phối chuyến đi
+        </NavLink>
+        <NavLink to="/operator/trip-monitoring" aria-label="Theo dõi chuyến">
+          <Icon name="pin" />
+          Theo dõi chuyến
         </NavLink>
         <NavLink to="/operator/booking-change-requests" aria-label="Thay đổi lịch trình">
           <Icon name="calendar" />
           Thay đổi lịch trình
         </NavLink>
-        <a href="/operator/bookings#booking-list">
+        <NavLink
+          to="/operator/booking-management"
+          className={({ isActive }) => (isActive ? 'active' : '')}
+        >
           <Icon name="list" />
           Quản lý đặt xe
-        </a>
-        <a href="/operator/bookings#available-vehicles">
+        </NavLink>
+        <NavLink
+          to="/operator/vehicles"
+          className={({ isActive }) => (isActive ? 'active' : '')}
+        >
           <Icon name="car" />
           Xe sẵn sàng
-        </a>
+        </NavLink>
       </nav>
       <div className="sidebar-bottom">
         <div className="sidebar-help">
