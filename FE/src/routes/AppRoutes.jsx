@@ -7,6 +7,8 @@ import VietTourHomePage from '../features/home/pages/VietTourHomePage.js';
 import RenterDashboardPage from '../features/renter-dashboard/pages/RenterDashboardPage.js';
 import RolePermissionManagementPage from '../features/role-management/pages/RolePermissionManagementPage.jsx';
 import ManagerDashboardPage from '../features/manager-dashboard/pages/ManagerDashboardPage.jsx';
+import MaintenanceApprovalsPage from '../features/manager-dashboard/pages/MaintenanceApprovalsPage.jsx';
+import { MAINTENANCE_APPROVALS_PATH } from '../features/manager-dashboard/managerDashboardConfig.js';
 import GarageLayout from '../features/garage/components/GarageLayout.jsx';
 import GarageDashboardPage from '../features/garage/pages/GarageDashboardPage.jsx';
 import GarageTaskPage from '../features/garage/pages/GarageTaskPage.jsx';
@@ -34,6 +36,7 @@ export default function AppRoutes() {
       </Route>
       <Route element={<RequireRole role="manager" />}>
         <Route path="/manager/dashboard" element={<ManagerDashboardPage />} />
+        <Route path={MAINTENANCE_APPROVALS_PATH} element={<MaintenanceApprovalsPage />} />
       </Route>
       <Route element={<RequireRole role="renter" />}>
         <Route path="/renter/dashboard" element={<RenterDashboardPage />} />

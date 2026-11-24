@@ -1,23 +1,25 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { bookingCode } from '../../bookings/bookingConstants';
-import { garageError, submitGarageInspection, updateGarageMaintenance } from '../api/garageApi';
-import { GARAGE_TASKS_PATH } from '../garageConstants';
+import { bookingCode, dateTime } from '../../bookings/bookingConstants';
+import { garageError, recordGarageRepair, submitGarageInspection, updateGarageMaintenance } from '../api/garageApi';
+import { GARAGE_TASKS_PATH, INSPECTION_RESULTS } from '../garageConstants';
+import { GarageReinspectionForm, GarageRepairForm } from './GarageMaintenanceForms';
 
 export default function GarageMaintenanceActions({ task, onUpdate }) {
-  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const lastCheck = task.latest_inspection;
-  const canClose = lastCheck && ['pass', 'passed'].includes(lastCheck.result)
-    && new Date(lastCheck.inspected_at) >= new Date(task.maintenance?.started_at || 0);
+  const { maintenance, reinspection, status, archived, needs_approval: needsApproval } = task;
+  const id = maintenance.maintenance_id;
+  const lastDecision = maintenance.approvals?.at(-1);
+  const awaitingApproval = status === 'awaiting_approval';
 
   async function run(action) {
     setBusy(true);
     setError('');
     try {
       await action();
-      setOpen(false);
+      setForm('');
       onUpdate();
     } catch (failure) {
       setError(garageError(failure));
@@ -26,60 +28,67 @@ export default function GarageMaintenanceActions({ task, onUpdate }) {
     }
   }
 
-  function inspect(event) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const note = form.get('note').trim();
-    if (!note) {
-      setError('Vui lòng ghi tình trạng xe.');
-      return;
-    }
-    run(() => submitGarageInspection({
-      booking_id: task.booking_id ?? null,
-      vehicle_id: task.vehicle_id,
-      inspection_type: 'periodic',
-      result: event.nativeEvent.submitter?.value || 'passed',
-      condition_note: note,
-      odometer: Number(form.get('odometer')),
+  function recheck(details) {
+    return run(() => submitGarageInspection({
+      ...details, vehicle_id: task.vehicle_id, maintenance_id: id, inspection_type: 'periodic',
     }));
   }
 
   return (
     <>
-      {task.damage_sources?.length > 0 && (
-        <ul className="garage-check-photos">
-          {task.damage_sources.map((source) => (
-            <li key={source.inspection_id}>
-              <Link to={`${GARAGE_TASKS_PATH}/return-${source.booking_id}/${task.vehicle_id}`}>
-                Hồ sơ hư hỏng {bookingCode(source.booking_id)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      {open ? (
-        <form className="garage-inspection-form" onSubmit={inspect}>
-          <label>Tình trạng xe<textarea name="note" rows={2} maxLength={1000} required disabled={busy} /></label>
-          <label>Số km<input name="odometer" type="number" min="0" step="0.1" required disabled={busy} /></label>
-          <div>
-            <button value="passed" disabled={busy}>Ghi nhận đạt</button>
-            <button className="garage-fail-button" value="failed" disabled={busy}>Không đạt</button>
-            <button className="garage-cancel-button" type="button" disabled={busy} onClick={() => setOpen(false)}>Hủy</button>
-          </div>
-        </form>
-      ) : (
-        <div className="garage-maintenance-actions">
-          <button className="dispatch-button subtle compact" disabled={busy} onClick={() => { setError(''); setOpen(true); }}>
-            Kiểm tra sau sửa chữa
-          </button>
-          {canClose && (
-            <button className="dispatch-button primary compact" disabled={busy}
-              onClick={() => run(() => updateGarageMaintenance(task.maintenance.maintenance_id, 'completed'))}
-            >
-              Đưa xe về sẵn sàng
-            </button>
-          )}
+      {task.damage_sources?.map((source) => (
+        <Link key={source.inspection_id} to={`${GARAGE_TASKS_PATH}/return-${source.booking_id}/${task.vehicle_id}`}>
+          Hồ sơ hư hỏng {bookingCode(source.booking_id)}
+        </Link>
+      ))}
+      {maintenance.repair_completed_at && (
+        <div className="garage-check-note">
+          <strong>Sửa chữa · {dateTime(maintenance.repair_completed_at)}</strong>
+          <div>{maintenance.repair_work}</div>
+          <div>{maintenance.repair_result}</div>
         </div>
+      )}
+      {reinspection && (
+        <div className="garage-check-note">
+          <strong>Kiểm tra lại · {INSPECTION_RESULTS[reinspection.result]}</strong>
+          <div>{dateTime(reinspection.inspected_at)} · {reinspection.odometer} km</div>
+          <div>{reinspection.condition_note}</div>
+        </div>
+      )}
+      {lastDecision?.decision === 'reject' && (
+        <p className="dispatch-alert">Manager trả phiếu · {lastDecision.note}</p>
+      )}
+      {status === 'completed' && <p className="garage-check-hint">Đã hoàn tất phiếu bảo dưỡng · {dateTime(maintenance.completed_at)}</p>}
+      {awaitingApproval && (
+        <div className="garage-maintenance-actions">
+          <p className="garage-check-hint" role="status">Phiếu đang chờ Manager duyệt.</p>
+          <button className="dispatch-button subtle compact" onClick={onUpdate}>Làm mới</button>
+        </div>
+      )}
+      {!archived && !awaitingApproval && (
+        <>
+          {form === 'repair' && <GarageRepairForm maintenance={maintenance} needsApproval={needsApproval} busy={busy}
+            onSave={(details) => run(() => recordGarageRepair(id, details))} onCancel={() => setForm('')} />}
+          {form === 'recheck' && <GarageReinspectionForm busy={busy} onSave={recheck} onCancel={() => setForm('')} />}
+          {!form && (
+            <div className="garage-maintenance-actions">
+              <button className="dispatch-button subtle compact" disabled={busy} onClick={() => setForm('repair')}>
+                {maintenance.repair_completed_at ? 'Cập nhật sửa chữa' : 'Ghi kết quả sửa chữa'}
+              </button>
+              {maintenance.repair_completed_at && (
+                <button className="dispatch-button subtle compact" disabled={busy} onClick={() => setForm('recheck')}>
+                  Kiểm tra sau sửa chữa
+                </button>
+              )}
+              {reinspection?.result === 'passed' && (
+                <button className="dispatch-button primary compact" disabled={busy}
+                  onClick={() => run(() => updateGarageMaintenance(id, 'completed', reinspection.inspection_id))}>
+                  {needsApproval ? 'Gửi Manager duyệt' : 'Hoàn tất phiếu'}
+                </button>
+              )}
+            </div>
+          )}
+        </>
       )}
       {error && <p className="dispatch-alert" role="alert">{error}</p>}
     </>

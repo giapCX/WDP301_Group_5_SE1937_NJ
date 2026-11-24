@@ -1,0 +1,26 @@
+.manager-maintenance-list { display: grid; gap: 12px; }
+.manager-maintenance-card {
+  padding: 16px;
+  border: 1px solid var(--manager-border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.manager-maintenance-card h2 { margin: 0 0 4px; color: #1b3553; font-size: 16px; }
+.manager-maintenance-card dl { padding: 12px; border-radius: 6px; background: #f4f7fb; }
+.manager-maintenance-card dd { margin: 0 0 8px; white-space: pre-wrap; }
+.manager-maintenance-card dd:last-child { margin-bottom: 0; }
+.manager-maintenance-card fieldset { display: grid; gap: 8px; }
+.manager-maintenance-card label { display: grid; gap: 4px; font-weight: 600; }
+.manager-maintenance-card :is(textarea, select) {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid #cbd7e5;
+  border-radius: 6px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-weight: 400;
+}
+.manager-maintenance-card form + p { margin: 8px 0 0; }

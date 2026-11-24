@@ -14,6 +14,7 @@ const driverDashboardRoutes = require('./src/routes/driver-dashboard.routes');
 const homepageRoutes = require('./src/routes/homepage.routes');
 const renterDashboardRoutes = require('./src/routes/renter-dashboard.routes');
 const managerDashboardRoutes = require('./src/routes/manager-dashboard.routes');
+const managerMaintenanceRoutes = require('./src/routes/manager-maintenance.routes');
 const tripWorkflowRoutes = require('./src/routes/trip-workflow.routes');
 const garageWorkflowRoutes = require('./src/routes/garage-workflow.routes');
 
@@ -34,6 +35,7 @@ app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
 app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver'], attachUser);
 app.use('/api/manager/dashboard', managerDashboardRoutes);
+app.use('/api/manager/maintenance-approvals', managerMaintenanceRoutes);
 app.use('/api/driver', driverDashboardRoutes);
 app.use('/api/renter/dashboard', renterDashboardRoutes);
 app.use('/api/operator', operatorOverviewRoutes);

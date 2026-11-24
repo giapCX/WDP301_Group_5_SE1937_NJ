@@ -39,7 +39,13 @@ export default function DriverWorkflowPanel() {
             Xác nhận trả xe cho Gara
           </button>
         )}
-        {!['completed','reassignment_required','routed_to_booking_changes'].includes(w.stage) && <><button className="workflow-secondary" disabled={waiting} onClick={() => incident(item, 'other')}>Báo sự cố / yêu cầu hỗ trợ</button><button className="workflow-secondary" disabled={waiting} onClick={() => incident(item, 'customer_route_change')}>Khách đổi điểm dừng</button><button className="workflow-danger" disabled={waiting} onClick={() => incident(item, 'vehicle_failure')}>Báo xe hỏng</button></>}
+        {!['completed', 'reassignment_required', 'routed_to_booking_changes', 'vehicle_replacement_required'].includes(w.stage) && (
+          <>
+            <button className="workflow-secondary" disabled={waiting} onClick={() => incident(item, 'other')}>Báo sự cố / yêu cầu hỗ trợ</button>
+            <button className="workflow-secondary" disabled={waiting} onClick={() => incident(item, 'customer_route_change')}>Khách đổi điểm dừng</button>
+            <button className="workflow-danger" disabled={waiting} onClick={() => incident(item, 'vehicle_failure')}>Báo xe hỏng</button>
+          </>
+        )}
       </div>
       {(w.stage === 'awaiting_vehicle' || item.handover?.status === 'accepted') && (
         <DriverVehicleHandover key={item.handover?.inspection_id || 'waiting'} item={item} clock={clock} busy={waiting}

@@ -12,7 +12,9 @@ export default function ManagerSidebar({ activeHref }) {
       </a>
       <div className="manager-nav-caption">PHÂN HỆ ĐIỀU HÀNH</div>
       <nav className="manager-nav" aria-label="Điều hướng Manager">
-        {MANAGER_NAVIGATION.map((item) => <a key={item.href} className={`manager-nav-link ${activeItem === item.href ? 'active' : ''}`} aria-current={activeItem === item.href ? 'page' : undefined} href={item.href} onClick={() => setActiveItem(item.href)}>
+        {MANAGER_NAVIGATION.map((item) => <a key={item.href} className={`manager-nav-link ${activeItem === item.href ? 'active' : ''}`} aria-current={activeItem === item.href ? 'page' : undefined}
+          href={!activeHref.startsWith('#') && item.href.startsWith('#') ? '/manager/dashboard' + item.href : item.href}
+          onClick={() => setActiveItem(item.href)}>
           <ManagerIcon name={item.icon} size={16}/><span>{item.label}</span>{activeItem === item.href && <i/>}
         </a>)}
       </nav>

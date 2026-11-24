@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const sample = require('../src/config/sample-data');
 const { router: authRouter, attachUser } = require('../src/routes/auth.routes');
 const garageRouter = require('../src/routes/garage-workflow.routes');
+const managerMaintenanceRouter = require('../src/routes/manager-maintenance.routes');
 const tripRouters = require('../src/routes/trip-workflow.routes');
 const errors = require('../middlewares/error.middleware');
 
@@ -61,14 +62,15 @@ test('garage verifies the current vehicle and preserves the handover, return and
     app.use('/api/auth', authRouter);
     app.use('/api/operator/dispatch', attachUser, tripRouters.operator);
     app.use('/api/driver/workflow', attachUser, tripRouters.driver);
+    app.use('/api/manager/maintenance-approvals', attachUser, managerMaintenanceRouter);
     app.use(errors);
     server = app.listen(0, '127.0.0.1');
     await once(server, 'listening');
     const base = 'http://127.0.0.1:' + server.address().port;
 
-    function request(path, cookie, body) {
+    function request(path, cookie, body, method = body === undefined ? 'GET' : 'POST') {
       return fetch(base + '/api' + path, {
-        method: body === undefined ? 'GET' : 'POST',
+        method,
         headers: { ...(cookie && { Cookie: cookie }), ...(body && { 'Content-Type': 'application/json' }) },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
@@ -81,7 +83,7 @@ test('garage verifies the current vehicle and preserves the handover, return and
       return response.headers.get('set-cookie').split(';')[0];
     }
 
-    const [operator, garage, driverOne, driverTwo] = await Promise.all([3, 4, 5, 6].map(login));
+    const [manager, operator, garage, driverOne, driverTwo] = await Promise.all([2, 3, 4, 5, 6].map(login));
     const inspect = (booking, vehicle, changes = {}) => request('/garage/inspections', garage, {
       booking_id: booking, vehicle_id: vehicle, inspection_type: 'handover', result: 'passed',
       condition_note: 'Kiểm tra tình trạng xe', odometer: 1400.5, fuel_percent: 65, checklist,
@@ -101,6 +103,21 @@ test('garage verifies the current vehicle and preserves the handover, return and
     const returnCheck = (booking, vehicle, changes = {}) => inspect(booking, vehicle, {
       inspection_type: 'return', odometer: 1505, fuel_percent: 44, ...changes,
     });
+    const repairInput = { repair_work: 'Thay chi tiết hỏng', repair_result: 'Đã lắp lại và thử vận hành' };
+    const repair = (id, changes = {}) => request('/garage/maintenance/' + id + '/repair', garage, {
+      ...repairInput, ...changes,
+    }, 'PATCH');
+    const recheck = (id, vehicle, result = 'passed') => request('/garage/inspections', garage, {
+      maintenance_id: id, vehicle_id: vehicle, inspection_type: 'periodic',
+      result, condition_note: 'Kiểm tra vận hành sau sửa', odometer: 1510,
+    });
+    const finishMaintenance = (id, inspection_id) => request('/garage/maintenance/' + id, garage, {
+      status: 'completed', inspection_id,
+    }, 'PATCH');
+    const approvalsPath = '/manager/maintenance-approvals';
+    const decide = (id, inspection_id, decision, note, cookie = manager) => request(approvalsPath + '/' + id, cookie, {
+      inspection_id, decision, note,
+    }, 'PATCH');
     async function reportTrip(booking, driver) {
       const path = '/driver/workflow/' + booking;
       assert.equal((await request(path + '/update', driver, { kind: 'outbound_completed' })).status, 200);
@@ -115,6 +132,8 @@ test('garage verifies the current vehicle and preserves the handover, return and
     const legacy = await loadTask(92);
     assert.equal(legacy.inspection.inspection_id, 81);
     assert.equal(legacy.inspection.checklist, undefined);
+    assert.equal((await request('/garage/tasks?date=2026-02-30', garage)).status, 400);
+    assert.equal((await request('/garage/tasks?date=2024-02-29', garage)).status, 200);
     assert.equal((await assign(90, 1, 2)).status, 200);
     assert.equal((await loadTask(90)).workflow_stage, 'awaiting_driver');
     assert.equal((await inspect(90, 2)).status, 409);
@@ -182,6 +201,9 @@ test('garage verifies the current vehicle and preserves the handover, return and
     const replies = await Promise.all([receive(90, driverOne, nextId), receive(90, driverOne, nextId)]);
     assert.deepEqual(replies.map((response) => response.status).sort(), [200, 409]);
     assert.equal((await db.collection('vehicles').findOne({ vehicle_id: 2 })).status, 'in_use');
+    assert.equal((await assign(90, 1, 7)).status, 409);
+    assert.equal((await db.collection('trip_workflows').findOne({ booking_id: 90 })).stage, 'to_pickup');
+    assert.equal((await db.collection('bookings').findOne({ booking_id: 90 })).vehicle_id, 2);
     assert.equal((await db.collection('vehicle_handovers').findOne({ inspection_id: inspection.inspection_id })).status, 'declined');
     const archived = await request('/garage/tasks/handover-90/2', garage);
     const { data: archive } = await archived.json();
@@ -201,10 +223,17 @@ test('garage verifies the current vehicle and preserves the handover, return and
 
     assert.equal((await request('/driver/workflow/90/update', driverOne, { kind: 'picked_up' })).status, 200);
     await db.collection('bookings').updateOne({ booking_id: 90 }, { $set: { pickup_time: pastPickup } });
-    assert.equal((await request('/driver/workflow/90/incident', driverOne, {
+    const failureReports = await Promise.all([1, 2].map(() => request('/driver/workflow/90/incident', driverOne, {
       kind: 'vehicle_failure', description: 'Xe không thể tiếp tục chuyến',
-    })).status, 200);
-    assert.equal((await request('/operator/dispatch/90/replace-vehicle', operator, { vehicle_id: 7 })).status, 200);
+    })));
+    assert.deepEqual(failureReports.map((response) => response.status).sort(), [200, 409]);
+    assert.equal(await db.collection('incidents').countDocuments({ booking_id: 90 }), 1);
+    assert.equal((await db.collection('maintenance_records').findOne({ vehicle_id: 2 })).requires_manager_approval, true);
+    const replacements = await Promise.all([1, 2].map(() => request('/operator/dispatch/90/replace-vehicle', operator, { vehicle_id: 7 })));
+    assert.deepEqual(replacements.map((response) => response.status).sort(), [200, 409]);
+    const replacedWorkflow = await db.collection('trip_workflows').findOne({ booking_id: 90 });
+    assert.equal(replacedWorkflow.vehicle_received_at, null);
+    assert.equal(replacedWorkflow.history.filter((event) => event.action === 'vehicle_replaced').length, 1);
     const replacedCheck = await inspect(90, 7);
     assert.equal(replacedCheck.status, 201);
     const replacedId = (await replacedCheck.json()).data.inspection.inspection_id;
@@ -241,6 +270,22 @@ test('garage verifies the current vehicle and preserves the handover, return and
     const returnPhoto = await request('/garage/inspections/' + afterReturn.inspection.inspection_id + '/photos/1', garage);
     assert.deepEqual(Buffer.from(await returnPhoto.arrayBuffer()), png);
     assert.equal(await db.collection('maintenance_records').countDocuments({ vehicle_id: 7 }), 1);
+    const maintenance = await db.collection('maintenance_records').findOne({ vehicle_id: 7 });
+    const maintenanceId = maintenance.maintenance_id;
+    assert.equal((await recheck(maintenanceId, 7)).status, 409);
+    assert.equal((await repair(maintenanceId, { repair_work: '   ' })).status, 400);
+    assert.equal((await repair(maintenanceId)).status, 200);
+    for (const odometer of ['', null, false]) {
+      const invalidRecheck = await request('/garage/inspections', garage, {
+        maintenance_id: maintenanceId, vehicle_id: 7, inspection_type: 'periodic',
+        result: 'passed', condition_note: 'Kiểm tra vận hành', odometer,
+      });
+      assert.equal(invalidRecheck.status, 400);
+    }
+    assert.equal((await recheck(maintenanceId, 2)).status, 409);
+    assert.equal((await finishMaintenance(maintenanceId)).status, 409);
+    assert.equal((await recheck(maintenanceId, 7)).status, 201);
+    assert.equal((await finishMaintenance(maintenanceId)).status, 409);
     assert.equal((await confirmReturn(90, driverTwo)).status, 404);
     assert.equal((await confirmReturn(90, driverOne)).status, 200);
     assert.equal((await confirmReturn(90, driverOne)).status, 409);
@@ -264,9 +309,9 @@ test('garage verifies the current vehicle and preserves the handover, return and
     ]);
     assert.deepEqual(reports.map((response) => response.status).sort(), [201, 409]);
     const { data: damage } = await reports.find((response) => response.status === 201).json();
-    const maintenance = await db.collection('maintenance_records').findOne({ vehicle_id: 7 });
-    assert.equal(damage.maintenance_id, maintenance.maintenance_id);
-    const maintenanceDetail = await request('/garage/tasks/maintenance-' + maintenance.maintenance_id + '/7', garage);
+    assert.equal(damage.maintenance_id, maintenanceId);
+    const maintenancePath = '/garage/tasks/maintenance-' + maintenanceId + '/7';
+    const maintenanceDetail = await request(maintenancePath, garage);
     assert.deepEqual((await maintenanceDetail.json()).data.damage_sources, [{ booking_id: 90, inspection_id: failedId }]);
     assert.equal(damage.photo_count, 1);
     assert.equal(damage.photos, undefined);
@@ -291,6 +336,71 @@ test('garage verifies the current vehicle and preserves the handover, return and
     assert.equal(resolvedReturn.damage_report.incident.resolution_note, 'Chuyển Gara kiểm tra phanh');
     assert.equal((await db.collection('trip_workflows').findOne({ booking_id: 90 })).stage, 'completed');
     assert.equal((await db.collection('vehicles').findOne({ vehicle_id: 7 })).status, 'maintenance');
+
+    assert.equal((await recheck(maintenanceId, 7, 'failed')).status, 201);
+    assert.equal((await finishMaintenance(maintenanceId)).status, 409);
+    const passedRecheck = await recheck(maintenanceId, 7);
+    assert.equal(passedRecheck.status, 201);
+    const { data: { inspection: firstRecheck } } = await passedRecheck.json();
+    assert.equal(firstRecheck.maintenance_id, maintenanceId);
+    const submitted = await finishMaintenance(maintenanceId);
+    assert.equal(submitted.status, 200);
+    assert.equal((await submitted.json()).data.status, 'awaiting_approval');
+    assert.equal((await db.collection('vehicles').findOne({ vehicle_id: 7 })).status, 'maintenance');
+    await db.collection('bookings').insertOne({
+      ...sample.bookings[0], booking_id: 94, booking_status: 'confirmed', vehicle_id: 7,
+      requested_seat_count: 7, pickup_time: pickup, estimated_end_time: end,
+    });
+    const blockedAssignment = await assign(94, 1, 7);
+    assert.equal(blockedAssignment.status, 409);
+    assert.match((await blockedAssignment.json()).message, /bảo dưỡng/i);
+    assert.equal((await repair(maintenanceId)).status, 409);
+    assert.equal((await recheck(maintenanceId, 7)).status, 409);
+    assert.equal((await request(approvalsPath, garage)).status, 403);
+    assert.equal((await decide(maintenanceId, firstRecheck.inspection_id, 'approve', '', garage)).status, 403);
+    assert.equal((await request(maintenancePath, manager)).status, 403);
+    const { data: queue } = await (await request(approvalsPath, manager)).json();
+    assert.equal(queue[0].maintenance_id, maintenanceId);
+    assert.equal(queue[0].vehicle.plate_number, '51A-GARA07');
+    assert.equal(queue[0].repair_work, repairInput.repair_work);
+    assert.equal(queue[0].reinspection.inspection_id, firstRecheck.inspection_id);
+
+    assert.equal((await decide(maintenanceId, firstRecheck.inspection_id, 'reject', '')).status, 400);
+    const reason = 'Kiểm tra lại lực phanh';
+    assert.equal((await decide(maintenanceId, firstRecheck.inspection_id, 'reject', reason)).status, 200);
+    const { data: returnedToGarage } = await (await request(maintenancePath, garage)).json();
+    assert.equal(returnedToGarage.maintenance.approvals.at(-1).note, reason);
+    assert.equal(returnedToGarage.maintenance.repair_completed_at, null);
+    assert.equal(returnedToGarage.reinspection, null);
+    assert.equal((await recheck(maintenanceId, 7)).status, 409);
+    assert.equal((await repair(maintenanceId)).status, 200);
+    const { data: { inspection: finalRecheck } } = await (await recheck(maintenanceId, 7)).json();
+    assert.equal((await finishMaintenance(maintenanceId, firstRecheck.inspection_id)).status, 409);
+    assert.equal((await finishMaintenance(maintenanceId, finalRecheck.inspection_id)).status, 200);
+    assert.equal((await decide(maintenanceId, firstRecheck.inspection_id, 'approve')).status, 409);
+
+    const otherId = 500;
+    await db.collection('maintenance_records').insertOne({
+      maintenance_id: otherId, vehicle_id: 7, reported_by: 4, maintenance_status: 'pending',
+      description: 'Sửa nội thất',
+    });
+    const decisions = await Promise.all([1, 2].map(() => decide(maintenanceId, finalRecheck.inspection_id, 'approve')));
+    assert.deepEqual(decisions.map((response) => response.status).sort(), [200, 409]);
+    const { data: closedMaintenance } = await (await request(maintenancePath, garage)).json();
+    assert.equal(closedMaintenance.archived, true);
+    assert.deepEqual(closedMaintenance.maintenance.approvals.map((entry) => entry.decision), ['reject', 'approve']);
+    assert.equal((await db.collection('vehicles').findOne({ vehicle_id: 7 })).status, 'maintenance');
+    assert.equal((await repair(otherId)).status, 200);
+    assert.equal((await recheck(otherId, 7)).status, 201);
+    const standardCompletion = await finishMaintenance(otherId);
+    assert.equal(standardCompletion.status, 200);
+    assert.equal((await standardCompletion.json()).data.status, 'completed');
+    assert.equal((await db.collection('vehicles').findOne({ vehicle_id: 7 })).status, 'available');
+    assert.equal((await request('/driver/workflow/90/incident', driverOne, {
+      kind: 'vehicle_failure', description: 'Gửi báo hỏng từ màn hình chuyến đã hoàn tất',
+    })).status, 409);
+    assert.equal((await db.collection('vehicles').findOne({ vehicle_id: 7 })).status, 'available');
+    assert.equal((await assign(94, 1, 7)).status, 200);
 
     const { data: { inspection: nextVehicle } } = await (await inspect(91, 6)).json();
     assert.equal((await prepare(91, 6, nextVehicle.inspection_id)).status, 201);
@@ -318,6 +428,24 @@ test('garage verifies the current vehicle and preserves the handover, return and
     assert.equal((await uploaded.json()).data.incident_id, null);
     const uploadedPhoto = await request('/garage/damages/1000/photos/1', garage);
     assert.deepEqual(Buffer.from(await uploadedPhoto.arrayBuffer()), png);
+    await db.collection('bookings').insertOne({
+      ...sample.bookings[0], booking_id: 93, vehicle_id: 3, booking_status: 'in_progress',
+    });
+    await db.collection('trip_workflows').insertOne({
+      booking_id: 93, vehicle_id: 3, driver_id: 1, stage: 'awaiting_vehicle_return',
+      service_type: 'one_way', driver_response: 'accepted', vehicle_received: true,
+      end_odometer: 900, created_at: pickup, updated_at: pickup,
+    });
+    await db.collection('trip_assignments').insertOne({
+      assignment_id: 1000, booking_id: 93, driver_id: 1, assigned_by: 3,
+      assigned_at: pickup, assignment_status: 'in_progress',
+    });
+    await db.collection('vehicles').updateOne({ vehicle_id: 3 }, { $set: { status: 'in_use' } });
+    assert.equal((await confirmReturn(93, driverOne)).status, 200);
+    const legacyMaintenance = await db.collection('maintenance_records').findOne({ vehicle_id: 3 });
+    assert.equal(legacyMaintenance.maintenance_status, 'in_progress');
+    assert.equal((await db.collection('vehicles').findOne({ vehicle_id: 3 })).status, 'maintenance');
+    assert.equal((await db.collection('vehicle_damages').findOne({ inspection_id: 1000 })).maintenance_id, legacyMaintenance.maintenance_id);
   } finally {
     if (server) await new Promise((resolve) => server.close(resolve));
     if (db.databaseName === dbName) await db.dropDatabase();

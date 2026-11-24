@@ -1,9 +1,12 @@
+export const MAINTENANCE_APPROVALS_PATH = '/manager/maintenance-approvals';
+
 export const MANAGER_NAVIGATION = [
   { label: 'Tổng quan & Báo cáo', href: '#manager-overview', icon: 'grid' },
   { label: 'Quản lý đội xe', href: '#manager-fleet', icon: 'car' },
   { label: 'Hiệu suất tài xế', href: '#manager-driver-performance', icon: 'users' },
   { label: 'Doanh thu & Tài chính', href: '#manager-revenue', icon: 'chart' },
   { label: 'Phê duyệt & Định mức', href: '#manager-approvals', icon: 'check' },
+  { label: 'Duyệt phiếu bảo dưỡng', href: MAINTENANCE_APPROVALS_PATH, icon: 'wrench' },
 ];
 
 export const VEHICLE_STATUS_META = {

@@ -24,8 +24,11 @@ export async function submitGarageInspection(input) {
 export function inspectionPhotoUrl(id, index) {
   return api.getUri({ url: '/garage/inspections/' + id + '/photos/' + index });
 }
-export async function updateGarageMaintenance(id, status) {
-  return (await api.patch(`/garage/maintenance/${id}`, { status })).data.data;
+export async function updateGarageMaintenance(id, status, inspectionId) {
+  return (await api.patch(`/garage/maintenance/${id}`, { status, inspection_id: inspectionId })).data.data;
+}
+export async function recordGarageRepair(id, input) {
+  return (await api.patch(`/garage/maintenance/${id}/repair`, input)).data.data;
 }
 export function garageError(error) {
   return error.response?.data?.message || 'Không thể cập nhật nhiệm vụ gara.';

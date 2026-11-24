@@ -4,28 +4,18 @@ const {
 } = require('../models');
 const { lockVehicleSchedule, runInTransaction } = require('../repositories/booking.repository');
 const HttpError = require('../utils/http-error');
+const { positiveId: id } = require('../utils/numeric-id');
+const addTripHistory = require('../utils/trip-history');
+const { openMaintenance } = require('./garage-maintenance.service');
 
-const CLOSED_MAINTENANCE = ['completed', 'closed', 'cancelled'];
 const ACTIVE_ASSIGNMENTS = ['assigned', 'accepted', 'in_progress'];
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function id(value) {
-  const number = Number(value);
-  if (!Number.isSafeInteger(number) || number < 1) throw new HttpError(400, 'Mã hồ sơ không hợp lệ');
-  return number;
-}
 
 function transact(work) {
   return runInTransaction((session) => {
     if (!session) throw new HttpError(503, 'Cần MongoDB replica set để lưu biên bản bàn giao');
     return work(session);
   });
-}
-
-function addHistory(workflow, action, actorId, note = null) {
-  const createdAt = new Date();
-  workflow.history.push({ action, actor_id: actorId, note, created_at: createdAt });
-  workflow.updated_at = createdAt;
 }
 
 function assertAwaitingHandover(workflow) {
@@ -69,7 +59,7 @@ async function create(input, staffId) {
     if (existing) return existing.toObject();
 
     workflow.handover_inspection_id = inspectionId;
-    addHistory(workflow, 'handover_prepared', staffId);
+    addTripHistory(workflow, 'handover_prepared', staffId);
     await workflow.save({ session });
     const [handover] = await VehicleHandover.create([{
       inspection_id: inspectionId, booking_id: bookingId, vehicle_id: vehicleId,
@@ -89,7 +79,7 @@ async function recheck(inspectionId, staffId) {
       throw new HttpError(409, 'Chỉ kiểm tra lại biên bản hiện tại đã bị từ chối');
     }
     workflow.handover_inspection_id = null;
-    addHistory(workflow, 'handover_recheck', staffId, handover.refusal_reason);
+    addTripHistory(workflow, 'handover_recheck', staffId, handover.refusal_reason);
     await workflow.save({ session });
     return { booking_id: handover.booking_id };
   });
@@ -131,9 +121,7 @@ async function respond(bookingId, driverId, actorId, action, input) {
       }).session(session).lean();
       if (!Number.isFinite(inspection?.odometer)) throw new HttpError(409, 'Biên bản thiếu số km kiểm tra xe');
       const vehicle = await lockVehicleSchedule(workflow.vehicle_id, session);
-      const maintenance = await MaintenanceRecord.exists({
-        vehicle_id: workflow.vehicle_id, maintenance_status: { $nin: CLOSED_MAINTENANCE },
-      }).session(session);
+      const maintenance = await MaintenanceRecord.exists(openMaintenance(workflow.vehicle_id)).session(session);
       if (!vehicle || !['available', 'in_use'].includes(vehicle.status) || maintenance) {
         throw new HttpError(409, 'Xe đang bảo dưỡng hoặc không sẵn sàng để nhận');
       }
@@ -148,7 +136,7 @@ async function respond(bookingId, driverId, actorId, action, input) {
     currentHandover.responded_by = actorId;
     currentHandover.responded_at = respondedAt;
     currentHandover.refusal_reason = received ? null : reason;
-    addHistory(workflow, action, actorId, currentHandover.refusal_reason);
+    addTripHistory(workflow, action, actorId, currentHandover.refusal_reason);
     await currentHandover.save({ session });
     await workflow.save({ session });
     return workflow.toObject();

@@ -1,25 +1,25 @@
-import { NavLink, Outlet, useMatch, useOutletContext } from 'react-router-dom';
+import { Outlet, useLocation, useMatch, useOutletContext } from 'react-router-dom';
 import SignOutButton from '../../auth/components/SignOutButton';
 import Icon from '../../bookings/components/BookingIcon';
-import { DispatchSidebar } from '../../bookings/components/BookingSidebar';
-import { GARAGE_TASKS_PATH } from '../garageConstants';
+import { GARAGE_TASKS_PATH, getGarageTaskView } from '../garageConstants';
+import GarageSidebar from './GarageSidebar';
 import '../../bookings/styles/bookings.css';
 import '../styles/garage.css';
 
 export default function GarageLayout() {
   const user = useOutletContext();
   const dashboard = useMatch(GARAGE_TASKS_PATH);
+  const { search } = useLocation();
+  const view = getGarageTaskView(search);
 
   return (
     <div className="dispatch-app garage-dashboard">
-      <DispatchSidebar home={GARAGE_TASKS_PATH} caption="NHÂN VIÊN GARA" navigationLabel="Điều hướng Gara">
-        <NavLink to={GARAGE_TASKS_PATH}><Icon name="list" />Danh sách nhiệm vụ</NavLink>
-      </DispatchSidebar>
+      <GarageSidebar activeView={view} />
       <div className="dispatch-workspace">
         <header className="dispatch-topbar">
           <div className="dispatch-breadcrumb">
             Gara <Icon name="chevron" size={11} />
-            <strong>{dashboard ? 'Nhiệm vụ' : 'Chi tiết nhiệm vụ'}</strong>
+            <strong>{dashboard ? view.title || view.label : 'Chi tiết nhiệm vụ'}</strong>
           </div>
           <div className="garage-user-actions">
             <div className="operator-profile">
@@ -29,7 +29,7 @@ export default function GarageLayout() {
             <SignOutButton />
           </div>
         </header>
-        <main className="dispatch-content"><Outlet /></main>
+        <main className="dispatch-content"><Outlet context={view} /></main>
       </div>
     </div>
   );

@@ -8,7 +8,9 @@ Supported service types are `one_way`, `round_trip`, and `tour`. Round trips req
 
 ## Garage handover and maintenance
 
-Garage staff signs in to `/garage/tasks`. The dashboard reads active assignments, vehicle inspections and maintenance records from MongoDB. Garage records passed/failed handover and return inspections with an odometer reading and condition note. Driver receipt/return confirmation is enabled only after a passed inspection. A failed inspection or driver vehicle-failure report puts the vehicle in maintenance and creates an active maintenance record. Garage records a passed periodic inspection after repair, then closes the maintenance record to release the vehicle.
+See the [Garage workflow](../garage/README.md) for use cases, diagrams, MongoDB fields, and the demo walkthrough.
+
+Garage staff signs in to `/garage/tasks` for handover, return and maintenance tasks. A failed inspection or driver vehicle-failure report puts the vehicle in maintenance and opens a maintenance record. Garage records the repair work and result, then inspects the vehicle again on the same record. Safety-related repairs go to `/manager/maintenance-approvals`. If Manager returns a record, Garage records a new repair and inspection before resubmitting. The vehicle can become available after it returns and all open maintenance records are completed.
 
 ## Routes
 
@@ -22,4 +24,7 @@ Garage staff signs in to `/garage/tasks`. The dashboard reads active assignments
 - `POST /api/driver/workflow/:bookingId/incident`
 - `GET /api/garage/tasks?date=YYYY-MM-DD`
 - `POST /api/garage/inspections`
+- `PATCH /api/garage/maintenance/:maintenanceId/repair`
 - `PATCH /api/garage/maintenance/:maintenanceId`
+- `GET /api/manager/maintenance-approvals`
+- `PATCH /api/manager/maintenance-approvals/:maintenanceId`

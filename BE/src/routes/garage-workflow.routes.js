@@ -14,4 +14,5 @@ router.post('/handovers', json(), controller.createHandover);
 router.post('/handovers/:id/recheck', controller.recheckHandover);
 router.post('/inspections', json({ limit: '9mb' }), urlencoded({ extended: true }), controller.inspection);
 router.patch('/maintenance/:id', json(), urlencoded({ extended: true }), controller.maintenance);
+router.patch('/maintenance/:id/repair', json(), controller.repair);
 module.exports = router;

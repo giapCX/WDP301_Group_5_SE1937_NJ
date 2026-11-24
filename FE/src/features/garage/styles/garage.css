@@ -1,6 +1,17 @@
 .garage-dashboard .dispatch-page-heading {
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: clamp(14px, 2vw, 20px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.garage-dashboard .dispatch-page-heading h1 {
+  font-size: clamp(22px, 2.25vw, 30px);
 }
 
 .garage-page-actions { display:flex; align-items:flex-end; gap:12px; }
@@ -8,16 +19,7 @@
 .garage-subline { display:block; margin-top:4px; color:#8592a3; font-size:10px; }
 .garage-inspection-note { display:block; margin:7px 0 0 41px; max-width:260px; color:#748397; font-size:10px; }
 .garage-task-actions { min-width:230px; }
-.garage-inspection-form { display:grid; gap:8px; min-width:230px; }
-.garage-inspection-form label { display:grid; gap:4px; color:#52667c; font-size:10px; font-weight:650; }
-.garage-inspection-form textarea,.garage-inspection-form input { width:100%; padding:7px 8px; border:1px solid #dbe4ed; border-radius:6px; font:inherit; resize:vertical; }
-.garage-inspection-form > div,.garage-maintenance-actions { display:flex; flex-wrap:wrap; gap:6px; }
-.garage-inspection-form button { border:1px solid #d7e2f2; background:#1b65c9; color:#fff; padding:7px 9px; border-radius:6px; font-size:10px; font-weight:650; cursor:pointer; }
-.garage-inspection-form button.garage-fail-button { border-color:#f0d4d4; background:#fff5f5; color:#b33e4d; }
-.garage-inspection-form button.garage-cancel-button { background:#fff; color:#52667c; }
-.garage-inspection-form button:disabled { opacity:.55; cursor:wait; }
-.garage-dashboard .dispatch-page-heading { gap:16px; }
-
+.garage-maintenance-actions { display:flex; flex-wrap:wrap; gap:6px; }
 .garage-date {
   display: grid;
   gap: 4px;
@@ -42,7 +44,38 @@
 }
 
 .garage-dashboard .dispatch-stats {
-  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.garage-dashboard .stat-card {
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 14px;
+}
+
+.garage-dashboard .stat-icon {
+  flex-shrink: 0;
+  padding: 8px;
+}
+
+.booking-filter-fields.garage-task-filters {
+  margin-top: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.garage-task-filters .booking-search { min-width: 0; }
+
+.garage-dashboard .dispatch-empty { padding: 24px 16px 28px; }
+.garage-dashboard .dispatch-empty > svg { margin-bottom: 8px; }
+.garage-dashboard .dispatch-empty p { max-width: 52ch; margin: 0 auto; color: #52667c; }
+
+@media (max-width: 940px) {
+  .garage-dashboard .dispatch-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .garage-check-panel {
@@ -109,6 +142,13 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+.garage-check-fields .garage-safety-option {
+  display: flex;
+  align-items: center;
+}
+
+.garage-check-fields .garage-safety-option input { width: auto; }
 
 .garage-check-fields input, .garage-check-fields select, .garage-check-fields textarea {
   width: 100%;
@@ -279,22 +319,10 @@
   color: #155bd6;
 }
 
-.garage-task-detail td {
-  background: #f0f5fc;
-}
-
-.garage-task-detail p {
-  margin: 4px 0 0;
-}
-
 @media (max-width: 600px) {
   .garage-dashboard .dispatch-page-heading {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .garage-dashboard .booking-tabs {
-    flex-wrap: wrap;
   }
 
   .garage-table {
@@ -306,7 +334,7 @@
     clip-path: inset(50%);
   }
 
-  .garage-table tbody tr:not(.garage-task-detail) {
+  .garage-table tbody tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;

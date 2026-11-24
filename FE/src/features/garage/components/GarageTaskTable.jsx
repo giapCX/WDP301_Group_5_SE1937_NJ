@@ -1,11 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import Icon from '../../bookings/components/BookingIcon';
 import { DispatchStatus } from '../../bookings/components/BookingStatus';
 import { bookingCode, dateTime } from '../../bookings/bookingConstants';
 import { GARAGE_TASKS_PATH, TASK_STATUSES, TASK_TYPES } from '../garageConstants';
 
 function TaskLink({ task }) {
-  const path = GARAGE_TASKS_PATH + '/' + task.id + '/' + task.vehicle_id;
+  const { search } = useOutletContext();
+  const path = GARAGE_TASKS_PATH + '/' + task.id + '/' + task.vehicle_id + search;
   let label = 'Xem nhiệm vụ';
   if (task.inspection) label = 'Xem hồ sơ';
   else if (task.type === 'HANDOVER_OUT' && task.workflow_stage === 'awaiting_vehicle') label = 'Mở checklist';
@@ -58,15 +59,17 @@ function TaskRow({ task }) {
   );
 }
 
-export default function GarageTaskTable({ tasks, loading, error, onReset }) {
+export default function GarageTaskTable({ tasks, loading, error, view, hasFilters, onReset }) {
   if (loading) return <p className="garage-task-loading" role="status">Đang tải nhiệm vụ Gara…</p>;
   if (error) return <p className="dispatch-alert" role="alert">{error}</p>;
   if (!tasks.length) {
     return (
       <div className="dispatch-empty">
         <Icon name="calendar" size={30} />
-        <h3>Không có nhiệm vụ phù hợp</h3>
-        <button className="dispatch-button subtle" onClick={onReset}>Đặt lại bộ lọc</button>
+        <h3>{hasFilters ? 'Không có nhiệm vụ phù hợp' : view.emptyTitle}</h3>
+        {hasFilters
+          ? <button className="dispatch-button subtle compact" onClick={onReset}>Đặt lại bộ lọc</button>
+          : view.emptyDescription && <p>{view.emptyDescription}</p>}
       </div>
     );
   }

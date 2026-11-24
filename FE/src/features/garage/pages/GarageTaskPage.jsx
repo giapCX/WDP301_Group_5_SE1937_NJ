@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { bookingCode } from '../../bookings/bookingConstants';
 import { submitGarageInspection } from '../api/garageApi';
 import GarageHandoverActions from '../components/GarageHandoverActions';
@@ -11,6 +11,7 @@ import useGarageTask from '../hooks/useGarageTask';
 
 export default function GarageTaskPage() {
   const { taskId, vehicleId } = useParams();
+  const { search } = useOutletContext();
   const { task, loading, error, refresh } = useGarageTask(taskId, vehicleId);
   const preTrip = task?.type === 'HANDOVER_OUT';
   const returning = task?.type === 'RETURN_IN';
@@ -41,7 +42,7 @@ export default function GarageTaskPage() {
             </p>
           )}
         </div>
-        <Link className="dispatch-button subtle compact" to={GARAGE_TASKS_PATH}>Về danh sách nhiệm vụ</Link>
+        <Link className="dispatch-button subtle compact" to={GARAGE_TASKS_PATH + search}>Về danh sách nhiệm vụ</Link>
       </header>
       {loading && !task && <p role="status">Đang tải nhiệm vụ Gara…</p>}
       {error && <p className="dispatch-alert" role="alert">{error}</p>}
@@ -55,7 +56,7 @@ export default function GarageTaskPage() {
           : <p className="garage-check-hint">Chờ tài xế chấp nhận phân công để mở checklist.</p>
       )}
       {returning && <GarageReturnTask key={taskId + ':' + vehicleId} task={task} onSave={save} onRefresh={refresh} />}
-      {task?.type === 'MAINTENANCE' && task.status !== 'completed' && (
+      {task?.type === 'MAINTENANCE' && (
         <GarageMaintenanceActions key={taskId + ':' + vehicleId} task={task} onUpdate={refresh} />
       )}
     </section>
