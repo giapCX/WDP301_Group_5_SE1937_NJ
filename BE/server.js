@@ -29,13 +29,9 @@ app.get('/api', (req, res) => {
 });
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
-<<<<<<< HEAD
-app.use(['/api/operator', '/api/renter', '/api/manager'], attachUser);
+app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver'], attachUser);
 app.use('/api/manager/dashboard', managerDashboardRoutes);
-=======
-app.use(['/api/operator', '/api/renter', '/api/driver'], attachUser);
 app.use('/api/driver', driverDashboardRoutes);
->>>>>>> 843005267ed67a514bca289082e4252b6d5746be
 app.use('/api/renter/dashboard', renterDashboardRoutes);
 app.use('/api/operator', operatorOverviewRoutes);
 app.use('/api/operator/trips', tripMonitoringRoutes);

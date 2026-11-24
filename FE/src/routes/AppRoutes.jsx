@@ -4,7 +4,7 @@ import BookingModificationPage from '../features/booking-changes/pages/BookingMo
 import RequireRole from '../features/auth/components/RequireRole.js';
 import LoginPage from '../features/auth/pages/LoginPage.js';
 import VietTourHomePage from '../features/home/pages/VietTourHomePage.js';
-import RenterDashboardPage from '../features/renter-dashboard/pages/RenterDashboardPage.js';
+import RenterDashboardPage from '../features/renter-dashboard/pages/RenterDashboardPage.jsx';
 import RolePermissionManagementPage from '../features/role-management/pages/RolePermissionManagementPage.jsx';
 import ManagerDashboardPage from '../features/manager-dashboard/pages/ManagerDashboardPage.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
