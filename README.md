@@ -134,6 +134,21 @@ Các tài khoản demo khác cũng dùng mật khẩu `Demo@12345`:
 
 Sau khi đăng nhập Manager, ứng dụng chuyển tới `/manager/dashboard`. Đây là tài khoản demo local, không dùng trên môi trường thật.
 
+### Đăng ký tài khoản mới
+
+Tại `http://localhost:3000/login`, chọn **Đăng ký mới**, nhập họ tên, số điện thoại, email và mật khẩu. Ứng dụng gửi mã OTP 6 chữ số tới email; mã hết hạn sau 10 phút và có thể gửi lại sau 60 giây. Tài khoản đăng ký mới có vai trò Người thuê.
+
+Backend hiện gửi OTP qua Gmail. Để đăng ký hoạt động, điền tài khoản Gmail và **Google App Password** vào `BE/.env`:
+
+```env
+SMTP_USER=your-address@gmail.com
+SMTP_PASS=your-google-app-password
+```
+
+Không dùng mật khẩu Gmail thông thường và không commit các giá trị này lên Git. Sau khi sửa `.env`, khởi động lại backend. Nếu chưa cấu hình SMTP, đăng nhập vẫn dùng được với tài khoản seed ở trên nhưng đăng ký mới sẽ không gửi được OTP.
+
+Khi đã đăng nhập, trang `/login` ẩn lựa chọn đăng nhập/đăng ký và hiển thị trạng thái tài khoản. Trên dashboard Manager, nhấn **Đăng xuất** ở góc phải để xóa phiên và quay lại trang đăng nhập.
+
 ## 6. Xem database bằng MongoDB Compass
 
 1. Kết nối Compass tới `mongodb://127.0.0.1:27017`.

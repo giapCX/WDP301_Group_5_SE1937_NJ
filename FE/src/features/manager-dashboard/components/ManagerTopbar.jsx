@@ -1,10 +1,31 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../../auth/api/authApi.js';
 import { DASHBOARD_PERIODS } from '../managerDashboardConfig';
 import ManagerIcon from './ManagerIcon';
 
 export default function ManagerTopbar({ month, year, onMonthChange, onYearChange, onRefresh, user, alertCount = 0 }) {
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState('');
+  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 4 }, (_, index) => currentYear - 2 + index);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    setSignOutError('');
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch {
+      setSignOutError('Chưa thể đăng xuất. Vui lòng thử lại.');
+    } finally {
+      setSigningOut(false);
+    }
+  }
+
   return (
+    <>
     <header className="manager-topbar">
       <div className="manager-breadcrumb"><span>Điều hành</span><b>›</b><strong>Quản lý đội xe &amp; vận hành</strong></div>
       <div className="manager-top-actions">
@@ -13,7 +34,12 @@ export default function ManagerTopbar({ month, year, onMonthChange, onYearChange
         <button className="manager-top-icon manager-notification" type="button" aria-label={`Làm mới dữ liệu, ${alertCount} cảnh báo`} onClick={onRefresh}><ManagerIcon name="bell" size={16}/>{alertCount > 0 && <i/>}</button>
         <span className="manager-top-divider"/>
         <div className="manager-user"><span className="manager-user-avatar">{user?.full_name?.slice(0, 1) || 'M'}</span><span><b>{user?.full_name || 'Quản lý'}</b><small>Manager</small></span></div>
+        <button className="manager-logout" type="button" onClick={handleSignOut} disabled={signingOut} aria-label="Đăng xuất" title="Đăng xuất">
+          <ManagerIcon name="logout" size={15}/><span>{signingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
+        </button>
       </div>
     </header>
+    {signOutError && <div className="manager-logout-error" role="alert">{signOutError}</div>}
+    </>
   );
 }
