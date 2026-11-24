@@ -28,9 +28,9 @@ const app = express();
 app.use(corsMiddleware);
 app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' }), paymentWebhook);
 app.use(morgan('dev'));
+app.use('/api/garage', attachUser, garageWorkflowRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/api/garage', attachUser, garageWorkflowRoutes);
 
 app.get('/api', (req, res) => {
   res.status(200).json({ message: 'Welcome Express server' });

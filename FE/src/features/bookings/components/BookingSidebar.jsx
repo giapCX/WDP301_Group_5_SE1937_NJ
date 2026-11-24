@@ -1,5 +1,4 @@
 import { NavLink, useOutletContext } from 'react-router-dom';
-import SignOutButton from '../../auth/components/SignOutButton';
 import Icon from './BookingIcon';
 
 export function DispatchSidebar({ home, caption, navigationLabel, children, footer }) {
@@ -33,7 +32,6 @@ export default function BookingSidebar() {
             <span className="workspace-dot" />
             {user?.full_name || 'Tài khoản điều hành'}
           </div>
-          <SignOutButton />
         </>
       }
     >

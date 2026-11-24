@@ -47,7 +47,15 @@ async function assertTripVehicleSeats(booking, vehicle, session = null) {
       ? vehicle
       : await Vehicle.findOne({ vehicle_id: booking.vehicle_id }).select('seat_count').session(session).lean();
   }
-  assertVehicleSeats(vehicle, requestedSeats(booking, previousVehicle?.seat_count));
+  if (booking.requested_seats) {
+    if (vehicle.seat_count < Math.max(booking.requested_seats, booking.passenger_count || 0)) {
+      throw new HttpError(409, 'Xe không đủ chỗ cho yêu cầu của khách.');
+    }
+  } else {
+    // Preserve assigned capacity for legacy bookings already confirmed.
+    const seats = booking.requested_seat_count ?? previousVehicle?.seat_count;
+    assertVehicleSeats(vehicle, requestedSeats({ ...booking, requested_seat_count: seats }));
+  }
 }
 async function latestInspectionFailed(vehicle_id, session) {
   const inspection = await VehicleInspection.findOne({
@@ -136,6 +144,10 @@ async function assign(bookingId, input, operatorId) {
   return retryDuplicateId(['assignment_id', 'booking_id'], () => runInTransaction(async (session) => {
     const booking = await Booking.findOne({ booking_id: id }).session(session).lean();
     if (!booking) throw new HttpError(404, 'Không tìm thấy booking');
+    const bookedService = booking.service_type === 'roundtrip' ? 'round_trip' : booking.service_type;
+    if (bookedService && serviceType !== bookedService) {
+      throw new HttpError(409, 'Phân công phải giữ đúng loại dịch vụ khách đã đặt.');
+    }
     if (booking.booking_status !== 'confirmed') {
       throw new HttpError(409, 'Chỉ phân công mới cho booking đã được Operator xác nhận');
     }

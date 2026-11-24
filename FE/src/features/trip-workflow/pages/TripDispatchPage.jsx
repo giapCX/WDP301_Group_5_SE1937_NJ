@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
+import OperatorTopbar from '../../../pages/operator/OperatorTopbar';
 import BookingSidebar from '../../bookings/components/BookingSidebar';
 import DispatchIncidents from '../components/DispatchIncidents';
 import Icon from '../../bookings/components/BookingIcon';
@@ -39,7 +40,7 @@ export default function TripDispatchPage() {
   }, []);
   useEffect(() => { load(); }, [load]);
   const row = data?.bookings.find(({ booking }) => booking.booking_id === Number(selected));
-  const seatCount = row?.booking.requested_seat_count ?? row?.booking.vehicle?.seat_count;
+  const seatCount = row?.booking.requested_seats ?? row?.booking.requested_seat_count ?? row?.booking.vehicle?.seat_count;
   const canDispatch = row && (
     ['vehicle_replacement_required', 'return_reassignment_required'].includes(row.workflow?.stage)
     || (row.booking.booking_status === 'confirmed' && !row.workflow?.vehicle_received)
@@ -50,8 +51,9 @@ export default function TripDispatchPage() {
     setSelected(id);
     setDriverId(match?.workflow?.stage === 'return_reassignment_required' ? '' : String(match?.workflow?.driver_id || ''));
     setVehicleId(match?.workflow?.stage === 'vehicle_replacement_required' ? '' : String(match?.workflow?.vehicle_id || match?.booking.vehicle_id || ''));
-    setServiceType(match?.workflow?.service_type || 'one_way');
-    setReturnTime(match?.workflow?.return_pickup_time ? new Date(match.workflow.return_pickup_time).toISOString().slice(0, 16) : '');
+    setServiceType(match?.workflow?.service_type || (match?.booking.service_type === 'roundtrip' ? 'round_trip' : match?.booking.service_type) || 'one_way');
+    const returnAt = match?.workflow?.return_pickup_time || match?.booking.return_pickup_time;
+    setReturnTime(returnAt ? new Date(new Date(returnAt).getTime() + 7 * 3600000).toISOString().slice(0, 16) : '');
   }
 
   async function submit(event) {
@@ -61,7 +63,7 @@ export default function TripDispatchPage() {
       else if (row.workflow?.stage === 'return_reassignment_required') await reassignReturnDriver(selected, Number(driverId));
       else await assignTrip(selected, {
         driver_id: Number(driverId), vehicle_id: Number(vehicleId), service_type: serviceType,
-        return_pickup_time: returnTime ? new Date(returnTime).toISOString() : undefined,
+        return_pickup_time: returnTime ? new Date(returnTime + ':00+07:00').toISOString() : undefined,
       });
       setSelected(''); setDriverId(''); setVehicleId(''); await load();
     } catch (failure) { setError(workflowError(failure)); }
@@ -78,7 +80,7 @@ export default function TripDispatchPage() {
   }
 
   return <div className="dispatch-app"><BookingSidebar /><div className="dispatch-workspace">
-    <header className="dispatch-topbar"><div className="dispatch-breadcrumb">Trang chủ <Icon name="chevron" size={11} /> Điều hành <Icon name="chevron" size={11} /><strong>Phân công chuyến</strong></div><div className="operator-profile"><span className="profile-avatar"><Icon name="user" size={18} /></span><span><strong>{user?.full_name || 'Operator Staff'}</strong><small>Trung tâm điều hành</small></span></div></header>
+    <OperatorTopbar title="Phân công chuyến" user={user} />
     <main className="dispatch-content">
       <section className="dispatch-page-heading"><div><div className="heading-kicker"><span>ĐIỀU PHỐI ĐỘI XE</span><i />Kiểm tra lịch tài xế và phương tiện</div><h1>Phân công và thực hiện chuyến</h1><p>Chọn booking đã xác nhận. Hệ thống kiểm tra lịch xe, bảo dưỡng, hồ sơ và lịch tài xế.</p></div><button className="dispatch-button primary" onClick={load}><Icon name="refresh" size={16} />Làm mới</button></section>
       {error && <div className="dispatch-alert" role="alert">{error}</div>}
@@ -87,8 +89,8 @@ export default function TripDispatchPage() {
         <label>Booking đã xác nhận<select value={selected} onChange={(e) => chooseBooking(e.target.value)}><option value="">Chọn booking</option>{data?.bookings.map(({ booking }) => <option key={booking.booking_id} value={booking.booking_id}>{bookingCode(booking.booking_id)} · {booking.renter?.full_name || 'Khách'} · {dateTime(booking.pickup_time)}</option>)}</select></label>
         {canDispatch && <form onSubmit={submit} className="workflow-form"><div className="workflow-form-grid">
           {row.workflow?.stage !== 'vehicle_replacement_required' && <label>{row.workflow?.stage === 'return_reassignment_required' ? 'Tài xế thay thế lượt về' : 'Tài xế'}<select required value={driverId} onChange={(e) => setDriverId(e.target.value)}><option value="">Chọn tài xế</option>{data.drivers.map((driver) => <option key={driver.driver_id} value={driver.driver_id} disabled={driver.status !== 'active' || !['available', 'busy'].includes(driver.availability_status) || !driver.approved}>{driver.full_name} · {driver.availability_status}{!driver.approved ? ' · chưa duyệt' : ''}</option>)}</select></label>}
-          {row.workflow?.stage !== 'return_reassignment_required' && <label>{row.workflow?.stage === 'vehicle_replacement_required' ? 'Xe thay thế' : 'Xe'}<select required value={vehicleId} onChange={(e) => setVehicleId(e.target.value)}><option value="">Chọn phương tiện</option>{data.vehicles.map((vehicle) => <option key={vehicle.vehicle_id} value={vehicle.vehicle_id} disabled={!['available', 'in_use'].includes(vehicle.status) || (seatCount != null && vehicle.seat_count !== seatCount)}>{vehicle.plate_number} · {vehicle.brand} {vehicle.model} · {vehicle.seat_count} chỗ · {vehicle.status}</option>)}</select></label>}
-          {!row.workflow && <><label>Loại dịch vụ<select value={serviceType} onChange={(e) => setServiceType(e.target.value)}><option value="one_way">Đưa khách một chiều</option><option value="round_trip">Đưa đi – đón về</option><option value="tour">Đồng hành tham quan</option></select></label>{serviceType === 'round_trip' && <label>Giờ đón lượt về<input required type="datetime-local" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} /></label>}</>}
+          {row.workflow?.stage !== 'return_reassignment_required' && <label>{row.workflow?.stage === 'vehicle_replacement_required' ? 'Xe thay thế' : 'Xe'}<select required value={vehicleId} onChange={(e) => setVehicleId(e.target.value)}><option value="">Chọn phương tiện</option>{data.vehicles.map((vehicle) => <option key={vehicle.vehicle_id} value={vehicle.vehicle_id} disabled={!['available', 'in_use'].includes(vehicle.status) || (seatCount != null && (row.booking.requested_seats ? vehicle.seat_count < seatCount : vehicle.seat_count !== seatCount))}>{vehicle.plate_number} · {vehicle.brand} {vehicle.model} · {vehicle.seat_count} chỗ · {vehicle.status}</option>)}</select></label>}
+          {!row.workflow && <><label>Loại dịch vụ<select disabled={Boolean(row.booking.service_type)} value={serviceType} onChange={(e) => setServiceType(e.target.value)}><option value="one_way">Đưa khách một chiều</option><option value="round_trip">Đưa đi – đón về</option><option value="tour">Đồng hành tham quan</option></select></label>{serviceType === 'round_trip' && <label>Giờ đón lượt về<input required type="datetime-local" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} /></label>}</>}
         </div><p className="workflow-route">{row.booking.pickup_location} → {row.booking.dropoff_location} · {dateTime(row.booking.pickup_time)} – {dateTime(row.booking.estimated_end_time)}</p><button className="dispatch-button primary" disabled={busy || (row.workflow?.stage !== 'vehicle_replacement_required' && !driverId) || (row.workflow?.stage !== 'return_reassignment_required' && !vehicleId)}>{busy ? 'Đang xử lý…' : row.workflow?.stage === 'vehicle_replacement_required' ? 'Điều phối xe thay thế' : row.workflow?.stage === 'return_reassignment_required' ? 'Giao lượt về cho tài xế khác' : row.workflow ? 'Phân công lại chuyến' : 'Gửi phân công cho tài xế'}</button></form>}
         {row && !canDispatch && <p className="workflow-muted">Chuyến đang được thực hiện. Dùng <Link to="/operator/trip-monitoring">Theo dõi chuyến</Link> để xem tiến độ.</p>}
       </section>
