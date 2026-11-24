@@ -13,3 +13,4 @@
 
 # Local frontend build output
 /FE/build/
+FE/src/features/bookings/components/BookingQuoteForm.jsx
