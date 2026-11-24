@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { fetchBookings, getBookingError } from '../api/bookingApi';
 import { BOOKING_TABS } from '../bookingConstants';
 
-export default function useBookings() {
-  const [status, setStatus] = useState('pending');
+export default function useBookings(initialStatus = 'pending') {
+  const [status, setStatus] = useState(initialStatus);
   const [page, setPage] = useState(1);
   const [revision, setRevision] = useState(0);
   const [result, setResult] = useState({ items: [], total: 0, total_pages: 0 });

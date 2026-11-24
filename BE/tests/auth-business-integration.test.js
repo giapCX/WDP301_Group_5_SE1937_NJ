@@ -6,6 +6,7 @@ const data = require('../src/config/sample-data');
 const { router, attachUser } = require('../src/routes/auth.routes');
 const chargeRoutes = require('../src/routes/additional-charge.routes');
 const historyRoutes = require('../src/routes/renter-booking-change.routes');
+const overviewRoutes = require('../src/routes/operator-overview.routes');
 const errors = require('../middlewares/error.middleware');
 
 test('merged session auth interoperates with Operator and Renter business APIs', async () => {
@@ -24,6 +25,7 @@ test('merged session auth interoperates with Operator and Renter business APIs',
     app.use(attachUser);
     app.use('/api/operator/additional-charges', chargeRoutes.operatorChargeRoutes);
     app.use('/api/renter/bookings', historyRoutes);
+    app.use('/api/operator', overviewRoutes);
     app.use(errors);
     server = app.listen(0, '127.0.0.1');
     await new Promise((resolve) => server.once('listening', resolve));
@@ -50,7 +52,26 @@ test('merged session auth interoperates with Operator and Renter business APIs',
       ).status,
       200,
     );
+    const overview = await fetch(base + '/api/operator/dashboard', {
+      headers: { Cookie: operator.cookie },
+    });
+    assert.equal(overview.status, 200);
+    assert.equal((await overview.json()).data.totalBookings, 6);
+    const vehicles = await fetch(base + '/api/operator/vehicles/available', {
+      headers: { Cookie: operator.cookie },
+    });
+    assert.equal(vehicles.status, 200);
+    assert.equal((await vehicles.json()).data.items.length, 3);
+    assert.equal((await fetch(base + '/api/operator/dashboard')).status, 401);
     const renter = await login('demo8@example.com');
+    assert.equal(
+      (
+        await fetch(base + '/api/operator/dashboard', {
+          headers: { Cookie: renter.cookie },
+        })
+      ).status,
+      403,
+    );
     assert.equal(renter.user.user_id, 8);
     const history = await fetch(base + '/api/renter/bookings/2/change-requests', {
       headers: { Cookie: renter.cookie },
