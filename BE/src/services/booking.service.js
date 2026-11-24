@@ -79,6 +79,19 @@ async function getPendingBooking(id, session = null) {
   return booking;
 }
 
+function requestedSeats(booking) {
+  if (
+    !Number.isSafeInteger(booking.requested_seat_count) ||
+    booking.requested_seat_count < 1
+  ) {
+    throw new HttpError(
+      409,
+      'Booking chưa có số chỗ khách yêu cầu. Cần bổ sung thông tin trước khi điều phối',
+    );
+  }
+  return booking.requested_seat_count;
+}
+
 // reviewedBy must come from the authenticated Operator, never the request body.
 async function approveBooking(id, input = {}, reviewedBy) {
   const reviewerId = parsePositiveInteger(reviewedBy, 'reviewed_by');
@@ -89,6 +102,7 @@ async function approveBooking(id, input = {}, reviewedBy) {
 
   return bookingRepository.runInTransaction(async (session) => {
     const booking = await getPendingBooking(id, session);
+    const seatCount = requestedSeats(booking);
     const vehicleId = parsePositiveInteger(
       input.vehicle_id === undefined ? booking.vehicle_id : input.vehicle_id,
       'vehicle_id',
@@ -97,6 +111,13 @@ async function approveBooking(id, input = {}, reviewedBy) {
 
     if (!vehicle) {
       throw new HttpError(404, 'Không tìm thấy xe');
+    }
+
+    if (vehicle.seat_count !== seatCount) {
+      throw new HttpError(
+        409,
+        `Khách yêu cầu xe ${seatCount} chỗ; không thể gán xe khác số chỗ`,
+      );
     }
 
     if (!['available', 'in_use'].includes(vehicle.status)) {
@@ -176,6 +197,7 @@ async function rejectBooking(id, input = {}, reviewedBy) {
 
 async function getAvailableVehicles(id) {
   const booking = await getPendingBooking(id);
+  const seatCount = requestedSeats(booking);
   const pickupTime = new Date(booking.pickup_time);
   const estimatedEndTime = new Date(booking.estimated_end_time);
 
@@ -190,6 +212,7 @@ async function getAvailableVehicles(id) {
   }
 
   const vehicles = await bookingRepository.findAvailableVehicles({
+    seatCount,
     bookingId: booking.booking_id,
     pickupTime,
     estimatedEndTime,
@@ -200,6 +223,7 @@ async function getAvailableVehicles(id) {
     pickup_time: pickupTime,
     estimated_end_time: estimatedEndTime,
     vehicles,
+    requested_seat_count: seatCount,
   };
 }
 

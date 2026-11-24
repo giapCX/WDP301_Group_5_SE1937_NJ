@@ -30,3 +30,9 @@ Không hiển thị loại dịch vụ, tên tài xế hay đánh giá giả vì
 ## Kiểm tra
 
 Chạy `npm run build` từ FE. Kiểm tra thủ công tab trạng thái, tìm kiếm, phân trang, mở chi tiết, danh sách xe, điều kiện bật nút duyệt/từ chối và màn hình nhỏ.
+
+## Số chỗ khách yêu cầu
+
+Booking.requested_seat_count lưu số chỗ Renter chọn, độc lập với vehicle_id. Người phụ trách tạo booking phải lưu field này từ lựa chọn khách (số nguyên dương), không suy ra từ xe Operator gán. Ví dụ requested_seat_count=7 chỉ trả xe seat_count=7, không tự nâng lên 16 chỗ. Duyệt cũng kiểm tra lại trong transaction, trả 409 nếu cố chọn khác số chỗ.
+
+Booking cũ thiếu số chỗ bị chặn điều phối bằng lỗi 409; không hiển thị mọi xe làm phương án mặc định. Chạy node scripts/add-requested-seat-count.js từ BE để thêm field null còn thiếu; không đoán yêu cầu khách. Sau đó bổ sung thông tin thực tế khi xác nhận với Renter. Dữ liệu seed mới có số chỗ giả lập rõ ràng cho từng booking; booking mẫu #1 yêu cầu 7 chỗ. JSON bookings đã cập nhật tương ứng.

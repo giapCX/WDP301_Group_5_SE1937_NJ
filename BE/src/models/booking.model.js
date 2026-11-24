@@ -30,6 +30,12 @@ module.exports = createModel(
         message: 'Must be a safe integer',
       },
     },
+    requested_seat_count: {
+      type: Number,
+      default: null,
+      min: 1,
+      validate: (value) => value === null || Number.isSafeInteger(value),
+    },
     pickup_location: {
       type: String,
       required: true,

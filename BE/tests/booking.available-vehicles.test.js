@@ -55,7 +55,7 @@ test('available vehicles API filters actual conflicts and returns useful errors'
     // Pending requests do not reserve cars; adjacent confirmed trips do not overlap.
     assert.deepEqual(
       result.data.vehicles.map((vehicle) => vehicle.vehicle_id),
-      [1, 2, 5],
+      [2, 5],
     );
     assert.equal(
       result.data.vehicles.some((vehicle) => 'schedule_version' in vehicle),

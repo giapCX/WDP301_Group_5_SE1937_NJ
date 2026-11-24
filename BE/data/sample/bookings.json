@@ -17,6 +17,7 @@
     "created_at": {
       "$date": "2026-11-01T01:00:00Z"
     },
+    "requested_seat_count": 7,
     "reviewed_by": null,
     "reviewed_at": null,
     "rejection_reason": null,
@@ -40,6 +41,7 @@
     "created_at": {
       "$date": "2026-11-01T01:00:00Z"
     },
+    "requested_seat_count": 5,
     "reviewed_by": null,
     "reviewed_at": null,
     "rejection_reason": null,
@@ -63,6 +65,7 @@
     "created_at": {
       "$date": "2026-11-01T01:00:00Z"
     },
+    "requested_seat_count": 7,
     "reviewed_by": null,
     "reviewed_at": null,
     "rejection_reason": null,
@@ -86,6 +89,7 @@
     "created_at": {
       "$date": "2026-11-01T01:00:00Z"
     },
+    "requested_seat_count": 16,
     "reviewed_by": null,
     "reviewed_at": null,
     "rejection_reason": null,
@@ -109,6 +113,7 @@
     "created_at": {
       "$date": "2026-11-01T01:00:00Z"
     },
+    "requested_seat_count": 7,
     "reviewed_by": null,
     "reviewed_at": null,
     "rejection_reason": null,
@@ -132,6 +137,7 @@
     "created_at": {
       "$date": "2026-11-01T01:00:00Z"
     },
+    "requested_seat_count": 5,
     "reviewed_by": null,
     "reviewed_at": null,
     "rejection_reason": null,
