@@ -16,7 +16,7 @@ router.get('/', requireRenter, async (req, res) => {
   const before = req.query.before === undefined ? null : reservations.positiveId(req.query.before);
   const bookings = await repository.listBookings(req.user.user_id, before);
   const items = bookings.items.map((booking) => ({ ...booking, paymentDue: payments.paymentDue(booking) }));
-  res.set('Cache-Control', 'no-store').json({ ...bookings, items, checkoutAvailable: payments.isAvailable() });
+  res.set('Cache-Control', 'no-store').json({ ...bookings, items, checkoutAvailable: payments.isAvailable(), paymentMode: payments.isSimulated() ? 'simulation' : 'stripe' });
 });
 router.post('/', requireRenter, async (req, res) => {
   const booking = await reservations.create(req.body, req.user.user_id);
@@ -35,6 +35,10 @@ router.post('/:id/accept-quote', requireRenter, async (req, res) => {
 });
 router.post('/:id/checkout', requireRenter, async (req, res) => {
   res.json(await payments.checkout(reservations.positiveId(req.params.id), req.user.user_id));
+});
+
+router.post('/:id/simulate-payment', requireRenter, async (req, res) => {
+  res.json(await payments.simulate(reservations.positiveId(req.params.id), req.user.user_id, req.body));
 });
 
 module.exports = router;

@@ -11,7 +11,12 @@ function clientOrigin() {
   return process.env.CLIENT_ORIGIN?.split(',')[0].trim();
 }
 
+function isSimulated() {
+  return process.env.NODE_ENV !== 'production' && process.env.PAYMENT_MODE !== 'stripe';
+}
+
 function isAvailable() {
+  if (isSimulated()) return true;
   return Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET && clientOrigin());
 }
 
@@ -100,6 +105,10 @@ async function checkout(bookingId, renterId) {
   if (!current?.checkout_attempt) throw new HttpError(409, 'Đơn đã được xử lý, vui lòng tải lại.');
   const active = current.checkout_attempt;
 
+  if (isSimulated()) {
+    return { simulated: true, attemptId: active.id, amount: active.amount, purpose: active.purpose };
+  }
+
   if (amount === 0) {
     await recordPayment({ bookingId, attemptId: active.id, amount, reference: active.id, method: 'promotion' });
     return { confirmed: true };
@@ -145,6 +154,27 @@ async function checkout(bookingId, renterId) {
   }
   if (!external.url) throw new HttpError(409, 'Phiên thanh toán đang được xử lý. Vui lòng thử lại.');
   return { url: external.url };
+}
+
+async function simulate(bookingId, renterId, input) {
+  if (!isSimulated()) throw new HttpError(404, 'Thanh toán mô phỏng không khả dụng.');
+  if (!input || typeof input.attemptId !== 'string' || !['success', 'failed', 'cancelled'].includes(input.outcome)) {
+    throw new HttpError(400, 'Kết quả mô phỏng không hợp lệ.');
+  }
+  const filter = { booking_id: bookingId, renter_id: renterId, 'checkout_attempt.id': input.attemptId };
+  const booking = await Booking.findOne(filter).lean();
+  if (!booking) throw new HttpError(409, 'Phiên thanh toán đã thay đổi hoặc đã xử lý.');
+  if (!paymentDue(booking)) throw new HttpError(409, 'Đơn chưa đến bước thanh toán.');
+  if (input.outcome === 'cancelled') {
+    const result = await Booking.updateOne(filter, { $unset: { checkout_attempt: '' } });
+    if (!result.modifiedCount) throw new HttpError(409, 'Phiên thanh toán đã được xử lý.');
+  } else {
+    const saved = await recordPayment({ bookingId, attemptId: input.attemptId,
+      amount: booking.checkout_attempt.amount, reference: 'SIM-' + input.attemptId,
+      method: 'simulation', paid: input.outcome === 'success' });
+    if (!saved) throw new HttpError(409, 'Phiên thanh toán đã được xử lý.');
+  }
+  return { simulated: true, outcome: input.outcome };
 }
 
 async function fulfill(checkoutSession, paid = true) {
@@ -196,5 +226,5 @@ async function webhook(req, res) {
   res.sendStatus(204);
 }
 
-module.exports = { checkout, isAvailable, paymentDue, webhook };
+module.exports = { checkout, isAvailable, isSimulated, simulate, paymentDue, webhook };
 

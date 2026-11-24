@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import BookingCard, { statuses } from '../components/BookingCard.jsx';
 import BookingPayment from '../components/BookingPayment.jsx';
@@ -11,6 +12,7 @@ export default function MyBookingsPage() {
   const selectedId = Number(params.get('booking'));
   const checkoutResult = params.get('checkout');
   const bookings = useRenterBookings();
+  const [paymentNotice, setPaymentNotice] = useState('');
   const visible = bookings.items.filter((item) => !status || item.booking_status === status);
   const selected = bookings.items.find((item) => item.booking_id === selectedId);
 
@@ -30,6 +32,7 @@ export default function MyBookingsPage() {
         <div><h1>Đơn đặt xe của tôi</h1><p>Theo dõi báo giá, đặt cọc và thanh toán chuyến đi.</p></div>
         <Link to="/renter/bookings/new" className="rv-button rv-primary">Đặt chuyến mới</Link>
       </div>
+      {paymentNotice && <p className="rv-notice" role="status">{paymentNotice}</p>}
       {checkoutResult === 'cancelled' && <p className="rv-notice" role="status">Bạn đã rời trang thanh toán. Có thể chọn thanh toán lại.</p>}
       {selected?.booking_status === 'confirmed' && <p className="rv-success" role="status">Đơn #{selectedId} đã được xác nhận.</p>}
       {checkoutResult === 'complete' && selected?.paymentDue && <p className="rv-notice" role="status">Đang chờ xác minh giao dịch. Hãy cập nhật trạng thái sau ít phút.</p>}
@@ -56,7 +59,12 @@ export default function MyBookingsPage() {
           {selected?.booking_status === 'quoted' && <QuoteAcceptance key={selected.quote_offer.id + ':' + bookings.revision}
             booking={selected} onAccepted={() => { changeParam('status', ''); bookings.refresh(); }}/>}
           {selected?.paymentDue && <BookingPayment key={selected.booking_id + ':' + selected.paymentDue.purpose}
-            booking={selected} checkoutAvailable={bookings.checkoutAvailable} onPaid={bookings.refresh}/>}
+            booking={selected} paymentMode={bookings.paymentMode} checkoutAvailable={bookings.checkoutAvailable} onPaid={(outcome) => {
+              setPaymentNotice(outcome === 'success' ? `Đơn #${selected.booking_id}: thanh toán mô phỏng thành công, không thu tiền thật.` :
+                outcome === 'failed' ? 'Đã mô phỏng thất bại. Chưa ghi nhận tiền; bạn có thể thanh toán lại.' :
+                outcome === 'cancelled' ? 'Đã hủy thanh toán mô phỏng. Đơn đặt xe vẫn được giữ nguyên.' : 'Đã cập nhật thanh toán.');
+              bookings.refresh();
+            }}/>}
           {!selected?.paymentDue && selected?.booking_status !== 'quoted' && <>
             <h2>Báo giá và thanh toán</h2>
             {!selected && <p>Chọn một đơn để xem báo giá hoặc thanh toán.</p>}

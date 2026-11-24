@@ -31,3 +31,7 @@ export async function loadVehicle(id, signal) {
   return (await api.get('/homepage/vehicles/' + id, { signal })).data.vehicle;
 }
 
+
+export async function simulatePayment(id, attemptId, outcome) {
+  return (await api.post(bookings + '/' + id + '/simulate-payment', { attemptId, outcome })).data;
+}
