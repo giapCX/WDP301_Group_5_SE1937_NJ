@@ -1,4 +1,5 @@
 const bookingRepository = require('../repositories/booking.repository');
+const { findAssignableVehicle, hasAssignedTrip } = require('../repositories/renter-reservation.repository');
 const HttpError = require('../utils/http-error');
 
 function parsePositiveInteger(value, field) {
@@ -89,31 +90,40 @@ async function approveBooking(id, input = {}, reviewedBy) {
 
   return bookingRepository.runInTransaction(async (session) => {
     const booking = await getPendingBooking(id, session);
+    if (booking.quote_requested_at) throw new HttpError(409, 'Vui lòng gửi báo giá để khách xác nhận trước.');
+    const pickupTime = new Date(booking.pickup_time);
+    const estimatedEndTime = new Date(booking.estimated_end_time);
+    if (booking.pickup_time == null || booking.estimated_end_time == null ||
+        !Number.isFinite(+pickupTime) || !Number.isFinite(+estimatedEndTime) || estimatedEndTime <= pickupTime) {
+      throw new HttpError(400, 'Thời gian chuyến đi không hợp lệ');
+    }
+
+    const candidate = booking.requested_seats ? await findAssignableVehicle({
+      bookingId: booking.booking_id, pickupTime, estimatedEndTime,
+      minSeats: booking.requested_seats, session,
+    }) : null;
+    if (booking.requested_seats && !candidate) {
+      throw new HttpError(409, 'Không còn xe đủ chỗ trong khung giờ yêu cầu.');
+    }
+
     const vehicleId = parsePositiveInteger(
-      input.vehicle_id === undefined ? booking.vehicle_id : input.vehicle_id,
+      candidate?.vehicle_id ?? (input.vehicle_id === undefined ? booking.vehicle_id : input.vehicle_id),
       'vehicle_id',
     );
+    if (booking.service_type && !booking.requested_seats && vehicleId !== booking.vehicle_id) {
+      throw new HttpError(409, 'Vui lòng duyệt xe đã được báo giá hoặc từ chối để khách chọn lại.');
+    }
     const vehicle = await bookingRepository.lockVehicleSchedule(vehicleId, session);
 
     if (!vehicle) {
       throw new HttpError(404, 'Không tìm thấy xe');
     }
+    if (Math.max(booking.requested_seats || 0, booking.passenger_count || 0) > vehicle.seat_count) {
+      throw new HttpError(409, 'Xe không đủ chỗ cho số hành khách đã đăng ký.');
+    }
 
     if (!['available', 'in_use'].includes(vehicle.status)) {
       throw new HttpError(409, 'Xe không đủ điều kiện vận hành');
-    }
-
-    const pickupTime = new Date(booking.pickup_time);
-    const estimatedEndTime = new Date(booking.estimated_end_time);
-
-    if (
-      booking.pickup_time == null ||
-      booking.estimated_end_time == null ||
-      !Number.isFinite(pickupTime.getTime()) ||
-      !Number.isFinite(estimatedEndTime.getTime()) ||
-      estimatedEndTime <= pickupTime
-    ) {
-      throw new HttpError(400, 'Thời gian chuyến đi không hợp lệ');
     }
 
     if (vehicle.status === 'in_use' && pickupTime.getTime() <= Date.now()) {
@@ -128,7 +138,7 @@ async function approveBooking(id, input = {}, reviewedBy) {
       session,
     });
 
-    if (overlappingBooking) {
+    if (overlappingBooking || (booking.service_type && await hasAssignedTrip(vehicleId, pickupTime, estimatedEndTime, session))) {
       throw new HttpError(409, 'Xe đã có booking trùng lịch');
     }
 
@@ -136,6 +146,7 @@ async function approveBooking(id, input = {}, reviewedBy) {
       bookingId: booking.booking_id,
       vehicleId,
       reviewedBy: reviewerId,
+      ...(booking.service_type && { requiresPayment: true }),
       session,
     });
 
@@ -193,13 +204,16 @@ async function getAvailableVehicles(id) {
     bookingId: booking.booking_id,
     pickupTime,
     estimatedEndTime,
+    ...(booking.requested_seats && { minSeats: booking.requested_seats }),
   });
 
   return {
     booking_id: booking.booking_id,
     pickup_time: pickupTime,
     estimated_end_time: estimatedEndTime,
-    vehicles,
+    vehicles: booking.service_type && !booking.requested_seats
+      ? vehicles.filter((vehicle) => vehicle.vehicle_id === booking.vehicle_id && vehicle.seat_count >= booking.passenger_count)
+      : vehicles,
   };
 }
 

@@ -1,5 +1,7 @@
 export const BOOKING_STATUSES = {
   pending: { label: 'Chờ duyệt', tone: 'red' },
+  quoted: { label: 'Đã gửi báo giá', tone: 'blue' },
+  awaiting_payment: { label: 'Chờ thanh toán', tone: 'blue' },
   confirmed: { label: 'Đã xác nhận', tone: 'blue' },
   in_progress: { label: 'Đang di chuyển', tone: 'teal' },
   completed: { label: 'Hoàn thành', tone: 'gray' },
@@ -10,6 +12,8 @@ export const BOOKING_STATUSES = {
 export const BOOKING_TABS = [
   { key: '', label: 'Tất cả' },
   { key: 'pending', label: 'Chờ duyệt' },
+  { key: 'quoted', label: 'Đã gửi báo giá' },
+  { key: 'awaiting_payment', label: 'Chờ thanh toán' },
   { key: 'confirmed', label: 'Đã xác nhận' },
   { key: 'in_progress', label: 'Đang thực hiện' },
   { key: 'completed', label: 'Hoàn thành' },

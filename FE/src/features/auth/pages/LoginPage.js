@@ -1,5 +1,5 @@
 import { createElement as h, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getSession, login, logout } from '../api/authApi.js';
 import RegistrationForm from './RegistrationForm.js';
 import { dashboardForRole } from '../dashboardRoutes.js';
@@ -33,6 +33,7 @@ export default function LoginPage() {
   const [registering, setRegistering] = useState(false);
   const [notice, setNotice] = useState('');
   const navigate = useNavigate();
+  const { state: loginState } = useLocation();
   const user = signedOut ? null : session.data;
 
   async function submit(event) {
@@ -46,7 +47,8 @@ export default function LoginPage() {
         password: form.get('password'),
         remember: form.has('remember'),
       });
-      navigate(dashboardForRole(account.role_name), { replace: true });
+      const from = loginState?.role === account.role_name ? loginState.from : null;
+      navigate(from || dashboardForRole(account.role_name), { replace: true, state: from?.state });
     } catch (failure) {
       setError(loginErrorMessage(failure));
     } finally {

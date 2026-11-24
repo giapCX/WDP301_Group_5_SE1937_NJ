@@ -28,7 +28,7 @@ function Footer() {
       h('div', null, h('h2', null, 'Dịch vụ'),
         h('a', { href: '#dich-vu' }, 'Đưa đón khứ hồi'),
         h('a', { href: '#dich-vu' }, 'Tham quan theo tour'),
-        h('a', { href: '#doi-xe' }, 'Danh sách xe')),
+        h('a', { href: '/vehicles' }, 'Danh sách xe')),
       h('div', null, h('h2', null, 'Đội ngũ & cam kết'),
         h('a', { href: '#cam-ket' }, 'Thông tin dịch vụ'),
         h('a', { href: '#diem-den' }, 'Gợi ý điểm đến'),
