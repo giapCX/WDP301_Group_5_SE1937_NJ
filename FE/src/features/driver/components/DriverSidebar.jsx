@@ -1,9 +1,8 @@
 import { NavLink } from 'react-router-dom';
-import useSignOut from '../../auth/hooks/useSignOut';
+import SignOutButton from '../../auth/components/SignOutButton';
 import Icon from '../../bookings/components/BookingIcon';
 
 export default function DriverSidebar() {
-  const { error, signingOut, signOut } = useSignOut();
   return (
     <aside className="dispatch-sidebar driver-sidebar">
       <NavLink
@@ -41,21 +40,7 @@ export default function DriverSidebar() {
             <p>Kiểm tra lịch và thông tin chuyến trước khi xuất phát.</p>
           </div>
         </div>
-        <button
-          className="driver-signout"
-          aria-label="Đăng xuất"
-          type="button"
-          disabled={signingOut}
-          onClick={signOut}
-        >
-          <Icon name="arrow" />
-          {signingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
-        </button>
-        {error && (
-          <p className="driver-signout-error" role="alert">
-            {error}
-          </p>
-        )}
+        <SignOutButton />
       </div>
     </aside>
   );

@@ -91,7 +91,6 @@
 
 .vt-h-header-actions, .vt-h-service-action { display: flex; align-items: center; gap: 10px; }
 .vt-h-auth-links { display: flex; align-items: center; gap: 8px; }
-.vt-h-auth-error { position: absolute; z-index: 5; top: 72px; right: max(12px, calc((100vw - 1240px) / 2)); margin: 0; padding: 8px 12px; border: 1px solid #f2c6c6; border-radius: 8px; color: #9d3030; background: #fff; box-shadow: 0 4px 16px #102a430f; font-size: .85rem; }
 .vt-h-header-hotline { color: var(--navy); font-weight: 700; white-space: nowrap; }
 .vt-h-hero .vt-h-hero-label {
   width: fit-content; margin: 0 auto 12px; padding: 5px 12px;

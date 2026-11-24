@@ -54,10 +54,6 @@
 .profile-avatar { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 50%; color: #2458a1; background: #e4edff; font-size: 10px; font-weight: 800; }
 .profile-button b { font-size: 10px; font-weight: 700; }
 .profile-button small { margin-top: 2px; color: #98a3b1; font-size: 9px; }
-.acl-logout { border: 1px solid #dce5ef; border-radius: 7px; padding: 8px 11px; color: #34516f; background: #fff; font: inherit; font-size: 10px; cursor: pointer; white-space: nowrap; }
-.acl-logout:hover { border-color: #b7cce2; background: #f6f9fc; }
-.acl-logout:disabled { opacity: .65; cursor: wait; }
-.acl-signout-error { margin: 0; padding: 8px 24px; color: #a63c42; background: #fff5f5; font-size: 11px; }
 .profile-caret { color: #8d99a9; font-size: 17px; }
 .acl-content { width: min(100%, 1540px); margin: 0 auto; padding: 27px 34px 18px; }
 .acl-page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin-bottom: 22px; }

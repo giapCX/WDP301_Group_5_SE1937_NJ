@@ -209,22 +209,6 @@
   color: #8d9aab;
   font-size: 9px;
 }
-.dispatch-signout {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-top: 10px;
-  padding: 9px 10px;
-  border: 1px solid rgba(255, 255, 255, .18);
-  border-radius: 7px;
-  color: #eaf2fb;
-  background: rgba(255, 255, 255, .06);
-  cursor: pointer;
-}
-.dispatch-signout:hover { background: rgba(255, 255, 255, .12); }
-.dispatch-signout:disabled { opacity: .65; cursor: wait; }
-.dispatch-signout-error { margin: 7px 0 0; color: #ffd3d3; font-size: 11px; }
 .dispatch-content {
   max-width: 1500px;
   margin: 0 auto;
@@ -1191,19 +1175,6 @@
   }
   .sidebar-help,
   .sidebar-workspace,
-  .dispatch-signout-error {
-    display: none;
-  }
-  .dispatch-signout {
-    justify-content: center;
-    padding: 10px;
-    font-size: 0;
-  }
-  .dispatch-signout svg {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-  }
   .dispatch-stats {
     gap: 10px;
   }
