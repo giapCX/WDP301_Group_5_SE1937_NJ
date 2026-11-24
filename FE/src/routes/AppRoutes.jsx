@@ -5,6 +5,10 @@ import RequireRole from '../features/auth/components/RequireRole.js';
 import LoginPage from '../features/auth/pages/LoginPage.js';
 import VietTourHomePage from '../features/home/pages/VietTourHomePage.js';
 import RenterDashboardPage from '../features/renter-dashboard/pages/RenterDashboardPage.jsx';
+import VehicleCatalogPage from '../features/renter-reservations/pages/VehicleCatalogPage.jsx';
+import VehicleDetailsPage from '../features/renter-reservations/pages/VehicleDetailsPage.jsx';
+import TripPlannerPage from '../features/renter-reservations/pages/TripPlannerPage.jsx';
+import MyBookingsPage from '../features/renter-reservations/pages/MyBookingsPage.jsx';
 import RolePermissionManagementPage from '../features/role-management/pages/RolePermissionManagementPage.jsx';
 import ManagerDashboardPage from '../features/manager-dashboard/pages/ManagerDashboardPage.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
@@ -22,6 +26,8 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<VietTourHomePage />} />
+      <Route path="/vehicles" element={<VehicleCatalogPage />} />
+      <Route path="/vehicles/:vehicleId" element={<VehicleDetailsPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<RequireRole role="admin" />}>
         <Route
@@ -41,6 +47,9 @@ export default function AppRoutes() {
       </Route>
       <Route element={<RequireRole role="renter" />}>
         <Route path="/renter/dashboard" element={<RenterDashboardPage />} />
+        <Route path="/renter/bookings" element={<MyBookingsPage />} />
+        <Route path="/renter/bookings/new" element={<TripPlannerPage />} />
+        <Route path="/renter/bookings/new/:vehicleId" element={<Navigate to="/renter/bookings/new" replace />} />
       </Route>
       <Route element={<RequireRole role="operator" />}>
         <Route path="/operator/dashboard" element={<OperatorDashboard />} />
