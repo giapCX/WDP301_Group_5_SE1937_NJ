@@ -7,15 +7,13 @@ import VietTourHomePage from '../features/home/pages/VietTourHomePage.js';
 import RenterDashboardPage from '../features/renter-dashboard/pages/RenterDashboardPage.js';
 import RolePermissionManagementPage from '../features/role-management/pages/RolePermissionManagementPage.jsx';
 import ManagerDashboardPage from '../features/manager-dashboard/pages/ManagerDashboardPage.jsx';
+import GarageDashboardPage from '../features/garage/pages/GarageDashboardPage.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import CartPage from '../pages/CartPage.jsx';
-
 import OperatorDashboard from '../pages/operator/OperatorDashboard.jsx';
 import AvailableVehiclesPage from '../pages/operator/AvailableVehiclesPage.jsx';
-
 import DriverDashboardPage from '../features/driver/pages/DriverDashboardPage.jsx';
-
 import TripMonitoringPage from '../features/trip-monitoring/pages/TripMonitoringPage.jsx';
 import TripDispatchPage from '../features/trip-workflow/pages/TripDispatchPage.jsx';
 
@@ -26,14 +24,8 @@ export default function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<Navigate to="/login?mode=register" replace />} />
       <Route element={<RequireRole role="admin" />}>
-        <Route
-          path="/admin/roles-permissions"
-          element={<RolePermissionManagementPage />}
-        />
-        <Route
-          path="/admin/permissions"
-          element={<Navigate to="/admin/roles-permissions" replace />}
-        />
+        <Route path="/admin/roles-permissions" element={<RolePermissionManagementPage />} />
+        <Route path="/admin/permissions" element={<Navigate to="/admin/roles-permissions" replace />} />
       </Route>
       <Route element={<RequireRole role="driver" />}>
         <Route path="/driver/dashboard" element={<DriverDashboardPage />} />
@@ -44,51 +36,22 @@ export default function AppRoutes() {
       <Route element={<RequireRole role="renter" />}>
         <Route path="/renter/dashboard" element={<RenterDashboardPage />} />
       </Route>
+      <Route element={<RequireRole role="garage_staff" />}>
+        <Route path="/garage" element={<Navigate to="/garage/tasks" replace />} />
+        <Route path="/garage/tasks" element={<GarageDashboardPage />} />
+      </Route>
       <Route element={<RequireRole role="operator" />}>
         <Route path="/operator/dashboard" element={<OperatorDashboard />} />
         <Route path="/operator/trip-monitoring" element={<TripMonitoringPage />} />
         <Route path="/operator/dispatch" element={<TripDispatchPage />} />
         <Route path="/operator/vehicles" element={<AvailableVehiclesPage />} />
-        <Route
-          path="/operator/booking-management"
-          element={
-            <BookingManagementPage
-              key="management"
-              initialStatus=""
-              screen="management"
-            />
-          }
-        />
+        <Route path="/operator/booking-management" element={<BookingManagementPage key="management" initialStatus="" screen="management" />} />
         <Route path="/operator/bookings" element={<BookingManagementPage />} />
-        <Route
-          path="/operator/booking-change-requests"
-          element={<BookingModificationPage />}
-        />
+        <Route path="/operator/booking-change-requests" element={<BookingModificationPage />} />
       </Route>
-      <Route
-        path="/store"
-        element={
-          <MainLayout>
-            <HomePage />
-          </MainLayout>
-        }
-      />
-      <Route
-        path="/cart"
-        element={
-          <MainLayout>
-            <CartPage />
-          </MainLayout>
-        }
-      />
-      <Route
-        path="*"
-        element={
-          <main>
-            <h1 className="h3">Không tìm thấy trang</h1>
-          </main>
-        }
-      />
+      <Route path="/store" element={<MainLayout><HomePage /></MainLayout>} />
+      <Route path="/cart" element={<MainLayout><CartPage /></MainLayout>} />
+      <Route path="*" element={<main><h1 className="h3">Không tìm thấy trang</h1></main>} />
     </Routes>
   );
 }

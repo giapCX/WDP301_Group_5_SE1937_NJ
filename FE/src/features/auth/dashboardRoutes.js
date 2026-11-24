@@ -3,6 +3,7 @@ const dashboards = new Map([
   ['renter', '/renter/dashboard'],
   ['operator', '/operator/dashboard'],
   ['manager', '/manager/dashboard'],
+  ['garage_staff', '/garage/tasks'],
 ]);
 
 export function dashboardForRole(role) {
