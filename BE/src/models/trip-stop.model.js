@@ -39,6 +39,8 @@ module.exports = createModel(
       default: null,
       maxlength: 255,
     },
+    arrival_at: Date,
+    departure_at: Date,
   },
   [
     {

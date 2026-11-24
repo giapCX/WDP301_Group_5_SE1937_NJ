@@ -1,13 +1,22 @@
 const express = require('express');
 const bookingController = require('../controllers/booking.controller');
 const requireOperator = require('../middleware/require-operator.middleware');
+const { sendQuote, closeTrip } = require('../services/booking-quote.service');
+const { positiveId } = require('../services/renter-reservation.service');
 
 const router = express.Router();
 
-// Authentication and Operator authorization will be added with the auth module.
-router.get('/', bookingController.getBookings);
-router.get('/:id/available-vehicles', bookingController.getAvailableVehicles);
-router.get('/:id', bookingController.getBookingById);
+router.get('/', requireOperator, bookingController.getBookings);
+router.get('/:id/available-vehicles', requireOperator, bookingController.getAvailableVehicles);
+router.get('/:id', requireOperator, bookingController.getBookingById);
+router.patch('/:id/quote', requireOperator, async (req, res) => {
+  const data = await sendQuote(positiveId(req.params.id), req.body, req.user.user_id);
+  res.json({ success: true, data });
+});
+router.patch('/:id/complete', requireOperator, async (req, res) => {
+  const data = await closeTrip(positiveId(req.params.id));
+  res.json({ success: true, data });
+});
 router.patch('/:id/approve', requireOperator, bookingController.approveBooking);
 router.patch('/:id/reject', requireOperator, bookingController.rejectBooking);
 

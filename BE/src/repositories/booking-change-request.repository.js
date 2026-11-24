@@ -194,7 +194,7 @@ async function hasDriverConflict(bookingId, start, end, session) {
   return Boolean(
     await Booking.exists({
       booking_id: { $in: others.map((item) => item.booking_id) },
-      booking_status: { $in: ['confirmed', 'in_progress'] },
+      booking_status: { $in: ['awaiting_payment', 'confirmed', 'in_progress'] },
       pickup_time: { $lt: end },
       estimated_end_time: { $gt: start },
     }).session(session),

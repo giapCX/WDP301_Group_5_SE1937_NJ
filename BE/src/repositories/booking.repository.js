@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Booking, TripStop, Vehicle } = require('../models');
+const HttpError = require('../utils/http-error');
 
 const USER_FIELDS = 'user_id full_name email phone -_id';
 const VEHICLE_FIELDS =
@@ -36,7 +37,7 @@ async function findBookings({ status, page = 1, limit = 10 } = {}) {
 
   const [items, total] = await Promise.all([
     Booking.find(filter)
-      .select('-_id -additional_charges')
+      .select('-_id -additional_charges -checkout_attempt -renter_request_id')
       .sort({ created_at: -1, booking_id: -1 })
       .skip(skip)
       .limit(limit)
@@ -70,7 +71,7 @@ async function findBookingById(bookingId, session = null) {
 
   const booking = await Booking.findOne({ booking_id: bookingId })
     .session(session)
-    .select('-_id -additional_charges')
+    .select('-_id -additional_charges -checkout_attempt -renter_request_id')
     .populate({
       path: 'renter',
       select: USER_FIELDS,
@@ -118,7 +119,7 @@ async function findOverlappingVehicleBooking({
   return Booking.findOne({
     booking_id: { $ne: excludeBookingId },
     vehicle_id: vehicleId,
-    booking_status: { $in: ['confirmed', 'in_progress'] },
+    booking_status: { $in: ['awaiting_payment', 'confirmed', 'in_progress'] },
     pickup_time: { $lt: estimatedEndTime },
     estimated_end_time: { $gt: pickupTime },
   })
@@ -130,7 +131,7 @@ async function findOverlappingVehicleBooking({
 
 // The service must validate permissions and availability before calling this.
 // Call inside runInTransaction after lockVehicleSchedule for cross-booking safety.
-async function approvePendingBooking({ bookingId, vehicleId, reviewedBy, session }) {
+async function approvePendingBooking({ bookingId, vehicleId, reviewedBy, session, requiresPayment = false }) {
   return Booking.findOneAndUpdate(
     {
       booking_id: bookingId,
@@ -139,7 +140,7 @@ async function approvePendingBooking({ bookingId, vehicleId, reviewedBy, session
     {
       $set: {
         vehicle_id: vehicleId,
-        booking_status: 'confirmed',
+        booking_status: requiresPayment ? 'awaiting_payment' : 'confirmed',
         reviewed_by: reviewedBy,
         reviewed_at: new Date(),
         rejection_reason: null,
@@ -181,11 +182,18 @@ async function rejectPendingBooking({ bookingId, reviewedBy, rejectionReason }) 
 }
 
 async function runInTransaction(work) {
-  return mongoose.connection.transaction(work, {
-    readConcern: { level: 'snapshot' },
-    writeConcern: { w: 'majority' },
-    readPreference: 'primary',
-  });
+  try {
+    return await mongoose.connection.transaction(work, {
+      readConcern: { level: 'snapshot' },
+      writeConcern: { w: 'majority' },
+      readPreference: 'primary',
+    });
+  } catch (error) {
+    if (error.code === 20 && error.message.includes('Transaction numbers')) {
+      throw new HttpError(503, 'Máy chủ cần MongoDB replica set để xử lý yêu cầu đặt xe.');
+    }
+    throw error;
+  }
 }
 
 // Every schedule-changing workflow must write the same vehicle in its transaction.
@@ -204,7 +212,7 @@ async function lockVehicleSchedule(vehicleId, session) {
 }
 
 // Availability is advisory; approval rechecks it inside the vehicle transaction.
-async function findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime }) {
+async function findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime, minSeats, session = null }) {
   const statuses =
     pickupTime.getTime() > Date.now() ? ['available', 'in_use'] : ['available'];
 
@@ -212,6 +220,7 @@ async function findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime }
     {
       $match: {
         status: { $in: statuses },
+        ...(minSeats && { seat_count: { $gte: minSeats }, price_per_day: { $gt: 0 } }),
       },
     },
     {
@@ -221,8 +230,8 @@ async function findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime }
         pipeline: [
           {
             $match: {
-              booking_id: { $ne: bookingId },
-              booking_status: { $in: ['confirmed', 'in_progress'] },
+              ...(bookingId && { booking_id: { $ne: bookingId } }),
+              booking_status: { $in: ['awaiting_payment', 'confirmed', 'in_progress'] },
               pickup_time: { $lt: estimatedEndTime },
               estimated_end_time: { $gt: pickupTime },
               $expr: { $eq: ['$vehicle_id', '$$vehicleId'] },
@@ -239,7 +248,7 @@ async function findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime }
         'conflicting_bookings.0': { $exists: false },
       },
     },
-    { $sort: { vehicle_id: 1 } },
+    { $sort: minSeats ? { price_per_day: 1, seat_count: 1, vehicle_id: 1 } : { vehicle_id: 1 } },
     {
       $project: {
         _id: 0,
@@ -252,7 +261,7 @@ async function findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime }
         status: 1,
       },
     },
-  ]).exec();
+  ]).session(session).exec();
 }
 
 module.exports = {
