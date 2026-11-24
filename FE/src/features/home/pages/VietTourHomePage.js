@@ -79,11 +79,10 @@ export default function VietTourHomePage() {
           nav.map(([label, href]) => h('a', { key: href, href }, label))),
         h('div', { className: 'vt-h-header-actions' },
           h('a', { className: 'vt-h-header-hotline', href: hotline.href }, hotline.label),
-          session.data
-            ? h(Link, { to: dashboardForRole(session.data.role_name), className: 'vt-h-outline' }, session.data.full_name)
-            : h('div', { className: 'vt-h-auth-links' },
-              h(Link, { to: '/login', className: 'vt-h-outline' }, 'Đăng nhập'),
-              h(Link, { to: '/register', className: 'vt-h-button' }, 'Đăng ký')),
+          h('div', { className: 'vt-h-auth-links' },
+            h(Link, { to: '/login', className: 'vt-h-outline' }, 'Đăng nhập'),
+            h(Link, { to: '/register', className: 'vt-h-outline' }, 'Đăng ký'),
+            session.data && h(Link, { to: dashboardForRole(session.data.role_name), className: 'vt-h-outline' }, session.data.full_name)),
           h('a', { href: '#tim-xe', className: 'vt-h-button' }, 'Tìm xe')),
       ),
     ),
