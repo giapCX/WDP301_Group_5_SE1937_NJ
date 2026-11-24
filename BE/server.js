@@ -10,6 +10,7 @@ const bookingRoutes = require('./src/routes/booking.routes');
 const changeRequestRoutes = require('./src/routes/booking-change-request.routes');
 const homepageRoutes = require('./src/routes/homepage.routes');
 const renterDashboardRoutes = require('./src/routes/renter-dashboard.routes');
+const managerDashboardRoutes = require('./src/routes/manager-dashboard.routes');
 
 require('dotenv').config({ path: require('node:path').join(__dirname, '.env'), quiet: true });
 const { router: authRoutes, attachUser } = require('./src/routes/auth.routes');
@@ -25,7 +26,8 @@ app.get('/api', (req, res) => {
 });
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
-app.use(['/api/operator', '/api/renter'], attachUser);
+app.use(['/api/operator', '/api/renter', '/api/manager'], attachUser);
+app.use('/api/manager/dashboard', managerDashboardRoutes);
 app.use('/api/renter/dashboard', renterDashboardRoutes);
 
 app.use('/api/renter/bookings', renterChangeRoutes);

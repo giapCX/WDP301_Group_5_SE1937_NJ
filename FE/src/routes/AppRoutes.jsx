@@ -6,6 +6,7 @@ import LoginPage from '../features/auth/pages/LoginPage.js';
 import VietTourHomePage from '../features/home/pages/VietTourHomePage.js';
 import RenterDashboardPage from '../features/renter-dashboard/pages/RenterDashboardPage.js';
 import RolePermissionManagementPage from '../features/role-management/pages/RolePermissionManagementPage.jsx';
+import ManagerDashboardPage from '../features/manager-dashboard/pages/ManagerDashboardPage.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import CartPage from '../pages/CartPage.jsx';
@@ -18,6 +19,9 @@ export default function AppRoutes() {
       <Route element={<RequireRole role="admin" />}>
         <Route path="/admin/roles-permissions" element={<RolePermissionManagementPage />} />
         <Route path="/admin/permissions" element={<Navigate to="/admin/roles-permissions" replace />} />
+      </Route>
+      <Route element={<RequireRole role="manager" />}>
+        <Route path="/manager/dashboard" element={<ManagerDashboardPage />} />
       </Route>
       <Route element={<RequireRole role="renter" />}>
         <Route path="/renter/dashboard" element={<RenterDashboardPage />} />

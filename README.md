@@ -1,88 +1,167 @@
-# Hướng dẫn chạy dự án và MongoDB
+# VietTour Mobility
 
-Hướng dẫn này dành cho Windows, PowerShell và MongoDB chạy local trên cổng `27017`.
+Hướng dẫn cài đặt và chạy dự án trên Windows bằng PowerShell, kết nối MongoDB local và đăng nhập bằng tài khoản demo.
 
-## 1. Cài đặt dependencies
+## Yêu cầu
 
-Mở terminal tại thư mục gốc dự án:
+- Node.js và npm.
+- MongoDB Community Server đang chạy trên cổng `27017`.
+- MongoDB Compass (không bắt buộc, dùng để xem database).
+
+> MongoDB Compass chỉ là ứng dụng xem dữ liệu; cần chạy MongoDB Server riêng.
+
+## 1. Cài dependencies
+
+Mở PowerShell tại thư mục gốc dự án, nơi có `package.json`, rồi chạy:
 
 ```powershell
 npm.cmd --prefix BE install
 npm.cmd --prefix FE install
 ```
 
-## 2. Khởi động MongoDB
+Dùng `npm.cmd` nếu PowerShell báo không cho chạy `npm.ps1`.
 
-Đảm bảo dịch vụ **MongoDB Server** đang chạy. Có thể kiểm tra bằng PowerShell:
+## 2. Cấu hình môi trường
+
+Tạo file môi trường từ file mẫu nếu chưa có:
+
+```powershell
+if (!(Test-Path BE/.env)) { Copy-Item BE/.env.example BE/.env }
+if (!(Test-Path FE/.env)) { Copy-Item FE/.env.example FE/.env }
+```
+
+Kiểm tra các giá trị sau:
+
+**`BE/.env`**
+
+```env
+PORT=9999
+MONGO_URI=mongodb://127.0.0.1:27017/tourist_car_rental_demo
+CLIENT_ORIGIN=http://localhost:3000
+NODE_ENV=development
+```
+
+**`FE/.env`**
+
+```env
+VITE_API_BASE_URL=/api
+```
+
+Frontend dùng Vite proxy để chuyển `/api` tới backend. Cách này tránh lỗi CORS thường gặp khi đặt URL API trực tiếp thành `http://localhost:9999/api`. Nếu `FE/.env` đã có `VITE_API_BASE_URL`, hãy sửa đúng dòng đó; không cần ghi đè các biến môi trường khác.
+
+## 3. Khởi động MongoDB và nạp dữ liệu
+
+Kiểm tra dịch vụ MongoDB trong PowerShell:
 
 ```powershell
 Get-Service MongoDB
 ```
 
-Nếu trạng thái không phải `Running`, mở PowerShell bằng quyền Administrator và chạy:
+Nếu dịch vụ đang dừng, mở PowerShell bằng quyền Administrator và chạy:
 
 ```powershell
 Start-Service MongoDB
 ```
 
-MongoDB Compass kết nối tới instance này bằng:
-
-```text
-mongodb://127.0.0.1:27017
-```
-
-## 3. Cấu hình backend
-
-Tạo file `.env` nếu chưa có:
-
-```powershell
-Copy-Item BE/.env.example BE/.env
-```
-
-Với MongoDB standalone mặc định, mở `BE/.env` và đặt URI như sau (không thêm `?replicaSet=rentalLocal`):
-
-```env
-MONGO_URI=mongodb://127.0.0.1:27017/tourist_car_rental_demo
-```
-
-`BE/.env.example` dùng URI có replica set cho môi trường hỗ trợ transaction. Nếu dùng standalone như hướng dẫn này, hãy bỏ phần `?replicaSet=rentalLocal`.
-
-## 4. Nạp dữ liệu mẫu vào MongoDB
-
-Chạy từ thư mục gốc:
+Nạp tài khoản và dữ liệu mẫu vào database `tourist_car_rental_demo`:
 
 ```powershell
 npm.cmd --prefix BE run seed
 ```
 
-Lệnh này tạo database `tourist_car_rental_demo`, các collection và dữ liệu mẫu. Seed chỉ thêm ID mẫu chưa có; chạy lại không ghi đè document hiện có. Trong Compass, kết nối `localhost:27017` rồi bấm **Refresh** để thấy database.
-
-Có thể kiểm tra dữ liệu mẫu mà không ghi vào database:
+Seed chỉ thêm dữ liệu mẫu còn thiếu, không xóa hoặc ghi đè dữ liệu đang có. Có thể kiểm tra trước mà không thay đổi database:
 
 ```powershell
 npm.cmd --prefix BE run seed:check
 ```
 
-## 5. Chạy ứng dụng
+## 4. Chạy dự án
 
-Chạy cả backend và frontend từ thư mục gốc:
+Từ thư mục gốc, chạy cả frontend và backend:
 
 ```powershell
 npm.cmd run dev
 ```
 
-Hoặc mở hai terminal riêng:
+Để dừng, nhấn `Ctrl+C` trong terminal đó.
+
+Mặc định:
+
+- Frontend: `http://localhost:3000`
+- Trang đăng nhập: `http://localhost:3000/login`
+- Backend API: `http://localhost:9999/api`
+- MongoDB: `mongodb://127.0.0.1:27017`
+
+Vite yêu cầu cổng `3000` chưa bị ứng dụng khác sử dụng. Backend dùng cổng `9999`.
+
+### Chạy frontend và backend riêng
+
+Nếu muốn mở hai terminal, chạy từ thư mục gốc dự án.
+
+Terminal 1:
 
 ```powershell
 npm.cmd --prefix BE start
 ```
 
+Terminal 2:
+
 ```powershell
 npm.cmd --prefix FE run dev
 ```
 
-Backend chạy tại `http://localhost:9999`; frontend thường chạy tại `http://localhost:5173`.
+## 5. Đăng nhập tài khoản demo
 
-## Lưu ý về transaction và replica set
+Sau khi seed database và chạy dự án, mở `http://localhost:3000/login`.
 
-MongoDB standalone trên `27017` chạy được các chức năng database thông thường. Các nghiệp vụ booking dùng transaction cần MongoDB replica set. Nếu gặp lỗi transaction yêu cầu replica set, cần cấu hình dịch vụ MongoDB thành replica set `rentalLocal` rồi dùng URI có `?replicaSet=rentalLocal`. Không chạy `npm run db:local` khi dịch vụ MongoDB standalone đang chiếm cổng `27017`; script sẽ báo cổng bị chiếm. Xem hướng dẫn dữ liệu mẫu chi tiết tại `BE/data/sample/README.md`.
+Tài khoản Manager để xem dashboard:
+
+```text
+Email:     demo2@example.com
+Mật khẩu: Demo@12345
+```
+
+Các tài khoản demo khác cũng dùng mật khẩu `Demo@12345`:
+
+| Vai trò | Email |
+| --- | --- |
+| Admin | `demo1@example.com` |
+| Manager | `demo2@example.com` |
+| Operator | `demo3@example.com` |
+| Garage staff | `demo4@example.com` |
+| Driver | `demo5@example.com`, `demo6@example.com` |
+| Renter | `demo7@example.com`, `demo8@example.com`, `demo9@example.com` |
+
+Sau khi đăng nhập Manager, ứng dụng chuyển tới `/manager/dashboard`. Đây là tài khoản demo local, không dùng trên môi trường thật.
+
+## 6. Xem database bằng MongoDB Compass
+
+1. Kết nối Compass tới `mongodb://127.0.0.1:27017`.
+2. Làm mới danh sách database.
+3. Mở `tourist_car_rental_demo` và collection `users`, `vehicles`, `bookings`, `payments` hoặc collection cần xem.
+
+## Xử lý lỗi đăng nhập thường gặp
+
+### Trang báo không kết nối được máy chủ VietTour
+
+- Đảm bảo `npm.cmd run dev` đang chạy và terminal không báo backend crash.
+- Kiểm tra MongoDB Server đang chạy trên `27017`.
+- Kiểm tra backend `PORT=9999` trong `BE/.env`.
+- Đặt `VITE_API_BASE_URL=/api` trong `FE/.env`, sau đó dừng và chạy lại frontend để Vite nạp cấu hình mới.
+- Mở trang bằng `http://localhost:3000`; không dùng một cổng khác nếu `CLIENT_ORIGIN` chưa được cấu hình cho cổng đó.
+
+### Email hoặc mật khẩu không chính xác
+
+- Chạy `npm.cmd --prefix BE run seed` để tạo các tài khoản demo.
+- Dùng đúng `demo2@example.com` và `Demo@12345` cho vai trò Manager.
+- Kiểm tra `MONGO_URI` trong `BE/.env` đang trỏ tới database `tourist_car_rental_demo`. Backend và lệnh seed phải dùng cùng URI.
+
+### Cổng đã được sử dụng
+
+- Frontend cần cổng `3000`; backend cần cổng `9999`; MongoDB cần cổng `27017`.
+- Nếu Vite báo `Port 3000 is already in use`, đóng tiến trình frontend cũ rồi chạy lại.
+- Nếu MongoDB Server đã chiếm `27017`, không chạy `npm run db:local`; hãy dùng instance MongoDB đó và URI `mongodb://127.0.0.1:27017/tourist_car_rental_demo`.
+
+### Booking báo cần replica set
+
+MongoDB standalone đủ để đăng nhập và xem dashboard. Một số thao tác booking dùng transaction và cần MongoDB replica set. Nếu MongoDB Server hiện tại là standalone, cần cấu hình replica set riêng; không chạy `db:local` trên cổng `27017` đang được instance khác sử dụng.
