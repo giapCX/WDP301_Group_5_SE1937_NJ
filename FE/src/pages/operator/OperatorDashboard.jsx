@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import apiClient from '../../api/client';
 import BookingSidebar from '../../features/bookings/components/BookingSidebar';
 import Icon from '../../features/bookings/components/BookingIcon';
 import BookingStatus from '../../features/bookings/components/BookingStatus';
 import { bookingCode, dateTime, money } from '../../features/bookings/bookingConstants';
+import OperatorTopbar from './OperatorTopbar';
 import '../../features/bookings/styles/bookings.css';
 import './operator-dashboard.css';
 
@@ -40,6 +41,7 @@ const cards = [
 ];
 
 export default function OperatorDashboard() {
+  const user = useOutletContext();
   const [data, setData] = useState(null);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,22 +80,7 @@ export default function OperatorDashboard() {
     <div className="dispatch-app">
       <BookingSidebar />
       <div className="dispatch-workspace">
-        <header className="dispatch-topbar">
-          <div className="dispatch-breadcrumb">
-            Trang chủ <Icon name="chevron" size={11} /> Điều hành{' '}
-            <Icon name="chevron" size={11} />
-            <strong>Tổng quan điều hành</strong>
-          </div>
-          <div className="operator-profile">
-            <span className="profile-avatar">
-              <Icon name="user" size={18} />
-            </span>
-            <span>
-              <strong>Operator Staff</strong>
-              <small>Trung tâm điều hành</small>
-            </span>
-          </div>
-        </header>
+        <OperatorTopbar title="Tổng quan điều hành" user={user} />
         <main className="dispatch-content">
           <section className="dispatch-page-heading">
             <div>

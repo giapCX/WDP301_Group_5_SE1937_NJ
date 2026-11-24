@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import useBookings from '../hooks/useBookings';
 import BookingSidebar from '../components/BookingSidebar';
 import BookingStats from '../components/BookingStats';
@@ -7,12 +8,14 @@ import BookingReview from '../components/BookingReview';
 import AvailableVehicleCards from '../components/AvailableVehicleCards';
 import Icon from '../components/BookingIcon';
 import { BOOKING_TABS, bookingCode } from '../bookingConstants';
+import OperatorTopbar from '../../../pages/operator/OperatorTopbar';
 import '../styles/bookings.css';
 
 export default function BookingManagementPage({
   initialStatus = 'pending',
   screen = 'dispatch',
 }) {
+  const user = useOutletContext();
   const bookings = useBookings(initialStatus);
   const [query, setQuery] = useState('');
   const [seats, setSeats] = useState('');
@@ -53,24 +56,10 @@ export default function BookingManagementPage({
     <div className="dispatch-app">
       <BookingSidebar />
       <div className="dispatch-workspace">
-        <header className="dispatch-topbar">
-          <div className="dispatch-breadcrumb">
-            Trang chủ <Icon name="chevron" size={11} /> Điều hành{' '}
-            <Icon name="chevron" size={11} />
-            <strong>
-              {screen === 'management' ? 'Quản lý đặt xe' : 'Điều phối chuyến đi'}
-            </strong>
-          </div>
-          <div className="operator-profile">
-            <span className="profile-avatar">
-              <Icon name="user" size={18} />
-            </span>
-            <span>
-              <strong>Operator Staff</strong>
-              <small>Trung tâm điều hành</small>
-            </span>
-          </div>
-        </header>
+        <OperatorTopbar
+          title={screen === 'management' ? 'Quản lý đặt xe' : 'Điều phối chuyến đi'}
+          user={user}
+        />
         <main className="dispatch-content" id="overview">
           <section className="dispatch-page-heading">
             <div>

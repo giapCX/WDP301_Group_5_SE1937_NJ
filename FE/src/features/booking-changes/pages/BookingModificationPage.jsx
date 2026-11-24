@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import BookingSidebar from '../../bookings/components/BookingSidebar';
 import Icon from '../../bookings/components/BookingIcon';
+import OperatorTopbar from '../../../pages/operator/OperatorTopbar';
 import useChangeRequests from '../hooks/useChangeRequests';
 import ChangeRequestTable from '../components/ChangeRequestTable';
 import ChangeRequestDetail from '../components/ChangeRequestDetail';
@@ -9,6 +11,7 @@ import '../../bookings/styles/bookings.css';
 import '../styles/bookingChanges.css';
 
 export default function BookingModificationPage() {
+  const user = useOutletContext();
   const requests = useChangeRequests();
   const [selectedId, setSelectedId] = useState(null);
   const [bookingInput, setBookingInput] = useState('');
@@ -39,24 +42,7 @@ export default function BookingModificationPage() {
     <div className="dispatch-app">
       <BookingSidebar />
       <div className="dispatch-workspace">
-        <header className="dispatch-topbar">
-          <div className="dispatch-breadcrumb">
-            Trang chủ
-            <Icon name="chevron" size={11} />
-            Điều hành
-            <Icon name="chevron" size={11} />
-            <strong>Thay đổi lịch trình</strong>
-          </div>
-          <div className="operator-profile">
-            <span className="profile-avatar">
-              <Icon name="user" />
-            </span>
-            <span>
-              <strong>Operator Staff</strong>
-              <small>Trung tâm điều hành</small>
-            </span>
-          </div>
-        </header>
+        <OperatorTopbar title="Thay đổi lịch trình" user={user} />
         <main className="dispatch-content" id="overview">
           <section className="dispatch-page-heading">
             <div>
