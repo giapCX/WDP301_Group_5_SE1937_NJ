@@ -134,6 +134,16 @@ Các tài khoản demo khác cũng dùng mật khẩu `Demo@12345`:
 
 Sau khi đăng nhập Manager, ứng dụng chuyển tới `/manager/dashboard`. Đây là tài khoản demo local, không dùng trên môi trường thật.
 
+Các trang theo vai trò hiện có:
+
+| Vai trò | Trang sau đăng nhập |
+| --- | --- |
+| Manager | `/manager/dashboard` |
+| Operator | `/operator/bookings`; có thêm `/operator/dashboard`, `/operator/vehicles` và `/operator/trip-monitoring` |
+| Driver | `/driver/dashboard` |
+| Renter | `/renter/dashboard` |
+| Admin | `/admin/roles-permissions` |
+
 ### Đăng ký tài khoản mới
 
 Tại `http://localhost:3000/login`, chọn **Đăng ký mới**, nhập họ tên, số điện thoại, email và mật khẩu. Ứng dụng gửi mã OTP 6 chữ số tới email; mã hết hạn sau 10 phút và có thể gửi lại sau 60 giây. Tài khoản đăng ký mới có vai trò Người thuê.
