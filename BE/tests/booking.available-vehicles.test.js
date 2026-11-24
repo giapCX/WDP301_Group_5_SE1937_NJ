@@ -39,6 +39,10 @@ test('available vehicles API filters actual conflicts and returns useful errors'
       { ...template, booking_id: 6, booking_status: 'rejected' },
     ]);
     const app = express();
+    app.use((req, _res, next) => {
+      req.user = { user_id: 3, role_name: 'operator', status: 'active' };
+      next();
+    });
     app.use('/api/operator/bookings', routes);
     app.use(errorMiddleware);
     server = app.listen(0, '127.0.0.1');
@@ -55,7 +59,7 @@ test('available vehicles API filters actual conflicts and returns useful errors'
     // Pending requests do not reserve cars; adjacent confirmed trips do not overlap.
     assert.deepEqual(
       result.data.vehicles.map((vehicle) => vehicle.vehicle_id),
-      [1, 2, 5],
+      [2, 5],
     );
     assert.equal(
       result.data.vehicles.some((vehicle) => 'schedule_version' in vehicle),

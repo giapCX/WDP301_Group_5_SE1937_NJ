@@ -19,6 +19,7 @@ test('real replica transactions prevent overlapping approvals and roll back losi
     const template = {
       ...sample.bookings[0],
       vehicle_id: 1,
+      requested_seat_count: 5,
       pickup_time: new Date('2099-01-01T00:00:00Z'),
       estimated_end_time: new Date('2099-01-02T00:00:00Z'),
     };

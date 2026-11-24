@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import apiClient from '../../api/client';
 import BookingSidebar from '../../features/bookings/components/BookingSidebar';
 import Icon from '../../features/bookings/components/BookingIcon';
@@ -8,6 +8,7 @@ import '../../features/bookings/styles/bookings.css';
 import './operator-dashboard.css';
 
 export default function AvailableVehiclesPage() {
+  const user = useOutletContext();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,7 +42,7 @@ export default function AvailableVehiclesPage() {
               <Icon name="user" size={18} />
             </span>
             <span>
-              <strong>Operator Staff</strong>
+              <strong>{user?.full_name || 'Tài khoản điều hành'}</strong>
               <small>Trung tâm điều hành</small>
             </span>
           </div>

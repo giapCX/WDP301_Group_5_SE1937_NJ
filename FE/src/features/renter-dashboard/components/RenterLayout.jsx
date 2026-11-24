@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { logout } from '../../auth/api/authApi.js';
+import { Link, useLocation } from 'react-router-dom';
+import useSignOut from '../../auth/hooks/useSignOut.js';
 import Icon from '../../home/components/HomeIcon.js';
 import { hotline } from '../../home/homeContent.js';
 import '../styles/renterDashboard.css';
@@ -24,23 +23,9 @@ function activeLink({ pathname, hash }) {
 
 export default function RenterLayout({ user, children, mainClassName = '' }) {
   const location = useLocation();
-  const navigate = useNavigate();
   const active = activeLink(location);
   const currentLabel = navigation.find(([to]) => to === active)?.[1];
-  const [signingOut, setSigningOut] = useState(false);
-  const [error, setError] = useState('');
-
-  async function signOut() {
-    setSigningOut(true);
-    setError('');
-    try {
-      await logout();
-      navigate('/login', { replace: true });
-    } catch {
-      setError('Chưa thể đăng xuất. Vui lòng thử lại.');
-      setSigningOut(false);
-    }
-  }
+  const { error, signingOut, signOut } = useSignOut();
 
   return (
     <div className="vt-r-dashboard">

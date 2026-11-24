@@ -212,7 +212,14 @@ async function lockVehicleSchedule(vehicleId, session) {
 }
 
 // Availability is advisory; approval rechecks it inside the vehicle transaction.
-async function findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime, minSeats, session = null }) {
+async function findAvailableVehicles({
+  bookingId,
+  pickupTime,
+  estimatedEndTime,
+  seatCount,
+  minSeats,
+  session = null,
+}) {
   const statuses =
     pickupTime.getTime() > Date.now() ? ['available', 'in_use'] : ['available'];
 
@@ -221,6 +228,7 @@ async function findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime, 
       $match: {
         status: { $in: statuses },
         ...(minSeats && { seat_count: { $gte: minSeats }, price_per_day: { $gt: 0 } }),
+        ...(seatCount !== undefined && !minSeats && { seat_count: seatCount }),
       },
     },
     {

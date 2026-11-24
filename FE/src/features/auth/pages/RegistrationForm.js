@@ -37,12 +37,12 @@ export default function RegistrationForm({ onComplete }) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     if (!challengeId) {
-      const details = Object.fromEntries(form);
-      if (details.password !== details.confirmPassword) {
+      const { confirmPassword, ...nextProfile } = Object.fromEntries(form);
+      if (nextProfile.password !== confirmPassword) {
         setError('Mật khẩu xác nhận không khớp.');
         return;
       }
-      await sendOtp(details);
+      await sendOtp(nextProfile);
       return;
     }
     setPending(true);

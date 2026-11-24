@@ -33,7 +33,7 @@ export default function TripMonitoringPage() {
               <Icon name="user" size={18} />
             </span>
             <span>
-              <strong>{user?.full_name || 'Operator Staff'}</strong>
+              <strong>{user?.full_name || 'Tài khoản điều hành'}</strong>
               <small>Trung tâm điều hành</small>
             </span>
           </div>

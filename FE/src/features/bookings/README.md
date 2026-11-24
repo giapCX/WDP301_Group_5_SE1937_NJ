@@ -30,3 +30,9 @@ Không hiển thị loại dịch vụ, tên tài xế hay đánh giá giả vì
 ## Kiểm tra
 
 Chạy `npm run build` từ FE. Kiểm tra thủ công tab trạng thái, tìm kiếm, phân trang, mở chi tiết, danh sách xe, điều kiện bật nút duyệt/từ chối và màn hình nhỏ.
+
+## Số chỗ khách yêu cầu
+
+Booking.requested_seat_count biểu thị số chỗ chính xác. Ví dụ giá trị 7 chỉ trả xe 7 chỗ và được kiểm tra lại trong transaction khi duyệt. Đơn Renter gửi yêu cầu báo giá dùng requested_seats để lưu số chỗ tối thiểu. Khi khách xác nhận báo giá, hệ thống tự phân xe đủ chỗ và còn lịch.
+
+Booking cũ thiếu số chỗ bị chặn điều phối bằng lỗi 409; không hiển thị mọi xe làm phương án mặc định. Chạy node scripts/add-requested-seat-count.js từ BE để thêm field null còn thiếu; không đoán yêu cầu khách. Sau đó bổ sung thông tin thực tế khi xác nhận với Renter. Dữ liệu seed mới có số chỗ giả lập rõ ràng cho từng booking; booking mẫu #1 yêu cầu 7 chỗ. JSON bookings đã cập nhật tương ứng.

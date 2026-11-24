@@ -81,12 +81,13 @@ function mockReviewRepository(context, overrides = {}) {
     booking_id: 1,
     vehicle_id: 2,
     booking_status: 'pending',
+    requested_seat_count: 7,
     pickup_time: new Date('2099-01-01T00:00:00Z'),
     estimated_end_time: new Date('2099-01-02T00:00:00Z'),
   };
   const defaults = {
     findBookingById: pending,
-    lockVehicleSchedule: { vehicle_id: 2, status: 'available' },
+    lockVehicleSchedule: { vehicle_id: 2, status: 'available', seat_count: 7 },
     findOverlappingVehicleBooking: null,
     approvePendingBooking: { ...pending, booking_status: 'confirmed' },
     rejectPendingBooking: { ...pending, booking_status: 'rejected' },
@@ -133,6 +134,7 @@ test('approval rejects missing, processed, unavailable and conflicting data', as
           booking_id: 1,
           vehicle_id: 2,
           booking_status: 'pending',
+          requested_seat_count: 7,
           pickup_time: null,
           estimated_end_time: new Date(),
         },
@@ -187,4 +189,28 @@ test('a competing decision returns 409 for both approval and rejection', async (
   await assert.rejects(service.rejectBooking(1, { rejection_reason: 'Khong du xe' }, 3), {
     statusCode: 409,
   });
+});
+
+test('approval rejects a vehicle of the wrong size before changing booking', async (context) => {
+  const mocks = mockReviewRepository(context, {
+    lockVehicleSchedule: { vehicle_id: 1, seat_count: 5, status: 'available' },
+  });
+  await assert.rejects(service.approveBooking(1, { vehicle_id: 1 }, 3), {
+    statusCode: 409,
+  });
+  assert.equal(mocks.approvePendingBooking.mock.callCount(), 0);
+});
+
+test('approval requires recorded seat requirements and does not guess', async (context) => {
+  const mocks = mockReviewRepository(context, {
+    findBookingById: {
+      booking_id: 1,
+      booking_status: 'pending',
+      requested_seat_count: null,
+    },
+  });
+  await assert.rejects(service.approveBooking(1, { vehicle_id: 1 }, 3), {
+    statusCode: 409,
+  });
+  assert.equal(mocks.lockVehicleSchedule.mock.callCount(), 0);
 });

@@ -156,7 +156,10 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                 {booking.booking_status === 'pending' && !booking.requested_seats && !booking.quote_requested_at && (
                   <>
                     <label className="review-label" htmlFor="review-vehicle">
-                      Chọn xe phù hợp
+                      Chọn xe đúng yêu cầu:{' '}
+                      {booking.requested_seat_count
+                        ? `${booking.requested_seat_count} chỗ`
+                        : 'Chưa có số chỗ'}
                     </label>
                     <select
                       id="review-vehicle"

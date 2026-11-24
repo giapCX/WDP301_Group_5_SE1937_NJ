@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import apiClient from '../../api/client';
 import BookingSidebar from '../../features/bookings/components/BookingSidebar';
 import Icon from '../../features/bookings/components/BookingIcon';
@@ -40,6 +40,7 @@ const cards = [
 ];
 
 export default function OperatorDashboard() {
+  const user = useOutletContext();
   const [data, setData] = useState(null);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +90,7 @@ export default function OperatorDashboard() {
               <Icon name="user" size={18} />
             </span>
             <span>
-              <strong>Operator Staff</strong>
+              <strong>{user?.full_name || 'Tài khoản điều hành'}</strong>
               <small>Trung tâm điều hành</small>
             </span>
           </div>

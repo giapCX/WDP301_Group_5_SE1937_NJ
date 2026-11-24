@@ -80,6 +80,24 @@ async function getPendingBooking(id, session = null) {
   return booking;
 }
 
+function requestedSeats(booking) {
+  if (Number.isSafeInteger(booking.requested_seats) && booking.requested_seats > 0) {
+    return booking.requested_seats;
+  }
+  const recordedSeats = booking.requested_seat_count ??
+    (booking.service_type ? booking.vehicle?.seat_count : undefined);
+  if (
+    !Number.isSafeInteger(recordedSeats) ||
+    recordedSeats < 1
+  ) {
+    throw new HttpError(
+      409,
+      'Booking chưa có số chỗ khách yêu cầu. Cần bổ sung thông tin trước khi điều phối',
+    );
+  }
+  return recordedSeats;
+}
+
 // reviewedBy must come from the authenticated Operator, never the request body.
 async function approveBooking(id, input = {}, reviewedBy) {
   const reviewerId = parsePositiveInteger(reviewedBy, 'reviewed_by');
@@ -91,6 +109,7 @@ async function approveBooking(id, input = {}, reviewedBy) {
   return bookingRepository.runInTransaction(async (session) => {
     const booking = await getPendingBooking(id, session);
     if (booking.quote_requested_at) throw new HttpError(409, 'Vui lòng gửi báo giá để khách xác nhận trước.');
+    const seatCount = requestedSeats(booking);
     const pickupTime = new Date(booking.pickup_time);
     const estimatedEndTime = new Date(booking.estimated_end_time);
     if (booking.pickup_time == null || booking.estimated_end_time == null ||
@@ -100,7 +119,7 @@ async function approveBooking(id, input = {}, reviewedBy) {
 
     const candidate = booking.requested_seats ? await findAssignableVehicle({
       bookingId: booking.booking_id, pickupTime, estimatedEndTime,
-      minSeats: booking.requested_seats, session,
+      minSeats: seatCount, session,
     }) : null;
     if (booking.requested_seats && !candidate) {
       throw new HttpError(409, 'Không còn xe đủ chỗ trong khung giờ yêu cầu.');
@@ -120,6 +139,13 @@ async function approveBooking(id, input = {}, reviewedBy) {
     }
     if (Math.max(booking.requested_seats || 0, booking.passenger_count || 0) > vehicle.seat_count) {
       throw new HttpError(409, 'Xe không đủ chỗ cho số hành khách đã đăng ký.');
+    }
+
+    if (!booking.requested_seats && vehicle.seat_count !== seatCount) {
+      throw new HttpError(
+        409,
+        `Khách yêu cầu xe ${seatCount} chỗ; không thể gán xe khác số chỗ`,
+      );
     }
 
     if (!['available', 'in_use'].includes(vehicle.status)) {
@@ -187,6 +213,7 @@ async function rejectBooking(id, input = {}, reviewedBy) {
 
 async function getAvailableVehicles(id) {
   const booking = await getPendingBooking(id);
+  const seatCount = requestedSeats(booking);
   const pickupTime = new Date(booking.pickup_time);
   const estimatedEndTime = new Date(booking.estimated_end_time);
 
@@ -201,10 +228,10 @@ async function getAvailableVehicles(id) {
   }
 
   const vehicles = await bookingRepository.findAvailableVehicles({
+    ...(booking.requested_seats ? { minSeats: seatCount } : { seatCount }),
     bookingId: booking.booking_id,
     pickupTime,
     estimatedEndTime,
-    ...(booking.requested_seats && { minSeats: booking.requested_seats }),
   });
 
   return {
@@ -214,6 +241,7 @@ async function getAvailableVehicles(id) {
     vehicles: booking.service_type && !booking.requested_seats
       ? vehicles.filter((vehicle) => vehicle.vehicle_id === booking.vehicle_id && vehicle.seat_count >= booking.passenger_count)
       : vehicles,
+    requested_seat_count: seatCount,
   };
 }
 

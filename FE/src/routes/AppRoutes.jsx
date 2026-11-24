@@ -29,6 +29,7 @@ export default function AppRoutes() {
       <Route path="/vehicles" element={<VehicleCatalogPage />} />
       <Route path="/vehicles/:vehicleId" element={<VehicleDetailsPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<Navigate to="/login?mode=register" replace />} />
       <Route element={<RequireRole role="admin" />}>
         <Route
           path="/admin/roles-permissions"

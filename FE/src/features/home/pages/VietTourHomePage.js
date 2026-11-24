@@ -5,6 +5,7 @@ import BookingSearch from '../components/BookingSearch.js';
 import Icon from '../components/HomeIcon.js';
 import VehicleGrid from '../components/VehicleGrid.js';
 import { getSession } from '../../auth/api/authApi.js';
+import SignOutButton from '../../auth/components/SignOutButton.js';
 import { dashboardForRole } from '../../auth/dashboardRoutes.js';
 import useHomeResource from '../hooks/useHomeResource.js';
 import { destinations, hotline, services, standards } from '../homeContent.js';
@@ -52,6 +53,8 @@ export default function VietTourHomePage() {
   const reviews = useHomeResource(loadReviews);
   const selectedSeats = query?.minSeats || 7;
   const session = useHomeResource(getSession);
+  const [signedOut, setSignedOut] = useState(false);
+  const user = signedOut ? null : session.data;
 
   useEffect(() => {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
@@ -79,8 +82,11 @@ export default function VietTourHomePage() {
           nav.map(([label, href]) => h('a', { key: href, href }, label))),
         h('div', { className: 'vt-h-header-actions' },
           h('a', { className: 'vt-h-header-hotline', href: hotline.href }, hotline.label),
-          h(Link, { to: session.data ? dashboardForRole(session.data.role_name) : '/login', className: 'vt-h-outline' },
-            session.data?.full_name || 'Đăng nhập'),
+          h('div', { className: 'vt-h-auth-links' },
+            h(Link, { to: '/login', className: 'vt-h-outline' }, 'Đăng nhập'),
+            h(Link, { to: '/register', className: 'vt-h-outline' }, 'Đăng ký'),
+            user && h(Link, { to: dashboardForRole(user.role_name), className: 'vt-h-outline' }, user.full_name),
+            user && h(SignOutButton, { redirectTo: null, onSuccess: () => setSignedOut(true) })),
           h('a', { href: '#tim-xe', className: 'vt-h-button' }, 'Tìm xe')),
       ),
     ),

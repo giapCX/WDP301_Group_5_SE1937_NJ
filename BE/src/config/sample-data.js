@@ -22,6 +22,7 @@ const definitions = [
 ];
 const bookings = definitions.map(([renter_id,vehicle_id,day,days,estimated_price,booking_status,additional_charge],i) => ({ booking_id:i+1,renter_id,vehicle_id,pickup_location:'Demo: Quan 1, TP.HCM',dropoff_location:'Demo: Vung Tau',pickup_time:date(`${day}T01:00:00Z`),estimated_end_time:new Date(date(`${day}T01:00:00Z`).getTime()+days*86400000),estimated_price,additional_charge,booking_status,created_at:date('2026-11-01T01:00:00Z') }));
 for (const booking of bookings) {
+  booking.requested_seat_count = [7, 5, 7, 16, 7, 5][booking.booking_id - 1];
   booking.reviewed_by = null;
   booking.reviewed_at = null;
   booking.rejection_reason = null;

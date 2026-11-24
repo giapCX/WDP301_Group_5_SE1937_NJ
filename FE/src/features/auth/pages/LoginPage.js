@@ -1,6 +1,7 @@
 import { createElement as h, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSession, login, logout } from '../api/authApi.js';
+import { getSession, login } from '../api/authApi.js';
+import SignOutButton from '../components/SignOutButton.js';
 import RegistrationForm from './RegistrationForm.js';
 import { dashboardForRole } from '../dashboardRoutes.js';
 import useHomeResource from '../../home/hooks/useHomeResource.js';
@@ -25,12 +26,13 @@ function loginErrorMessage(error) {
 }
 
 export default function LoginPage() {
+  const location = useLocation();
   const session = useHomeResource(getSession);
   const [showPassword, setShowPassword] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-  const [registering, setRegistering] = useState(false);
+  const [registering, setRegistering] = useState(() => new URLSearchParams(location.search).get('mode') === 'register');
   const [notice, setNotice] = useState('');
   const navigate = useNavigate();
   const { state: loginState } = useLocation();
@@ -51,20 +53,6 @@ export default function LoginPage() {
       navigate(from || dashboardForRole(account.role_name), { replace: true, state: from?.state });
     } catch (failure) {
       setError(loginErrorMessage(failure));
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function signOut() {
-    setPending(true);
-    setError('');
-    try {
-      await logout();
-      setSignedOut(true);
-
-    } catch {
-      setError('Chưa thể đăng xuất. Vui lòng thử lại.');
     } finally {
       setPending(false);
     }
@@ -94,7 +82,7 @@ export default function LoginPage() {
           notice && h('p', { role: 'status', className: 'vt-auth-success' }, notice),
           error && h('p', { role: 'alert', className: 'vt-login-error' }, error),
           user
-            ? h('button', { className: 'vt-h-outline', type: 'button', onClick: signOut, disabled: pending }, 'Đăng xuất')
+            ? h(SignOutButton, { redirectTo: null, onSuccess: () => setSignedOut(true) })
             : registering ? h(RegistrationForm, { onComplete: (message) => changeMode(false, message) })
             : h('form', { onSubmit: submit },
               h('label', { htmlFor: 'vt-identifier' }, 'Số điện thoại hoặc email'),

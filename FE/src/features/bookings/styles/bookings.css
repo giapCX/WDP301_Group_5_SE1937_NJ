@@ -1158,7 +1158,6 @@
   }
   .dispatch-brand > span:last-child,
   .sidebar-label,
-  .sidebar-bottom,
   .dispatch-sidebar nav a {
     font-size: 0;
   }
@@ -1172,8 +1171,10 @@
     flex-shrink: 0;
   }
   .sidebar-bottom {
-    display: none;
+    display: block;
   }
+  .sidebar-help,
+  .sidebar-workspace,
   .dispatch-stats {
     gap: 10px;
   }

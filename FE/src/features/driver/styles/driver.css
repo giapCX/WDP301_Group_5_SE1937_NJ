@@ -164,26 +164,6 @@
   font-size: 10px;
   margin-top: 6px;
 }
-.driver-signout {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid #ffffff20;
-  border-radius: 6px;
-  background: transparent;
-  color: #b0c8de;
-  padding: 10px 12px;
-  width: 100%;
-  font-size: 11px;
-}
-.driver-signout:hover {
-  background: #ffffff0a;
-}
-.driver-signout-error {
-  font-size: 10px;
-  color: #ffb1b1;
-  margin: 8px 0 0;
-}
 .driver-filter-note {
   display: flex;
   gap: 7px;
@@ -292,19 +272,5 @@
   }
   .driver-sidebar .sidebar-help {
     display: none;
-  }
-  .driver-sidebar .driver-signout {
-    font-size: 0;
-    padding: 10px;
-    justify-content: center;
-  }
-  .driver-sidebar .driver-signout svg {
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-  }
-  .driver-sidebar .driver-signout-error {
-    font-size: 8px;
-    overflow-wrap: anywhere;
   }
 }

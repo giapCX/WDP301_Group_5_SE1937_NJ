@@ -82,6 +82,12 @@ export default function BookingTable({ items, loading, error, onRetry, onSelect 
                 <small>Đến {dateTime(booking.estimated_end_time)}</small>
               </td>
               <td>
+                <small>
+                  Yêu cầu:{' '}
+                  {booking.requested_seat_count
+                    ? `${booking.requested_seat_count} chỗ`
+                    : 'Chưa có số chỗ'}
+                </small>
                 {booking.vehicle ? (
                   <>
                     <strong>

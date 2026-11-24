@@ -1,7 +1,9 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useOutletContext } from 'react-router-dom';
+import SignOutButton from '../../auth/components/SignOutButton';
 import Icon from './BookingIcon';
 
 export default function BookingSidebar() {
+  const user = useOutletContext();
   return (
     <aside className="dispatch-sidebar">
       <NavLink className="dispatch-brand" to="/operator/dashboard">
@@ -58,8 +60,9 @@ export default function BookingSidebar() {
         </div>
         <div className="sidebar-workspace">
           <span className="workspace-dot" />
-          Trung tâm điều hành<span>V1.0</span>
+          {user?.full_name || 'Tài khoản điều hành'}
         </div>
+        <SignOutButton />
       </div>
     </aside>
   );

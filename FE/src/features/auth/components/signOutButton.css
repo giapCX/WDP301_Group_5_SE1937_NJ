@@ -1,0 +1,44 @@
+.auth-signout-wrap { position: relative; display: inline-flex; flex: 0 0 auto; }
+.auth-signout-button {
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 29px;
+  min-height: 29px !important;
+  width: auto;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 8px !important;
+  border: 1px solid #e6ebf1;
+  border-radius: 6px;
+  color: #5f7186;
+  background: #fff;
+  font: inherit;
+  font-size: 8px !important;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.auth-signout-wrap .auth-signout-button { height: 29px !important; }
+.auth-signout-button:hover { border-color: #f0c7c7; color: #b24f55; background: #fff8f8; }
+.auth-signout-button:disabled { opacity: .65; cursor: wait; }
+.auth-signout-button:focus-visible { outline: 2px solid #6b9cda; outline-offset: 2px; }
+.auth-signout-error {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  width: max-content;
+  max-width: min(280px, 90vw);
+  padding: 7px 10px;
+  border: 1px solid #f2c6c6;
+  border-radius: 6px;
+  color: #a63c42;
+  background: #fff8f8;
+  box-shadow: 0 5px 16px #102a4318;
+  font-size: 11px;
+  white-space: normal;
+}
+@media (max-width: 760px) {
+  .auth-signout-button { width: 30px; justify-content: center; padding: 0; }
+  .auth-signout-button > span { display: none; }
+}
