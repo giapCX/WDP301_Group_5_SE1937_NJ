@@ -15,6 +15,7 @@ const homepageRoutes = require('./src/routes/homepage.routes');
 const renterDashboardRoutes = require('./src/routes/renter-dashboard.routes');
 const managerDashboardRoutes = require('./src/routes/manager-dashboard.routes');
 const tripWorkflowRoutes = require('./src/routes/trip-workflow.routes');
+const garageWorkflowRoutes = require('./src/routes/garage-workflow.routes');
 
 require('dotenv').config({ path: require('node:path').join(__dirname, '.env'), quiet: true });
 const { router: authRoutes, attachUser } = require('./src/routes/auth.routes');
@@ -30,7 +31,7 @@ app.get('/api', (req, res) => {
 });
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
-app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver'], attachUser);
+app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver', '/api/garage'], attachUser);
 app.use('/api/manager/dashboard', managerDashboardRoutes);
 app.use('/api/driver', driverDashboardRoutes);
 app.use('/api/renter/dashboard', renterDashboardRoutes);
@@ -38,6 +39,7 @@ app.use('/api/operator', operatorOverviewRoutes);
 app.use('/api/operator/trips', tripMonitoringRoutes);
 app.use('/api/operator/dispatch', tripWorkflowRoutes.operator);
 app.use('/api/driver/workflow', tripWorkflowRoutes.driver);
+app.use('/api/garage', garageWorkflowRoutes);
 
 app.use('/api/renter/bookings', renterChangeRoutes);
 app.use('/api/renter/bookings', chargeRoutes.renterBookingRoutes);

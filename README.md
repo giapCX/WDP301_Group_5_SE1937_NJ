@@ -140,6 +140,7 @@ Các trang theo vai trò hiện có:
 | --- | --- |
 | Manager | `/manager/dashboard` |
 | Operator | `/operator/bookings`; có thêm `/operator/dashboard`, `/operator/vehicles` và `/operator/trip-monitoring` |
+| Garage staff | `/garage/tasks` |
 | Driver | `/driver/dashboard` |
 | Renter | `/renter/dashboard` |
 | Admin | `/admin/roles-permissions` |

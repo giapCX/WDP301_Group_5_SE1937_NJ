@@ -27,6 +27,22 @@ async function nextId(Model, field) {
   const [last] = await Model.find().sort({ [field]: -1 }).select(`${field} -_id`).limit(1).lean();
   return (last?.[field] || 0) + 1;
 }
+async function ensureMaintenance(vehicleId, reportedBy, description) {
+  const open = await MaintenanceRecord.exists({ vehicle_id: vehicleId, maintenance_status: { $nin: CLOSED_MAINTENANCE } });
+  if (open) return;
+  await MaintenanceRecord.create({
+    maintenance_id: await nextId(MaintenanceRecord, 'maintenance_id'), vehicle_id: vehicleId,
+    reported_by: reportedBy, description, maintenance_status: 'in_progress', started_at: now(), completed_at: null,
+  });
+}
+async function syncDriverAvailability(driverId) {
+  const [profile, activeAssignment] = await Promise.all([
+    DriverProfile.findOne({ driver_id: driverId }).select('availability_status').lean(),
+    TripAssignment.exists({ driver_id: driverId, assignment_status: { $in: ACTIVE_ASSIGNMENTS } }),
+  ]);
+  if (!profile || profile.availability_status === 'unavailable') return;
+  await DriverProfile.updateOne({ driver_id: driverId }, { $set: { availability_status: activeAssignment ? 'busy' : 'available' } });
+}
 async function audit(workflow, action, actorId, note = null) {
   workflow.history.push({ action, actor_id: actorId, note, created_at: now() });
   workflow.updated_at = now();
@@ -44,7 +60,7 @@ async function availability({ booking, driverId, vehicleId, excludeBookingId }) 
   if (!driver) throw new HttpError(404, 'Không tìm thấy hồ sơ tài xế');
   const existingWorkflow = excludeBookingId ? await TripWorkflow.findOne({ booking_id: excludeBookingId, driver_id: driverId }).lean() : null;
   const sameBookingReassignment = existingWorkflow && ['awaiting_driver', 'reassignment_required', 'vehicle_replacement_required', 'incident_open'].includes(existingWorkflow.stage);
-  if (driver.availability_status !== 'available' && !sameBookingReassignment) throw new HttpError(409, 'Tài xế hiện không ở trạng thái sẵn sàng');
+  if (driver.availability_status === 'unavailable' || (!['available', 'busy'].includes(driver.availability_status) && !sameBookingReassignment)) throw new HttpError(409, 'Tài xế hiện không ở trạng thái sẵn sàng');
   if (!driver.approved_at) throw new HttpError(409, 'Hồ sơ tài xế chưa được duyệt');
   if (!driver.license_expiry || new Date(driver.license_expiry) < end) throw new HttpError(409, 'Giấy phép tài xế hết hạn trước khi chuyến kết thúc');
   const user = await User.findOne({ user_id: driver.user_id, status: 'active' }).select('user_id full_name phone status -_id').lean();
@@ -132,6 +148,9 @@ async function assign(bookingId, input, operatorId) {
   await record.save();
   await TripAssignment.create({ assignment_id: await nextId(TripAssignment, 'assignment_id'), booking_id: booking.booking_id, driver_id: driverId, assigned_by: operatorId, assigned_at: now(), assignment_status: 'assigned' });
   await Booking.updateOne({ booking_id: booking.booking_id }, { $set: { vehicle_id: vehicleId } });
+  await syncDriverAvailability(driverId);
+  const previousDriverId = latest?.driver_id;
+  if (previousDriverId && previousDriverId !== driverId) await syncDriverAvailability(previousDriverId);
   return record.toObject();
 }
 async function mutateDriver(bookingId, actorId, action, input = {}) {
@@ -152,14 +171,15 @@ async function mutateDriver(bookingId, actorId, action, input = {}) {
     if (workflow.driver_response !== 'pending') throw new HttpError(409, 'Phân công này đã được phản hồi');
     const reason = text(input.reason, 'Lý do từ chối', 500);
     workflow.driver_response = 'rejected'; workflow.stage = 'reassignment_required'; await TripAssignment.updateOne({ assignment_id: latest.assignment_id }, { $set: { assignment_status: 'rejected' } });
-    await DriverProfile.updateOne({ driver_id: workflow.driver_id }, { $set: { availability_status: 'available' } });
+    await syncDriverAvailability(workflow.driver_id);
     await audit(workflow, 'driver_rejected', actorId, reason); await workflow.save();
     return workflow.toObject();
   } else if (action === 'vehicle_received') {
     if (workflow.driver_response !== 'accepted' || workflow.stage !== 'awaiting_vehicle') throw new HttpError(409, 'Cần chấp nhận phân công trước');
-    const passed = await VehicleInspection.exists({ booking_id: id, vehicle_id: workflow.vehicle_id, inspection_type: 'handover', result: { $in: ['passed', 'pass'] } });
-    if (!passed) throw new HttpError(409, 'Gara chưa ghi nhận kiểm tra xe đạt cho booking này');
-    const km = Number(input.odometer);
+    const inspection = await VehicleInspection.findOne({ booking_id: id, vehicle_id: workflow.vehicle_id, inspection_type: 'handover' }).sort({ inspected_at: -1, inspection_id: -1 }).lean();
+    if (!inspection || !['passed', 'pass'].includes(inspection.result)) throw new HttpError(409, 'Gara chưa ghi nhận kiểm tra xe đạt cho booking này');
+    if (!Number.isFinite(inspection.odometer)) throw new HttpError(409, 'Gara cần ghi số km trên biên bản bàn giao');
+    const km = Number(input.odometer ?? inspection.odometer);
     if (!Number.isFinite(km) || km < 0) throw new HttpError(400, 'Số km nhận xe không hợp lệ');
     workflow.vehicle_received = true; workflow.vehicle_received_at = now(); workflow.start_odometer ??= km; workflow.stage = workflow.resume_stage || 'to_pickup'; workflow.resume_stage = null;
   } else if (action === 'update') {
@@ -177,7 +197,7 @@ async function mutateDriver(bookingId, actorId, action, input = {}) {
     if (kind === 'arrived_pickup') workflow.stage = 'at_pickup';
     if (kind === 'picked_up') {
       if (!['to_pickup', 'at_pickup'].includes(workflow.stage)) throw new HttpError(409, 'Chưa thể xác nhận đón khách');
-      workflow.stage = workflow.service_type === 'tour' ? 'tour' : 'outbound'; workflow.started_at ||= now(); workflow.picked_up_at = now(); await Booking.updateOne({ booking_id: id }, { $set: { booking_status: 'in_progress' } }); await Vehicle.updateOne({ vehicle_id: workflow.vehicle_id }, { $set: { status: 'in_use' } }); await DriverProfile.updateOne({ driver_id: workflow.driver_id }, { $set: { availability_status: 'busy' } });
+      workflow.stage = workflow.service_type === 'tour' ? 'tour' : 'outbound'; workflow.started_at ||= now(); workflow.picked_up_at = now(); await Booking.updateOne({ booking_id: id }, { $set: { booking_status: 'in_progress' } }); await Vehicle.updateOne({ vehicle_id: workflow.vehicle_id }, { $set: { status: 'in_use' } });
     }
     if (kind === 'outbound_completed') {
       if (!['one_way', 'round_trip'].includes(workflow.service_type) || workflow.stage !== 'outbound') throw new HttpError(409, 'Không ở lượt đi');
@@ -229,8 +249,9 @@ async function mutateDriver(bookingId, actorId, action, input = {}) {
     await Booking.updateOne({ booking_id: id }, { $set: { booking_status: 'completed' } });
     const [assignment] = assignments;
     if (assignment) await TripAssignment.updateOne({ assignment_id: assignment.assignment_id }, { $set: { assignment_status: 'completed' } });
-    await DriverProfile.updateOne({ driver_id: workflow.driver_id }, { $set: { availability_status: 'available' } });
-    await Vehicle.updateOne({ vehicle_id: workflow.vehicle_id }, { $set: { status: 'available' } });
+    await syncDriverAvailability(workflow.driver_id);
+    const openMaintenance = await MaintenanceRecord.exists({ vehicle_id: workflow.vehicle_id, maintenance_status: { $nin: CLOSED_MAINTENANCE } });
+    if (!openMaintenance) await Vehicle.updateOne({ vehicle_id: workflow.vehicle_id }, { $set: { status: 'available' } });
   }
   const actionName = action === 'update' ? input.kind : action;
   await audit(workflow, actionName, actorId, input.reason || input.summary || null);
@@ -255,7 +276,7 @@ async function reportIncident(bookingId, driverUserId, input) {
   const incidentId = await nextId(Incident, 'incident_id');
   await Incident.create({ incident_id: incidentId, booking_id: workflow.booking_id, reported_by: driverUserId, description, incident_status: 'open', resolution_note: null, resolved_by: null });
   workflow.incident_ids.push(incidentId);
-  if (input.kind === 'vehicle_failure') { workflow.resume_stage = workflow.stage; workflow.stage = 'vehicle_replacement_required'; await Vehicle.updateOne({ vehicle_id: workflow.vehicle_id }, { $set: { status: 'maintenance' } }); }
+  if (input.kind === 'vehicle_failure') { workflow.resume_stage = workflow.stage; workflow.stage = 'vehicle_replacement_required'; await Vehicle.updateOne({ vehicle_id: workflow.vehicle_id }, { $set: { status: 'maintenance' } }); await ensureMaintenance(workflow.vehicle_id, driverUserId, `Báo hỏng trong chuyến VT-${String(workflow.booking_id).padStart(6, '0')}: ${description}`); }
   else if (input.kind === 'customer_route_change') { workflow.resume_stage = workflow.stage; workflow.stage = 'routed_to_booking_changes'; }
   else { workflow.resume_stage = workflow.stage; workflow.stage = 'incident_open'; }
   await audit(workflow, 'incident_reported', driverUserId, description); await workflow.save();
@@ -282,9 +303,13 @@ async function replaceVehicle(bookingId, vehicleId, operatorId) {
   if (!vehicle || !['available', 'in_use'].includes(vehicle.status)) throw new HttpError(409, 'Xe thay thế không sẵn sàng');
   const maintenance = await MaintenanceRecord.exists({ vehicle_id: vehicle.vehicle_id, maintenance_status: { $nin: CLOSED_MAINTENANCE } });
   if (maintenance) throw new HttpError(409, 'Xe thay thế đang bảo dưỡng');
+  const lastInspection = await VehicleInspection.findOne({ vehicle_id: vehicle.vehicle_id }).sort({ inspected_at: -1, inspection_id: -1 }).lean();
+  if (lastInspection && ['failed', 'fail'].includes(lastInspection.result)) throw new HttpError(409, 'Xe thay thế có lần kiểm tra gần nhất không đạt');
   const otherBookings = await Booking.find({ vehicle_id: vehicle.vehicle_id, booking_status: { $in: ['confirmed', 'in_progress'] }, booking_id: { $ne: id } }).select('pickup_time estimated_end_time -_id').lean();
   if (otherBookings.some((b) => windowsOverlap(now(), booking.estimated_end_time, b.pickup_time, b.estimated_end_time))) throw new HttpError(409, 'Xe thay thế đã có lịch trùng');
-  workflow.vehicle_id = vehicle.vehicle_id; workflow.vehicle_received = false; workflow.stage = 'awaiting_vehicle';
+  if (!workflow.resume_stage && !['awaiting_driver', 'awaiting_vehicle', 'vehicle_replacement_required'].includes(workflow.stage)) workflow.resume_stage = workflow.stage;
+  if (!workflow.resume_stage) workflow.resume_stage = 'to_pickup';
+  workflow.vehicle_id = vehicle.vehicle_id; workflow.vehicle_received = false; workflow.start_odometer = null; workflow.stage = 'awaiting_vehicle';
   await Booking.updateOne({ booking_id: id }, { $set: { vehicle_id: vehicle.vehicle_id } });
   await Incident.updateMany({ booking_id: id, incident_status: 'open' }, { $set: { incident_status: 'resolved', resolution_note: `Đã điều phối xe thay thế ${vehicle.plate_number}`, resolved_by: operatorId } });
   await audit(workflow, 'vehicle_replaced', operatorId, `Xe thay thế ${vehicle.plate_number}; chờ gara bàn giao`); await workflow.save();
@@ -301,8 +326,8 @@ async function reassignReturn(bookingId, driverId, operatorId) {
   if (latest) await TripAssignment.updateOne({ assignment_id: latest.assignment_id }, { $set: { assignment_status: 'cancelled' } });
   workflow.driver_id = driverId; workflow.driver_response = 'accepted'; workflow.stage = 'return_waiting'; workflow.resume_stage = null; workflow.leg = 'return';
   await TripAssignment.create({ assignment_id: await nextId(TripAssignment, 'assignment_id'), booking_id: id, driver_id: driverId, assigned_by: operatorId, assigned_at: now(), assignment_status: 'accepted' });
-  await DriverProfile.updateOne({ driver_id: driverId }, { $set: { availability_status: 'busy' } });
-  if (latest) await DriverProfile.updateOne({ driver_id: latest.driver_id }, { $set: { availability_status: 'available' } });
+  await syncDriverAvailability(driverId);
+  if (latest) await syncDriverAvailability(latest.driver_id);
   await audit(workflow, 'return_driver_reassigned', operatorId, `Tài xế lượt về: ${resources.user.full_name}`); await workflow.save();
   return workflow.toObject();
 }

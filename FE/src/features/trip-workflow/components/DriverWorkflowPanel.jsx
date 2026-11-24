@@ -13,7 +13,7 @@ export default function DriverWorkflowPanel() {
   useEffect(() => { load(); const timer = window.setInterval(load, 30000); return () => window.clearInterval(timer); }, [load]);
   async function perform(id, action, body) { setBusy(`${id}-${action}`); setError(''); try { await driverTripAction(id, action, body); await load(); } catch (failure) { setError(workflowError(failure)); } finally { setBusy(''); } }
   async function reject(item) { const reason = window.prompt('Lý do từ chối phân công:'); if (reason?.trim()) await perform(item.workflow.booking_id, 'reject', { reason }); }
-  async function receive(item) { const value = window.prompt('Số km trên đồng hồ khi nhận xe từ Gara:'); if (value !== null) await perform(item.workflow.booking_id, 'vehicle_received', { odometer: Number(value) }); }
+  async function receive(item) { await perform(item.workflow.booking_id, 'vehicle_received'); }
   async function update(item, kind, extra = {}) { await perform(item.workflow.booking_id, 'update', { kind, ...extra }); }
   async function delay(item) { const reason = window.prompt('Lý do chậm:'); if (!reason?.trim()) return; const minutes = window.prompt('Chậm bao nhiêu phút?'); if (minutes) await update(item, 'delayed', { reason, minutes: Number(minutes) }); }
   async function report(item) { const km = window.prompt('Số km cuối:'); if (km === null) return; const summary = window.prompt('Báo cáo sau chuyến (tình trạng khách/xe, phát sinh):'); if (summary?.trim()) await perform(item.workflow.booking_id, 'report', { end_odometer: Number(km), summary }); }
