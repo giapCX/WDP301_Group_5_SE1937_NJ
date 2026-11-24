@@ -6,6 +6,9 @@ export async function getGarageTasks(date, signal) {
 export async function submitGarageInspection(input) {
   return (await api.post('/garage/inspections', input)).data.data;
 }
+export function inspectionPhotoUrl(id, index) {
+  return api.getUri({ url: '/garage/inspections/' + id + '/photos/' + index });
+}
 export async function updateGarageMaintenance(id, status) {
   return (await api.patch(`/garage/maintenance/${id}`, { status })).data.data;
 }

@@ -149,7 +149,8 @@ async function assign(bookingId, input, operatorId) {
     return_pickup_location: serviceType === 'round_trip' ? text(input.return_pickup_location || booking.dropoff_location, 'Điểm đón lượt về', 255) : null,
     return_dropoff_location: serviceType === 'round_trip' ? text(input.return_dropoff_location || booking.pickup_location, 'Điểm trả lượt về', 255) : null,
     driver_id: driverId, vehicle_id: vehicleId, driver_response: 'pending', stage: 'awaiting_driver', leg: 'outbound',
-    vehicle_received: false, vehicle_returned: false, completed_stops: [], delay_minutes: 0, delay_reason: null,
+    vehicle_received: false, vehicle_returned: false, handover_inspection_id: null,
+    completed_stops: [], delay_minutes: 0, delay_reason: null,
     vehicle_received_at: null, vehicle_returned_at: null, started_at: null, picked_up_at: null,
     outbound_completed_at: null, return_started_at: null, ended_at: null,
     resume_stage: null,
@@ -194,7 +195,14 @@ async function mutateDriver(bookingId, actorId, action, input = {}) {
     const currentTime = now().getTime();
     if (currentTime < receiveFrom) throw new HttpError(409, `Chỉ có thể nhận xe trong 24 giờ trước giờ khởi hành. Bạn có thể nhận từ ${new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(receiveFrom))}`);
     if (currentTime >= pickupTime) throw new HttpError(409, 'Đã đến hoặc quá giờ khởi hành; vui lòng liên hệ Operator');
-    const inspection = await VehicleInspection.findOne({ booking_id: id, vehicle_id: workflow.vehicle_id, inspection_type: 'handover' }).sort({ inspected_at: -1, inspection_id: -1 }).lean();
+    const inspection = workflow.handover_inspection_id === null
+      ? null
+      : await VehicleInspection.findOne({
+        booking_id: id,
+        vehicle_id: workflow.vehicle_id,
+        inspection_type: 'handover',
+        ...(workflow.handover_inspection_id !== undefined && { inspection_id: workflow.handover_inspection_id }),
+      }).sort({ inspected_at: -1, inspection_id: -1 }).lean();
     if (!inspection || !['passed', 'pass'].includes(inspection.result)) throw new HttpError(409, 'Gara chưa ghi nhận kiểm tra xe đạt cho booking này');
     if (!Number.isFinite(inspection.odometer)) throw new HttpError(409, 'Gara cần ghi số km trên biên bản bàn giao');
     const km = Number(input.odometer ?? inspection.odometer);
@@ -329,6 +337,7 @@ async function replaceVehicle(bookingId, vehicleId, operatorId) {
   if (!workflow.resume_stage && !['awaiting_driver', 'awaiting_vehicle', 'vehicle_replacement_required'].includes(workflow.stage)) workflow.resume_stage = workflow.stage;
   if (!workflow.resume_stage) workflow.resume_stage = 'to_pickup';
   workflow.vehicle_id = vehicle.vehicle_id; workflow.vehicle_received = false; workflow.start_odometer = null; workflow.stage = 'awaiting_vehicle';
+  workflow.handover_inspection_id = null;
   await Booking.updateOne({ booking_id: id }, { $set: { vehicle_id: vehicle.vehicle_id } });
   await Incident.updateMany({ booking_id: id, incident_status: 'open' }, { $set: { incident_status: 'resolved', resolution_note: `Đã điều phối xe thay thế ${vehicle.plate_number}`, resolved_by: operatorId } });
   await audit(workflow, 'vehicle_replaced', operatorId, `Xe thay thế ${vehicle.plate_number}; chờ gara bàn giao`); await workflow.save();

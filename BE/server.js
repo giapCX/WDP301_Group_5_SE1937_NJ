@@ -22,16 +22,17 @@ const { router: authRoutes, attachUser } = require('./src/routes/auth.routes');
 
 const app = express();
 app.use(corsMiddleware);
+app.use(morgan('dev'));
+app.use('/api/garage', attachUser, garageWorkflowRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
 
 app.get('/api', (req, res) => {
   res.status(200).json({ message: 'Welcome Express server' });
 });
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
-app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver', '/api/garage'], attachUser);
+app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver'], attachUser);
 app.use('/api/manager/dashboard', managerDashboardRoutes);
 app.use('/api/driver', driverDashboardRoutes);
 app.use('/api/renter/dashboard', renterDashboardRoutes);
@@ -39,7 +40,6 @@ app.use('/api/operator', operatorOverviewRoutes);
 app.use('/api/operator/trips', tripMonitoringRoutes);
 app.use('/api/operator/dispatch', tripWorkflowRoutes.operator);
 app.use('/api/driver/workflow', tripWorkflowRoutes.driver);
-app.use('/api/garage', garageWorkflowRoutes);
 
 app.use('/api/renter/bookings', renterChangeRoutes);
 app.use('/api/renter/bookings', chargeRoutes.renterBookingRoutes);

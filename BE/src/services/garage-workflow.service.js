@@ -2,6 +2,8 @@ const {
   Booking, DriverProfile, MaintenanceRecord, TripWorkflow, Vehicle, VehicleInspection,
 } = require('../models');
 const HttpError = require('../utils/http-error');
+const { readPreTripDetails } = require('../utils/garage-inspection-details');
+const { lockVehicleSchedule, runInTransaction } = require('../repositories/booking.repository');
 
 const CLOSED_MAINTENANCE = ['completed', 'closed', 'cancelled'];
 const now = () => new Date();
@@ -14,8 +16,8 @@ function note(value) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > 1000) throw new HttpError(400, 'Ghi chú kiểm tra là bắt buộc (tối đa 1000 ký tự)');
   return value.trim();
 }
-async function nextId(Model, field) {
-  const [last] = await Model.find().sort({ [field]: -1 }).select(`${field} -_id`).limit(1).lean();
+async function nextId(Model, field, session = null) {
+  const [last] = await Model.find().session(session).sort({ [field]: -1 }).select(`${field} -_id`).limit(1).lean();
   return (last?.[field] || 0) + 1;
 }
 function pushHistory(workflow, action, actorId, detail) {
@@ -28,9 +30,13 @@ async function tasks(query = {}) {
   if (localDate && (!/^\d{4}-\d{2}-\d{2}$/.test(localDate) || !Number.isFinite(new Date(`${localDate}T00:00:00+07:00`).getTime()))) throw new HttpError(400, 'Ngày lọc không hợp lệ');
   const startUtc = localDate ? new Date(`${localDate}T00:00:00+07:00`) : null;
   const endUtc = startUtc ? new Date(startUtc.getTime() + 86400000) : null;
-  const workflows = await TripWorkflow.find({ stage: { $nin: ['completed'] } }).sort({ updated_at: -1 }).lean();
+  const workflows = await TripWorkflow.find({
+    stage: { $in: ['awaiting_driver', 'awaiting_vehicle', 'vehicle_replacement_required', 'awaiting_vehicle_return', 'vehicle_return_issue'] },
+  }).sort({ updated_at: -1 }).lean();
   const bookingIds = workflows.map((item) => item.booking_id);
-  const inspections = await VehicleInspection.find().sort({ inspected_at: -1, inspection_id: -1 }).lean();
+  const inspections = await VehicleInspection.find({ booking_id: { $in: bookingIds } })
+    .sort({ inspected_at: -1, inspection_id: -1 }).lean();
+  const inspectionsById = new Map(inspections.map((inspection) => [inspection.inspection_id, inspection]));
   const existingByKey = new Map();
   for (const inspection of inspections) {
     const key = [inspection.booking_id, inspection.vehicle_id, inspection.inspection_type].join(':');
@@ -38,12 +44,21 @@ async function tasks(query = {}) {
   }
   const tasks = [];
   for (const workflow of workflows) {
-    if (workflow.stage === 'awaiting_vehicle') {
-      const key = [workflow.booking_id, workflow.vehicle_id, 'handover'].join(':');
-      const inspection = existingByKey.get(key);
+    const handoverKey = [workflow.booking_id, workflow.vehicle_id, 'handover'].join(':');
+    const lastHandoverInspection = workflow.handover_inspection_id === undefined
+      ? existingByKey.get(handoverKey)
+      : inspectionsById.get(workflow.handover_inspection_id);
+    const handoverInspection = workflow.stage !== 'awaiting_driver'
+      && lastHandoverInspection?.vehicle_id === workflow.vehicle_id
+      ? lastHandoverInspection : undefined;
+    const blockedHandover = workflow.stage === 'vehicle_replacement_required'
+      && ['failed', 'fail'].includes(handoverInspection?.result);
+    if (['awaiting_driver', 'awaiting_vehicle'].includes(workflow.stage) || blockedHandover) {
       tasks.push({
         id: `handover-${workflow.booking_id}`, booking_id: workflow.booking_id, vehicle_id: workflow.vehicle_id,
-        type: 'HANDOVER_OUT', inspection_type: 'handover', status: !inspection ? 'pending' : ['passed', 'pass'].includes(inspection.result) ? 'completed' : 'in_progress', inspection,
+        type: 'HANDOVER_OUT', inspection_type: 'handover',
+        status: blockedHandover ? 'failed' : handoverInspection ? 'completed' : 'pending',
+        inspection: handoverInspection,
       });
     }
     if (workflow.stage === 'awaiting_vehicle_return' || workflow.stage === 'vehicle_return_issue') {
@@ -82,17 +97,93 @@ async function tasks(query = {}) {
   }).filter((item) => !startUtc || item.type === 'MAINTENANCE' || !item.due_at || (item.due_at >= startUtc && item.due_at < endUtc));
 }
 
+async function savePreTripInspection(input, bookingId, vehicleId, staffId) {
+  const details = readPreTripDetails(input);
+  const { result, odometer } = input;
+  const conditionNote = note(input.condition_note);
+  if (!Number.isFinite(odometer) || odometer < 0) {
+    throw new HttpError(400, 'Số km không hợp lệ');
+  }
+
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await runInTransaction(async (session) => {
+        if (!session) {
+          throw new HttpError(503, 'Cần MongoDB replica set để lưu hồ sơ và trạng thái xe cùng lúc');
+        }
+        const vehicle = await lockVehicleSchedule(vehicleId, session);
+        const workflow = await TripWorkflow.findOne({ booking_id: bookingId }).session(session);
+        if (!vehicle || !workflow || workflow.vehicle_id !== vehicleId) {
+          throw new HttpError(409, 'Xe không khớp với phân công hiện tại');
+        }
+        if (workflow.handover_inspection_id != null) {
+          throw new HttpError(409, 'Lần kiểm tra xe này đã được lưu');
+        }
+        if (workflow.stage !== 'awaiting_vehicle' || workflow.driver_response !== 'accepted') {
+          throw new HttpError(409, 'Chuyến chưa tới bước kiểm tra trước bàn giao');
+        }
+
+        const maintenance = await MaintenanceRecord.exists({
+          vehicle_id: vehicleId, maintenance_status: { $nin: CLOSED_MAINTENANCE },
+        }).session(session);
+        if (result === 'passed' && (maintenance || !['available', 'in_use'].includes(vehicle.status))) {
+          throw new HttpError(409, 'Xe đang bảo dưỡng hoặc không sẵn sàng để bàn giao');
+        }
+
+        const inspectionId = await nextId(VehicleInspection, 'inspection_id', session);
+        const [inspection] = await VehicleInspection.create([{
+          inspection_id: inspectionId, booking_id: bookingId, vehicle_id: vehicleId, staff_id: staffId,
+          inspection_type: 'handover', condition_note: conditionNote, inspected_at: now(),
+          result, odometer, ...details,
+        }], { session });
+
+        if (result === 'failed') {
+          workflow.resume_stage ||= 'to_pickup';
+          workflow.stage = 'vehicle_replacement_required';
+          await Vehicle.updateOne({ vehicle_id: vehicleId }, { $set: { status: 'maintenance' } }, { session });
+          if (!maintenance) {
+            await MaintenanceRecord.create([{
+              maintenance_id: await nextId(MaintenanceRecord, 'maintenance_id', session),
+              vehicle_id: vehicleId, reported_by: staffId,
+              description: `Không đạt kiểm tra bàn giao booking VT-${String(bookingId).padStart(6, '0')}: ${conditionNote}`,
+              maintenance_status: 'in_progress', started_at: now(), completed_at: null,
+            }], { session });
+          }
+        }
+        workflow.handover_inspection_id = inspectionId;
+        pushHistory(workflow, `handover_inspection_${result}`, staffId, conditionNote);
+        await workflow.save({ session });
+
+        const { photos, ...publicInspection } = inspection.toObject();
+        return { inspection: publicInspection, workflow: workflow.toObject() };
+      });
+    } catch (error) {
+      const duplicateInspectionId = error.keyPattern?.inspection_id && error.code === 11000;
+      const duplicateMaintenanceId = error.keyPattern?.maintenance_id && error.code === 11000;
+      if (attempt >= 2 || !(duplicateInspectionId || duplicateMaintenanceId)) throw error;
+    }
+  }
+}
+
+async function inspectionPhoto(id, index) {
+  const inspectionId = positive(id, 'inspection_id');
+  const photoIndex = positive(index, 'Ảnh kiểm tra') - 1;
+  const inspection = await VehicleInspection.findOne({ inspection_id: inspectionId }).select('+photos');
+  const photo = inspection?.photos?.[photoIndex];
+  if (!photo) throw new HttpError(404, 'Không tìm thấy ảnh kiểm tra');
+  return photo;
+}
+
 async function inspectAndHandover(input, staffId) {
   const inspectionType = input.inspection_type;
   const vehicleId = positive(input.vehicle_id, 'vehicle_id');
   if (!['handover', 'return', 'periodic'].includes(inspectionType)) throw new HttpError(400, 'Loại kiểm tra không hợp lệ');
   const bookingId = input.booking_id == null && inspectionType === 'periodic' ? null : positive(input.booking_id, 'booking_id');
+  if (inspectionType === 'handover') return savePreTripInspection(input, bookingId, vehicleId, staffId);
   const workflow = bookingId == null ? null : await TripWorkflow.findOne({ booking_id: bookingId });
-  if (inspectionType !== 'periodic') {
-    if (!workflow || !['awaiting_vehicle', 'awaiting_vehicle_return', 'vehicle_return_issue'].includes(workflow.stage)) throw new HttpError(409, 'Chuyến chưa chờ Gara kiểm tra hoặc bàn giao');
+  if (inspectionType === 'return') {
+    if (!workflow || !['awaiting_vehicle_return', 'vehicle_return_issue'].includes(workflow.stage)) throw new HttpError(409, 'Chuyến chưa tới bước trả xe');
     if (workflow.vehicle_id !== vehicleId) throw new HttpError(409, 'Xe không khớp với phân công hiện tại');
-    if (inspectionType === 'handover' && workflow.stage !== 'awaiting_vehicle') throw new HttpError(409, 'Chuyến chưa tới bước bàn giao xe');
-    if (inspectionType === 'return' && !['awaiting_vehicle_return', 'vehicle_return_issue'].includes(workflow.stage)) throw new HttpError(409, 'Chuyến chưa tới bước trả xe');
   }
   const result = input.result;
   if (!['passed', 'failed'].includes(result)) throw new HttpError(400, 'Kết quả phải là đạt hoặc không đạt');
@@ -104,20 +195,12 @@ async function inspectAndHandover(input, staffId) {
     inspection_id: inspectionId, booking_id: bookingId, vehicle_id: vehicleId, staff_id: staffId,
     inspection_type: inspectionType, condition_note: conditionNote, result, inspected_at: now(), odometer,
   });
-  if (inspectionType === 'handover' && result === 'failed') {
-    workflow.resume_stage ||= workflow.vehicle_received ? workflow.stage : 'to_pickup';
-    workflow.stage = 'vehicle_replacement_required';
-    await Vehicle.updateOne({ vehicle_id: vehicleId }, { $set: { status: 'maintenance' } });
-    const open = await MaintenanceRecord.exists({ vehicle_id: vehicleId, maintenance_status: { $nin: CLOSED_MAINTENANCE } });
-    if (!open) await MaintenanceRecord.create({ maintenance_id: await nextId(MaintenanceRecord, 'maintenance_id'), vehicle_id: vehicleId, reported_by: staffId, description: `Không đạt kiểm tra bàn giao booking VT-${String(bookingId).padStart(6, '0')}: ${conditionNote}`, maintenance_status: 'in_progress', started_at: now(), completed_at: null });
-  } else if (inspectionType === 'return' && result === 'failed') {
+  if (inspectionType === 'return' && result === 'failed') {
     workflow.resume_stage = 'awaiting_vehicle_return';
     workflow.stage = 'vehicle_return_issue';
     await Vehicle.updateOne({ vehicle_id: vehicleId }, { $set: { status: 'maintenance' } });
     const open = await MaintenanceRecord.exists({ vehicle_id: vehicleId, maintenance_status: { $nin: CLOSED_MAINTENANCE } });
     if (!open) await MaintenanceRecord.create({ maintenance_id: await nextId(MaintenanceRecord, 'maintenance_id'), vehicle_id: vehicleId, reported_by: staffId, description: `Phát hiện hư hỏng khi nhận xe booking VT-${String(bookingId).padStart(6, '0')}: ${conditionNote}`, maintenance_status: 'in_progress', started_at: now(), completed_at: null });
-  } else if (inspectionType === 'handover') {
-    await Vehicle.updateOne({ vehicle_id: vehicleId }, { $set: { status: 'in_use' } });
   } else if (inspectionType === 'return') {
     workflow.stage = 'awaiting_vehicle_return';
     const openMaintenance = await MaintenanceRecord.exists({ vehicle_id: vehicleId, maintenance_status: { $nin: CLOSED_MAINTENANCE } });
@@ -153,4 +236,4 @@ async function updateMaintenance(id, input, staffId) {
   return { maintenance_id: maintenanceId, status: maintenance.maintenance_status, updated_by: staffId };
 }
 
-module.exports = { tasks, inspectAndHandover, updateMaintenance };
+module.exports = { tasks, inspectAndHandover, inspectionPhoto, updateMaintenance };

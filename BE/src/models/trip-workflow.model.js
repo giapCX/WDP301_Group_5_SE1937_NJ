@@ -18,6 +18,7 @@ module.exports = createModel('TripWorkflow', 'trip_workflows', {
   vehicle_id: { type: Number, required: true },
   driver_response: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
   stage: { type: String, required: true, default: 'awaiting_driver' },
+  handover_inspection_id: { type: Number },
   resume_stage: { type: String, default: null },
   leg: { type: String, enum: ['outbound', 'return'], default: 'outbound' },
   vehicle_received: { type: Boolean, default: false },

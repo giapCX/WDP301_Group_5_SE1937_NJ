@@ -54,6 +54,128 @@
   color: var(--tone);
 }
 
+.garage-dashboard .dispatch-stats {
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+}
+
+.garage-check-panel {
+  display: grid;
+  gap: 16px;
+  padding: clamp(14px, 3vw, 24px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.garage-check-header, .garage-check-actions, .garage-check-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.garage-check-header h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.garage-check-header p, .garage-check-actions p, .garage-check-summary, .garage-check-hint {
+  margin: 0;
+  color: #52667c;
+  font-size: 13px;
+}
+
+.garage-check-form, .garage-check-fields {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.garage-check-fields {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.garage-check-fields legend {
+  float: none;
+  width: auto;
+  margin: 0;
+  padding: 0 5px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.garage-check-grid, .garage-check-items, .garage-check-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
+  gap: 10px;
+}
+
+.garage-check-fields label {
+  display: grid;
+  gap: 5px;
+  color: #31485f;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.garage-check-fields input, .garage-check-fields select, .garage-check-fields textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #cbd7e5;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+
+.garage-check-measurements {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 175px), 1fr));
+}
+
+.garage-check-items, .garage-check-values, .garage-check-photos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.garage-check-items li, .garage-check-values div {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #f0f5fc;
+  font-size: 13px;
+}
+
+.garage-check-values dd, .garage-check-note {
+  margin: 0;
+}
+
+.garage-check-note {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.garage-check-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.garage-task-loading {
+  margin: 0;
+  padding: 12px 16px;
+  color: #52667c;
+  font-size: 13px;
+}
+
 .garage-table td {
   padding-top: 14px;
   padding-bottom: 14px;
