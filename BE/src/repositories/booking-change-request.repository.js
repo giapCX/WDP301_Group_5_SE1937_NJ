@@ -179,7 +179,7 @@ async function applyItinerary(bookingId, after, session) {
 async function hasDriverConflict(bookingId, start, end, session) {
   const assignments = await TripAssignment.find({
     booking_id: bookingId,
-    assignment_status: 'assigned',
+    assignment_status: { $in: ['assigned', 'accepted', 'in_progress'] },
   })
     .session(session)
     .lean();
@@ -187,7 +187,7 @@ async function hasDriverConflict(bookingId, start, end, session) {
   const others = await TripAssignment.find({
     booking_id: { $ne: bookingId },
     driver_id: { $in: assignments.map((item) => item.driver_id) },
-    assignment_status: 'assigned',
+    assignment_status: { $in: ['assigned', 'accepted', 'in_progress'] },
   })
     .session(session)
     .lean();

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { Booking, TripStop, Vehicle } = require('../models');
 const HttpError = require('../utils/http-error');
 
+
 const USER_FIELDS = 'user_id full_name email phone -_id';
 const VEHICLE_FIELDS =
   'vehicle_id plate_number brand model seat_count price_per_day status -_id';
@@ -211,7 +212,7 @@ async function lockVehicleSchedule(vehicleId, session) {
     .exec();
 }
 
-// Availability is advisory; approval rechecks it inside the vehicle transaction.
+// Availability is advisory; approval rechecks it while holding the vehicle schedule lock.
 async function findAvailableVehicles({
   bookingId,
   pickupTime,

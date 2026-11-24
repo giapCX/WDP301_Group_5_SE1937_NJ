@@ -16,6 +16,9 @@ const renterDashboardRoutes = require('./src/routes/renter-dashboard.routes');
 const managerDashboardRoutes = require('./src/routes/manager-dashboard.routes');
 const renterReservationRoutes = require('./src/routes/renter-reservation.routes');
 const { webhook: paymentWebhook } = require('./src/services/renter-payment.service');
+const managerMaintenanceRoutes = require('./src/routes/manager-maintenance.routes');
+const tripWorkflowRoutes = require('./src/routes/trip-workflow.routes');
+const garageWorkflowRoutes = require('./src/routes/garage-workflow.routes');
 
 require('dotenv').config({ path: require('node:path').join(__dirname, '.env'), quiet: true });
 const { router: authRoutes, attachUser } = require('./src/routes/auth.routes');
@@ -23,9 +26,10 @@ const { router: authRoutes, attachUser } = require('./src/routes/auth.routes');
 const app = express();
 app.use(corsMiddleware);
 app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' }), paymentWebhook);
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
+app.use('/api/garage', attachUser, garageWorkflowRoutes);
 
 app.get('/api', (req, res) => {
   res.status(200).json({ message: 'Welcome Express server' });
@@ -34,10 +38,13 @@ app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
 app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver'], attachUser);
 app.use('/api/manager/dashboard', managerDashboardRoutes);
+app.use('/api/manager/maintenance-approvals', managerMaintenanceRoutes);
 app.use('/api/driver', driverDashboardRoutes);
 app.use('/api/renter/dashboard', renterDashboardRoutes);
 app.use('/api/operator', operatorOverviewRoutes);
 app.use('/api/operator/trips', tripMonitoringRoutes);
+app.use('/api/operator/dispatch', tripWorkflowRoutes.operator);
+app.use('/api/driver/workflow', tripWorkflowRoutes.driver);
 
 app.use('/api/renter/bookings', renterReservationRoutes);
 app.use('/api/renter/bookings', renterChangeRoutes);

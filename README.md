@@ -140,9 +140,12 @@ Các trang theo vai trò hiện có:
 | --- | --- |
 | Manager | `/manager/dashboard` |
 | Operator | `/operator/bookings`; có thêm `/operator/dashboard`, `/operator/vehicles` và `/operator/trip-monitoring` |
+| Garage staff | `/garage/tasks` |
 | Driver | `/driver/dashboard` |
 | Renter | `/renter/dashboard` |
 | Admin | `/admin/roles-permissions` |
+
+Xem [kịch bản demo và sơ đồ luồng Gara](FE/src/features/garage/README.md) để thử kiểm tra, bàn giao, tiếp nhận và bảo dưỡng xe.
 
 ### Đăng ký tài khoản mới
 

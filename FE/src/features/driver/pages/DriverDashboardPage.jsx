@@ -10,6 +10,8 @@ import Icon from '../../bookings/components/BookingIcon';
 import { bookingCode, dateTime } from '../../bookings/bookingConstants';
 import '../../bookings/styles/bookings.css';
 import '../styles/driver.css';
+import DriverWorkflowPanel from '../../trip-workflow/components/DriverWorkflowPanel';
+import '../../trip-workflow/styles/workflow.css';
 
 export default function DriverDashboardPage() {
   const user = useOutletContext();
@@ -77,6 +79,7 @@ export default function DriverDashboardPage() {
             </button>
           </section>
           <DriverStats stats={data?.stats} />
+          <DriverWorkflowPanel />
           {error && (
             <div className="dispatch-alert" role="alert">
               {error}

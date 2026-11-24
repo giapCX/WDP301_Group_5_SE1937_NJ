@@ -1,4 +1,11 @@
+const { Schema } = require('mongoose');
 const { createModel } = require('./model-factory');
+const { CHECKLIST_ITEMS } = require('../utils/garage-inspection-details');
+const photoSchema = require('./garage-photo.schema');
+
+const checklistSchema = new Schema(Object.fromEntries(CHECKLIST_ITEMS.map((item) => [
+  item, { type: String, enum: ['passed', 'failed'], required: true },
+])), { _id: false });
 
 module.exports = createModel(
   'VehicleInspection',
@@ -51,6 +58,18 @@ module.exports = createModel(
       required: true,
       maxlength: 30,
     },
+    odometer: {
+      type: Number,
+      default: null,
+      min: 0,
+      validate: { validator: (value) => value === null || Number.isFinite(value), message: 'Must be a finite number' },
+    },
+    checklist: { type: checklistSchema },
+    before_inspection_id: { type: Number },
+    maintenance_id: { type: Number },
+    fuel_percent: { type: Number, min: 0, max: 100, validate: Number.isInteger },
+    photos: { type: [photoSchema], default: undefined, select: false },
+    photo_count: { type: Number, default: 0 },
     inspected_at: {
       type: Date,
       required: true,

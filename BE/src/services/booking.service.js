@@ -98,6 +98,12 @@ function requestedSeats(booking) {
   return recordedSeats;
 }
 
+function assertVehicleSeats(vehicle, seatCount) {
+  if (vehicle.seat_count !== seatCount) {
+    throw new HttpError(409, `Khách yêu cầu xe ${seatCount} chỗ; không thể gán xe khác số chỗ`);
+  }
+}
+
 // reviewedBy must come from the authenticated Operator, never the request body.
 async function approveBooking(id, input = {}, reviewedBy) {
   const reviewerId = parsePositiveInteger(reviewedBy, 'reviewed_by');
@@ -246,6 +252,8 @@ async function getAvailableVehicles(id) {
 }
 
 module.exports = {
+  requestedSeats,
+  assertVehicleSeats,
   getAvailableVehicles,
   getBookings,
   getBookingById,

@@ -56,6 +56,8 @@ module.exports = createModel(
         message: 'Must be a safe integer',
       },
     },
+    schedule_lock_token: { type: String, default: null, select: false },
+    schedule_lock_at: { type: Date, default: null, select: false },
     status: {
       type: String,
       required: true,

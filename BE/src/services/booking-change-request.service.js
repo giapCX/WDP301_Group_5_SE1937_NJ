@@ -1,7 +1,7 @@
 const { isDeepStrictEqual } = require('node:util');
 const bookingRepository = require('../repositories/booking.repository');
 const changeRequestRepository = require('../repositories/booking-change-request.repository');
-const { BookingChangeRequest } = require('../models');
+const { BookingChangeRequest, TripWorkflow } = require('../models');
 const HttpError = require('../utils/http-error');
 
 function parsePositiveInteger(value, field) {
@@ -182,6 +182,14 @@ async function approveChangeRequest(id, reviewerId) {
       session,
     );
     if (!updated) throw new HttpError(409, 'Booking đã được xử lý bởi người khác');
+    const workflow = await TripWorkflow.findOne({ booking_id: booking.booking_id, stage: 'routed_to_booking_changes' }).session(session);
+    if (workflow) {
+      workflow.stage = workflow.resume_stage || 'reassignment_required';
+      workflow.resume_stage = null;
+      workflow.history.push({ action: 'booking_change_approved', actor_id: reviewer, note: 'Đã áp dụng lịch trình được duyệt ở luồng 4', created_at: new Date() });
+      workflow.updated_at = new Date();
+      await workflow.save({ session });
+    }
     const result = await changeRequestRepository.decidePendingRequest(
       requestId,
       'approved',
@@ -203,7 +211,7 @@ async function rejectChangeRequest(id, input = {}, reviewerId) {
     input.rejection_reason.trim().length > 2000
   )
     throw new HttpError(400, 'Lý do từ chối phải có từ 1 đến 2000 ký tự');
-  await pendingRequest(requestId);
+  const request = await pendingRequest(requestId);
   const result = await changeRequestRepository.decidePendingRequest(
     requestId,
     'rejected',
@@ -211,6 +219,14 @@ async function rejectChangeRequest(id, input = {}, reviewerId) {
     input.rejection_reason.trim(),
   );
   if (!result) throw new HttpError(409, 'Yêu cầu đã được xử lý bởi người khác');
+  const workflow = await TripWorkflow.findOne({ booking_id: request.booking_id, stage: 'routed_to_booking_changes' });
+  if (workflow) {
+    workflow.stage = workflow.resume_stage || 'reassignment_required';
+    workflow.resume_stage = null;
+    workflow.history.push({ action: 'booking_change_rejected', actor_id: reviewer, note: input.rejection_reason.trim(), created_at: new Date() });
+    workflow.updated_at = new Date();
+    await workflow.save();
+  }
   return result;
 }
 
