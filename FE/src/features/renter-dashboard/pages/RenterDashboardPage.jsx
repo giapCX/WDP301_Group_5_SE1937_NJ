@@ -20,10 +20,14 @@ const metrics = [
   ['upcoming', 'Chuyến đi sắp tới', 'calendar_month', 'indigo'],
   ['offers', 'Ưu đãi đang có', 'redeem', 'orange'],
 ];
+const configuredGroupSeats = Number(import.meta.env.VITE_RENTER_GROUP_MIN_SEATS);
+const groupMinimumSeats = Number.isSafeInteger(configuredGroupSeats) && configuredGroupSeats > 0
+  ? configuredGroupSeats : 7;
 const shortcuts = [
   ['flight_land', 'Đưa đón sân bay', 'Chọn điểm đón và giờ hẹn.', '/renter/bookings/new?service=roundtrip'],
   ['route', 'Thuê xe theo tour', 'Lên lịch qua nhiều điểm dừng.', '/renter/bookings/new?service=tour'],
-  ['airport_shuttle', 'Limousine và xe đoàn', 'Đặt xe từ 7 chỗ trở lên.', '/renter/bookings/new?minSeats=7'],
+  ['airport_shuttle', 'Limousine và xe đoàn', `Đặt xe từ ${groupMinimumSeats} chỗ trở lên.`,
+    `/renter/bookings/new?minSeats=${groupMinimumSeats}`],
   ['edit_road', 'Lộ trình tự thiết kế', 'Chọn điểm đến cho chuyến đi riêng.', '/renter/bookings/new?service=tour'],
 ];
 

@@ -6,8 +6,8 @@ export async function searchVehicles(filters, signal) {
   const { data } = await api.get('/homepage/vehicles', { params: filters, signal });
   return data;
 }
-export async function loadVehicleTypes(_params, signal) {
-  return (await api.get('/homepage/vehicle-types', { signal })).data.types;
+export async function loadVehicleFilters(_params, signal) {
+  return (await api.get('/homepage/vehicles/filters', { signal })).data;
 }
 export async function loadSeatOptions(_params, signal) {
   return (await api.get(bookings + '/seat-options', { signal })).data.seats;

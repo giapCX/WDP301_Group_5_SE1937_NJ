@@ -1,28 +1,29 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import useHomeResource from '../../home/hooks/useHomeResource.js';
-import { loadVehicleTypes, searchVehicles } from '../api/reservationsApi.js';
+import { loadVehicleFilters, searchVehicles } from '../api/reservationsApi.js';
 import ReservationLayout from '../components/ReservationLayout.jsx';
 import VehicleSummary from '../components/VehicleSummary.jsx';
 import { earliestTripMinute, errorMessage, minuteMs, money, services, toTripTime } from '../reservationFormat.js';
 
 const initialFilters = { minSeats: 1, page: 1 };
-const seatOptions = [4, 5, 7, 9, 12, 16, 29, 35, 45, 50];
-const priceThresholds = [1_000_000, 1_500_000, 2_000_000, 3_000_000];
-const priceRanges = priceThresholds.map((max, index) => {
-  const min = priceThresholds[index - 1];
-  return {
-    label: min ? `${money(min)} đến dưới ${money(max)}` : `Dưới ${money(max)}`,
-    minPrice: min,
-    maxPrice: max - 1,
-  };
-});
-const topThreshold = priceThresholds.at(-1);
-priceRanges.push({ label: `Từ ${money(topThreshold)} trở lên`, minPrice: topThreshold });
 const timeMessages = {
   startAt: 'Giờ bắt đầu phải hợp lệ và không được trước thời điểm hiện tại.',
   endAt: 'Giờ kết thúc phải hợp lệ và không được trước giờ bắt đầu.',
 };
+
+function buildPriceRanges(prices) {
+  return prices.map((minPrice, index) => {
+    const nextPrice = prices[index + 1];
+    return {
+      minPrice,
+      priceBelow: nextPrice,
+      label: nextPrice === undefined
+        ? `Từ ${money(minPrice)} trở lên`
+        : `${money(minPrice)} đến dưới ${money(nextPrice)}`,
+    };
+  });
+}
 
 function VehicleCatalog({ minSeats, serviceType, catalogSearch }) {
   const [filters, setFilters] = useState(() => ({ ...initialFilters, minSeats: minSeats ?? initialFilters.minSeats }));
@@ -30,7 +31,12 @@ function VehicleCatalog({ minSeats, serviceType, catalogSearch }) {
   const [earliestStart, setEarliestStart] = useState(earliestTripMinute);
   const [selectedStart, setSelectedStart] = useState('');
   const vehicles = useHomeResource(searchVehicles, filters);
-  const types = useHomeResource(loadVehicleTypes);
+  const filterOptions = useHomeResource(loadVehicleFilters);
+  const seatOptions = [...new Set([
+    ...(minSeats === undefined ? [] : [minSeats]),
+    ...(filterOptions.data?.seats ?? []),
+  ])].sort((a, b) => a - b);
+  const priceRanges = buildPriceRanges(filterOptions.data?.prices ?? []);
   const earliestEnd = selectedStart > earliestStart ? selectedStart : earliestStart;
 
   useEffect(() => {
@@ -86,13 +92,13 @@ function VehicleCatalog({ minSeats, serviceType, catalogSearch }) {
       }
     }
     setTimeError('');
-    const selectedRange = priceRange === '' ? undefined : priceRanges[Number(priceRange)];
+    const selectedRange = priceRanges.find(({ minPrice }) => String(minPrice) === priceRange);
     setFilters({
       page: 1,
       type: type || undefined,
       minSeats: Number(minSeats) || initialFilters.minSeats,
       minPrice: selectedRange?.minPrice,
-      maxPrice: selectedRange?.maxPrice,
+      priceBelow: selectedRange?.priceBelow,
       startAt: startTime, endAt: endTime,
     });
   }
@@ -101,7 +107,7 @@ function VehicleCatalog({ minSeats, serviceType, catalogSearch }) {
     <ReservationLayout publicPage>
       <div className="rv-heading"><h1>Tìm xe cho chuyến đi</h1><p>Chọn xe theo số chỗ, giá thuê và lịch sử dụng.</p></div>
       <form onSubmit={search} className="rv-panel rv-filters">
-        <label>Loại xe<select name="type"><option value="">Tất cả</option>{types.data?.map((type) => <option key={type}>{type}</option>)}</select></label>
+        <label>Loại xe<select name="type"><option value="">Tất cả</option>{filterOptions.data?.types.map((type) => <option key={type}>{type}</option>)}</select></label>
         <label>Số chỗ tối thiểu
           <select name="minSeats" defaultValue={minSeats ?? ''}>
             <option value="">Tất cả số chỗ</option>
@@ -111,7 +117,7 @@ function VehicleCatalog({ minSeats, serviceType, catalogSearch }) {
         <label>Khoảng giá thuê / ngày
           <select name="priceRange">
             <option value="">Tất cả mức giá</option>
-            {priceRanges.map(({ label }, index) => <option key={label} value={index}>{label}</option>)}
+            {priceRanges.map(({ label, minPrice }) => <option key={minPrice} value={minPrice}>{label}</option>)}
           </select>
         </label>
         <label>Bắt đầu (giờ VN)
@@ -128,6 +134,7 @@ function VehicleCatalog({ minSeats, serviceType, catalogSearch }) {
         </label>
         <button className="rv-button rv-primary" type="submit">Tìm xe</button>
         {timeError && <p id="vehicle-time-error" role="alert" className="rv-error rv-filter-error">{timeMessages[timeError]}</p>}
+        {filterOptions.error && <p role="alert" className="rv-error rv-filter-error">Chưa tải được lựa chọn lọc xe.</p>}
       </form>
       {vehicles.loading && <p role="status">Đang tìm xe…</p>}
       {vehicles.error && <p role="alert" className="rv-error">{errorMessage(vehicles.error, 'Chưa thể tải danh sách xe.')}</p>}
@@ -156,7 +163,9 @@ function VehicleCatalog({ minSeats, serviceType, catalogSearch }) {
 
 export default function VehicleCatalogPage() {
   const [params] = useSearchParams();
-  const minSeats = seatOptions.find((seats) => String(seats) === params.get('minSeats'));
+  const rawMinSeats = params.get('minSeats');
+  const seats = Number(rawMinSeats);
+  const minSeats = /^[1-9]\d*$/.test(rawMinSeats ?? '') && Number.isSafeInteger(seats) ? seats : undefined;
   const serviceType = services.find(({ value }) => value === params.get('service'))?.value;
   const query = params.toString();
 
