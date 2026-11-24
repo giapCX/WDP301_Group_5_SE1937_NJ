@@ -1,7 +1,10 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useOutletContext } from 'react-router-dom';
+import useSignOut from '../../auth/hooks/useSignOut';
 import Icon from './BookingIcon';
 
 export default function BookingSidebar() {
+  const user = useOutletContext();
+  const { error, signingOut, signOut } = useSignOut();
   return (
     <aside className="dispatch-sidebar">
       <NavLink className="dispatch-brand" to="/operator/dashboard">
@@ -58,8 +61,13 @@ export default function BookingSidebar() {
         </div>
         <div className="sidebar-workspace">
           <span className="workspace-dot" />
-          Trung tâm điều hành<span>V1.0</span>
+          {user?.full_name || 'Tài khoản điều hành'}
         </div>
+        <button className="dispatch-signout" type="button" onClick={signOut} disabled={signingOut}>
+          <Icon name="arrow" size={16} />
+          {signingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
+        </button>
+        {error && <p className="dispatch-signout-error" role="alert">{error}</p>}
       </div>
     </aside>
   );

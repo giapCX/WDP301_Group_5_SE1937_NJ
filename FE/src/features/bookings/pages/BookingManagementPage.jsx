@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import useBookings from '../hooks/useBookings';
 import BookingSidebar from '../components/BookingSidebar';
 import BookingStats from '../components/BookingStats';
@@ -13,6 +14,7 @@ export default function BookingManagementPage({
   initialStatus = 'pending',
   screen = 'dispatch',
 }) {
+  const user = useOutletContext();
   const bookings = useBookings(initialStatus);
   const [query, setQuery] = useState('');
   const [seats, setSeats] = useState('');
@@ -32,6 +34,10 @@ export default function BookingManagementPage({
         );
       }),
     [bookings.items, query, seats],
+  );
+  const seatOptions = useMemo(
+    () => [...new Set(bookings.items.map((booking) => booking.vehicle?.seat_count).filter(Number.isFinite))].sort((a, b) => a - b),
+    [bookings.items],
   );
   const today = new Intl.DateTimeFormat('vi-VN', {
     day: '2-digit',
@@ -66,7 +72,7 @@ export default function BookingManagementPage({
               <Icon name="user" size={18} />
             </span>
             <span>
-              <strong>Operator Staff</strong>
+              <strong>{user?.full_name || 'Tài khoản điều hành'}</strong>
               <small>Trung tâm điều hành</small>
             </span>
           </div>
@@ -158,7 +164,7 @@ export default function BookingManagementPage({
                   onChange={(event) => setSeats(event.target.value)}
                 >
                   <option value="">Tất cả số chỗ</option>
-                  {[5, 7, 16].map((value) => (
+                  {seatOptions.map((value) => (
                     <option key={value} value={value}>
                       {value} chỗ
                     </option>

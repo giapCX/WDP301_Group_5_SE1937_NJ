@@ -1,24 +1,9 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { logout } from '../../auth/api/authApi';
-import { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import useSignOut from '../../auth/hooks/useSignOut';
 import Icon from '../../bookings/components/BookingIcon';
 
 export default function DriverSidebar() {
-  const navigate = useNavigate();
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  async function signOut() {
-    setBusy(true);
-    setError('');
-    try {
-      await logout();
-      navigate('/login', { replace: true });
-    } catch {
-      setError('Chưa đăng xuất được. Hãy thử lại.');
-    } finally {
-      setBusy(false);
-    }
-  }
+  const { error, signingOut, signOut } = useSignOut();
   return (
     <aside className="dispatch-sidebar driver-sidebar">
       <NavLink
@@ -59,11 +44,12 @@ export default function DriverSidebar() {
         <button
           className="driver-signout"
           aria-label="Đăng xuất"
-          disabled={busy}
+          type="button"
+          disabled={signingOut}
           onClick={signOut}
         >
           <Icon name="arrow" />
-          {busy ? 'Đang đăng xuất…' : 'Đăng xuất'}
+          {signingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
         </button>
         {error && (
           <p className="driver-signout-error" role="alert">

@@ -1,6 +1,6 @@
-import { createElement as h, useState } from 'react';
-import { Link, Navigate, useNavigate, useOutletContext } from 'react-router-dom';
-import { logout } from '../../auth/api/authApi.js';
+import { createElement as h } from 'react';
+import { Link, Navigate, useOutletContext } from 'react-router-dom';
+import useSignOut from '../../auth/hooks/useSignOut.js';
 import { LoginFooter } from '../../auth/pages/LoginLayout.js';
 import Icon from '../../home/components/HomeIcon.js';
 import { hotline } from '../../home/homeContent.js';
@@ -113,21 +113,7 @@ function RenterContent({ data, user }) {
 export default function RenterDashboardPage() {
   const user = useOutletContext();
   const result = useHomeResource(loadRenterDashboard);
-  const navigate = useNavigate();
-  const [signOutError, setSignOutError] = useState('');
-  const [signingOut, setSigningOut] = useState(false);
-
-  async function signOut() {
-    setSigningOut(true);
-    setSignOutError('');
-    try {
-      await logout();
-      navigate('/login', { replace: true });
-    } catch {
-      setSignOutError('Chưa thể đăng xuất. Vui lòng thử lại.');
-      setSigningOut(false);
-    }
-  }
+  const { error: signOutError, signingOut, signOut } = useSignOut();
 
   if (result.error?.response?.status === 401) return h(Navigate, { to: '/login', replace: true });
   return h('div', { className: 'vt-homepage vt-r-dashboard' },

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import BookingSidebar from '../../bookings/components/BookingSidebar';
 import Icon from '../../bookings/components/BookingIcon';
 import useChangeRequests from '../hooks/useChangeRequests';
@@ -9,6 +10,7 @@ import '../../bookings/styles/bookings.css';
 import '../styles/bookingChanges.css';
 
 export default function BookingModificationPage() {
+  const user = useOutletContext();
   const requests = useChangeRequests();
   const [selectedId, setSelectedId] = useState(null);
   const [bookingInput, setBookingInput] = useState('');
@@ -52,7 +54,7 @@ export default function BookingModificationPage() {
               <Icon name="user" />
             </span>
             <span>
-              <strong>Operator Staff</strong>
+              <strong>{user?.full_name || 'Tài khoản điều hành'}</strong>
               <small>Trung tâm điều hành</small>
             </span>
           </div>

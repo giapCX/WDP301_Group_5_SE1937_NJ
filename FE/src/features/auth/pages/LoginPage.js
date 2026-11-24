@@ -1,6 +1,7 @@
 import { createElement as h, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSession, login, logout } from '../api/authApi.js';
+import { getSession, login } from '../api/authApi.js';
+import useSignOut from '../hooks/useSignOut.js';
 import RegistrationForm from './RegistrationForm.js';
 import { dashboardForRole } from '../dashboardRoutes.js';
 import useHomeResource from '../../home/hooks/useHomeResource.js';
@@ -34,6 +35,10 @@ export default function LoginPage() {
   const [registering, setRegistering] = useState(() => new URLSearchParams(location.search).get('mode') === 'register');
   const [notice, setNotice] = useState('');
   const navigate = useNavigate();
+  const { error: signOutError, signingOut, signOut } = useSignOut({
+    redirectTo: null,
+    onSuccess: () => setSignedOut(true),
+  });
   const user = signedOut ? null : session.data;
 
   async function submit(event) {
@@ -50,20 +55,6 @@ export default function LoginPage() {
       navigate(dashboardForRole(account.role_name), { replace: true });
     } catch (failure) {
       setError(loginErrorMessage(failure));
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function signOut() {
-    setPending(true);
-    setError('');
-    try {
-      await logout();
-      setSignedOut(true);
-
-    } catch {
-      setError('Chưa thể đăng xuất. Vui lòng thử lại.');
     } finally {
       setPending(false);
     }
@@ -91,9 +82,9 @@ export default function LoginPage() {
           !user && h('p', null, registering ? 'Đăng ký tài khoản người thuê và xác nhận email.'
             : 'Truy cập lịch trình và quản lý các chuyến đi của bạn.'),
           notice && h('p', { role: 'status', className: 'vt-auth-success' }, notice),
-          error && h('p', { role: 'alert', className: 'vt-login-error' }, error),
+          (error || signOutError) && h('p', { role: 'alert', className: 'vt-login-error' }, error || signOutError),
           user
-            ? h('button', { className: 'vt-h-outline', type: 'button', onClick: signOut, disabled: pending }, 'Đăng xuất')
+            ? h('button', { className: 'vt-h-outline', type: 'button', onClick: signOut, disabled: pending || signingOut }, signingOut ? 'Đang đăng xuất…' : 'Đăng xuất')
             : registering ? h(RegistrationForm, { onComplete: (message) => changeMode(false, message) })
             : h('form', { onSubmit: submit },
               h('label', { htmlFor: 'vt-identifier' }, 'Số điện thoại hoặc email'),

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
+import useSignOut from '../../auth/hooks/useSignOut.js';
 import AccessControlIcon from '../components/AccessControlIcon';
 import AccessControlMetrics from '../components/AccessControlMetrics';
 import AccountsPanel from '../components/AccountsPanel';
@@ -7,11 +9,12 @@ import AdminSidebar from '../components/AdminSidebar';
 import AuditPanel from '../components/AuditPanel';
 import PermissionMatrix from '../components/PermissionMatrix';
 import useAccessControl from '../hooks/useAccessControl';
-import { DEMO_ADMIN_PROFILE } from '../data/accessControlDemoData';
 import { exportAccountsCsv } from '../utils/accessControlExport';
 import '../styles/accessControl.css';
 
 export default function RolePermissionManagementPage() {
+  const user = useOutletContext();
+  const { error: signOutError, signingOut, signOut } = useSignOut();
   const [activeNavigation, setActiveNavigation] = useState('Quản lý vai trò & quyền');
   const [activeTab, setActiveTab] = useState('Ma trận phân quyền');
   const [isRoleDialogOpen, setRoleDialogOpen] = useState(false);
@@ -27,9 +30,11 @@ export default function RolePermissionManagementPage() {
             <span className="system-status"><i/> Chế độ xem trước</span>
             <button className="top-icon-button" type="button" aria-label="Thông báo"><AccessControlIcon name="bell" size={18}/><i/></button>
             <span className="top-divider"/>
-            <button className="profile-button" type="button"><span className="profile-avatar">{DEMO_ADMIN_PROFILE.initials}</span><span><b>{DEMO_ADMIN_PROFILE.name}</b><small>{DEMO_ADMIN_PROFILE.role}</small></span><span className="profile-caret">⌄</span></button>
+            <div className="profile-button"><span className="profile-avatar">{user?.full_name?.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase() || '--'}</span><span><b>{user?.full_name || 'Tài khoản quản trị'}</b><small>{user?.role_name || 'Quản trị viên'}</small></span></div>
+            <button className="acl-logout" type="button" onClick={signOut} disabled={signingOut}>{signingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}</button>
           </div>
         </header>
+        {signOutError && <p className="acl-signout-error" role="alert">{signOutError}</p>}
 
         <div className="acl-content">
           <section className="acl-page-heading">

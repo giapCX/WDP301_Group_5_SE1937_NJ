@@ -5,6 +5,7 @@ import BookingSearch from '../components/BookingSearch.js';
 import Icon from '../components/HomeIcon.js';
 import VehicleGrid from '../components/VehicleGrid.js';
 import { getSession } from '../../auth/api/authApi.js';
+import useSignOut from '../../auth/hooks/useSignOut.js';
 import { dashboardForRole } from '../../auth/dashboardRoutes.js';
 import useHomeResource from '../hooks/useHomeResource.js';
 import { destinations, hotline, services, standards } from '../homeContent.js';
@@ -52,6 +53,12 @@ export default function VietTourHomePage() {
   const reviews = useHomeResource(loadReviews);
   const selectedSeats = query?.minSeats || 7;
   const session = useHomeResource(getSession);
+  const [signedOut, setSignedOut] = useState(false);
+  const { error: signOutError, signingOut, signOut } = useSignOut({
+    redirectTo: null,
+    onSuccess: () => setSignedOut(true),
+  });
+  const user = signedOut ? null : session.data;
 
   useEffect(() => {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
@@ -82,10 +89,12 @@ export default function VietTourHomePage() {
           h('div', { className: 'vt-h-auth-links' },
             h(Link, { to: '/login', className: 'vt-h-outline' }, 'Đăng nhập'),
             h(Link, { to: '/register', className: 'vt-h-outline' }, 'Đăng ký'),
-            session.data && h(Link, { to: dashboardForRole(session.data.role_name), className: 'vt-h-outline' }, session.data.full_name)),
+            user && h(Link, { to: dashboardForRole(user.role_name), className: 'vt-h-outline' }, user.full_name),
+            user && h('button', { type: 'button', className: 'vt-h-outline', onClick: signOut, disabled: signingOut }, signingOut ? 'Đang đăng xuất…' : 'Đăng xuất')),
           h('a', { href: '#tim-xe', className: 'vt-h-button' }, 'Tìm xe')),
       ),
     ),
+    signOutError && h('p', { className: 'vt-h-auth-error', role: 'alert' }, signOutError),
     h('main', null,
       h('section', { id: 'trang-chu', className: 'vt-h-hero', style: { '--vt-h-photo': 'url("' + heroPhoto + '")' } },
         h('div', { className: 'vt-h-wrap' },

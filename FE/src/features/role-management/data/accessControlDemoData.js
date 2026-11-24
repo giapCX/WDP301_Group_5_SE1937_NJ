@@ -7,8 +7,6 @@ export const DEMO_ROLES = [
   { id: 'renter', name: 'Khách thuê xe', short: 'K', color: 'orange' },
 ];
 
-export const DEMO_ADMIN_PROFILE = { name: 'Việt Anh', role: 'Quản trị viên', initials: 'VA' };
-
 export const DEMO_ACCOUNTS = [
   { name: 'Nguyễn Việt Anh', email: 'vietanh@viettour.vn', role: 'Quản trị viên', status: 'Hoạt động', initials: 'VA', tone: 'avatar-blue', lastActivity: '2 phút trước' },
   { name: 'Trần Hồng Nhung', email: 'nhung.tran@viettour.vn', role: 'Quản lý', status: 'Hoạt động', initials: 'TN', tone: 'avatar-violet', lastActivity: '18 phút trước' },
