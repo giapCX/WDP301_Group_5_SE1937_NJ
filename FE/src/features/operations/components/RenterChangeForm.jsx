@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useEffect, useRef, useState } from 'react';
 import TripForm from '../../renter-reservations/components/TripForm';
 import { loadQuoteReview } from '../../renter-reservations/api/reservationsApi';
 import { operationAction, operationError } from '../api/operationsApi';
@@ -7,6 +8,25 @@ const local = (value) => value ? new Date(new Date(value).getTime() + 7 * 360000
 const iso = (value) => value ? value + ':00+07:00' : undefined;
 export default function RenterChangeForm({ booking, onDone }) {
   const [trip, setTrip] = useState(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
+  const dialog = useRef(null);
+  useEffect(() => {
+    if (!trip) return;
+    const previous = document.activeElement;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    dialog.current?.querySelector('button')?.focus();
+    function keys(event) {
+      if (event.key === 'Escape' && !busy) setTrip(null);
+      if (event.key !== 'Tab') return;
+      const controls = [...dialog.current.querySelectorAll('button:not(:disabled),input:not(:disabled):not([readonly]),select:not(:disabled),textarea:not(:disabled)')];
+      const first = controls[0], last = controls[controls.length - 1];
+      if (!first) { event.preventDefault(); return; }
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+    document.addEventListener('keydown', keys);
+    return () => { document.removeEventListener('keydown', keys); document.body.style.overflow = overflow; previous?.focus(); };
+  }, [Boolean(trip), busy]);
   async function open() {
     setBusy(true); setError('');
     try {
@@ -31,5 +51,15 @@ export default function RenterChangeForm({ booking, onDone }) {
     try { await operationAction(`/renter/bookings/${booking.booking_id}/change-requests`, { after, reason: fields.get('reason') }); setTrip(null); onDone(); }
     catch (failure) { setError(operationError(failure)); } finally { setBusy(false); }
   }
-  return <section><Feedback error={error}/>{!trip ? <button className="dispatch-button subtle" disabled={busy} onClick={open}>Yêu cầu đổi lịch trình</button> : <form className="op-form" onSubmit={submit}><h3>Đề xuất lịch trình mới</h3><p>Số hành khách, loại dịch vụ và yêu cầu xe giữ theo đơn đã xác nhận. Giá thay đổi do Operator xem xét.</p><fieldset disabled={busy}><TripForm lockPickup={booking.booking_status === 'in_progress'} readOnlyDetails trip={trip} onChange={setTrip} seatCount={trip.requestedSeats} onTimeError={setError}/><label>Lý do thay đổi<textarea name="reason" required maxLength={2000}/></label><div className="op-actions"><button type="button" className="dispatch-button subtle" onClick={() => setTrip(null)}>Đóng</button><button className="dispatch-button primary">Gửi đề xuất</button></div></fieldset></form>}</section>;
+  return <section><Feedback error={!trip ? error : ''}/><button type="button" className="dispatch-button primary" disabled={busy} onClick={open}>{busy && !trip ? 'Đang tải lịch trình…' : 'Yêu cầu đổi lịch trình'}</button>
+    {trip && createPortal(<div className="rv-change-backdrop"><div className="rv-change-dialog rv-app" ref={dialog} role="dialog" aria-modal="true" aria-labelledby="renter-change-title">
+      <header className="rv-change-header"><div><span>ĐƠN #{booking.booking_id} · THAY ĐỔI LỊCH TRÌNH</span><h2 id="renter-change-title">Đề xuất lịch trình mới</h2></div><button type="button" className="rv-button" disabled={busy} onClick={()=>setTrip(null)}>Đóng</button></header>
+      <form className="op-form rv-change-form" onSubmit={submit}>
+        <div className="rv-change-body"><p className="rv-notice">Số hành khách, loại dịch vụ và yêu cầu xe giữ theo đơn đã xác nhận. Operator sẽ xem xét lịch trình và báo lại nếu giá thay đổi.</p>
+          <fieldset disabled={busy}><TripForm lockPickup={booking.booking_status === 'in_progress'} readOnlyDetails trip={trip} onChange={setTrip} seatCount={trip.requestedSeats} onTimeError={setError}/><label>Lý do thay đổi<textarea className="rv-change-reason" name="reason" required maxLength={2000} placeholder="Cho chúng tôi biết bạn muốn thay đổi điều gì…"/></label></fieldset><Feedback error={error}/>
+        </div>
+        <footer className="rv-change-footer"><button type="button" className="rv-button" disabled={busy} onClick={()=>setTrip(null)}>Hủy chỉnh sửa</button><button type="submit" className="rv-button rv-primary" disabled={busy}>{busy ? 'Đang gửi…' : 'Gửi đề xuất'}</button></footer>
+      </form>
+    </div></div>,document.body)}
+  </section>;
 }

@@ -8,6 +8,7 @@
     "start": "nodemon server",
     "seed": "node scripts/seed.js",
     "seed:check": "node scripts/seed.js --check",
+    "seed:manager-demo": "node scripts/seed-manager-demo.js",
     "db:booking-review-fields": "node scripts/add-booking-review-fields.js",
     "test:models": "node --test tests/models.test.js",
     "db:local": "node scripts/start-local-db.js",

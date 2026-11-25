@@ -1,3 +1,4 @@
+import PriceSummary from '../components/PriceSummary';
 import SignedContractView from '../components/SignedContractView';
 import RenterOperations from '../../operations/components/RenterOperations';
 import { useState } from 'react';
@@ -70,13 +71,15 @@ export default function MyBookingsPage() {
             }}/>}
           {!selected?.paymentDue && selected?.booking_status !== 'quoted' && <>
             <h2>Báo giá và thanh toán</h2>
+            {selected?.pricing_breakdown && <PriceSummary price={selected.pricing_breakdown}/>}
             {!selected && <p>Chọn một đơn để xem báo giá hoặc thanh toán.</p>}
             {selected?.booking_status === 'pending' && selected.quote_requested_at && <p role="status">Đang đợi Operator gửi báo giá.</p>}
           </>}
           {selected?.transport_contract?.document && <SignedContractView key={'contract:' + selected.booking_id} contract={selected.transport_contract}/>}
-          {selected && <RenterOperations key={selected.booking_id} booking={selected} onUpdated={bookings.refresh}/>}
+
         </aside>
       </div>
+      {selected && <RenterOperations key={selected.booking_id} booking={selected} onUpdated={bookings.refresh}/>}
     </ReservationLayout>
   );
 }

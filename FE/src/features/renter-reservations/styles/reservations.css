@@ -129,3 +129,29 @@
   .rv-filters { grid-template-columns: minmax(0, 1fr); }
 }
 
+
+/* Booking requests are separate from the compact financial summary. */
+.rv-summary { align-content: start; align-self: start; }
+.renter-booking-details { margin-top: 24px; padding: 24px; }
+.rv-details-heading h2 { margin: 5px 0 18px; }
+.rv-details-eyebrow { color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+.rv-detail-tabs { display: flex; gap: 8px; flex-wrap: wrap; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid #e2e8f0; }
+.rv-detail-tabs [aria-pressed="true"] { color: white; border-color: #215dbb; background: #215dbb; }
+.renter-booking-details > .dispatch-button { margin-bottom: 18px; }
+.rv-change-backdrop { position: fixed; inset: 0; z-index: 1250; background: #0f172a99; display: flex; align-items: center; justify-content: center; padding: 24px; backdrop-filter: blur(3px); }
+.rv-change-dialog { width: min(1080px,100%); max-height: calc(100dvh - 48px); display: flex; flex-direction: column; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 24px 80px #0004; color: #182c45; }
+.rv-change-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 28px; border-bottom: 1px solid #e2e8f0; }
+.rv-change-header span { color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: .06em; }
+.rv-change-header h2 { margin: 5px 0 0; font-size: 22px; }
+.rv-change-form { display: flex; flex-direction: column; min-height: 0; margin: 0; border: 0; padding: 0; }
+.rv-change-body { overflow: auto; padding: 24px 28px; overscroll-behavior: contain; }
+.rv-change-body > .rv-notice { margin-bottom: 20px; }
+.rv-change-body .rv-form-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.rv-change-body fieldset { border: 0; padding: 0; min-width: 0; }
+.rv-change-body label { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; font-weight: 600; }
+.rv-change-reason { min-height: 96px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; resize: vertical; }
+.rv-change-footer { display: flex; justify-content: flex-end; gap: 12px; padding: 16px 28px; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+@media(max-width: 760px) { .rv-change-backdrop { padding: 8px; } .rv-change-dialog { max-height: calc(100dvh - 16px); } .rv-change-header,.rv-change-body,.rv-change-footer { padding: 16px; } .rv-change-body .rv-form-grid { grid-template-columns: minmax(0,1fr); } .rv-detail-tabs { overflow-x: auto; flex-wrap: nowrap; } .rv-detail-tabs button { white-space: nowrap; } }
+
+.rv-change-dialog { --rv-ink: #182c45; --rv-muted: #64748b; --rv-border: #dce4ef; --rv-blue: #215dbb; }
+.rv-change-header, .rv-change-footer { flex: 0 0 auto; }

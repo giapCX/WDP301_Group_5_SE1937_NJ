@@ -34,3 +34,10 @@ Vehicle schedule_version defaults to 0 in new sample documents. Seed also adds t
 
 
 Collection booking_change_requests co 3 yeu cau mau (rejected, approved, pending) cho booking_id=2. Chi luu snapshot truoc/sau va thong tin xu ly, khong thay doi booking. Xem BE/src/models/booking-change-request.md.
+
+## Hồ sơ Manager demo dùng cho hợp đồng
+
+Chạy từ thư mục BE: `npm run seed:manager-demo`.
+Kiểm tra trước, không ghi database: `npm run seed:manager-demo -- --check`.
+Script đọc MONGO_URI từ BE/.env, tìm đúng Manager active có email demo2@example.com và chỉ bổ sung tên đơn vị, địa chỉ, MST, điện thoại còn thiếu. Không đổi mật khẩu, tên, vai trò hoặc thông tin đã có; chạy lại được. Nếu chưa có tài khoản mẫu, tạo dữ liệu trên database demo bằng seed hiện có trước.
+Sau khi chạy, Operator bấm Tải lại hồ sơ Manager. Script này không sửa lỗi route hoặc backend đang chạy code cũ.
