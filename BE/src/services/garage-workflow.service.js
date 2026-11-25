@@ -7,10 +7,13 @@ const addTripHistory = require('../utils/trip-history');
 const maintenance = require('./garage-maintenance.service');
 const { findTripInspection } = require('./garage-task.service');
 
-function inspectionNote(value) {
-  const note = typeof value === 'string' ? value.trim() : '';
-  if (!note || note.length > 1000) throw new HttpError(400, 'Ghi chú kiểm tra là bắt buộc (tối đa 1000 ký tự)');
-  return note;
+function inspectionNote(value, required = true) {
+  const note = typeof value === 'string' ? value.trim() : value;
+  if (note != null && (typeof note !== 'string' || note.length > 1000)) {
+    throw new HttpError(400, 'Ghi chú kiểm tra phải là văn bản, tối đa 1000 ký tự');
+  }
+  if (required && !note) throw new HttpError(400, 'Ghi chú kiểm tra là bắt buộc');
+  return note || null;
 }
 
 function assertOdometer(odometer) {
@@ -19,11 +22,12 @@ function assertOdometer(odometer) {
 
 async function saveTripInspection(input, bookingId, vehicleId, staffId) {
   const { result, odometer, inspection_type: type } = input;
-  const conditionNote = inspectionNote(input.condition_note);
-  const details = readInspectionDetails(input);
+  const returning = type === 'return';
+  const evidenceRequired = !returning || result !== 'passed';
+  const conditionNote = inspectionNote(input.condition_note, evidenceRequired);
+  const details = readInspectionDetails(input, evidenceRequired);
   assertOdometer(odometer);
 
-  const returning = type === 'return';
   const field = type + '_inspection_id';
   return retryDuplicateId(['inspection_id', 'maintenance_id'], () => runInTransaction(async (session) => {
     if (!session) throw new HttpError(503, 'Cần MongoDB replica set để lưu hồ sơ và trạng thái xe cùng lúc');

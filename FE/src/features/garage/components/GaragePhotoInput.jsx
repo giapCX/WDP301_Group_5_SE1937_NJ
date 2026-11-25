@@ -13,10 +13,10 @@ function readPhoto(file) {
 }
 
 export function encodePhotos(form) {
-  return Promise.all(form.getAll('photos').map(readPhoto));
+  return Promise.all(form.getAll('photos').filter((file) => file.name).map(readPhoto));
 }
 
-export default function GaragePhotoInput({ label, onError }) {
+export default function GaragePhotoInput({ label, onError, required = true }) {
   const hintId = useId();
 
   function checkPhotos(event) {
@@ -34,11 +34,18 @@ export default function GaragePhotoInput({ label, onError }) {
     <>
       <label>
         {label}
-        <input name="photos" type="file" multiple onInvalid={"Vui lòng nhập"} accept={IMAGE_TYPES.join(',')}
+        <input name="photos" type="file" multiple required={required} accept={IMAGE_TYPES.join(',')}
           onChange={checkPhotos} aria-describedby={hintId}
+          onInvalid={(event) => {
+            event.preventDefault();
+            const { validity, validationMessage } = event.currentTarget;
+            onError(validity.valueMissing ? 'Vui lòng chọn ít nhất một ảnh.' : validationMessage);
+          }}
         />
       </label>
-      <p id={hintId} className="garage-check-hint">1–3 ảnh JPG hoặc PNG, tối đa 2 MB mỗi ảnh.</p>
+      <p id={hintId} className="garage-check-hint">
+        {required ? '1–3 ảnh JPG hoặc PNG' : 'Không bắt buộc. Nếu đính kèm, chọn tối đa 3 ảnh JPG hoặc PNG'}, tối đa 2 MB mỗi ảnh.
+      </p>
     </>
   );
 }

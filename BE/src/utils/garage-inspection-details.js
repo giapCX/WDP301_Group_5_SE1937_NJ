@@ -38,7 +38,7 @@ function readInspectionPhotos(photos) {
   return photos.map(readPhoto);
 }
 
-function readInspectionDetails(input) {
+function readInspectionDetails(input, photosRequired = true) {
   const { checklist, fuel_percent: fuelPercent, photos, result } = input;
   if (!checklist || Object.keys(checklist).length !== CHECKLIST_ITEMS.length
     || CHECKLIST_ITEMS.some((item) => !['passed', 'failed'].includes(checklist[item]))) {
@@ -52,7 +52,8 @@ function readInspectionDetails(input) {
   if (!Number.isInteger(fuelPercent) || fuelPercent < 0 || fuelPercent > 100) {
     throw new HttpError(400, 'Mức nhiên liệu phải là số nguyên từ 0 đến 100%');
   }
-  const images = readInspectionPhotos(photos);
+  const noPhotos = photos == null || (Array.isArray(photos) && photos.length === 0);
+  const images = !photosRequired && noPhotos ? [] : readInspectionPhotos(photos);
   return {
     checklist,
     fuel_percent: fuelPercent,
