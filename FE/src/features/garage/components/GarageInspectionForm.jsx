@@ -9,12 +9,19 @@ export default function GarageInspectionForm({ onSave, minOdometer = 0, returnin
   const [saving, setSaving] = useState(false);
   const complete = Object.keys(checklist).length === CHECKLIST_ITEMS.length;
   const result = Object.values(checklist).includes('failed') ? 'failed' : 'passed';
+  const evidenceRequired = !returning || result === 'failed';
 
   async function submit(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const note = form.get('condition_note').trim();
-    if (!note) {
+    const odometer = form.get('odometer');
+    const fuel = form.get('fuel_percent');
+    if (!odometer || !fuel) {
+      setError('Vui lòng nhập số km đồng hồ và mức nhiên liệu.');
+      return;
+    }
+    if (evidenceRequired && !note) {
       setError('Vui lòng ghi tình trạng xe hoặc lý do không đạt.');
       return;
     }
@@ -24,8 +31,8 @@ export default function GarageInspectionForm({ onSave, minOdometer = 0, returnin
       await onSave({
         checklist,
         result,
-        odometer: Number(form.get('odometer')),
-        fuel_percent: Number(form.get('fuel_percent')),
+        odometer: Number(odometer),
+        fuel_percent: Number(fuel),
         condition_note: note,
         photos: await encodePhotos(form),
       });
@@ -47,6 +54,7 @@ export default function GarageInspectionForm({ onSave, minOdometer = 0, returnin
               <select required defaultValue="" onChange={(event) => {
                 const value = event.target.value;
                 setChecklist((current) => ({ ...current, [key]: value }));
+                setError('');
               }}>
                 <option value="" disabled>Chọn kết quả</option>
                 <option value="passed">Đạt</option>
@@ -59,11 +67,14 @@ export default function GarageInspectionForm({ onSave, minOdometer = 0, returnin
       <fieldset className="garage-check-fields" disabled={saving}>
         <legend>Số km và hiện trạng</legend>
         <div className="garage-check-grid garage-check-measurements">
-          <label>Số km đồng hồ (km)<input name="odometer" type="number" min={minOdometer} step="any" required /></label>
-          <label>Nhiên liệu (%)<input name="fuel_percent" type="number" min="0" max="100" required /></label>
+          <label>Số km đồng hồ (km)<input name="odometer" type="number" min={minOdometer} step="any" /></label>
+          <label>Nhiên liệu (%)<input name="fuel_percent" type="number" min="0" max="100" /></label>
         </div>
-        <label>Ghi chú tình trạng xe<textarea name="condition_note" rows={3} maxLength={1000} required /></label>
-        <GaragePhotoInput label="Ảnh hiện trạng" onError={setError} />
+        <label>
+          {evidenceRequired ? 'Ghi chú tình trạng xe' : 'Ghi chú tình trạng xe (không bắt buộc)'}
+          <textarea name="condition_note" rows={3} maxLength={1000} />
+        </label>
+        <GaragePhotoInput label="Ảnh hiện trạng" required={evidenceRequired} onError={setError} />
       </fieldset>
       {error && <p className="dispatch-alert" role="alert">{error}</p>}
       <div className="garage-check-actions">

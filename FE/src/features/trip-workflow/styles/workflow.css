@@ -9,3 +9,29 @@
 .workflow-driver-section{margin:20px 0}.workflow-section-heading,.workflow-driver-card-head{display:flex;align-items:center;justify-content:space-between;gap:14px}.workflow-section-heading h2{margin:4px 0 0}.workflow-driver-list{display:grid;gap:14px}.workflow-driver-card{border:1px solid #e8edf3;border-radius:11px;padding:17px}.workflow-driver-card-head span:first-child{font-size:11px;color:#77869a}.workflow-driver-card h3{margin:5px 0 0;font-size:15px;color:#153750}.workflow-driver-card>p{font-size:12px;color:#596b7e;margin:10px 0}.workflow-stage{background:#eff4fb;color:#30598b;border-radius:20px;padding:7px 10px;font-size:10px!important;white-space:nowrap}.workflow-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.workflow-actions button,.workflow-stop-list button{border:1px solid #d7e2f2;background:#1b65c9;color:white;padding:8px 11px;border-radius:7px;font-size:11px;font-weight:650;cursor:pointer}.workflow-actions button:disabled,.workflow-stop-list button:disabled{opacity:.5;cursor:not-allowed}.workflow-actions .workflow-secondary{background:#fff;color:#3d5c79}.workflow-actions .workflow-danger{background:#fff5f5;border-color:#f4d8d8;color:#b33e4d}.workflow-stop-list{padding-left:20px;color:#4f6174;font-size:12px}.workflow-stop-list li{padding:6px 0}.workflow-stop-list li.is-done{text-decoration:line-through;color:#27816c}.workflow-stop-list li button{margin-left:10px;padding:5px 8px;font-size:10px}.workflow-muted{font-size:11px;color:#79889a}.workflow-history{margin-top:14px;color:#64758a;font-size:11px}.workflow-history summary{cursor:pointer;font-weight:650}.workflow-history ol{padding-left:18px}.workflow-history li{padding:3px 0}
 .workflow-route-notice{padding:13px 16px;margin:14px 0;background:#fff8e8;border:1px solid #f0dfb9;border-radius:9px;color:#70571c;font-size:12px}.workflow-route-notice a{color:#175fbc;font-weight:700}.workflow-incident{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid #edf0f4;color:#53657a;font-size:12px}.workflow-incident button{border:1px solid #d7e2f2;background:#fff;color:#285d9e;padding:7px 10px;border-radius:7px;white-space:nowrap;cursor:pointer}
 @media(max-width:720px){.workflow-form-grid{grid-template-columns:1fr}.workflow-assign-card,.workflow-driver-section{padding:15px}.workflow-driver-card-head{align-items:flex-start;flex-direction:column}}
+
+.workflow-form.driver-action-form {
+  display: grid;
+  gap: 10px;
+  flex-basis: 100%;
+  min-width: 0;
+  margin-top: 4px;
+  padding: 14px;
+  border: 1px solid #dce3ed;
+  border-radius: 8px;
+  background: #f7faff;
+}
+
+.driver-action-form :is(input, textarea) {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #b8c9dd;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 400;
+  color: #24384c;
+}
+
+.driver-action-form textarea { resize: vertical; }
+.driver-action-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.driver-action-form :is(.dispatch-alert, .workflow-muted) { margin: 0; }

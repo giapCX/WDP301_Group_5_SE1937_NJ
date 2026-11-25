@@ -332,12 +332,25 @@ async function mutateDriver(bookingId, actorId, action, input = {}) {
     await TripStatusUpdate.create({ update_id: await nextId(TripStatusUpdate, 'update_id'), booking_id: id, updated_by: actorId, trip_status: kind, updated_at: now() });
   } else if (action === 'report') {
     if (workflow.stage !== 'awaiting_report') throw new HttpError(409, 'Chỉ gửi báo cáo sau khi hoàn thành dịch vụ');
-    const km = Number(input.end_odometer);
+    const odometer = input.end_odometer;
+    const km = typeof odometer === 'string' && odometer.trim() ? Number(odometer) : odometer;
     if (!Number.isFinite(km) || km < 0 || (workflow.start_odometer != null && km < workflow.start_odometer)) throw new HttpError(400, 'Số km kết thúc phải lớn hơn hoặc bằng km nhận xe');
-    workflow.end_odometer = km; workflow.report_summary = text(input.summary, 'Báo cáo sau chuyến', 2000); workflow.report_created_at = now(); workflow.ended_at = now(); workflow.stage = 'awaiting_vehicle_return';
+    const summary = typeof input.summary === 'string' ? input.summary.trim() : input.summary;
+    if (summary != null && (typeof summary !== 'string' || summary.length > 2000)) {
+      throw new HttpError(400, 'Ghi chú sau chuyến phải là văn bản, tối đa 2000 ký tự');
+    }
+    const endedAt = now();
+    workflow.set({
+      end_odometer: km,
+      report_summary: summary || null,
+      report_created_at: endedAt,
+      ended_at: endedAt,
+      stage: 'awaiting_vehicle_return',
+    });
   }
   const actionName = action === 'update' ? input.kind : action;
-  addTripHistory(workflow, actionName, actorId, input.reason || input.summary || null);
+  const note = action === 'report' ? workflow.report_summary : input.reason || input.summary || null;
+  addTripHistory(workflow, actionName, actorId, note);
   await workflow.save();
   return workflow.toObject();
 }

@@ -118,10 +118,17 @@ test('garage verifies the current vehicle and preserves the handover, return and
     const decide = (id, inspection_id, decision, note, cookie = manager) => request(approvalsPath + '/' + id, cookie, {
       inspection_id, decision, note,
     }, 'PATCH');
-    async function reportTrip(booking, driver) {
+    async function reportTrip(booking, driver, summary) {
       const path = '/driver/workflow/' + booking;
       assert.equal((await request(path + '/update', driver, { kind: 'outbound_completed' })).status, 200);
-      assert.equal((await request(path + '/report', driver, { end_odometer: 1500, summary: 'Đã trả khách' })).status, 200);
+      const response = await request(path + '/report', driver, { end_odometer: 1500, summary });
+      assert.equal(response.status, 200);
+      const { data } = await response.json();
+      assert.equal(data.stage, 'awaiting_vehicle_return');
+      assert.equal(data.end_odometer, 1500);
+      assert.ok(data.ended_at);
+      assert.equal(data.report_summary, summary?.trim() || null);
+      assert.equal(data.history.at(-1).note, data.report_summary);
     }
     async function loadTask(id) {
       const response = await request('/garage/tasks', garage);
@@ -249,7 +256,7 @@ test('garage verifies the current vehicle and preserves the handover, return and
     assert.equal(replacement.inspection, undefined);
     assert.equal((await request('/driver/workflow/91/vehicle_received', driverTwo, {})).status, 409);
 
-    await reportTrip(90, driverOne);
+    await reportTrip(90, driverOne, '  Đã trả khách  ');
     assert.equal((await confirmReturn(90, driverOne)).status, 409);
     const returnPath = '/garage/tasks/return-90/7';
     const { data: beforeReturn } = await (await request(returnPath, garage)).json();
@@ -258,6 +265,8 @@ test('garage verifies the current vehicle and preserves the handover, return and
     assert.equal((await returnCheck(90, 2)).status, 409);
     assert.equal((await returnCheck(90, 7, { odometer: 1400 })).status, 400);
     const failDetails = { result: 'failed', checklist: { ...checklist, brakes: 'failed' } };
+    assert.equal((await returnCheck(90, 7, { ...failDetails, photos: [] })).status, 400);
+    assert.equal((await returnCheck(90, 7, { ...failDetails, condition_note: '' })).status, 400);
     const returnSubmissions = await Promise.all([returnCheck(90, 7, failDetails), returnCheck(90, 7, failDetails)]);
     assert.deepEqual(returnSubmissions.map((response) => response.status).sort(), [201, 409]);
     const { data: afterReturn } = await (await request(returnPath, garage)).json();
@@ -407,9 +416,11 @@ test('garage verifies the current vehicle and preserves the handover, return and
     assert.equal((await receive(91, driverTwo, nextVehicle.inspection_id)).status, 200);
     assert.equal((await request('/driver/workflow/91/update', driverTwo, { kind: 'picked_up' })).status, 200);
     await reportTrip(91, driverTwo);
-    const passedReturnResponse = await returnCheck(91, 6);
+    const passedReturnResponse = await returnCheck(91, 6, { condition_note: '', photos: [] });
     assert.equal(passedReturnResponse.status, 201);
     const { data: { inspection: passedReturn } } = await passedReturnResponse.json();
+    assert.equal(passedReturn.condition_note, null);
+    assert.equal(passedReturn.photo_count, 0);
     assert.equal((await request('/garage/damages', garage, { ...damageInput, inspection_id: passedReturn.inspection_id })).status, 409);
     assert.equal((await db.collection('vehicles').findOne({ vehicle_id: 6 })).status, 'in_use');
     assert.equal((await confirmReturn(91, driverTwo)).status, 200);
