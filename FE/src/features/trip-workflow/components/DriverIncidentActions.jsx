@@ -55,14 +55,14 @@ export default function DriverIncidentActions({ busy, onReport }) {
         </button>
       ))}
       {incident && (
-        <form key={kind} id={formId} className="workflow-form driver-incident-form"
+        <form key={kind} id={formId} className="workflow-form driver-action-form"
           aria-label={incident.label} onSubmit={submit} noValidate>
           <label>
             {incident.description}
             <textarea name="description" rows={3} maxLength={2000} required disabled={busy} autoFocus />
           </label>
           {error && <p className="dispatch-alert" role="alert">{error}</p>}
-          <div className="driver-incident-buttons">
+          <div className="driver-action-buttons">
             <button type="submit" disabled={busy}>{busy ? 'Đang gửi…' : 'Gửi báo cáo'}</button>
             <button type="button" className="workflow-secondary" disabled={busy} onClick={() => selectKind('')}>Hủy</button>
           </div>

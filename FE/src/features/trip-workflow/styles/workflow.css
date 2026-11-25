@@ -10,7 +10,9 @@
 .workflow-route-notice{padding:13px 16px;margin:14px 0;background:#fff8e8;border:1px solid #f0dfb9;border-radius:9px;color:#70571c;font-size:12px}.workflow-route-notice a{color:#175fbc;font-weight:700}.workflow-incident{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid #edf0f4;color:#53657a;font-size:12px}.workflow-incident button{border:1px solid #d7e2f2;background:#fff;color:#285d9e;padding:7px 10px;border-radius:7px;white-space:nowrap;cursor:pointer}
 @media(max-width:720px){.workflow-form-grid{grid-template-columns:1fr}.workflow-assign-card,.workflow-driver-section{padding:15px}.workflow-driver-card-head{align-items:flex-start;flex-direction:column}}
 
-.workflow-form.driver-incident-form {
+.workflow-form.driver-action-form {
+  display: grid;
+  gap: 10px;
   flex-basis: 100%;
   min-width: 0;
   margin-top: 4px;
@@ -20,7 +22,7 @@
   background: #f7faff;
 }
 
-.driver-incident-form textarea {
+.driver-action-form :is(input, textarea) {
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #b8c9dd;
@@ -28,8 +30,8 @@
   font: inherit;
   font-weight: 400;
   color: #24384c;
-  resize: vertical;
 }
 
-.driver-incident-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.driver-incident-form .dispatch-alert { margin: 8px 0 0; }
+.driver-action-form textarea { resize: vertical; }
+.driver-action-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.driver-action-form :is(.dispatch-alert, .workflow-muted) { margin: 0; }
