@@ -16,6 +16,7 @@ function receiveMessage(booking, workflow, clock) {
 export default function DriverVehicleHandover({ item, clock, busy, onAction }) {
   const { booking, workflow, handover } = item;
   const [refusing, setRefusing] = useState(false);
+  const [error, setError] = useState('');
   if (!handover) return <p className="workflow-muted">Chờ Gara lập biên bản bàn giao.</p>;
 
   const pending = handover.status === 'pending' && workflow.stage === 'awaiting_vehicle';
@@ -25,6 +26,11 @@ export default function DriverVehicleHandover({ item, clock, busy, onAction }) {
   function decline(event) {
     event.preventDefault();
     const reason = new FormData(event.currentTarget).get('reason').trim();
+    if (!reason) {
+      setError('Vui lòng nhập lý do từ chối nhận xe.');
+      return;
+    }
+    setError('');
     onAction('vehicle_declined', { inspection_id, reason });
   }
 
@@ -46,14 +52,15 @@ export default function DriverVehicleHandover({ item, clock, busy, onAction }) {
             <button disabled={busy || Boolean(timing)} onClick={() => onAction('vehicle_received', { inspection_id })}>
               Xác nhận hiện trạng và nhận xe
             </button>
-            <button className="workflow-danger" disabled={busy} onClick={() => setRefusing((open) => !open)}>
+            <button className="workflow-danger" disabled={busy} onClick={() => { setRefusing((open) => !open); setError(''); }}>
               Từ chối nhận xe
             </button>
           </div>
         )}
         {pending && refusing && (
-          <form className="garage-check-form" onSubmit={decline}>
+          <form className="garage-check-form" onSubmit={decline} noValidate>
             <label>Lý do từ chối<textarea className="form-control" name="reason" rows={2} maxLength={500} required /></label>
+            {error && <p className="dispatch-alert" role="alert">{error}</p>}
             <button className="dispatch-button danger" disabled={busy}>Gửi lý do từ chối</button>
           </form>
         )}

@@ -79,7 +79,7 @@ export default function DriverDashboardPage() {
             </button>
           </section>
           <DriverStats stats={data?.stats} />
-          <DriverWorkflowPanel />
+          <DriverWorkflowPanel onRefresh={dashboard.refresh} />
           {error && (
             <div className="dispatch-alert" role="alert">
               {error}

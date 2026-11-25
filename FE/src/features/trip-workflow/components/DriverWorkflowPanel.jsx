@@ -8,19 +8,23 @@ import DriverVehicleHandover from './DriverVehicleHandover';
 
 const labels = { awaiting_driver: 'Chờ bạn phản hồi phân công', awaiting_vehicle: 'Chờ Gara kiểm tra và bàn giao xe', to_pickup: 'Đang tới điểm đón', at_pickup: 'Đã đến điểm đón', outbound: 'Đang phục vụ lượt đi', tour: 'Đang đồng hành tham quan', return_waiting: 'Chờ giờ đón khách lượt về', return: 'Đang đưa khách về', awaiting_report: 'Xác nhận trả khách và gửi báo cáo', awaiting_vehicle_return: 'Chờ Gara tiếp nhận xe', completed: 'Hoàn tất chuyến', reassignment_required: 'Đã từ chối, chờ Operator phân công lại', vehicle_replacement_required: 'Báo xe hỏng, chờ Operator đổi xe', incident_open: 'Đã báo sự cố, chờ hỗ trợ', vehicle_return_issue: 'Gara ghi nhận xe cần xử lý', return_reassignment_required: 'Chờ Operator bố trí tài xế lượt về', routed_to_booking_changes: 'Đã chuyển Operator xử lý đổi lịch trình' };
 
-export default function DriverWorkflowPanel() {
+export default function DriverWorkflowPanel({ onRefresh }) {
   const [items, setItems] = useState([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
   const [clock, setClock] = useState(() => Date.now());
   const load = useCallback(async () => { try { setItems(await getDriverWorkflow()); setError(''); } catch (failure) { setError(workflowError(failure)); } }, []);
   useEffect(() => { load(); const timer = window.setInterval(load, 30000); const clockTimer = window.setInterval(() => setClock(Date.now()), 30000); return () => { window.clearInterval(timer); window.clearInterval(clockTimer); }; }, [load]);
+  function refresh() {
+    onRefresh();
+    return load();
+  }
   async function runAction(id, action, request) {
     setBusy(`${id}-${action}`);
     setError('');
     try {
       await request();
-      await load();
+      await refresh();
     } finally {
       setBusy('');
     }
@@ -32,7 +36,7 @@ export default function DriverWorkflowPanel() {
   async function reject(item) { const reason = window.prompt('Lý do từ chối phân công:'); if (reason?.trim()) await perform(item.workflow.booking_id, 'reject', { reason }); }
   async function update(item, kind, extra = {}) { await perform(item.workflow.booking_id, 'update', { kind, ...extra }); }
   async function delay(item) { const reason = window.prompt('Lý do chậm:'); if (!reason?.trim()) return; const minutes = window.prompt('Chậm bao nhiêu phút?'); if (minutes) await update(item, 'delayed', { reason, minutes: Number(minutes) }); }
-  return <section className="workflow-driver-section" id="driver-workflow"><div className="workflow-section-heading"><div><span className="section-eyebrow">THỰC HIỆN CHUYẾN</span><h2>Phân công và cập nhật hành trình</h2></div><button className="dispatch-button subtle" onClick={load}><Icon name="refresh" size={14} /> Làm mới</button></div>
+  return <section className="workflow-driver-section" id="driver-workflow"><div className="workflow-section-heading"><div><span className="section-eyebrow">THỰC HIỆN CHUYẾN</span><h2>Phân công và cập nhật hành trình</h2></div><button className="dispatch-button subtle" onClick={refresh}><Icon name="refresh" size={14} /> Làm mới</button></div>
     {error && <div className="dispatch-alert" role="alert">{error}</div>}
     {items.length === 0 ? <p className="workflow-muted">Chưa có phân công cần thao tác.</p> : <div className="workflow-driver-list">{items.map((item) => { const w = item.workflow; const b = item.booking; const id = w.booking_id; const waiting = busy.startsWith(`${id}-`); return <article className="workflow-driver-card" key={id}>
       <div className="workflow-driver-card-head"><div><span>{bookingCode(id)} · {w.service_type === 'tour' ? 'Tham quan' : w.service_type === 'round_trip' ? 'Đưa đi – đón về' : 'Một chiều'}</span><h3>{labels[w.stage] || w.stage}</h3></div><span className={`workflow-stage stage-${w.stage}`}>{w.driver_response === 'pending' ? 'Cần phản hồi' : w.stage}</span></div>
