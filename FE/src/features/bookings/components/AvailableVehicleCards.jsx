@@ -7,7 +7,7 @@ import {
 import { bookingCode, money } from '../bookingConstants';
 import Icon from './BookingIcon';
 
-function VehicleIllustration({ vehicle }) {
+export function VehicleIllustration({ vehicle }) {
   const isVan = vehicle.seat_count > 7;
   return (
     <svg

@@ -1,3 +1,4 @@
+import BookingAvailableVehicles from './BookingAvailableVehicles';
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import useBookingReview from '../hooks/useBookingReview';
@@ -210,6 +211,7 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                   </p>
                 )}
               </section>
+              {['pending', 'quoted'].includes(booking.booking_status) && <BookingAvailableVehicles booking={booking} review={review}/>}
               {(!booking.quote_requested_at || booking.pricing_breakdown) && <section className="review-section">
                 <h3>Chi phí dự kiến</h3>
                 <div className="cost-line">

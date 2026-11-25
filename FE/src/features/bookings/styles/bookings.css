@@ -1397,3 +1397,5 @@
     display: none;
   }
 }
+
+.booking-available-cards{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.booking-available-cards .vehicle-card{cursor:default}.booking-available-cards .vehicle-art{max-height:90px}

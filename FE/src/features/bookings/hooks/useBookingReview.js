@@ -33,7 +33,7 @@ export default function useBookingReview(id, onUpdated) {
         const detail = await fetchBooking(id, controller.signal);
         if (controller.signal.aborted) return;
         setBooking(detail);
-        if (detail.booking_status === 'pending' && !detail.requested_seats && !detail.quote_requested_at) {
+        if (['pending', 'quoted'].includes(detail.booking_status)) {
           try {
             const available = await fetchAvailableVehicles(id, controller.signal);
             if (controller.signal.aborted) return;

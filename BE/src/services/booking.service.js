@@ -218,7 +218,8 @@ async function rejectBooking(id, input = {}, reviewedBy) {
 }
 
 async function getAvailableVehicles(id) {
-  const booking = await getPendingBooking(id);
+  const booking = await getBookingById(id);
+  if (!['pending', 'quoted'].includes(booking.booking_status)) throw new HttpError(409, 'Chỉ xem xe khả dụng cho đơn đang xét duyệt hoặc đã báo giá');
   const seatCount = requestedSeats(booking);
   const pickupTime = new Date(booking.pickup_time);
   const estimatedEndTime = new Date(booking.estimated_end_time);
@@ -240,13 +241,18 @@ async function getAvailableVehicles(id) {
     estimatedEndTime,
   });
 
+  const readiness = require('../repositories/booking-readiness.repository');
+  const eligible = [];
+  for (const vehicle of vehicles) {
+    if (await readiness.vehicleReady(vehicle.vehicle_id, estimatedEndTime) && !await require('../repositories/renter-reservation.repository').hasAssignedTrip(vehicle.vehicle_id, pickupTime, estimatedEndTime, null)) eligible.push(vehicle);
+  }
   return {
     booking_id: booking.booking_id,
     pickup_time: pickupTime,
     estimated_end_time: estimatedEndTime,
     vehicles: booking.service_type && !booking.requested_seats
-      ? vehicles.filter((vehicle) => vehicle.vehicle_id === booking.vehicle_id && vehicle.seat_count >= booking.passenger_count)
-      : vehicles,
+      ? eligible.filter((vehicle) => vehicle.vehicle_id === booking.vehicle_id && vehicle.seat_count >= booking.passenger_count)
+      : eligible,
     requested_seat_count: seatCount,
   };
 }
