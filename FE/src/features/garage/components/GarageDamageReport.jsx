@@ -19,11 +19,16 @@ function DamageForm({ inspection, onUpdate }) {
       setError('Chọn ít nhất một hạng mục hư hỏng.');
       return;
     }
+    const description = form.get('description').trim();
+    if (!description) {
+      setError('Vui lòng nhập mô tả hư hỏng.');
+      return;
+    }
     setError('');
     setBusy(true);
     try {
       await createDamageReport({
-        inspection_id: inspection.inspection_id, damaged_items: items, description: form.get('description').trim(),
+        inspection_id: inspection.inspection_id, damaged_items: items, description,
         evidence_source: source, share_with_operator: form.has('share_with_operator'),
         ...(source === 'upload' && { photos: await encodePhotos(form) }),
       });
@@ -51,7 +56,7 @@ function DamageForm({ inspection, onUpdate }) {
         </div>
         <label>
           Mô tả hư hỏng
-          <textarea name="description" rows={3} maxLength={1000} required defaultValue={inspection.condition_note || ''} />
+          <textarea name="description" rows={3} maxLength={1000} aria-required="true" defaultValue={inspection.condition_note || ''} />
         </label>
         {hasPhotos && (
           <label>

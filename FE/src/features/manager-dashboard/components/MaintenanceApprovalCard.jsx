@@ -12,6 +12,10 @@ export default function MaintenanceApprovalCard({ record, onDecision }) {
     const data = new FormData(event.currentTarget);
     const decision = data.get('decision');
     const note = data.get('note').trim();
+    if (!decision) {
+      setError('Vui lòng chọn quyết định xử lý phiếu.');
+      return;
+    }
     if (decision === 'reject' && !note) {
       setError('Vui lòng nhập lý do trả phiếu.');
       return;
@@ -41,7 +45,7 @@ export default function MaintenanceApprovalCard({ record, onDecision }) {
           ? <>Đạt · {dateTime(reinspection.inspected_at)} · {reinspection.odometer} km<br />{reinspection.condition_note}</>
           : 'Chưa có kết quả đạt'}</dd>
       </dl>
-      <form onSubmit={submit}>
+      <form onSubmit={submit} noValidate>
         <fieldset disabled={busy}>
           <label>Quyết định
             <select name="decision" defaultValue="" required>
