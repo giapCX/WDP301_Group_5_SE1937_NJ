@@ -6,6 +6,7 @@ const stopSchema = new mongoose.Schema(
     stop_order: { type: Number, required: true, min: 1, validate: Number.isSafeInteger },
     location: { type: String, required: true, trim: true, maxlength: 255 },
     note: { type: String, default: null, maxlength: 255 },
+    arrival_at: Date, departure_at: Date,
   },
   { _id: false },
 );
@@ -17,6 +18,7 @@ const itinerarySchema = new mongoose.Schema(
     dropoff_location: { type: String, required: true, maxlength: 255 },
     pickup_time: { type: Date, required: true },
     estimated_end_time: { type: Date, required: true },
+    destination: String, return_pickup_location: String, return_pickup_time: Date,
     estimated_price: { type: Number, required: true, min: 0 },
     trip_stops: { type: [stopSchema], required: true, default: undefined },
   },
@@ -57,6 +59,7 @@ module.exports = createModel(
       enum: ['pending', 'approved', 'rejected', 'cancelled'],
       default: 'pending',
     },
+    price_offer: { id: String, sent_by: Number, sent_at: Date, reason: String, accepted_at: Date },
     reviewed_by: {
       type: Number,
       default: null,

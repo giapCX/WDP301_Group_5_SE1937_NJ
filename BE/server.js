@@ -4,6 +4,7 @@ const { connectDb, disconnectDb } = require('./dal/database');
 const corsMiddleware = require('./middlewares/cors.middleware');
 const notFoundMiddleware = require('./middlewares/not-found.middleware');
 const errorMiddleware = require('./middlewares/error.middleware');
+const operationRoutes = require('./src/routes/operations.routes');
 const chargeRoutes = require('./src/routes/additional-charge.routes');
 const renterChangeRoutes = require('./src/routes/renter-booking-change.routes');
 const bookingRoutes = require('./src/routes/booking.routes');
@@ -48,6 +49,9 @@ app.use('/api/operator/trips', tripMonitoringRoutes);
 app.use('/api/operator/dispatch', tripWorkflowRoutes.operator);
 app.use('/api/driver/workflow', tripWorkflowRoutes.driver);
 
+app.use('/api/operator/operations', operationRoutes.operator);
+app.use('/api/manager/operation-approvals', operationRoutes.manager);
+app.use('/api/renter/bookings', operationRoutes.renter);
 app.use('/api/renter/bookings', renterReservationRoutes);
 app.use('/api/renter/bookings', renterChangeRoutes);
 app.use('/api/renter/bookings', chargeRoutes.renterBookingRoutes);

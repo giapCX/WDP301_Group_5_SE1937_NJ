@@ -1,3 +1,4 @@
+import RenterOperations from '../../operations/components/RenterOperations';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import BookingCard, { statuses } from '../components/BookingCard.jsx';
@@ -58,6 +59,7 @@ export default function MyBookingsPage() {
         <aside className="rv-panel rv-summary" aria-label="Báo giá và thanh toán">
           {selected?.booking_status === 'quoted' && <QuoteAcceptance key={selected.quote_offer.id + ':' + bookings.revision}
             booking={selected} onAccepted={() => { changeParam('status', ''); bookings.refresh(); }}/>}
+          {selected?.additional_charges?.some((charge) => charge.status === 'disputed') && <p role="status" className="rv-notice">Tạm dừng thanh toán để Operator giải quyết phụ phí đang tranh chấp.</p>}
           {selected?.paymentDue && <BookingPayment key={selected.booking_id + ':' + selected.paymentDue.purpose}
             booking={selected} paymentMode={bookings.paymentMode} checkoutAvailable={bookings.checkoutAvailable} onPaid={(outcome) => {
               setPaymentNotice(outcome === 'success' ? `Đơn #${selected.booking_id}: thanh toán mô phỏng thành công, không thu tiền thật.` :
@@ -70,6 +72,7 @@ export default function MyBookingsPage() {
             {!selected && <p>Chọn một đơn để xem báo giá hoặc thanh toán.</p>}
             {selected?.booking_status === 'pending' && selected.quote_requested_at && <p role="status">Đang đợi Operator gửi báo giá.</p>}
           </>}
+          {selected && <RenterOperations key={selected.booking_id} booking={selected} onUpdated={bookings.refresh}/>}
         </aside>
       </div>
     </ReservationLayout>

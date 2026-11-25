@@ -108,7 +108,7 @@ async function createResource(resource, actor, actorId, input) {
       license_expiry: expiry, availability_status: 'unavailable', approval_status: 'pending', approved_at: null,
       created_at: now, updated_at: now };
   } else if (resource === 'service_policies') {
-    const policyValues = ['cancellation_fee_percent', 'waiting_fee_per_hour', 'overtime_fee_per_hour', 'extra_km_fee', 'refund_days'];
+    const policyValues = ['cancellation_fee_percent', 'waiting_fee_per_hour', 'overtime_fee_per_hour', 'extra_km_fee', 'refund_days', 'free_cancellation_hours'];
     const policyData = Object.fromEntries(policyValues.map((key) => [key, Number(body[key] || 0)]));
     if (Object.values(policyData).some((value) => !Number.isFinite(value) || value < 0) || policyData.cancellation_fee_percent > 100) throw new HttpError(400, 'Các khoản phí và thời hạn chính sách không hợp lệ.');
     document = { policy_id: await repository.nextId('service_policies'), name: text(body.name, 'Tên chính sách', 120),
@@ -271,10 +271,10 @@ async function updateResource(resource, actor, actorId, rawId, input) {
     for (const key of ['service_type', 'vehicle_type', 'unit', 'route']) {
       if (body[key] !== undefined) changes[key] = text(body[key], key, key === 'route' ? 200 : 60);
     }
-    for (const key of ['base_price', 'distance_limit_km', 'surcharge_per_unit', 'cancellation_fee_percent', 'waiting_fee_per_hour', 'overtime_fee_per_hour', 'extra_km_fee', 'refund_days']) {
+    for (const key of ['base_price', 'distance_limit_km', 'surcharge_per_unit', 'cancellation_fee_percent', 'waiting_fee_per_hour', 'overtime_fee_per_hour', 'extra_km_fee', 'refund_days', 'free_cancellation_hours']) {
       if (body[key] !== undefined) {
         const value = Number(body[key]);
-        if (!Number.isFinite(value) || value < 0) throw new HttpError(400, `${key} không hợp lệ.`);
+        if (!Number.isFinite(value) || value < 0 || (key === 'cancellation_fee_percent' && value > 100)) throw new HttpError(400, `${key} không hợp lệ.`);
         changes[key] = value;
       }
     }

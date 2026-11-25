@@ -28,7 +28,7 @@ async function hasAssignedTrip(vehicleId, pickupTime, estimatedEndTime, session)
 async function findAssignableVehicle({ bookingId, pickupTime, estimatedEndTime, minSeats, session }) {
   const candidates = await findAvailableVehicles({ bookingId, pickupTime, estimatedEndTime, minSeats, session });
   for (const vehicle of candidates) {
-    if (!(await hasAssignedTrip(vehicle.vehicle_id, pickupTime, estimatedEndTime, session))) return vehicle;
+    if (!(await hasAssignedTrip(vehicle.vehicle_id, pickupTime, estimatedEndTime, session)) && await require('./booking-readiness.repository').vehicleReady(vehicle.vehicle_id, estimatedEndTime, session)) return vehicle;
   }
   return null;
 }

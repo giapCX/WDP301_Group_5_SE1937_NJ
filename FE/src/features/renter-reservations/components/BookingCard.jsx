@@ -33,8 +33,8 @@ export default function BookingCard({ booking, selected, onSelect }) {
       {status === 'awaiting_payment' && <p className="rv-notice">{booking.paymentDue?.purpose === 'deposit' ? 'Đã xác nhận báo giá. Vui lòng đặt cọc để giữ xe.' : 'Đơn đã được duyệt. Vui lòng thanh toán để xác nhận.'}</p>}
       {booking.deposit_paid_at && <p className="rv-notice">Đã đặt cọc {money(booking.deposit_due)}.</p>}
       <footer><strong>{status === 'pending' && booking.quote_requested_at ? 'Chưa có giá' : money(booking.pricing_breakdown?.total ?? booking.estimated_price)}</strong>
-        {(status === 'quoted' || booking.paymentDue) && <button type="button" className="rv-button rv-primary" aria-pressed={selected}
-          onClick={() => onSelect(booking.booking_id)}>{status === 'quoted' ? 'Xem báo giá' : 'Chọn thanh toán'}</button>}
+        <button type="button" className="rv-button rv-primary" aria-pressed={selected}
+          onClick={() => onSelect(booking.booking_id)}>{status === 'quoted' ? 'Xem báo giá' : booking.paymentDue ? 'Chọn thanh toán' : 'Chi tiết và yêu cầu'}</button>
       </footer>
     </article>
   );

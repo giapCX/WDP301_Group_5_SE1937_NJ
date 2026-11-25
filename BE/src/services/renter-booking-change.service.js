@@ -17,22 +17,7 @@ function positiveId(value, name) {
   return Number(value);
 }
 
-function snapshot(booking) {
-  return {
-    pickup_location: booking.pickup_location,
-    dropoff_location: booking.dropoff_location,
-    pickup_time: new Date(booking.pickup_time),
-    estimated_end_time: new Date(booking.estimated_end_time),
-    estimated_price: booking.estimated_price,
-    trip_stops: [...booking.trip_stops]
-      .sort((a, b) => a.stop_order - b.stop_order)
-      .map(({ stop_order, location, note }) => ({
-        stop_order,
-        location,
-        note: note ?? null,
-      })),
-  };
-}
+const { snapshot, validateTimes, validateActiveChange } = require('../utils/itinerary-snapshot');
 
 async function createChangeRequest(id, input, renterId) {
   const bookingId = positiveId(id, 'booking_id');
@@ -53,7 +38,7 @@ async function createChangeRequest(id, input, renterId) {
     'dropoff_location',
     'pickup_time',
     'estimated_end_time',
-    'trip_stops',
+    'trip_stops', 'destination', 'return_pickup_location', 'return_pickup_time',
   ];
   if (Object.keys(input.after).some((key) => !editable.includes(key))) {
     throw new HttpError(
@@ -67,14 +52,15 @@ async function createChangeRequest(id, input, renterId) {
     if (booking.renter_id !== requesterId)
       throw new HttpError(403, 'Bạn không sở hữu booking này');
     if (
-      booking.booking_status !== 'confirmed' ||
-      new Date(booking.pickup_time).getTime() <= Date.now()
+      !['confirmed', 'in_progress'].includes(booking.booking_status) ||
+      (booking.booking_status === 'confirmed' && new Date(booking.pickup_time).getTime() <= Date.now())
     ) {
       throw new HttpError(
         409,
         'Chỉ yêu cầu đổi lịch booking đã xác nhận và chưa khởi hành',
       );
     }
+    if (booking.cancellation?.status === 'pending') throw new HttpError(409, 'Đơn đang chờ xử lý hủy');
     // Shared vehicle write serializes submissions with approvals and schedule changes.
     const vehicle = await bookingRepository.lockVehicleSchedule(
       booking.vehicle_id,
@@ -96,7 +82,7 @@ async function createChangeRequest(id, input, renterId) {
     if (
       !Number.isFinite(start) ||
       !Number.isFinite(end) ||
-      start <= Date.now() ||
+      (booking.booking_status !== 'in_progress' && start <= Date.now()) ||
       end <= start
     )
       throw new HttpError(400, 'Thời gian đề xuất không hợp lệ');
@@ -119,7 +105,9 @@ async function createChangeRequest(id, input, renterId) {
       (before.estimated_end_time - before.pickup_time) / 86400000,
     );
     const newDays = Math.ceil((end - start) / 86400000);
-    const priceDifference = (newDays - oldDays) * vehicle.price_per_day;
+    validateTimes(afterInput, booking.service_type);
+    await validateActiveChange(booking, afterInput, session);
+    const priceDifference = booking.quote_offer?.accepted_at ? 0 : (newDays - oldDays) * vehicle.price_per_day;
     afterInput.estimated_price = before.estimated_price + priceDifference;
     const document = new BookingChangeRequest({
       change_request_id: randomInt(1, 2 ** 48 - 1),
@@ -144,6 +132,7 @@ async function createChangeRequest(id, input, renterId) {
     data.after = snapshot(data.after);
     if (isDeepStrictEqual(before, data.after))
       throw new HttpError(400, 'Lịch trình đề xuất chưa có thay đổi');
+    await require('../models').Booking.updateOne({ booking_id: bookingId }, { $push: { operation_events: { action: 'change_requested', actor_id: requesterId, at: new Date(), note: input.reason.trim() } } }, { session });
     return requestRepository.createChangeRequest(data, session);
   });
 }

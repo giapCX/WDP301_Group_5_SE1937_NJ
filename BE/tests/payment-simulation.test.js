@@ -69,6 +69,10 @@ test('simulation records deposits and balances once, preserves failed/cancelled 
   assert.equal(booking.paid_total, 1000000);
   assert.equal(booking.booking_status, 'completed');
   assert.equal(payments.paymentDue(booking), null);
+  reset();
+  booking.deposit_due = 350000;
+  await assert.rejects(payments.simulate(7, 9, { attemptId: 'test-attempt', outcome: 'success' }), { statusCode: 409 });
+  assert.equal(booking.paid_total, 0);
   process.env.NODE_ENV = 'production';
   assert.equal(payments.isSimulated(), false);
   await assert.rejects(payments.simulate(7, 9, { attemptId: 'x', outcome: 'success' }), { statusCode: 404 });

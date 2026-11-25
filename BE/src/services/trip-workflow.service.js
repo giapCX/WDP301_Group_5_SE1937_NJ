@@ -148,6 +148,7 @@ async function assign(bookingId, input, operatorId) {
     if (bookedService && serviceType !== bookedService) {
       throw new HttpError(409, 'Phân công phải giữ đúng loại dịch vụ khách đã đặt.');
     }
+    if (booking.cancellation?.status === 'pending') throw new HttpError(409, 'Booking đang chờ xử lý hủy');
     if (booking.booking_status !== 'confirmed') {
       throw new HttpError(409, 'Chỉ phân công mới cho booking đã được Operator xác nhận');
     }
@@ -168,8 +169,8 @@ async function assign(bookingId, input, operatorId) {
     const record = existing || new TripWorkflow({ booking_id: id, created_at: now(), history: [] });
     Object.assign(record, {
       service_type: serviceType, return_pickup_time: returnTime,
-      return_pickup_location: returnTime ? text(input.return_pickup_location || booking.dropoff_location, 'Điểm đón lượt về', 255) : null,
-      return_dropoff_location: returnTime ? text(input.return_dropoff_location || booking.pickup_location, 'Điểm trả lượt về', 255) : null,
+      return_pickup_location: returnTime ? text(input.return_pickup_location || booking.return_pickup_location || booking.dropoff_location, 'Điểm đón lượt về', 255) : null,
+      return_dropoff_location: returnTime ? text(input.return_dropoff_location || (booking.service_type ? booking.dropoff_location : booking.pickup_location), 'Điểm trả lượt về', 255) : null,
       driver_id: driverId, vehicle_id: vehicleId, driver_response: 'pending', stage: 'awaiting_driver', leg: 'outbound',
       vehicle_received: false, vehicle_returned: false, handover_inspection_id: null, return_inspection_id: null,
       completed_stops: [], delay_minutes: 0, delay_reason: null,
@@ -266,7 +267,7 @@ async function mutateDriver(bookingId, actorId, action, input = {}) {
   if (!latest || latest.driver_id !== workflow.driver_id || ['rejected', 'cancelled'].includes(latest.assignment_status)) throw new HttpError(409, 'Phân công không còn hiệu lực');
   if (action === 'accept') {
     if (workflow.driver_response !== 'pending') throw new HttpError(409, 'Phân công này đã được phản hồi');
-    workflow.driver_response = 'accepted'; workflow.stage = 'awaiting_vehicle'; await TripAssignment.updateOne({ assignment_id: latest.assignment_id }, { $set: { assignment_status: 'accepted' } });
+    workflow.driver_response = 'accepted'; workflow.stage = workflow.vehicle_received ? workflow.resume_stage || 'to_pickup' : 'awaiting_vehicle'; if (workflow.vehicle_received) workflow.resume_stage = null; await TripAssignment.updateOne({ assignment_id: latest.assignment_id }, { $set: { assignment_status: 'accepted' } });
   } else if (action === 'reject') {
     if (workflow.driver_response !== 'pending') throw new HttpError(409, 'Phân công này đã được phản hồi');
     const reason = text(input.reason, 'Lý do từ chối', 500);
@@ -377,7 +378,7 @@ async function reportIncident(bookingId, driverUserId, input) {
     }
     const incident_id = await nextId(Incident, 'incident_id', session);
     await Incident.create([{
-      incident_id, booking_id, reported_by: driverUserId, description, incident_status: 'open',
+      incident_id, booking_id, reported_by: driverUserId, description, kind, reported_at: now(), incident_status: 'open',
       resolution_note: null, resolved_by: null,
     }], { session });
     workflow.incident_ids.push(incident_id);
@@ -400,25 +401,36 @@ async function reportIncident(bookingId, driverUserId, input) {
 }
 async function resolveIncident(bookingId, incidentId, operatorId, note) {
   const id = positive(bookingId, 'booking_id');
-  const incident = await Incident.findOne({ booking_id: id, incident_id: positive(incidentId, 'incident_id'), incident_status: 'open' });
-  if (!incident) throw new HttpError(404, 'Không tìm thấy sự cố đang mở');
-  const workflow = incident.garage_damage_inspection_id ? null : await TripWorkflow.findOne({ booking_id: id });
-  if (workflow?.stage === 'routed_to_booking_changes') throw new HttpError(409, 'Yêu cầu đã chuyển sang luồng 4; cần xử lý thay đổi lịch trình trước khi đóng');
-  if (workflow?.stage === 'vehicle_replacement_required') throw new HttpError(409, 'Cần đổi xe trước khi đóng sự cố hỏng xe');
   const resolution = text(note, 'Biện pháp xử lý', 2000);
-  const resolved = await Incident.findOneAndUpdate(
-    { _id: incident._id, incident_status: 'open' },
-    { $set: { incident_status: 'resolved', resolution_note: resolution, resolved_by: operatorId } },
-    { returnDocument: 'after' },
-  );
-  if (!resolved) throw new HttpError(409, 'Sự cố đã được xử lý');
-  if (workflow) {
-    workflow.stage = workflow.resume_stage || 'reassignment_required';
-    workflow.resume_stage = null;
-    addTripHistory(workflow, 'incident_resolved', operatorId, resolution);
-    await workflow.save();
-  }
-  return resolved.toObject();
+  return runInTransaction(async (session) => {
+    const booking = await Booking.findOne({ booking_id: id }).session(session);
+    if (!booking) throw new HttpError(404, 'Không tìm thấy booking');
+    const incident = await Incident.findOne({ booking_id: id, incident_id: positive(incidentId, 'incident_id'), incident_status: 'open' }).session(session);
+    if (!incident) throw new HttpError(409, 'Sự cố đã được xử lý');
+    const approval = incident.resolution_approval;
+    if (approval && approval.status !== 'approved') throw new HttpError(409, 'Phương án cần Manager phê duyệt trước khi đóng');
+    if (['accident', 'complaint'].includes(incident.kind) && approval?.status !== 'approved') throw new HttpError(409, 'Sự cố đặc biệt cần trình Manager');
+    const workflow = incident.garage_damage_inspection_id ? null : await TripWorkflow.findOne({ booking_id: id }).session(session);
+    if (workflow?.stage === 'routed_to_booking_changes') throw new HttpError(409, 'Cần xử lý thay đổi lịch trình trước khi đóng');
+    if (workflow?.stage === 'vehicle_replacement_required') throw new HttpError(409, 'Cần đổi xe trước khi đóng sự cố hỏng xe');
+    if (approval?.action === 'replace_driver' && workflow?.driver_response !== 'accepted') throw new HttpError(409, 'Tài xế thay thế cần chấp nhận phân công trước khi đóng sự cố');
+    if (approval?.action === 'replace_driver' && !workflow?.history?.some((item) => ['assigned', 'reassigned', 'return_driver_reassigned', 'incident_driver_reassigned'].includes(item.action) && item.created_at >= approval.requested_at)) throw new HttpError(409, 'Cần hoàn tất phân công lại tài xế trước khi đóng');
+    if (approval?.action === 'change_itinerary' && !workflow?.history?.some((item) => item.action === 'booking_change_approved' && item.created_at >= approval.requested_at)) throw new HttpError(409, 'Cần duyệt lịch trình mới trước khi đóng');
+    if (approval?.action === 'replace_vehicle' && workflow?.history?.filter((item) => item.action === 'vehicle_replaced' && item.created_at >= approval.requested_at).length === 0) throw new HttpError(409, 'Cần hoàn tất đổi xe trước khi đóng');
+    incident.incident_status = 'resolved'; incident.resolution_note = resolution;
+    incident.resolved_by = operatorId; incident.resolved_at = now();
+    incident.history.push({ action: 'resolved', actor_id: operatorId, at: now(), note: resolution });
+    await incident.save({ session });
+    const otherOpen = await Incident.exists({ booking_id: id, incident_status: 'open', garage_damage_inspection_id: null }).session(session);
+    if (workflow && !otherOpen && workflow.stage === 'incident_open') {
+      workflow.stage = workflow.resume_stage || 'reassignment_required'; workflow.resume_stage = null;
+      addTripHistory(workflow, 'incident_resolved', operatorId, resolution);
+      await workflow.save({ session });
+    }
+    booking.operation_events.push({ action: 'incident_resolved', actor_id: operatorId, at: now(), note: resolution });
+    await booking.save({ session });
+    return incident.toObject();
+  });
 }
 async function replaceVehicle(bookingId, vehicleId, operatorId) {
   const id = positive(bookingId, 'booking_id');
@@ -451,7 +463,7 @@ async function replaceVehicle(bookingId, vehicleId, operatorId) {
       stage: 'awaiting_vehicle', handover_inspection_id: null, return_inspection_id: null,
     });
     await Booking.updateOne({ booking_id: id }, { $set: { vehicle_id: newVehicleId } }, { session });
-    await Incident.updateMany({ booking_id: id, incident_status: 'open', garage_damage_inspection_id: null }, {
+    await Incident.updateMany({ booking_id: id, incident_status: 'open', garage_damage_inspection_id: null, 'resolution_approval.id': { $exists: false }, kind: { $nin: ['accident', 'complaint'] } }, {
       $set: { incident_status: 'resolved', resolution_note: `Đã điều phối xe thay thế ${vehicle.plate_number}`, resolved_by: operatorId },
     }, { session });
     addTripHistory(workflow, 'vehicle_replaced', operatorId, `Xe thay thế ${vehicle.plate_number}; chờ gara bàn giao`);
@@ -476,4 +488,26 @@ async function reassignReturn(bookingId, driverId, operatorId) {
   await workflow.save();
   return workflow.toObject();
 }
-module.exports = { dispatchData, assign, mutateDriver, driverTrips, reportIncident, resolveIncident, replaceVehicle, reassignReturn };
+async function replaceIncidentDriver(incidentId, driverId, operatorId, reason) {
+  return retryDuplicateId(['assignment_id'], () => runInTransaction(async (session) => {
+    const incident = await Incident.findOne({ incident_id: incidentId, incident_status: 'open', 'resolution_approval.status': 'approved', 'resolution_approval.action': 'replace_driver' }).session(session);
+    if (!incident) throw new HttpError(409, 'Cần phương án đổi tài xế đã được Manager duyệt');
+    const workflow = await TripWorkflow.findOne({ booking_id: incident.booking_id }).session(session);
+    const booking = await Booking.findOne({ booking_id: incident.booking_id }).session(session).lean();
+    if (!workflow || !booking || !['confirmed', 'in_progress'].includes(booking.booking_status)) throw new HttpError(409, 'Chuyến không đủ điều kiện đổi tài xế');
+    if (workflow.driver_id === driverId) throw new HttpError(400, 'Chọn tài xế khác tài xế hiện tại');
+    await lockVehicleSchedule(workflow.vehicle_id, session);
+    await availability({ booking: { ...booking, pickup_time: new Date(Math.max(+new Date(booking.pickup_time), Date.now())) }, driverId, vehicleId: workflow.vehicle_id, excludeBookingId: booking.booking_id }, session);
+    const oldDriver = workflow.driver_id;
+    await TripAssignment.updateMany({ booking_id: booking.booking_id, assignment_status: { $in: ACTIVE_ASSIGNMENTS } }, { $set: { assignment_status: 'cancelled' } }, { session });
+    await TripAssignment.create([{ assignment_id: await nextId(TripAssignment, 'assignment_id', session), booking_id: booking.booking_id, driver_id: driverId, assigned_by: operatorId, assigned_at: now(), assignment_status: 'assigned' }], { session });
+    workflow.driver_id = driverId; workflow.driver_response = 'pending';
+    if (workflow.stage !== 'awaiting_driver') workflow.resume_stage ||= workflow.stage;
+    workflow.stage = 'awaiting_driver';
+    addTripHistory(workflow, 'incident_driver_reassigned', operatorId, reason);
+    await workflow.save({ session });
+    await syncDriverAvailability(oldDriver, session); await syncDriverAvailability(driverId, session);
+    return workflow.toObject();
+  }));
+}
+module.exports = { replaceIncidentDriver, dispatchData, assign, mutateDriver, driverTrips, reportIncident, resolveIncident, replaceVehicle, reassignReturn };

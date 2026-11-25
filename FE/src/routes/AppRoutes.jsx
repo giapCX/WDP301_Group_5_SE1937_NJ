@@ -1,3 +1,4 @@
+import OperationsPage from '../features/operations/pages/OperationsPage';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import BookingManagementPage from '../features/bookings/pages/BookingManagementPage.jsx';
 import BookingModificationPage from '../features/booking-changes/pages/BookingModificationPage.jsx';
@@ -41,6 +42,7 @@ export default function AppRoutes() {
         <Route path="/driver/dashboard" element={<DriverDashboardPage />} />
       </Route>
       <Route element={<RequireRole role="manager" />}>
+        <Route path="/manager/operation-approvals" element={<OperationsPage manager/>}/>
         <Route path="/manager/dashboard" element={<ManagerDashboardPage />} />
         <Route path={MAINTENANCE_APPROVALS_PATH} element={<MaintenanceApprovalsPage />} />
         <Route path="/manager" element={<Navigate to="/manager/dashboard" replace />} />
@@ -60,6 +62,7 @@ export default function AppRoutes() {
         </Route>
       </Route>
       <Route element={<RequireRole role="operator" />}>
+        <Route path="/operator/operations" element={<OperationsPage/>}/>
         <Route path="/operator/dashboard" element={<OperatorDashboard />} />
         <Route path="/operator/trip-monitoring" element={<TripMonitoringPage />} />
         <Route path="/operator/dispatch" element={<TripDispatchPage />} />

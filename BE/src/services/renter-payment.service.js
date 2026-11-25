@@ -22,14 +22,14 @@ function isAvailable() {
 
 function paymentDue(booking) {
   const price = booking.pricing_breakdown;
-  if (!price || !Number.isSafeInteger(price.total)) return null;
+  if (!price || !Number.isSafeInteger(price.total) || booking.additional_charges?.some((charge) => charge.status === 'disputed')) return null;
   if (booking.booking_status === 'awaiting_payment') {
     return booking.quote_offer?.accepted_at
       ? { purpose: 'deposit', amount: booking.deposit_due }
       : { purpose: 'full', amount: price.total };
   }
   if (booking.booking_status === 'completed' && booking.quote_offer?.accepted_at) {
-    const amount = price.total + (booking.additional_charge ?? 0) - (price.surcharge ?? 0) - (booking.paid_total ?? 0);
+    const amount = price.total + (booking.additional_charge ?? 0) - (price.surcharge ?? 0) - (booking.paid_total ?? 0) + (booking.refunded_total ?? 0) - (booking.compensation_refunded ?? 0);
     if (Number.isSafeInteger(amount) && amount > 0) return { purpose: 'balance', amount };
   }
   return null;
@@ -85,6 +85,7 @@ async function checkout(bookingId, renterId) {
   const filter = { booking_id: bookingId, renter_id: renterId };
   const booking = await Booking.findOne(filter).lean();
   if (!booking) throw new HttpError(404, 'Không tìm thấy đơn đặt xe.');
+  if (booking.cancellation?.status === 'pending') throw new HttpError(409, 'Đơn đang chờ Operator xử lý hủy');
   const due = paymentDue(booking);
   if (!due) throw new HttpError(409, 'Đơn chưa đến bước thanh toán.');
   const amount = booking.checkout_attempt?.amount ?? due.amount;
@@ -106,6 +107,10 @@ async function checkout(bookingId, renterId) {
   const active = current.checkout_attempt;
 
   if (isSimulated()) {
+    if (active.amount !== due.amount || active.purpose !== due.purpose) {
+      await Booking.updateOne({ ...filter, 'checkout_attempt.id': active.id }, { $unset: { checkout_attempt: '' } });
+      throw new HttpError(409, 'Chi phí đã thay đổi; vui lòng mở lại thanh toán để xem số tiền mới.');
+    }
     return { simulated: true, attemptId: active.id, amount: active.amount, purpose: active.purpose };
   }
 
@@ -164,7 +169,9 @@ async function simulate(bookingId, renterId, input) {
   const filter = { booking_id: bookingId, renter_id: renterId, 'checkout_attempt.id': input.attemptId };
   const booking = await Booking.findOne(filter).lean();
   if (!booking) throw new HttpError(409, 'Phiên thanh toán đã thay đổi hoặc đã xử lý.');
-  if (!paymentDue(booking)) throw new HttpError(409, 'Đơn chưa đến bước thanh toán.');
+  const currentDue = paymentDue(booking);
+  if (!currentDue) throw new HttpError(409, 'Đơn chưa đến bước thanh toán.');
+  if (input.outcome !== 'cancelled' && (currentDue.amount !== booking.checkout_attempt.amount || currentDue.purpose !== booking.checkout_attempt.purpose)) throw new HttpError(409, 'Chi phí đã thay đổi; hủy phiên cũ và mở lại thanh toán.');
   if (input.outcome === 'cancelled') {
     const result = await Booking.updateOne(filter, { $unset: { checkout_attempt: '' } });
     if (!result.modifiedCount) throw new HttpError(409, 'Phiên thanh toán đã được xử lý.');

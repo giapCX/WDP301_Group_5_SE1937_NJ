@@ -1,3 +1,4 @@
+import { ActionForm } from '../../operations/components/OperationShared';
 import { useEffect, useRef, useState } from 'react';
 import useChangeRequestDetail from '../hooks/useChangeRequestDetail';
 import ChangeStatus from './ChangeStatus';
@@ -112,6 +113,8 @@ export default function ChangeRequestDetail({ id, revision, onUpdated }) {
               {request.rejection_reason}
             </div>
           )}
+          {request.request_status === 'pending' && <ActionForm title="Xem xét giá lịch trình mới" path={'/operator/booking-change-requests/' + request.change_request_id + '/price'} method="patch" transform={(fields) => ({ price: Number(fields.price) })} onDone={detail.reload} label="Gửi giá thay đổi cho Renter"><label>Giá chuyến mới trước ưu đãi (₫)<input type="number" name="price" min="0" step="1" required defaultValue={request.after.estimated_price}/></label></ActionForm>}
+          {request.price_offer && <p>{request.price_offer.accepted_at ? 'Renter đã đồng ý giá thay đổi.' : 'Đang chờ Renter chấp nhận giá thay đổi.'}</p>}
           {request.request_status === 'pending' && (
             <div className="change-decisions">
               <p className="change-decision-hint">

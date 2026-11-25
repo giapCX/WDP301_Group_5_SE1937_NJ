@@ -207,3 +207,7 @@ MongoDB standalone đủ để đăng nhập và xem dashboard. Một số thao 
 Môi trường development mặc định sử dụng thanh toán mô phỏng, không cần Stripe và không thu tiền thật. Có thể đặt PAYMENT_MODE=simulation trong BE/.env. NODE_ENV=production luôn tắt mô phỏng; PAYMENT_MODE=stripe dùng lại luồng Stripe hiện có.
 
 Test: Renter mở My Bookings, chấp nhận báo giá rồi chọn Đặt cọc mô phỏng. Chọn Mô phỏng thành công để ghi nhận cọc và xác nhận đơn; Mô phỏng thất bại ghi giao dịch failed, không tăng tiền đã trả; Hủy thanh toán chỉ đóng phiên thanh toán, không hủy booking. Có thể thử lại sau thất bại/hủy. Sau khi Operator hoàn tất chuyến, thực hiện tương tự để thanh toán phần còn lại. Giao dịch demo lưu payment_method=simulation và mã SIM-, số tiền do backend tính. Endpoint mô phỏng yêu cầu đăng nhập đúng Renter sở hữu đơn và dùng cơ chế transaction hiện tại (MongoDB replica set).
+
+### Workflow người 4
+
+Phụ phí, hủy chuyến, hoàn tiền mô phỏng, xử lý sự cố và phê duyệt Manager: xem [hướng dẫn vận hành](docs/WORKFLOW_4.md) và [đặc tả Use Case, sơ đồ](docs/WORKFLOW_4_SPEC.md). Không cần collection mới. Cần chính sách active do Manager cấu hình để tính phí hủy đơn đã xác nhận/thu tiền.

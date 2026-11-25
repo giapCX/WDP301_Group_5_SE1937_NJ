@@ -151,7 +151,7 @@ async function mutate(action, bookingId, chargeId, body = {}, actorId) {
         history: [],
       };
       charges.push(charge);
-      note = 'Tạo khoản phụ phí';
+      note = body.reason ? text(body.reason, 'Lý do tạo') : 'Tạo khoản phụ phí';
     } else {
       charge = getCharge(booking, chargeId);
       previous = contribution(charge);
@@ -209,6 +209,19 @@ async function mutate(action, bookingId, chargeId, body = {}, actorId) {
     if (!Number.isSafeInteger(total) || total < 0)
       throw new HttpError(409, 'Tổng phụ phí không hợp lệ; cần đối soát dữ liệu booking');
     await repository.saveCharges(selectedBooking, charges, total, session);
+    const { Booking } = require('../models');
+    await Booking.updateOne({ booking_id: selectedBooking }, { $push: { operation_events: {
+      action: 'charge_' + action, actor_id: operatorId, at: new Date(), note,
+    } } }, { session });
+    if (booking.pricing_breakdown && total < booking.additional_charge) {
+      const netPaid = (booking.paid_total || 0) - (booking.refunded_total || 0);
+      const due = booking.pricing_breakdown.total + total - (booking.pricing_breakdown.surcharge || 0);
+      const { Refund } = require('../models');
+      const reserved = await Refund.find({ booking_id: selectedBooking, refund_status: { $in: ['pending', 'approved'] } }).session(session).lean();
+      const refundable = Math.max(0, netPaid - due - reserved.reduce((sum, item) => sum + item.amount, 0));
+      await require('./cancellation.service').reserveRefunds(booking, refundable, 'Hoàn do giảm phụ phí: ' + note,
+        'charge:' + charge.charge_id + ':' + charge.history.length, { user_id: operatorId }, session);
+    }
     return { booking_id: selectedBooking, additional_charge: total, charge };
   });
 }

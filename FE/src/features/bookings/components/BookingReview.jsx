@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import useBookingReview from '../hooks/useBookingReview';
 import BookingStatus from './BookingStatus';
@@ -98,6 +99,7 @@ export default function BookingReview({ id, onClose, onUpdated }) {
           )}
           {booking && (
             <>
+              <p><Link to={'/operator/operations?booking=' + booking.booking_id}>Phụ phí, hủy đơn, hoàn tiền và sự cố của booking</Link></p>
               <div className="review-status">
                 <BookingStatus status={booking.booking_status} />
                 <span>Tạo lúc {dateTime(booking.created_at)}</span>

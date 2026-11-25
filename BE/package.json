@@ -15,7 +15,8 @@
     "test:booking": "node --test tests/booking.service.test.js tests/booking.routes.test.js",
     "test:booking-concurrency": "node --test tests/booking.concurrency.test.js",
     "db:embedded-charges": "node scripts/add-embedded-charges.js",
-    "test:charges": "node --test tests/additional-charge.test.js"
+    "test:charges": "node --test tests/additional-charge.test.js",
+    "test:operations": "node --test tests/operations.integration.test.js tests/operations.policy.test.js"
   },
   "keywords": [],
   "author": "",

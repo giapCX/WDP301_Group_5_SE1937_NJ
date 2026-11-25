@@ -29,6 +29,11 @@ module.exports = createModel(
         message: 'Must be a safe integer',
       },
     },
+    kind: { type: String, enum: ['other', 'vehicle_failure', 'customer_route_change', 'complaint', 'accident'], default: 'other' },
+    evidence: { type: [String], default: [] },
+    reported_at: Date, resolved_at: Date,
+    resolution_approval: require('./operation.schema').approvalSchema,
+    history: { type: [require('./operation.schema').historySchema], default: [] },
     description: {
       type: String,
       required: true,

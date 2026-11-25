@@ -147,7 +147,7 @@ async function decidePendingRequest(
 async function applyItinerary(bookingId, after, session) {
   const { trip_stops: stops, ...fields } = after;
   const updated = await Booking.findOneAndUpdate(
-    { booking_id: bookingId, booking_status: 'confirmed' },
+    { booking_id: bookingId, booking_status: { $in: ['confirmed', 'in_progress'] } },
     { $set: fields },
     { session, returnDocument: 'after', runValidators: true },
   ).lean();

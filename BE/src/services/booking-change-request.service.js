@@ -80,22 +80,7 @@ async function getChangeRequestById(id) {
   return request;
 }
 
-function itinerary(value) {
-  return {
-    pickup_location: value.pickup_location,
-    dropoff_location: value.dropoff_location,
-    pickup_time: new Date(value.pickup_time).getTime(),
-    estimated_end_time: new Date(value.estimated_end_time).getTime(),
-    estimated_price: value.estimated_price,
-    trip_stops: [...value.trip_stops]
-      .sort((a, b) => a.stop_order - b.stop_order)
-      .map((stop) => ({
-        stop_order: stop.stop_order,
-        location: stop.location,
-        note: stop.note ?? null,
-      })),
-  };
-}
+const { snapshot: itinerary, validateTimes, validateActiveChange } = require('../utils/itinerary-snapshot');
 
 async function pendingRequest(id, session = null) {
   const request = await changeRequestRepository.findRequestForReview(id, session);
@@ -113,8 +98,9 @@ async function approveChangeRequest(id, reviewerId) {
     const request = await pendingRequest(requestId, session);
     const booking = await bookingRepository.findBookingById(request.booking_id, session);
     if (!booking) throw new HttpError(404, 'Không tìm thấy booking');
-    if (booking.booking_status !== 'confirmed')
+    if (!['confirmed', 'in_progress'].includes(booking.booking_status))
       throw new HttpError(409, 'Chỉ đổi lịch booking đã xác nhận và chưa khởi hành');
+    if (booking.cancellation?.status === 'pending') throw new HttpError(409, 'Đơn đang chờ xử lý hủy');
     if (request.requested_by !== booking.renter_id)
       throw new HttpError(409, 'Người yêu cầu không phải chủ booking');
     try {
@@ -125,18 +111,21 @@ async function approveChangeRequest(id, reviewerId) {
       }
       throw error;
     }
+    if (request.price_offer && !request.price_offer.accepted_at) throw new HttpError(409, 'Khách cần chấp nhận giá thay đổi trước khi duyệt');
+    validateTimes(request.after, booking.service_type);
+    await validateActiveChange(booking, request.after, session);
     const before = itinerary(request.before);
     const after = itinerary(request.after);
     if (!isDeepStrictEqual(before, itinerary(booking)))
       throw new HttpError(409, 'Booking đã thay đổi so với lịch cũ. Cần gửi yêu cầu mới');
     if (
-      !Number.isFinite(after.pickup_time) ||
-      !Number.isFinite(after.estimated_end_time) ||
+      !Number.isFinite(+after.pickup_time) ||
+      !Number.isFinite(+after.estimated_end_time) ||
       after.estimated_end_time <= after.pickup_time ||
-      after.pickup_time <= Date.now()
+      (booking.booking_status !== 'in_progress' && after.pickup_time <= Date.now())
     )
       throw new HttpError(400, 'Thời gian mới không hợp lệ hoặc đã qua');
-    if (new Date(booking.pickup_time).getTime() <= Date.now())
+    if (booking.booking_status !== 'in_progress' && new Date(booking.pickup_time).getTime() <= Date.now())
       throw new HttpError(409, 'Chuyến đi đã đến giờ khởi hành');
     if (
       !Number.isFinite(after.estimated_price) ||
@@ -182,10 +171,25 @@ async function approveChangeRequest(id, reviewerId) {
       session,
     );
     if (!updated) throw new HttpError(409, 'Booking đã được xử lý bởi người khác');
-    const workflow = await TripWorkflow.findOne({ booking_id: booking.booking_id, stage: 'routed_to_booking_changes' }).session(session);
+    if (booking.quote_offer?.accepted_at) {
+      const oldPrice = booking.pricing_breakdown;
+      const newSubtotal = request.after.estimated_price;
+      const discount = oldPrice.subtotal > 0 ? Math.round(newSubtotal * oldPrice.discount / oldPrice.subtotal) : 0;
+      const total = newSubtotal + (oldPrice.surcharge || 0) - discount;
+      const Booking = require('../models').Booking;
+      await Booking.updateOne({ booking_id: booking.booking_id }, { $set: { pricing_breakdown: { ...oldPrice, subtotal: newSubtotal, discount, total } },
+        $push: { operation_events: { action: 'change_approved', actor_id: reviewer, at: new Date(), note: 'Đã áp dụng lịch trình và giá được chấp nhận' } } }, { session });
+      if ((booking.paid_total || 0) - (booking.refunded_total || 0) > total) {
+        await require('./cancellation.service').reserveRefunds(booking, booking.paid_total - (booking.refunded_total || 0) - total,
+          'Hoàn chênh lệch đổi lịch', 'change:' + requestId, { user_id: reviewer }, session);
+      }
+    }
+    const workflow = await TripWorkflow.findOne({ booking_id: booking.booking_id }).session(session);
     if (workflow) {
-      workflow.stage = workflow.resume_stage || 'reassignment_required';
-      workflow.resume_stage = null;
+      if (workflow.stage === 'routed_to_booking_changes') { workflow.stage = workflow.resume_stage || 'reassignment_required'; workflow.resume_stage = null; }
+      if (request.after.return_pickup_time) workflow.return_pickup_time = request.after.return_pickup_time;
+      if (request.after.return_pickup_location) workflow.return_pickup_location = request.after.return_pickup_location;
+      workflow.return_dropoff_location = request.after.dropoff_location;
       workflow.history.push({ action: 'booking_change_approved', actor_id: reviewer, note: 'Đã áp dụng lịch trình được duyệt ở luồng 4', created_at: new Date() });
       workflow.updated_at = new Date();
       await workflow.save({ session });
@@ -211,26 +215,52 @@ async function rejectChangeRequest(id, input = {}, reviewerId) {
     input.rejection_reason.trim().length > 2000
   )
     throw new HttpError(400, 'Lý do từ chối phải có từ 1 đến 2000 ký tự');
-  const request = await pendingRequest(requestId);
+  return bookingRepository.runInTransaction(async (session) => {
+  const request = await pendingRequest(requestId, session);
   const result = await changeRequestRepository.decidePendingRequest(
     requestId,
     'rejected',
     reviewer,
     input.rejection_reason.trim(),
+    session,
   );
   if (!result) throw new HttpError(409, 'Yêu cầu đã được xử lý bởi người khác');
-  const workflow = await TripWorkflow.findOne({ booking_id: request.booking_id, stage: 'routed_to_booking_changes' });
+  const workflow = await TripWorkflow.findOne({ booking_id: request.booking_id, stage: 'routed_to_booking_changes' }).session(session);
   if (workflow) {
     workflow.stage = workflow.resume_stage || 'reassignment_required';
     workflow.resume_stage = null;
     workflow.history.push({ action: 'booking_change_rejected', actor_id: reviewer, note: input.rejection_reason.trim(), created_at: new Date() });
     workflow.updated_at = new Date();
-    await workflow.save();
+    await workflow.save({ session });
   }
+  await require('../models').Booking.updateOne({ booking_id: request.booking_id }, { $push: { operation_events: { action: 'change_rejected', actor_id: reviewer, at: new Date(), note: input.rejection_reason.trim() } } }, { session });
   return result;
+  });
 }
 
-module.exports = {
+async function offerChangePrice(id, input, actorId) {
+  const { randomUUID } = require('node:crypto');
+  const value = require('./operation-validation').amount(input.price);
+  const reason = require('./operation-validation').text(input.reason);
+  return bookingRepository.runInTransaction(async (session) => {
+    const request = await pendingRequest(parsePositiveInteger(id, 'change_request_id'), session);
+    request.after.estimated_price = value;
+    request.price_difference = value - request.before.estimated_price;
+    const updated = await BookingChangeRequest.findOneAndUpdate({ change_request_id: request.change_request_id, request_status: 'pending' },
+      { $set: { after: request.after, price_difference: request.price_difference, price_offer: { id: randomUUID(), sent_by: actorId, sent_at: new Date(), reason } } }, { session, returnDocument: 'after', runValidators: true }).lean();
+    await require('../models').Booking.updateOne({ booking_id: request.booking_id }, { $push: { operation_events: { action: 'change_price_offered', actor_id: actorId, at: new Date(), note: reason } } }, { session });
+    return updated;
+  });
+}
+async function acceptChangePrice(id, input, renterId) {
+  return bookingRepository.runInTransaction(async (session) => {
+    const request = await pendingRequest(parsePositiveInteger(id, 'change_request_id'), session);
+    if (request.requested_by !== renterId) throw new HttpError(404, 'Không tìm thấy yêu cầu');
+    if (!request.price_offer || request.price_offer.id !== input.offerId) throw new HttpError(409, 'Báo giá thay đổi đã cập nhật');
+    return BookingChangeRequest.findOneAndUpdate({ change_request_id: request.change_request_id, request_status: 'pending', 'price_offer.id': input.offerId }, { $set: { 'price_offer.accepted_at': new Date() } }, { session, returnDocument: 'after' }).lean();
+  });
+}
+module.exports = { offerChangePrice, acceptChangePrice,
   approveChangeRequest,
   rejectChangeRequest,
   getChangeRequests,

@@ -6,7 +6,7 @@ function stopText(stops = []) {
       .sort((a, b) => a.stop_order - b.stop_order)
       .map(
         (stop) =>
-          `${stop.stop_order}. ${stop.location}${stop.note ? ` — ${stop.note}` : ''}`,
+          `${stop.stop_order}. ${stop.location}${stop.note ? ` — ${stop.note}` : ''}${stop.arrival_at ? ' · Đến ' + dateTime(stop.arrival_at) : ''}${stop.departure_at ? ' · Rời ' + dateTime(stop.departure_at) : ''}`,
       )
       .join('\n') || 'Không có điểm dừng'
   );
@@ -15,6 +15,9 @@ function stopText(stops = []) {
 export default function ItineraryComparison({ before, after }) {
   const fields = [
     ['pickup_location', 'Điểm đón', (value) => value],
+    ['destination', 'Điểm du lịch', (value) => value || '—'],
+    ['return_pickup_location', 'Điểm đón về', (value) => value || '—'],
+    ['return_pickup_time', 'Giờ đón về', dateTime],
     ['dropoff_location', 'Điểm trả', (value) => value],
     ['pickup_time', 'Giờ đón', dateTime],
     ['estimated_end_time', 'Giờ kết thúc', dateTime],

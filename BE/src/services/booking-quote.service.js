@@ -41,10 +41,12 @@ async function sendQuote(bookingId, input, operatorId) {
     throw new HttpError(409, 'Booking không ở bước gửi báo giá.');
   }
 
+  if (booking.cancellation?.status === 'pending') throw new HttpError(409, 'Đơn đang chờ xử lý hủy');
   const calculation = calculateQuote(booking.service_type, input?.calculation);
   const subtotal = calculation.subtotal;
   const deposit = readAmount(input?.deposit, 'Tiền đặt cọc');
   await findVehicle(booking, null);
+  if (!(await require('../repositories/booking-readiness.repository').availableDrivers(booking)).length) throw new HttpError(409, 'Chưa có tài xế đủ điều kiện và còn lịch để phục vụ; cần đề xuất lịch khác.');
   const promotion = booking.requested_promotion_code ? await Promotion.findOne({
     code: booking.requested_promotion_code, status: 'active', valid_until: { $gte: new Date() },
     discount_percent: { $gt: 0, $lte: 100 },
@@ -77,6 +79,7 @@ async function acceptQuote(bookingId, renterId, input) {
   return runInTransaction(async (session) => {
     const booking = await Booking.findOne({ booking_id: bookingId, renter_id: renterId }).session(session).lean();
     if (!booking) throw new HttpError(404, 'Không tìm thấy booking.');
+    if (booking.cancellation?.status === 'pending') throw new HttpError(409, 'Đơn đang chờ xử lý hủy');
     if (booking.quote_offer?.id !== input.quoteId) throw new HttpError(409, 'Báo giá đã thay đổi. Vui lòng tải lại.');
     if (booking.quote_offer.accepted_at) return booking.booking_status;
     if (booking.booking_status !== 'quoted') throw new HttpError(409, 'Đơn chưa có báo giá để xác nhận.');
@@ -103,6 +106,8 @@ async function acceptQuote(bookingId, renterId, input) {
 }
 
 async function closeTrip(bookingId) {
+  const workflow = await require('../models').TripWorkflow.findOne({ booking_id: bookingId }).lean();
+  if (workflow && workflow.stage !== 'completed') throw new HttpError(409, 'Driver và Gara cần hoàn tất chuyến và tiếp nhận xe trước.');
   const booking = await Booking.findOneAndUpdate({
     booking_id: bookingId,
     booking_status: { $in: ['confirmed', 'in_progress'] },

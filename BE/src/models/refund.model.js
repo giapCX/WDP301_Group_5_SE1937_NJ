@@ -13,6 +13,11 @@ module.exports = createModel(
         message: 'Must be a safe integer',
       },
     },
+    booking_id: Number,
+    source_key: String,
+    created_by: Number, created_at: Date, reviewed_at: Date, completed_at: Date,
+    decision_note: String, provider_reference: String,
+    history: { type: [require('./operation.schema').historySchema], default: [] },
     payment_id: {
       type: Number,
       required: true,
@@ -32,7 +37,7 @@ module.exports = createModel(
     reason: {
       type: String,
       default: null,
-      maxlength: 255,
+      maxlength: 2000,
     },
     refund_status: {
       type: String,

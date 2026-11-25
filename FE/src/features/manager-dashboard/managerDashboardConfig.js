@@ -1,6 +1,7 @@
 export const MAINTENANCE_APPROVALS_PATH = '/manager/maintenance-approvals';
 
 export const MANAGER_NAVIGATION = [
+  { label: 'Duyệt ngoại lệ / Hoàn tiền', href: '/manager/operation-approvals', icon: 'check' },
   { label: 'Duyệt phiếu bảo dưỡng', href: MAINTENANCE_APPROVALS_PATH, icon: 'wrench' },
   { label: 'Tổng quan & Báo cáo', href: '/manager/dashboard', icon: 'grid' },
   { label: 'Quản lý đội xe', href: '/manager/fleet', icon: 'car' },

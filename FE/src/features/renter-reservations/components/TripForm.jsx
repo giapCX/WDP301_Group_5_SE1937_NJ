@@ -4,7 +4,7 @@ import VietnamDateTimeField from './VietnamDateTimeField.jsx';
 
 const MAX_STOPS = 20;
 
-export default function TripForm({ trip, onChange, seatCount, onTimeError }) {
+export default function TripForm({ trip, onChange, seatCount, onTimeError, readOnlyDetails = false, lockPickup = false }) {
   const nextStopId = useRef(Math.max(0, ...trip.stops.map(({ id }) => id)) + 1);
   const tour = trip.serviceType === 'tour';
   const change = (name, value) => onChange({ ...trip, [name]: value });
@@ -30,14 +30,14 @@ export default function TripForm({ trip, onChange, seatCount, onTimeError }) {
     <>
       <p className="rv-muted">Chọn ngày giờ hoặc nhập theo định dạng DD/MM/YYYY HH:mm. Form dùng giờ Việt Nam (UTC+7) và hệ 24 giờ.</p>
       <div className="rv-form-grid">
-        {input('Địa điểm đón khách', 'pickup', 'text', { maxLength: 255 })}
+        {input('Địa điểm đón khách', 'pickup', 'text', { maxLength: 255, readOnly: lockPickup })}
         {input(tour ? 'Khu vực du lịch' : 'Địa điểm du lịch', 'destination', 'text', { maxLength: 255 })}
-        {dateTime('Ngày giờ khởi hành (giờ VN)', 'pickupTime', earliestTripMinute())}
+        {lockPickup ? <label>Giờ khởi hành đã thực hiện<input readOnly value={trip.pickupTime.replace('T', ' ')}/><input type="hidden" name="pickupTime" value={trip.pickupTime}/></label> : dateTime('Ngày giờ khởi hành (giờ VN)', 'pickupTime', earliestTripMinute())}
         {dateTime(tour ? 'Ngày giờ kết thúc (giờ VN)' : 'Ngày giờ đón về (giờ VN)', 'endTime', trip.pickupTime)}
         {!tour && input('Địa điểm đón về', 'returnPickup', 'text', { maxLength: 255 })}
         {!tour && dateTime('Ngày giờ dự kiến trả khách (giờ VN)', 'finalTime', trip.endTime)}
         {input('Địa điểm trả khách cuối cùng', 'dropoff', 'text', { maxLength: 255 })}
-        {input('Số hành khách', 'passengerCount', 'number', { min: 1, max: seatCount })}
+        {input('Số hành khách', 'passengerCount', 'number', { min: 1, max: seatCount, readOnly: readOnlyDetails })}
       </div>
       {tour && (
         <fieldset className="rv-stops">
@@ -72,7 +72,7 @@ export default function TripForm({ trip, onChange, seatCount, onTimeError }) {
             onClick={() => changeStops([...trip.stops, { id: nextStopId.current++, location: '', arrival: '', departure: '' }])}>Thêm điểm dừng</button>
         </fieldset>
       )}
-      <label>Yêu cầu bổ sung<textarea rows="3" maxLength="1000" value={trip.notes} onChange={(event) => change('notes', event.target.value)}/></label>
+      <label>Yêu cầu bổ sung<textarea readOnly={readOnlyDetails} rows="3" maxLength="1000" value={trip.notes} onChange={(event) => change('notes', event.target.value)}/></label>
     </>
   );
 }
