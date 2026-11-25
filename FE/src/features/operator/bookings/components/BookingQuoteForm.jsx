@@ -4,8 +4,7 @@ import useHomeResource from '../../../home/hooks/useHomeResource';
 import { money } from '../../../shared/booking/bookingConstants';
 
 export default function BookingQuoteForm({ booking, busy, onSend }) {
-  const [companyRevision, setCompanyRevision] = useState(0);
-  const company = useHomeResource(fetchContractCompany, `${booking.booking_id}:${companyRevision}`);
+  const company = useHomeResource(fetchContractCompany, booking.booking_id);
   const tour = booking.service_type === 'tour';
   const saved = booking.quote_calculation?.inputs;
   const [values, setValues] = useState(() => {
@@ -108,7 +107,6 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
             <fieldset disabled={busy}>
               <legend>Thông tin hợp đồng đính kèm</legend>
               <p>Thông tin bên vận tải được lấy tự động từ hồ sơ Manager.</p>
-              <button type="button" disabled={busy || company.loading} onClick={() => setCompanyRevision((value) => value + 1)}>Tải lại hồ sơ Manager</button>
               {company.loading && <p role="status">Đang tải hồ sơ Manager…</p>}
               {company.error && <p role="alert">{getBookingError(company.error)}</p>}
               {company.data && <dl>
