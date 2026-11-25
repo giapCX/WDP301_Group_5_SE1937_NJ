@@ -1,6 +1,7 @@
 const bookingRepository = require('../repositories/booking.repository');
 const { findAssignableVehicle, hasAssignedTrip } = require('../repositories/renter-reservation.repository');
 const HttpError = require('../utils/http-error');
+const { tourRentalDays } = require('./quote-calculator');
 
 function parsePositiveInteger(value, field) {
   const normalized = typeof value === 'string' ? value.trim() : value;
@@ -67,7 +68,7 @@ async function getBookingById(id, session = null) {
     throw new HttpError(404, 'Không tìm thấy booking');
   }
 
-  return booking;
+  return booking.service_type === 'tour' ? { ...booking, rental_days: tourRentalDays(booking) } : booking;
 }
 
 async function getPendingBooking(id, session = null) {

@@ -48,5 +48,355 @@
     "price_per_day": 1600000,
     "status": "available",
     "schedule_version": 0
+  },
+  {
+    "vehicle_id": 6,
+    "plate_number": "51A-DEMO06",
+    "brand": "Toyota",
+    "model": "Camry",
+    "seat_count": 5,
+    "price_per_day": 1200000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 7,
+    "plate_number": "51A-DEMO07",
+    "brand": "Toyota",
+    "model": "Corolla Cross",
+    "seat_count": 5,
+    "price_per_day": 1100000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 8,
+    "plate_number": "51A-DEMO08",
+    "brand": "Hyundai",
+    "model": "Accent",
+    "seat_count": 5,
+    "price_per_day": 800000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 9,
+    "plate_number": "51A-DEMO09",
+    "brand": "Honda",
+    "model": "City",
+    "seat_count": 5,
+    "price_per_day": 850000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 10,
+    "plate_number": "51A-DEMO10",
+    "brand": "Honda",
+    "model": "Civic",
+    "seat_count": 5,
+    "price_per_day": 1100000,
+    "status": "in_use",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 11,
+    "plate_number": "51A-DEMO11",
+    "brand": "Mazda",
+    "model": "Mazda3",
+    "seat_count": 5,
+    "price_per_day": 950000,
+    "status": "maintenance",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 12,
+    "plate_number": "51A-DEMO12",
+    "brand": "Mazda",
+    "model": "CX-5",
+    "seat_count": 5,
+    "price_per_day": 1200000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 13,
+    "plate_number": "51A-DEMO13",
+    "brand": "Kia",
+    "model": "K3",
+    "seat_count": 5,
+    "price_per_day": 900000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 14,
+    "plate_number": "51A-DEMO14",
+    "brand": "Kia",
+    "model": "Seltos",
+    "seat_count": 5,
+    "price_per_day": 1000000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 15,
+    "plate_number": "51A-DEMO15",
+    "brand": "VinFast",
+    "model": "VF 5",
+    "seat_count": 5,
+    "price_per_day": 850000,
+    "status": "in_use",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 16,
+    "plate_number": "51A-DEMO16",
+    "brand": "VinFast",
+    "model": "VF 8",
+    "seat_count": 5,
+    "price_per_day": 1400000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 17,
+    "plate_number": "51A-DEMO17",
+    "brand": "Hyundai",
+    "model": "Tucson",
+    "seat_count": 5,
+    "price_per_day": 1200000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 18,
+    "plate_number": "51A-DEMO18",
+    "brand": "Toyota",
+    "model": "Innova",
+    "seat_count": 7,
+    "price_per_day": 1200000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 19,
+    "plate_number": "51A-DEMO19",
+    "brand": "Toyota",
+    "model": "Fortuner",
+    "seat_count": 7,
+    "price_per_day": 1500000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 20,
+    "plate_number": "51A-DEMO20",
+    "brand": "Toyota",
+    "model": "Veloz Cross",
+    "seat_count": 7,
+    "price_per_day": 1100000,
+    "status": "in_use",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 21,
+    "plate_number": "51A-DEMO21",
+    "brand": "Suzuki",
+    "model": "XL7",
+    "seat_count": 7,
+    "price_per_day": 1050000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 22,
+    "plate_number": "51A-DEMO22",
+    "brand": "Suzuki",
+    "model": "Ertiga",
+    "seat_count": 7,
+    "price_per_day": 1000000,
+    "status": "maintenance",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 23,
+    "plate_number": "51A-DEMO23",
+    "brand": "Hyundai",
+    "model": "Stargazer",
+    "seat_count": 7,
+    "price_per_day": 1100000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 24,
+    "plate_number": "51A-DEMO24",
+    "brand": "Hyundai",
+    "model": "Santa Fe",
+    "seat_count": 7,
+    "price_per_day": 1500000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 25,
+    "plate_number": "51A-DEMO25",
+    "brand": "Kia",
+    "model": "Carens",
+    "seat_count": 7,
+    "price_per_day": 1150000,
+    "status": "in_use",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 26,
+    "plate_number": "51A-DEMO26",
+    "brand": "Ford",
+    "model": "Everest",
+    "seat_count": 7,
+    "price_per_day": 1600000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 27,
+    "plate_number": "51A-DEMO27",
+    "brand": "Honda",
+    "model": "BR-V",
+    "seat_count": 7,
+    "price_per_day": 1150000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 28,
+    "plate_number": "51A-DEMO28",
+    "brand": "Mitsubishi",
+    "model": "Pajero Sport",
+    "seat_count": 7,
+    "price_per_day": 1500000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 29,
+    "plate_number": "51A-DEMO29",
+    "brand": "Hyundai",
+    "model": "Staria",
+    "seat_count": 8,
+    "price_per_day": 1800000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 30,
+    "plate_number": "51A-DEMO30",
+    "brand": "Ford",
+    "model": "Transit Limousine",
+    "seat_count": 9,
+    "price_per_day": 2400000,
+    "status": "in_use",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 31,
+    "plate_number": "51A-DEMO31",
+    "brand": "Hyundai",
+    "model": "Solati Limousine",
+    "seat_count": 9,
+    "price_per_day": 2600000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 32,
+    "plate_number": "51A-DEMO32",
+    "brand": "Ford",
+    "model": "Transit",
+    "seat_count": 16,
+    "price_per_day": 1800000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 33,
+    "plate_number": "51A-DEMO33",
+    "brand": "Hyundai",
+    "model": "Solati",
+    "seat_count": 16,
+    "price_per_day": 2000000,
+    "status": "maintenance",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 34,
+    "plate_number": "51A-DEMO34",
+    "brand": "Toyota",
+    "model": "Hiace",
+    "seat_count": 16,
+    "price_per_day": 1900000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 35,
+    "plate_number": "51A-DEMO35",
+    "brand": "Hyundai",
+    "model": "County",
+    "seat_count": 29,
+    "price_per_day": 3200000,
+    "status": "in_use",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 36,
+    "plate_number": "51A-DEMO36",
+    "brand": "THACO",
+    "model": "Town",
+    "seat_count": 29,
+    "price_per_day": 3200000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 37,
+    "plate_number": "51A-DEMO37",
+    "brand": "THACO",
+    "model": "Bluesky",
+    "seat_count": 35,
+    "price_per_day": 4200000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 38,
+    "plate_number": "51A-DEMO38",
+    "brand": "Hyundai",
+    "model": "Universe",
+    "seat_count": 45,
+    "price_per_day": 5500000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 39,
+    "plate_number": "51A-DEMO39",
+    "brand": "THACO",
+    "model": "Cruiser",
+    "seat_count": 45,
+    "price_per_day": 5500000,
+    "status": "available",
+    "schedule_version": 0
+  },
+  {
+    "vehicle_id": 40,
+    "plate_number": "51A-DEMO40",
+    "brand": "THACO",
+    "model": "Bluesky",
+    "seat_count": 47,
+    "price_per_day": 5700000,
+    "status": "in_use",
+    "schedule_version": 0
   }
 ]

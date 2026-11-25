@@ -31,7 +31,7 @@ async function previewQuote(bookingId, input) {
   if (!booking.quote_requested_at || !['pending', 'quoted'].includes(booking.booking_status)) {
     throw new HttpError(409, 'Booking không ở bước xem xét báo giá.');
   }
-  return calculateQuote(booking.service_type, input?.calculation);
+  return calculateQuote(booking, input?.calculation);
 }
 
 async function sendQuote(bookingId, input, operatorId) {
@@ -42,7 +42,7 @@ async function sendQuote(bookingId, input, operatorId) {
   }
 
   if (booking.cancellation?.status === 'pending') throw new HttpError(409, 'Đơn đang chờ xử lý hủy');
-  const calculation = calculateQuote(booking.service_type, input?.calculation);
+  const calculation = calculateQuote(booking, input?.calculation);
   const subtotal = calculation.subtotal;
   const transportContract = await require('./passenger-contract.service').proposal(input?.contract, booking, operatorId);
   transportContract.stops = await require('../models').TripStop.find({ booking_id: bookingId }).sort({ stop_order: 1 }).select('location arrival_at departure_at -_id').lean();

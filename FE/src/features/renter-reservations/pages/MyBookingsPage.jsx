@@ -9,15 +9,22 @@ import QuoteAcceptance from '../components/QuoteAcceptance.jsx';
 import ReservationLayout from '../components/ReservationLayout.jsx';
 import useRenterBookings from '../hooks/useRenterBookings.js';
 
+const contractCancellationMessages = {
+  payment_failed: 'Hợp đồng đã bị hủy do thanh toán mô phỏng thất bại.',
+  payment_cancelled: 'Hợp đồng đã bị hủy do bạn hủy thanh toán mô phỏng.',
+};
+
 export default function MyBookingsPage() {
   const [params, setParams] = useSearchParams();
   const status = params.get('status') || '';
   const selectedId = Number(params.get('booking'));
   const checkoutResult = params.get('checkout');
   const bookings = useRenterBookings();
-  const [paymentNotice, setPaymentNotice] = useState('');
+  const [paymentNotice, setPaymentNotice] = useState(null);
   const visible = bookings.items.filter((item) => !status || item.booking_status === status);
   const selected = bookings.items.find((item) => item.booking_id === selectedId);
+  const contractCancellationNotice = contractCancellationMessages[selected?.transport_contract?.cancellationReason];
+  const notice = contractCancellationNotice || (paymentNotice?.bookingId === selectedId ? paymentNotice.message : '');
 
   function changeParam(name, value) {
     setParams((previous) => {
@@ -35,11 +42,11 @@ export default function MyBookingsPage() {
         <div><h1>Đơn đặt xe của tôi</h1><p>Theo dõi báo giá, đặt cọc và thanh toán chuyến đi.</p></div>
         <Link to="/renter/bookings/new" className="rv-button rv-primary">Đặt chuyến mới</Link>
       </div>
-      {paymentNotice && <p className="rv-notice" role="status">{paymentNotice}</p>}
-      {checkoutResult === 'cancelled' && <p className="rv-notice" role="status">Bạn đã rời trang thanh toán. Có thể chọn thanh toán lại.</p>}
+      {notice && <p className="rv-notice" role="status">{notice}</p>}
+      {checkoutResult === 'cancelled' && selected?.paymentDue && <p className="rv-notice" role="status">Bạn đã rời trang thanh toán. Có thể chọn thanh toán lại.</p>}
       {selected?.booking_status === 'confirmed' && <p className="rv-success" role="status">Đơn #{selectedId} đã được xác nhận.</p>}
       {checkoutResult === 'complete' && selected?.paymentDue && <p className="rv-notice" role="status">Đang chờ xác minh giao dịch. Hãy cập nhật trạng thái sau ít phút.</p>}
-      {checkoutResult === 'complete' && selected?.booking_status === 'completed' && !selected.paymentDue && <p className="rv-success" role="status">Đã thanh toán phần còn lại.</p>}
+      {checkoutResult === 'complete' && selected?.booking_status === 'completed' && selected.transport_contract?.status !== 'cancelled' && !selected.paymentDue && <p className="rv-success" role="status">Đã thanh toán phần còn lại.</p>}
       {bookings.error && <p className="rv-error" role="alert">{bookings.error}</p>}
       <div className="rv-filters-bar">
         <div className="rv-tabs" aria-label="Lọc trạng thái" role="group">
@@ -63,10 +70,12 @@ export default function MyBookingsPage() {
             booking={selected} onAccepted={() => { changeParam('status', ''); bookings.refresh(); }}/>}
           {selected?.additional_charges?.some((charge) => charge.status === 'disputed') && <p role="status" className="rv-notice">Tạm dừng thanh toán để Operator giải quyết phụ phí đang tranh chấp.</p>}
           {selected?.paymentDue && <BookingPayment key={selected.booking_id + ':' + selected.paymentDue.purpose}
-            booking={selected} paymentMode={bookings.paymentMode} checkoutAvailable={bookings.checkoutAvailable} onPaid={(outcome) => {
-              setPaymentNotice(outcome === 'success' ? `Đơn #${selected.booking_id}: thanh toán mô phỏng thành công, không thu tiền thật.` :
+            booking={selected} paymentMode={bookings.paymentMode} checkoutAvailable={bookings.checkoutAvailable} onPaid={(outcome, contractCancelled) => {
+              const message = contractCancelled ? contractCancellationMessages[outcome === 'failed' ? 'payment_failed' : 'payment_cancelled'] :
+                outcome === 'success' ? `Đơn #${selected.booking_id}: thanh toán mô phỏng thành công, không thu tiền thật.` :
                 outcome === 'failed' ? 'Đã mô phỏng thất bại. Chưa ghi nhận tiền; bạn có thể thanh toán lại.' :
-                outcome === 'cancelled' ? 'Đã hủy thanh toán mô phỏng. Đơn đặt xe vẫn được giữ nguyên.' : 'Đã cập nhật thanh toán.');
+                outcome === 'cancelled' ? 'Đã hủy phiên thanh toán mô phỏng.' : 'Đã cập nhật thanh toán.';
+              setPaymentNotice({ bookingId: selected.booking_id, message });
               bookings.refresh();
             }}/>}
           {!selected?.paymentDue && selected?.booking_status !== 'quoted' && <>

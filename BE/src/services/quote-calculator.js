@@ -4,7 +4,18 @@ const HttpError = require('../utils/http-error');
 const rates = { 4: [10000, 1200000, 80000], 7: [12000, 1500000, 100000],
   16: [15000, 2000000, 150000], 29: [20000, 3000000, 200000], 45: [25000, 4500000, 300000] };
 
-function calculateQuote(service, input) {
+const vietnamDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+function tourRentalDays(booking) {
+  const pickup = new Date(booking.pickup_time ?? NaN);
+  const end = new Date(booking.estimated_end_time ?? NaN);
+  if (!Number.isFinite(+pickup) || !Number.isFinite(+end) || end <= pickup) return null;
+  const pickupDay = Date.parse(`${vietnamDate.format(pickup)}T00:00:00Z`);
+  const endDay = Date.parse(`${vietnamDate.format(end)}T00:00:00Z`);
+  return (endDay - pickupDay) / 86400000 + 1;
+}
+
+function calculateQuote(booking, input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new HttpError(400, 'Thiếu thông số tính giá.');
   const values = {};
   function number(key, label, integer = false) {
@@ -21,7 +32,7 @@ function calculateQuote(service, input) {
     if (!Number.isSafeInteger(amount)) throw new HttpError(400, 'Giá trị tính giá quá lớn.');
     lines.push({ label, quantity, unit_price: unitPrice, amount });
   }
-  if (service === 'roundtrip') {
+  if (booking.service_type === 'roundtrip') {
     const outward = number('outwardKm', 'Km lượt đi');
     const inward = number('returnKm', 'Km lượt về');
     const kmRate = number('kmRate', 'Đơn giá/km', true);
@@ -31,35 +42,21 @@ function calculateQuote(service, input) {
     const percent = number('dispatchPercent', 'Tỷ lệ điều xe');
     if (percent > 100) throw new HttpError(400, 'Tỷ lệ điều xe không vượt quá 100%.');
     line('Điều xe', 1, Math.round((outward + inward) * kmRate * percent / 100));
-  } else if (service === 'tour') {
-    if (!Array.isArray(input.dailyHours) || !input.dailyHours.length || input.dailyHours.length > 60 ||
-      input.dailyHours.some((hours) => typeof hours !== 'number' || !Number.isFinite(hours) || hours < 0 || hours > 24)) {
-      throw new HttpError(400, 'Nhập giờ phục vụ từng ngày từ 0 đến 24 giờ (tối đa 60 ngày).');
-    }
-    values.dailyHours = input.dailyHours;
-    const days = input.dailyHours.length;
+  } else if (booking.service_type === 'tour') {
+    const days = tourRentalDays(booking);
+    if (!days) throw new HttpError(400, 'Thời gian thuê trong booking không hợp lệ.');
+    values.rentalDays = days;
     const dayRate = number('dayRate', 'Đơn giá/ngày', true);
     if (!dayRate) throw new HttpError(400, 'Đơn giá/ngày phải lớn hơn 0.');
-    line('Thuê cơ bản (8 giờ, 100 km/ngày)', days, dayRate);
+    line('Thuê cơ bản (100 km/ngày)', days, dayRate);
     line('Vượt km', Math.max(0, number('totalKm', 'Tổng km') - days * 100), number('kmRate', 'Đơn giá/km', true));
-    line('Quá giờ', input.dailyHours.reduce((sum, hours) => sum + Math.max(0, hours - 8), 0), number('hourRate', 'Đơn giá quá giờ', true));
     const nights = number('nights', 'Số đêm', true);
-    if (nights >= days) throw new HttpError(400, 'Số đêm phải nhỏ hơn số ngày phục vụ.');
+    if (nights >= days) throw new HttpError(400, `Đã nhập ${nights} đêm cho ${days} ngày thuê. Số đêm tối đa là ${days - 1}.`);
     line('Lưu trú tài xế', nights, number('nightRate', 'Đơn giá lưu trú', true));
   } else throw new HttpError(400, 'Loại dịch vụ không hợp lệ.');
-  line('Cầu đường', 1, number('tolls', 'Phí cầu đường', true));
-  line('Đỗ xe', 1, number('parking', 'Phí đỗ xe', true));
-  line('Phụ phí khác', 1, number('otherFee', 'Phụ phí khác', true));
-  const adjustment = input.adjustment;
-  if (!Number.isSafeInteger(adjustment) || Math.abs(adjustment) > 1e9) throw new HttpError(400, 'Điều chỉnh giá không hợp lệ.');
-  const reason = typeof input.reason === 'string' ? input.reason.trim() : '';
-  if (reason.length > 1000 || ((adjustment || values.otherFee) && !reason)) throw new HttpError(400, 'Cần ghi lý do điều chỉnh hoặc phụ phí khác (tối đa 1000 ký tự).');
-  values.adjustment = adjustment;
-  values.reason = reason;
-  line('Điều chỉnh', 1, adjustment);
   const subtotal = lines.reduce((sum, item) => sum + item.amount, 0);
   if (!Number.isSafeInteger(subtotal) || subtotal < 0) throw new HttpError(400, 'Tổng giá không hợp lệ.');
   return { inputs: values, lines, subtotal };
 }
 
-module.exports = { calculateQuote, rates };
+module.exports = { calculateQuote, rates, tourRentalDays };

@@ -9,7 +9,7 @@ export default function BookingPayment({ booking, checkoutAvailable, paymentMode
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(null);
-  const [notice, setNotice] = useState('');
+  const [contractCancelled, setContractCancelled] = useState(false);
   const simulated = paymentMode === 'simulation';
   const { amount, purpose } = booking.paymentDue;
   const label = paymentLabels[purpose] ?? paymentLabels.full;
@@ -22,7 +22,6 @@ export default function BookingPayment({ booking, checkoutAvailable, paymentMode
       const result = await startCheckout(booking.booking_id);
       if (result.simulated) {
         setAttempt(result);
-        setNotice('');
         return;
       }
       if (result.url) {
@@ -42,15 +41,16 @@ export default function BookingPayment({ booking, checkoutAvailable, paymentMode
     setPaying(true);
     setError('');
     try {
-      await simulatePayment(booking.booking_id, attempt.attemptId, outcome);
+      const result = await simulatePayment(booking.booking_id, attempt.attemptId, outcome);
       setAttempt(null);
-      setNotice(outcome === 'success' ? 'Thanh toán mô phỏng thành công.' :
-        outcome === 'failed' ? 'Đã mô phỏng giao dịch thất bại. Bạn có thể thử lại.' : 'Đã hủy thanh toán mô phỏng. Đơn chưa bị hủy.');
-      onPaid(outcome);
+      setContractCancelled(result.contractCancelled);
+      onPaid(outcome, result.contractCancelled);
     } catch (failure) {
       setError(errorMessage(failure, 'Chưa thể ghi nhận kết quả mô phỏng.'));
     } finally { setPaying(false); }
   }
+
+  if (contractCancelled) return null;
 
   return (
     <>
@@ -59,7 +59,6 @@ export default function BookingPayment({ booking, checkoutAvailable, paymentMode
       <p><strong>{label} · {money(amount)}</strong></p>
       {booking.checkout_failed_at && <p className="rv-error" role="alert">Giao dịch trước không thành công. Bạn có thể thanh toán lại.</p>}
       <p>{simulated ? 'Chế độ mô phỏng dùng để test, không thu tiền thật và không cần nhập thông tin thẻ.' : needsProvider ? 'Chọn phương thức khả dụng trên trang thanh toán Stripe.' : 'Ưu đãi đã chi trả toàn bộ đơn.'}</p>
-      {notice && <p className="rv-notice" role="status">{notice}</p>}
       {needsProvider && !checkoutAvailable && <p className="rv-notice">Thanh toán trực tuyến chưa được cấu hình.</p>}
       {error && <p className="rv-error" role="alert">{error}</p>}
       <button className="rv-button rv-primary" type="button" hidden={Boolean(attempt)} onClick={pay} disabled={paying || (needsProvider && !checkoutAvailable)}>

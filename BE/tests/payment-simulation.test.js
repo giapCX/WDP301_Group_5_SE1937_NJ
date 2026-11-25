@@ -4,7 +4,7 @@ const repository = require('../src/repositories/booking.repository');
 const reservations = require('../src/repositories/renter-reservation.repository');
 const { Booking, Payment } = require('../src/models');
 
-test('simulation records deposits and balances once, preserves failed/cancelled bookings and checks ownership', async (context) => {
+test('simulation records payments once, cancels contracts awaiting payment and checks ownership', async (context) => {
   context.mock.method(repository, 'runInTransaction', async (action) => action(null));
   context.mock.method(reservations, 'nextIds', async () => 1);
   // Load after transaction helpers are stubbed: no database or payment provider is used.
@@ -35,7 +35,11 @@ test('simulation records deposits and balances once, preserves failed/cancelled 
   context.mock.method(Booking, 'updateOne', async (filter, update) => {
     if (filter['checkout_attempt.id'] !== booking.checkout_attempt?.id) return { modifiedCount: 0 };
     if (update.$inc) booking.paid_total += update.$inc.paid_total;
-    Object.assign(booking, update.$set);
+    for (const [key, value] of Object.entries(update.$set || {})) {
+      const [field, nested] = key.split('.');
+      if (nested) booking[field][nested] = value;
+      else booking[field] = value;
+    }
     for (const key of Object.keys(update.$unset || {})) delete booking[key];
     return { modifiedCount: 1 };
   });
@@ -61,6 +65,24 @@ test('simulation records deposits and balances once, preserves failed/cancelled 
   assert.equal(booking.paid_total, 0);
   assert.equal(booking.booking_status, 'awaiting_payment');
   assert.equal(rows.length, 2);
+  for (const [outcome, reason] of [['failed', 'payment_failed'], ['cancelled', 'payment_cancelled']]) {
+    reset();
+    booking.transport_contract = { status: 'signed_pending_payment', id: 'signed-contract' };
+    const result = await payments.simulate(7, 9, { attemptId: 'test-attempt', outcome });
+    assert.equal(result.contractCancelled, true);
+    assert.equal(booking.booking_status, 'cancelled');
+    assert.equal(booking.transport_contract.status, 'cancelled');
+    assert.equal(booking.transport_contract.cancellationReason, reason);
+    assert.ok(booking.transport_contract.cancelledAt instanceof Date);
+    assert.equal(booking.transport_contract.id, 'signed-contract');
+    assert.equal(booking.paid_total, 0);
+    assert.equal(booking.checkout_attempt, undefined);
+    assert.equal(payments.paymentDue(booking), null);
+    await assert.rejects(payments.checkout(7, 9), { statusCode: 409 });
+    await assert.rejects(payments.simulate(7, 9, { attemptId: 'test-attempt', outcome: 'success' }), { statusCode: 409 });
+  }
+  assert.equal(rows.length, 3);
+  assert.equal(rows.at(-1).payment_status, 'failed');
   reset();
   booking.booking_status = 'completed';
   booking.paid_total = 300000;
@@ -69,6 +91,20 @@ test('simulation records deposits and balances once, preserves failed/cancelled 
   assert.equal(booking.paid_total, 1000000);
   assert.equal(booking.booking_status, 'completed');
   assert.equal(payments.paymentDue(booking), null);
+  reset();
+  booking.booking_status = 'completed';
+  booking.transport_contract = { status: 'active', id: 'signed-contract' };
+  booking.paid_total = 300000;
+  booking.checkout_attempt = { id: 'balance-attempt', amount: 700000, purpose: 'balance' };
+  const cancelled = await payments.simulate(7, 9, { attemptId: 'balance-attempt', outcome: 'cancelled' });
+  assert.equal(cancelled.contractCancelled, true);
+  assert.equal(booking.booking_status, 'completed');
+  assert.equal(booking.transport_contract.status, 'cancelled');
+  assert.equal(booking.transport_contract.cancellationReason, 'payment_cancelled');
+  assert.equal(booking.paid_total, 300000);
+  assert.equal(payments.paymentDue(booking), null);
+  await assert.rejects(payments.checkout(7, 9), { statusCode: 409 });
+  await assert.rejects(payments.simulate(7, 9, { attemptId: 'balance-attempt', outcome: 'success' }), { statusCode: 409 });
   reset();
   booking.deposit_due = 350000;
   await assert.rejects(payments.simulate(7, 9, { attemptId: 'test-attempt', outcome: 'success' }), { statusCode: 409 });

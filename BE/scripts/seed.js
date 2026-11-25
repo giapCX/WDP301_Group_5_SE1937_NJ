@@ -33,8 +33,11 @@ const unique = {
   reviews: ['booking_id'],
 };
 async function main() {
+  const vehiclesOnly = process.argv.includes('--vehicles-only');
+  const collections = Object.entries(data).map(([name, rows], index) => ({ name, rows, key: keys[index] }));
+  const selected = vehiclesOnly ? collections.filter(({ name }) => name === 'vehicles') : collections;
   if (process.argv.includes('--check')) {
-    for (const [name, rows] of Object.entries(data))
+    for (const { name, rows } of selected)
       console.log(`${name}: ${rows.length}`);
     console.log('Sample data loaded successfully; no database changes.');
     return;
@@ -44,9 +47,8 @@ async function main() {
     serverSelectionTimeoutMS: 5000,
   });
   const db = mongoose.connection.db;
-  for (const [i, [name, rows]] of Object.entries(data).entries()) {
+  for (const { name, rows, key } of selected) {
     const collection = db.collection(name);
-    const key = keys[i];
     await collection.createIndex({ [key]: 1 }, { unique: true });
     for (const field of unique[name] || [])
       await collection.createIndex({ [field]: 1 }, { unique: true });
@@ -73,9 +75,11 @@ async function main() {
       `${name}: inserted ${result.upsertedCount}, existing ${result.matchedCount}`,
     );
   }
-  await addEmbeddedCharges(db);
-  await addBookingReviewFields(db);
-  await addVehicleScheduleVersion(db);
+  if (!vehiclesOnly) {
+    await addEmbeddedCharges(db);
+    await addBookingReviewFields(db);
+    await addVehicleScheduleVersion(db);
+  }
   console.log(`Seed completed: ${db.databaseName}`);
 }
 main()

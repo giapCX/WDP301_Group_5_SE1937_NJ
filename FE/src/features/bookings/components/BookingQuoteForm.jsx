@@ -8,10 +8,13 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
   const company = useHomeResource(fetchContractCompany, `${booking.booking_id}:${companyRevision}`);
   const tour = booking.service_type === 'tour';
   const saved = booking.quote_calculation?.inputs;
-  const [values, setValues] = useState(saved || { outwardKm: '', returnKm: '', kmRate: '',
-    dayRate: '', hourRate: '', dispatchPercent: 20, totalKm: '', nights: 0, nightRate: 300000,
-    tolls: 0, parking: 0, otherFee: 0, adjustment: 0, reason: '' });
-  const [hours, setHours] = useState(saved?.dailyHours?.join(', ') || '8');
+  const [values, setValues] = useState(() => {
+    const defaults = tour ? { dayRate: '', totalKm: '', kmRate: '', nights: 0, nightRate: 300000 }
+      : { outwardKm: '', returnKm: '', kmRate: '', dispatchPercent: 20 };
+    return Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key, saved?.[key] ?? value]));
+  });
+  const rentalDays = booking.rental_days;
+  const maxNights = rentalDays ? rentalDays - 1 : undefined;
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState('');
   const [calculating, setCalculating] = useState(false);
@@ -22,7 +25,7 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
     fetchQuoteRates().then((rates) => {
       if (!active) return;
       const rate = rates[booking.requested_seats];
-      if (!saved && rate) setValues((current) => ({ ...current, kmRate: rate[0], dayRate: rate[1], hourRate: rate[2] }));
+      if (!saved && rate) setValues((current) => ({ ...current, kmRate: rate[0], ...(tour && { dayRate: rate[1] }) }));
       setRatesReady(true);
     }).catch((failure) => { if (active) setError(getBookingError(failure)); });
     return () => { active = false; };
@@ -32,15 +35,14 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
     setPreview(null);
     setError('');
   }
-  function numeric(key, label, step = '1') {
+  function numeric(key, label, step = '1', max) {
     return <label key={key}>{label}<input type="number" className="form-control" required
-      min={key === 'adjustment' ? undefined : '0'} step={step} value={values[key]}
+      min="0" max={max} step={step} value={values[key]}
       onChange={(event) => change(key, event.target.value)} /></label>;
   }
   async function calculate(event) {
     event.preventDefault();
-    const calculation = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, key === 'reason' ? value : Number(value)]));
-    if (tour) calculation.dailyHours = hours.split(',').map((value) => value.trim() === '' ? NaN : Number(value));
+    const calculation = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, Number(value)]));
     setCalculating(true);
     setError('');
     setPreview(null);
@@ -54,24 +56,22 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
   return <section className="review-section">
     <h3>{booking.booking_status === 'quoted' ? 'Xem xét lại báo giá' : 'Xem xét và tính giá'}</h3>
     <p>{tour ? 'Đồng hành du lịch' : 'Đưa đi – đón về'} · Xe từ {booking.requested_seats} chỗ</p>
-    <p>Đơn giá tham khảo phục vụ đồ án, cần kiểm tra trước khi gửi. Nhập quãng đường thủ công. Giá ngày gồm 8 giờ và 100 km; phí xe, tài xế, nhiên liệu đã bao gồm.</p>
+    {tour && rentalDays && <p>{rentalDays} ngày thuê theo lịch booking · Tối đa {maxNights} đêm lưu trú. Giá ngày gồm 100 km.</p>}
+    {tour && !rentalDays && <p className="dispatch-alert" role="alert">Thời gian thuê trong booking không hợp lệ.</p>}
     {booking.requested_promotion_code && <p>Mã ưu đãi khách yêu cầu: {booking.requested_promotion_code}. Hệ thống kiểm tra và áp dụng khi gửi báo giá.</p>}
     {error && <p className="dispatch-alert" role="alert">{error}</p>}
     <form onSubmit={calculate}>
-      <fieldset disabled={busy || calculating || !ratesReady}>
+      <fieldset disabled={busy || calculating || !ratesReady || (tour && !rentalDays)}>
         <legend>Thông số tính giá</legend>
         <div className="review-route">
           {tour ? <>
             {numeric('dayRate', 'Đơn giá/ngày (₫)')}
             {numeric('totalKm', 'Tổng quãng đường (km)', '0.1')}
             {numeric('kmRate', 'Đơn giá/km vượt (₫)')}
-            {numeric('hourRate', 'Đơn giá quá giờ (₫)')}
-            <label>Giờ phục vụ từng ngày (ngăn cách bằng dấu phẩy)
-              <input className="form-control" required value={hours} placeholder="8, 10, 8"
-                onChange={(event) => { setHours(event.target.value); setPreview(null); }}/>
-              <small>Mỗi giá trị là một ngày phục vụ, không tính giờ nghỉ đêm. Ví dụ 8, 10, 8 là 3 ngày và 2 giờ vượt.</small>
-            </label>
-            {numeric('nights', 'Số đêm lưu trú tài xế')}
+            {numeric('nights', 'Số đêm lưu trú tài xế', '1', maxNights)}
+            {Number(values.nights) > maxNights && <p className="dispatch-alert" role="alert">
+              Đã nhập {values.nights} đêm cho {rentalDays} ngày thuê. Nhập tối đa {maxNights} đêm.
+            </p>}
             {numeric('nightRate', 'Đơn giá lưu trú/đêm (₫)')}
           </> : <>
             {numeric('outwardKm', 'Quãng đường lượt đi (km)', '0.1')}
@@ -79,16 +79,7 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
             {numeric('kmRate', 'Đơn giá/km (₫)')}
             {numeric('dispatchPercent', 'Phí điều xe (%)', '0.1')}
           </>}
-          {numeric('tolls', 'Cầu đường (₫)')}
-          {numeric('parking', 'Đỗ xe (₫)')}
-          {numeric('otherFee', 'Phụ phí khác (₫)')}
-          {numeric('adjustment', 'Điều chỉnh tăng/giảm (₫)')}
         </div>
-        <label>Lý do điều chỉnh / nội dung phụ phí khác
-          <textarea className="form-control" maxLength={1000} value={values.reason}
-            required={Number(values.adjustment) !== 0 || Number(values.otherFee) > 0}
-            onChange={(event) => change('reason', event.target.value)}/>
-        </label>
         <button className="dispatch-button primary" type="submit">{calculating ? 'Đang tính…' : 'Tính giá dự kiến'}</button>
       </fieldset>
     </form>
