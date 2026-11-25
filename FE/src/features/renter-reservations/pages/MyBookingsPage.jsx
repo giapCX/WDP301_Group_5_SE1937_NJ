@@ -1,4 +1,4 @@
-import { ContractDocument } from '../components/PassengerContract';
+import SignedContractView from '../components/SignedContractView';
 import RenterOperations from '../../operations/components/RenterOperations';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -73,7 +73,7 @@ export default function MyBookingsPage() {
             {!selected && <p>Chọn một đơn để xem báo giá hoặc thanh toán.</p>}
             {selected?.booking_status === 'pending' && selected.quote_requested_at && <p role="status">Đang đợi Operator gửi báo giá.</p>}
           </>}
-          {selected?.transport_contract?.document && <section><h3>Hợp đồng {selected.transport_contract.status === 'active' ? 'đã kích hoạt' : selected.transport_contract.status === 'cancelled' ? 'đã hủy' : 'đã ký, chờ thanh toán'}</h3><details><summary>Xem bản đã ký</summary><ContractDocument document={selected.transport_contract.document} signature={selected.transport_contract}/></details></section>}
+          {selected?.transport_contract?.document && <SignedContractView key={selected.booking_id} contract={selected.transport_contract}/>}
           {selected && <RenterOperations key={selected.booking_id} booking={selected} onUpdated={bookings.refresh}/>}
         </aside>
       </div>
