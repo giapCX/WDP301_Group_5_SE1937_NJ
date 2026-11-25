@@ -16,13 +16,18 @@ function ApprovalCard({ record, onDecision }) {
 
   async function submit(event) {
     event.preventDefault();
+    const reason = note.trim();
+    if (decision === 'reject' && !reason) {
+      setError('Vui lòng nhập lý do trả phiếu.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
       await onDecision(record.maintenance_id, {
         decision,
         inspection_id: inspection.inspection_id,
-        note: note.trim(),
+        note: reason,
       });
     } catch (failure) {
       setError(garageError(failure));
@@ -38,10 +43,12 @@ function ApprovalCard({ record, onDecision }) {
     <p><strong>Kết quả kiểm tra:</strong> {inspection.result || 'Chưa có kết quả'}{inspection.condition_note ? ` · ${inspection.condition_note}` : ''}</p>
     {error && <p className="dispatch-alert" role="alert">{error}</p>}
     <form className="acl-account-form" onSubmit={submit}>
-      <label>Quyết định<select value={decision} onChange={(event) => setDecision(event.target.value)}>
+      <label>Quyết định<select value={decision} onChange={(event) => { setDecision(event.target.value); setError(''); }}>
         <option value="approve">Duyệt hoàn tất</option><option value="reject">Trả Gara xử lý lại</option>
       </select></label>
-      <label>Lý do xử lý<textarea required maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)}/></label>
+      <label>Ghi chú (bắt buộc khi trả phiếu)
+        <textarea aria-required={decision === 'reject'} maxLength={1000} value={note} onChange={(event) => setNote(event.target.value)} />
+      </label>
       <button className="button button-primary" disabled={busy || !inspection.inspection_id}>{busy ? 'Đang lưu…' : 'Gửi quyết định'}</button>
     </form>
   </article>;
