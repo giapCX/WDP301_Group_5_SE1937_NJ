@@ -25,6 +25,7 @@ function assertAwaitingHandover(workflow) {
 }
 
 function assertReceiveWindow(booking, workflow, receivedAt) {
+  // Chi cho phep Driver nhan xe trong cua so thoi gian gan truoc gio khoi hanh.
   if (booking?.booking_status === 'in_progress' && workflow.started_at && workflow.resume_stage) return;
   const pickup = new Date(booking?.pickup_time).getTime();
   if (!booking?.pickup_time || !Number.isFinite(pickup)) {
@@ -37,6 +38,7 @@ function assertReceiveWindow(booking, workflow, receivedAt) {
 }
 
 async function create(input, staffId) {
+  // Gara tao bien ban ban giao sau khi kiem tra xe truoc chuyen.
   const bookingId = id(input.booking_id);
   const vehicleId = id(input.vehicle_id);
   const inspectionId = id(input.inspection_id);
@@ -70,6 +72,7 @@ async function create(input, staffId) {
 }
 
 async function recheck(inspectionId, staffId) {
+  // Gara kiem tra lai bien ban hoac hien trang xe truoc khi ban giao.
   return transact(async (session) => {
     const handover = await VehicleHandover.findOne({ inspection_id: id(inspectionId) }).session(session);
     if (!handover) throw new HttpError(404, 'Không tìm thấy biên bản bàn giao');
@@ -86,6 +89,7 @@ async function recheck(inspectionId, staffId) {
 }
 
 async function respond(bookingId, driverId, actorId, action, input) {
+  // Ghi nhan Driver chap nhan xe hoac tu choi ban giao kem ly do.
   const inspectionId = input.inspection_id == null ? null : id(input.inspection_id);
   const received = action === 'vehicle_received';
   const reason = typeof input.reason === 'string' ? input.reason.trim() : '';
