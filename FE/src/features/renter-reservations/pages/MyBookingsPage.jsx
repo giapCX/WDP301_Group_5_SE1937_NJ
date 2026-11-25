@@ -73,7 +73,7 @@ export default function MyBookingsPage() {
             {!selected && <p>Chọn một đơn để xem báo giá hoặc thanh toán.</p>}
             {selected?.booking_status === 'pending' && selected.quote_requested_at && <p role="status">Đang đợi Operator gửi báo giá.</p>}
           </>}
-          {selected?.transport_contract?.document && <SignedContractView key={selected.booking_id} contract={selected.transport_contract}/>}
+          {selected?.transport_contract?.document && <SignedContractView key={'contract:' + selected.booking_id} contract={selected.transport_contract}/>}
           {selected && <RenterOperations key={selected.booking_id} booking={selected} onUpdated={bookings.refresh}/>}
         </aside>
       </div>

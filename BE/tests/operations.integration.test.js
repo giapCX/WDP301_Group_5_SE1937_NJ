@@ -116,6 +116,14 @@ test('workflow 4 owns cancellation, refund, incident approvals, disputes and iti
   const readiness = require('../src/repositories/booking-readiness.repository');
   await models.DriverProfile.updateMany({}, { $set: { license_expiry: new Date('2100-01-01') } });
   assert.equal((await readiness.availableDrivers(updated)).length, 2);
+  // A driver assigned to another overlapping booking must not be offered again.
+  await create(108, { vehicle_id: 1, paid_total: 0 });
+  await models.TripAssignment.create({ assignment_id: 10001, booking_id: 108, driver_id: 1, assigned_by: 3, assigned_at: new Date(), assignment_status: 'accepted' });
+  assert.deepEqual((await readiness.availableDrivers(updated)).map((driver) => driver.driver_id), [2]);
+  // Ending exactly at the new pickup time is not an overlap.
+  await models.Booking.updateOne({ booking_id: 108 }, { $set: { estimated_end_time: updated.pickup_time } });
+  assert.equal((await readiness.availableDrivers(updated)).length, 2);
+  await models.TripAssignment.updateOne({ assignment_id: 10001 }, { $set: { assignment_status: 'cancelled' } });
   await mongoose.connection.db.collection('driver_unavailability').insertOne({ driver_id: 1, status: 'approved', start_at: new Date('2099-01-01'), end_at: new Date('2099-01-03') });
   assert.equal((await readiness.availableDrivers(updated)).length, 1);
   // A manager-approved driver replacement reuses dispatch validation and requires driver acceptance.

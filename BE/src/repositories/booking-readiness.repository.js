@@ -15,7 +15,7 @@ async function availableDrivers(booking, session = null) {
     const leave = await mongoose.connection.db.collection('driver_unavailability').findOne({ driver_id: driver.driver_id, status: { $nin: ['cancelled', 'rejected'] }, start_at: { $lt: booking.estimated_end_time }, end_at: { $gt: booking.pickup_time } }, { session });
     if (leave) continue;
     const assignments = await TripAssignment.find({ driver_id: driver.driver_id, booking_id: { $ne: booking.booking_id }, assignment_status: { $in: ['assigned', 'accepted', 'in_progress'] } }).session(session).lean();
-    if (await Booking.exists({ booking_id: { $in: assignments.map((item) => item.booking_id) }, booking_status: { $in: ['awaiting_payment', 'confirmed', 'in_progress'] }, pickup_time: { $lt: booking.estimated_end_time }, estimated_end_at: { $gt: booking.pickup_time } }).session(session)) continue;
+    if (await Booking.exists({ booking_id: { $in: assignments.map((item) => item.booking_id) }, booking_status: { $in: ['awaiting_payment', 'confirmed', 'in_progress'] }, pickup_time: { $lt: booking.estimated_end_time }, estimated_end_time: { $gt: booking.pickup_time } }).session(session)) continue;
     result.push({ driver_id: driver.driver_id });
   }
   return result;
