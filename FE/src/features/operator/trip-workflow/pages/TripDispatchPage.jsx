@@ -67,6 +67,8 @@ export default function TripDispatchPage() {
     row?.booking.requested_seats ??
     row?.booking.requested_seat_count ??
     row?.booking.vehicle?.seat_count;
+  const availableVehicles = data?.vehicles.filter((vehicle) => row?.available_vehicle_ids?.includes(vehicle.vehicle_id)) ?? [];
+  const selectedVehicle = availableVehicles.some((vehicle) => vehicle.vehicle_id === Number(vehicleId)) ? vehicleId : "";
   const canDispatch =
     row &&
     (["vehicle_replacement_required", "return_reassignment_required"].includes(
@@ -116,13 +118,13 @@ export default function TripDispatchPage() {
     setError("");
     try {
       if (row.workflow?.stage === "vehicle_replacement_required")
-        await replaceTripVehicle(selected, Number(vehicleId));
+        await replaceTripVehicle(selected, Number(selectedVehicle));
       else if (row.workflow?.stage === "return_reassignment_required")
         await reassignReturnDriver(selected, Number(driverId));
       else
         await assignTrip(selected, {
           driver_id: Number(driverId),
-          vehicle_id: Number(vehicleId),
+          vehicle_id: Number(selectedVehicle),
           service_type: serviceType,
           return_pickup_time: returnTime
             ? new Date(returnTime + ":00+07:00").toISOString()
@@ -242,8 +244,7 @@ export default function TripDispatchPage() {
                               !driver.approved
                             }
                           >
-                            {driver.full_name} · {driver.availability_status}
-                            {!driver.approved ? " · chưa duyệt" : ""}
+                            {driver.full_name}
                           </option>
                         ))}
                       </select>
@@ -256,30 +257,22 @@ export default function TripDispatchPage() {
                         : "Xe"}
                       <select
                         required
-                        value={vehicleId}
+                        value={selectedVehicle}
                         onChange={(e) => setVehicleId(e.target.value)}
                       >
                         <option value="">Chọn phương tiện</option>
-                        {data.vehicles.map((vehicle) => (
+                        {availableVehicles.map((vehicle) => (
                           <option
                             key={vehicle.vehicle_id}
                             value={vehicle.vehicle_id}
-                            disabled={
-                              !["available", "in_use"].includes(
-                                vehicle.status,
-                              ) ||
-                              (seatCount != null &&
-                                (row.booking.requested_seats
-                                  ? vehicle.seat_count < seatCount
-                                  : vehicle.seat_count !== seatCount))
-                            }
                           >
                             {vehicle.plate_number} · {vehicle.brand}{" "}
-                            {vehicle.model} · {vehicle.seat_count} chỗ ·{" "}
-                            {vehicle.status}
+                            {vehicle.model} · {vehicle.seat_count} chỗ
                           </option>
                         ))}
                       </select>
+                      <small>{seatCount ? `Xe từ ${seatCount} chỗ theo đơn đặt.` : "Đơn chưa có số chỗ yêu cầu."}
+                        {seatCount && !availableVehicles.length && " Không có xe phù hợp còn trống trong lịch chuyến."}</small>
                     </label>
                   )}
                   {!row.workflow && (
@@ -322,7 +315,7 @@ export default function TripDispatchPage() {
                     (row.workflow?.stage !== "vehicle_replacement_required" &&
                       !driverId) ||
                     (row.workflow?.stage !== "return_reassignment_required" &&
-                      !vehicleId)
+                      !selectedVehicle)
                   }
                 >
                   {busy

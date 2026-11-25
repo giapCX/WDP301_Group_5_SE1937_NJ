@@ -4,7 +4,7 @@ const {
   TripStatusUpdate, TripStop, TripWorkflow, User, Vehicle, VehicleDamage, VehicleInspection,
 } = require('../models');
 const HttpError = require('../utils/http-error');
-const { requestedSeats, assertVehicleSeats } = require('./booking.service');
+const { requestedSeats } = require('./booking.service');
 const { lockVehicleSchedule, runInTransaction } = require('../repositories/booking.repository');
 const { positiveId: positive, nextId, retryDuplicateId } = require('../utils/numeric-id');
 const addTripHistory = require('../utils/trip-history');
@@ -12,6 +12,8 @@ const handovers = require('./vehicle-handover.service');
 const { openMaintenance, openForDamage, releaseVehicleIfReady } = require('./garage-maintenance.service');
 
 const ACTIVE_ASSIGNMENTS = ['assigned', 'accepted', 'in_progress'];
+const RESERVED_VEHICLE_STATUSES = ['awaiting_payment', 'confirmed', 'in_progress'];
+const VEHICLE_INSPECTION_RESULTS = ['pass', 'passed', 'fail', 'failed'];
 const now = () => new Date();
 function text(value, field, max = 500) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max)
@@ -39,27 +41,22 @@ function windowsOverlap(aStart, aEnd, bStart, bEnd) {
 async function assignmentsForBooking(bookingId, session = null) {
   return TripAssignment.find({ booking_id: bookingId }).sort({ assigned_at: -1, assignment_id: -1 }).session(session).lean();
 }
+function dispatchSeatCount(booking) {
+  return booking.requested_seats ?? booking.requested_seat_count ?? booking.vehicle?.seat_count;
+}
 async function assertTripVehicleSeats(booking, vehicle, session = null) {
-  // Older confirmed bookings can keep the capacity of their already selected vehicle.
-  let previousVehicle;
-  if (booking.requested_seat_count == null && booking.vehicle_id != null) {
-    previousVehicle = booking.vehicle_id === vehicle.vehicle_id
-      ? vehicle
-      : await Vehicle.findOne({ vehicle_id: booking.vehicle_id }).select('seat_count').session(session).lean();
-  }
-  if (booking.requested_seats) {
-    if (vehicle.seat_count < Math.max(booking.requested_seats, booking.passenger_count || 0)) {
-      throw new HttpError(409, 'Xe không đủ chỗ cho yêu cầu của khách.');
-    }
-  } else {
-    // Preserve assigned capacity for legacy bookings already confirmed.
-    const seats = booking.requested_seat_count ?? previousVehicle?.seat_count;
-    assertVehicleSeats(vehicle, requestedSeats({ ...booking, requested_seat_count: seats }));
-  }
+  const previousVehicle = dispatchSeatCount(booking) == null && booking.vehicle_id != null
+    ? await Vehicle.findOne({ vehicle_id: booking.vehicle_id }).select('seat_count').session(session).lean() : null;
+  const seats = requestedSeats({ ...booking, requested_seat_count: dispatchSeatCount(booking) ?? previousVehicle?.seat_count });
+  if (vehicle.seat_count < seats) throw new HttpError(409, `Khách yêu cầu xe từ ${seats} chỗ.`);
+  return seats;
+}
+function vehicleCanDispatch(vehicle) {
+  return ['available', 'in_use'].includes(vehicle.status) && !['pending', 'rejected'].includes(vehicle.approval_status);
 }
 async function latestInspectionFailed(vehicle_id, session) {
   const inspection = await VehicleInspection.findOne({
-    vehicle_id, result: { $in: ['pass', 'passed', 'fail', 'failed'] },
+    vehicle_id, result: { $in: VEHICLE_INSPECTION_RESULTS },
   }).sort({ inspected_at: -1, inspection_id: -1 }).select('result').session(session).lean();
   return ['fail', 'failed'].includes(inspection?.result);
 }
@@ -78,8 +75,8 @@ async function availability({ booking, driverId, vehicleId, excludeBookingId }, 
   if (!user) throw new HttpError(409, 'Tài khoản tài xế không hoạt động');
   const vehicle = await Vehicle.findOne({ vehicle_id: vehicleId }).session(session).lean();
   if (!vehicle) throw new HttpError(404, 'Không tìm thấy xe');
-  await assertTripVehicleSeats(booking, vehicle, session);
-  if (!['available', 'in_use'].includes(vehicle.status)) throw new HttpError(409, 'Xe đang bảo dưỡng hoặc không sẵn sàng');
+  const seats = await assertTripVehicleSeats(booking, vehicle, session);
+  if (!vehicleCanDispatch(vehicle)) throw new HttpError(409, 'Xe đang bảo dưỡng hoặc không sẵn sàng');
   const maintenance = await MaintenanceRecord.exists(openMaintenance(vehicleId)).session(session);
   if (maintenance) throw new HttpError(409, 'Xe đang có phiếu bảo dưỡng chưa hoàn tất');
   if (await latestInspectionFailed(vehicleId, session)) {
@@ -96,10 +93,10 @@ async function availability({ booking, driverId, vehicleId, excludeBookingId }, 
   }).populate({ path: 'booking', select: 'pickup_time estimated_end_time -_id' }).session(session).lean();
   if (overlapping.some((item) => item.booking && windowsOverlap(start, end, item.booking.pickup_time, item.booking.estimated_end_time)))
     throw new HttpError(409, 'Tài xế đã được phân công một chuyến trùng lịch');
-  const vehicleBookings = await Booking.find({ vehicle_id: vehicleId, booking_status: { $in: ['confirmed', 'in_progress'] }, booking_id: { $ne: excludeBookingId } }).select('booking_id pickup_time estimated_end_time -_id').session(session).lean();
+  const vehicleBookings = await Booking.find({ vehicle_id: vehicleId, booking_status: { $in: RESERVED_VEHICLE_STATUSES }, booking_id: { $ne: excludeBookingId } }).select('booking_id pickup_time estimated_end_time -_id').session(session).lean();
   if (vehicleBookings.some((item) => windowsOverlap(start, end, item.pickup_time, item.estimated_end_time)))
     throw new HttpError(409, 'Xe đã có booking trùng thời gian');
-  return { driver, user, vehicle };
+  return { driver, user, vehicle, seats };
 }
 async function dispatchData() {
   // Lay booking da xac nhan, tai xe, xe va su co de hien thi man dieu phoi Operator.
@@ -109,11 +106,22 @@ async function dispatchData() {
     .where({ $or: [{ booking_status: 'confirmed' }, { booking_id: { $in: activeIds } }] })
     .sort({ pickup_time: 1 }).populate({ path: 'renter', select: 'full_name phone -_id' })
     .populate({ path: 'vehicle', select: 'vehicle_id plate_number brand model seat_count status -_id' }).lean();
-  const [drivers, vehicles, workflows] = await Promise.all([
+  const [drivers, vehicles, reservations, maintenanceIds, inspections] = await Promise.all([
     DriverProfile.find().populate({ path: 'user', select: 'full_name phone status -_id' }).lean(),
-    Vehicle.find().select('vehicle_id plate_number brand model seat_count status -_id').lean(),
-    Promise.resolve(allWorkflows.filter((workflow) => bookings.some((booking) => booking.booking_id === workflow.booking_id))),
+    Vehicle.find().select('vehicle_id plate_number brand model seat_count status approval_status -_id').lean(),
+    Booking.find({ vehicle_id: { $ne: null }, booking_status: { $in: RESERVED_VEHICLE_STATUSES } })
+      .select('booking_id vehicle_id pickup_time estimated_end_time -_id').lean(),
+    MaintenanceRecord.distinct('vehicle_id', openMaintenance()),
+    VehicleInspection.aggregate([
+      { $match: { result: { $in: VEHICLE_INSPECTION_RESULTS } } },
+      { $sort: { inspected_at: -1, inspection_id: -1 } },
+      { $group: { _id: '$vehicle_id', result: { $first: '$result' } } },
+      { $match: { result: { $in: ['fail', 'failed'] } } },
+    ]),
   ]);
+  const blockedVehicles = new Set([...maintenanceIds, ...inspections.map(({ _id }) => _id)]);
+  const readyVehicles = vehicles.filter((vehicle) => vehicleCanDispatch(vehicle) && !blockedVehicles.has(vehicle.vehicle_id));
+  const workflows = new Map(allWorkflows.map((workflow) => [workflow.booking_id, workflow]));
   const incidents = await Incident.find({ incident_status: 'open' }).sort({ incident_id: -1 }).lean();
   const incidentWorkflows = await TripWorkflow.find({ booking_id: { $in: incidents.map((incident) => incident.booking_id) } }).select('booking_id stage -_id').lean();
   const reports = await VehicleDamage.find({
@@ -124,7 +132,18 @@ async function dispatchData() {
   const latest = new Map();
   for (const item of assigned) if (!latest.has(item.booking_id)) latest.set(item.booking_id, item);
   return {
-    bookings: bookings.map((booking) => ({ booking, assignment: latest.get(booking.booking_id) || null, workflow: workflows.find((w) => w.booking_id === booking.booking_id) || null })),
+    bookings: bookings.map((booking) => {
+      const workflow = workflows.get(booking.booking_id) || null;
+      const start = workflow?.stage === 'vehicle_replacement_required' ? now() : booking.pickup_time;
+      const seats = dispatchSeatCount(booking);
+      const busyVehicles = new Set(reservations.filter((reservation) => reservation.booking_id !== booking.booking_id &&
+        windowsOverlap(start, booking.estimated_end_time, reservation.pickup_time, reservation.estimated_end_time))
+        .map((reservation) => reservation.vehicle_id));
+      const available_vehicle_ids = Number.isSafeInteger(seats) && seats > 0 && +new Date(start) < +new Date(booking.estimated_end_time)
+        ? readyVehicles.filter((vehicle) => vehicle.seat_count >= seats && !busyVehicles.has(vehicle.vehicle_id)).map((vehicle) => vehicle.vehicle_id)
+        : [];
+      return { booking, assignment: latest.get(booking.booking_id) || null, workflow, available_vehicle_ids };
+    }),
     drivers: drivers.map((d) => ({ driver_id: d.driver_id, full_name: d.user?.full_name || 'Tài xế', phone: d.user?.phone, status: d.user?.status, availability_status: d.availability_status, license_expiry: d.license_expiry, approved: Boolean(d.approved_at) })),
     vehicles,
     incidents: incidents.map((incident) => ({
@@ -190,7 +209,10 @@ async function assign(bookingId, input, operatorId) {
     await TripAssignment.create([{
       assignment_id, booking_id: id, driver_id: driverId, assigned_by: operatorId, assigned_at: now(), assignment_status: 'assigned',
     }], { session });
-    await Booking.updateOne({ booking_id: id }, { $set: { vehicle_id: vehicleId } }, { session });
+    await Booking.updateOne({ booking_id: id }, { $set: {
+      vehicle_id: vehicleId,
+      ...(booking.requested_seats == null && booking.requested_seat_count == null && { requested_seat_count: resources.seats }),
+    } }, { session });
     await syncDriverAvailability(driverId, session);
     if (latest?.driver_id && latest.driver_id !== driverId) await syncDriverAvailability(latest.driver_id, session);
     return record.toObject();
@@ -464,8 +486,8 @@ async function replaceVehicle(bookingId, vehicleId, operatorId) {
     if (!workflow || !booking || workflow.stage !== 'vehicle_replacement_required') {
       throw new HttpError(409, 'Chuyến chưa có yêu cầu đổi xe');
     }
-    if (!vehicle || !['available', 'in_use'].includes(vehicle.status)) throw new HttpError(409, 'Xe thay thế không sẵn sàng');
-    await assertTripVehicleSeats(booking, vehicle, session);
+    if (!vehicle || !vehicleCanDispatch(vehicle)) throw new HttpError(409, 'Xe thay thế không sẵn sàng');
+    const seats = await assertTripVehicleSeats(booking, vehicle, session);
     if (await MaintenanceRecord.exists(openMaintenance(newVehicleId)).session(session)) {
       throw new HttpError(409, 'Xe thay thế đang bảo dưỡng');
     }
@@ -473,7 +495,7 @@ async function replaceVehicle(bookingId, vehicleId, operatorId) {
       throw new HttpError(409, 'Xe thay thế có lần kiểm tra gần nhất không đạt');
     }
     const otherBookings = await Booking.find({
-      vehicle_id: newVehicleId, booking_status: { $in: ['confirmed', 'in_progress'] }, booking_id: { $ne: id },
+      vehicle_id: newVehicleId, booking_status: { $in: RESERVED_VEHICLE_STATUSES }, booking_id: { $ne: id },
     }).select('pickup_time estimated_end_time -_id').session(session).lean();
     if (otherBookings.some((other) => windowsOverlap(now(), booking.estimated_end_time, other.pickup_time, other.estimated_end_time))) {
       throw new HttpError(409, 'Xe thay thế đã có lịch trùng');
@@ -484,7 +506,10 @@ async function replaceVehicle(bookingId, vehicleId, operatorId) {
       vehicle_id: newVehicleId, vehicle_received: false, vehicle_received_at: null, start_odometer: null,
       stage: 'awaiting_vehicle', handover_inspection_id: null, return_inspection_id: null,
     });
-    await Booking.updateOne({ booking_id: id }, { $set: { vehicle_id: newVehicleId } }, { session });
+    await Booking.updateOne({ booking_id: id }, { $set: {
+      vehicle_id: newVehicleId,
+      ...(booking.requested_seats == null && booking.requested_seat_count == null && { requested_seat_count: seats }),
+    } }, { session });
     await Incident.updateMany({ booking_id: id, incident_status: 'open', garage_damage_inspection_id: null, 'resolution_approval.id': { $exists: false }, kind: { $nin: ['accident', 'complaint'] } }, {
       $set: { incident_status: 'resolved', resolution_note: `Đã điều phối xe thay thế ${vehicle.plate_number}`, resolved_by: operatorId },
     }, { session });
