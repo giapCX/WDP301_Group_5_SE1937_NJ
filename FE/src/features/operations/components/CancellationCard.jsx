@@ -1,5 +1,5 @@
 import { ActionForm, History, labels } from './OperationShared';
-import { dateTime, money } from '../../bookings/bookingConstants';
+import { dateTime, money } from '../../shared/booking/bookingConstants';
 export default function CancellationCard({ booking, renter, manager, onDone }) {
   const request = booking.cancellation;
   if (!request?.id) return null;

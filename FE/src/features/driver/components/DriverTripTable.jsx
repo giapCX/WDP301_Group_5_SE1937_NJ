@@ -1,6 +1,6 @@
-import Icon from '../../bookings/components/BookingIcon';
-import BookingStatus from '../../bookings/components/BookingStatus';
-import { bookingCode, dateTime } from '../../bookings/bookingConstants';
+import Icon from '../../shared/booking/BookingIcon';
+import BookingStatus from '../../shared/booking/BookingStatus';
+import { bookingCode, dateTime } from '../../shared/booking/bookingConstants';
 
 export default function DriverTripTable({ rows, onSelect }) {
   if (!rows.length)

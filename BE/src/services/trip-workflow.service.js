@@ -64,6 +64,7 @@ async function latestInspectionFailed(vehicle_id, session) {
   return ['fail', 'failed'].includes(inspection?.result);
 }
 async function availability({ booking, driverId, vehicleId, excludeBookingId }, session = null) {
+  // Kiem tra dieu kien tai xe, xe, bao duong va lich trung truoc khi dieu phoi.
   const start = new Date(booking.pickup_time);
   const end = new Date(booking.estimated_end_time);
   const driver = await DriverProfile.findOne({ driver_id: driverId }).session(session).lean();
@@ -101,6 +102,7 @@ async function availability({ booking, driverId, vehicleId, excludeBookingId }, 
   return { driver, user, vehicle };
 }
 async function dispatchData() {
+  // Lay booking da xac nhan, tai xe, xe va su co de hien thi man dieu phoi Operator.
   const allWorkflows = await TripWorkflow.find().lean();
   const activeIds = allWorkflows.filter((workflow) => workflow.stage !== 'completed').map((workflow) => workflow.booking_id);
   const bookings = await Booking.find({ booking_status: { $in: ['confirmed', 'in_progress'] } })
@@ -134,6 +136,7 @@ async function dispatchData() {
   };
 }
 async function assign(bookingId, input, operatorId) {
+  // Gan xe va tai xe cho booking sau khi kiem tra kha nang dap ung lich trinh.
   const id = positive(bookingId, 'booking_id');
   const driverId = positive(input.driver_id, 'driver_id');
   const vehicleId = positive(input.vehicle_id, 'vehicle_id');
@@ -195,6 +198,7 @@ async function assign(bookingId, input, operatorId) {
 }
 
 async function finishVehicleReturn(bookingId, driverId, actorId) {
+  // Dong buoc tra xe cua Driver sau khi Gara da ghi nhan kiem tra tiep nhan.
   return retryDuplicateId(['maintenance_id'], () => runInTransaction(async (session) => {
     if (!session) throw new HttpError(503, 'Cần MongoDB replica set để xác nhận trả xe');
     const workflow = await TripWorkflow.findOne({ booking_id: bookingId, driver_id: driverId }).session(session);
@@ -253,6 +257,7 @@ async function finishVehicleReturn(bookingId, driverId, actorId) {
 }
 
 async function mutateDriver(bookingId, actorId, action, input = {}) {
+  // Xu ly phan hoi phan cong va cac cap nhat hanh trinh do Driver gui len.
   const id = positive(bookingId, 'booking_id');
   const profile = await DriverProfile.findOne({ user_id: actorId }).lean();
   if (!profile) throw new HttpError(404, 'Tài khoản chưa có hồ sơ tài xế');
@@ -355,6 +360,7 @@ async function mutateDriver(bookingId, actorId, action, input = {}) {
   return workflow.toObject();
 }
 async function driverTrips(userId) {
+  // Lay cac chuyen va bien ban ban giao xe thuoc tai khoan Driver hien tai.
   const profile = await DriverProfile.findOne({ user_id: userId }).lean();
   if (!profile) throw new HttpError(404, 'Tài khoản chưa có hồ sơ tài xế');
   const workflows = await TripWorkflow.find({ driver_id: profile.driver_id }).sort({ updated_at: -1 }).lean();
@@ -370,6 +376,7 @@ async function driverTrips(userId) {
   }));
 }
 async function reportIncident(bookingId, driverUserId, input) {
+  // Ghi nhan su co, xe hong hoac yeu cau doi diem dung de Operator xu ly.
   const booking_id = positive(bookingId, 'booking_id');
   const profile = await DriverProfile.findOne({ user_id: driverUserId }).lean();
   if (!profile) throw new HttpError(404, 'Không tìm thấy chuyến được giao cho bạn');
@@ -413,6 +420,7 @@ async function reportIncident(bookingId, driverUserId, input) {
   }));
 }
 async function resolveIncident(bookingId, incidentId, operatorId, note) {
+  // Ghi ket qua xu ly su co va khoi phuc trang thai workflow neu phu hop.
   const id = positive(bookingId, 'booking_id');
   const resolution = text(note, 'Biện pháp xử lý', 2000);
   return runInTransaction(async (session) => {
@@ -446,6 +454,7 @@ async function resolveIncident(bookingId, incidentId, operatorId, note) {
   });
 }
 async function replaceVehicle(bookingId, vehicleId, operatorId) {
+  // Thay xe khi xe dang dieu phoi gap su co hoac khong the tiep tuc chuyen.
   const id = positive(bookingId, 'booking_id');
   const newVehicleId = positive(vehicleId, 'vehicle_id');
   return runInTransaction(async (session) => {
@@ -485,6 +494,7 @@ async function replaceVehicle(bookingId, vehicleId, operatorId) {
   });
 }
 async function reassignReturn(bookingId, driverId, operatorId) {
+  // Gan tai xe khac cho rieng chang ve khi tai xe cu khong the tiep tuc.
   const id = positive(bookingId, 'booking_id');
   const workflow = await TripWorkflow.findOne({ booking_id: id });
   const booking = await Booking.findOne({ booking_id: id }).lean();
@@ -502,6 +512,7 @@ async function reassignReturn(bookingId, driverId, operatorId) {
   return workflow.toObject();
 }
 async function replaceIncidentDriver(incidentId, driverId, operatorId, reason) {
+  // Thay tai xe cho chuyen co su co va luu ly do dieu phoi lai.
   return retryDuplicateId(['assignment_id'], () => runInTransaction(async (session) => {
     const incident = await Incident.findOne({ incident_id: incidentId, incident_status: 'open', 'resolution_approval.status': 'approved', 'resolution_approval.action': 'replace_driver' }).session(session);
     if (!incident) throw new HttpError(409, 'Cần phương án đổi tài xế đã được Manager duyệt');

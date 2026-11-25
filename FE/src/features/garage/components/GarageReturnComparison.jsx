@@ -1,4 +1,4 @@
-import { dateTime } from '../../bookings/bookingConstants';
+import { dateTime } from '../../shared/booking/bookingConstants';
 import { CHECKLIST_ITEMS, INSPECTION_RESULTS } from '../garageConstants';
 import { InspectionPhotos } from './GarageInspectionRecord';
 

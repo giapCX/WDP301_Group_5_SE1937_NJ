@@ -39,6 +39,7 @@ function currentInspection(workflow, type, inspectionsById, latestInspections) {
 }
 
 async function tripTasks(workflows) {
+  // Tao danh sach viec Gara can xu ly cho cac chuyen dang cho ban giao hoac tra xe.
   if (!workflows.length) return [];
   const bookingIds = workflows.map((workflow) => workflow.booking_id);
   const [inspections, handovers, vehicles, bookings, drivers] = await Promise.all([
@@ -100,6 +101,7 @@ async function maintenanceTasks() {
 }
 
 async function tasks({ date } = {}) {
+  // Hop nhat viec ban giao, tiep nhan xe va bao duong theo ngay duoc chon.
   const start = dayStart(date);
   const end = start && new Date(+start + 24 * 60 * 60 * 1000);
   const workflows = TripWorkflow.find({ stage: { $in: TASK_STAGES } }).sort({ updated_at: -1 }).lean();

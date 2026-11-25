@@ -1,7 +1,7 @@
 import OperationsPage from '../features/operations/pages/OperationsPage';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import BookingManagementPage from '../features/bookings/pages/BookingManagementPage.jsx';
-import BookingModificationPage from '../features/booking-changes/pages/BookingModificationPage.jsx';
+import BookingManagementPage from '../features/operator/bookings/pages/BookingManagementPage.jsx';
+import BookingModificationPage from '../features/operator/booking-changes/pages/BookingModificationPage.jsx';
 import RequireRole from '../features/auth/components/RequireRole.js';
 import LoginPage from '../features/auth/pages/LoginPage.js';
 import VietTourHomePage from '../features/home/pages/VietTourHomePage.js';
@@ -20,11 +20,11 @@ import GarageTaskPage from '../features/garage/pages/GarageTaskPage.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import CartPage from '../pages/CartPage.jsx';
-import OperatorDashboard from '../pages/operator/OperatorDashboard.jsx';
-import AvailableVehiclesPage from '../pages/operator/AvailableVehiclesPage.jsx';
+import OperatorDashboard from '../features/operator/OperatorDashboard.jsx';
+import AvailableVehiclesPage from '../features/operator/AvailableVehiclesPage.jsx';
 import DriverDashboardPage from '../features/driver/pages/DriverDashboardPage.jsx';
-import TripMonitoringPage from '../features/trip-monitoring/pages/TripMonitoringPage.jsx';
-import TripDispatchPage from '../features/trip-workflow/pages/TripDispatchPage.jsx';
+import TripMonitoringPage from '../features/operator/trip-monitoring/pages/TripMonitoringPage.jsx';
+import TripDispatchPage from '../features/operator/trip-workflow/pages/TripDispatchPage.jsx';
 
 export default function AppRoutes() {
   return (

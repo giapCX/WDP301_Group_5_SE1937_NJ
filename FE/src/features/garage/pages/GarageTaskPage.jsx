@@ -1,5 +1,5 @@
 import { Link, useOutletContext, useParams } from 'react-router-dom';
-import { bookingCode } from '../../bookings/bookingConstants';
+import { bookingCode } from '../../shared/booking/bookingConstants';
 import { submitGarageInspection } from '../api/garageApi';
 import GarageHandoverActions from '../components/GarageHandoverActions';
 import GarageInspectionForm from '../components/GarageInspectionForm';

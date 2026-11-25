@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { dateTime } from '../../bookings/bookingConstants';
+import { dateTime } from '../../shared/booking/bookingConstants';
 import { createDamageReport, damagePhotoUrl, garageError } from '../api/garageApi';
 import { CHECKLIST_ITEMS, CHECKLIST_LABELS } from '../garageConstants';
 import { InspectionPhotos } from './GarageInspectionRecord';

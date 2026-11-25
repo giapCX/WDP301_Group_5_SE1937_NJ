@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { dateTime } from '../../bookings/bookingConstants';
+import { dateTime } from '../../shared/booking/bookingConstants';
 import { decideMaintenanceApproval } from '../api/maintenanceApprovalApi';
 
 export default function MaintenanceApprovalCard({ record, onDecision }) {

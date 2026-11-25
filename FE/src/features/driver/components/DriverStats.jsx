@@ -1,4 +1,4 @@
-import Icon from '../../bookings/components/BookingIcon';
+import Icon from '../../shared/booking/BookingIcon';
 
 export default function DriverStats({ stats }) {
   const cards = [

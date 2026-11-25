@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { bookingCode, dateTime } from '../../bookings/bookingConstants';
+import { bookingCode, dateTime } from '../../shared/booking/bookingConstants';
 import { garageError, recordGarageRepair, submitGarageInspection, updateGarageMaintenance } from '../api/garageApi';
 import { GARAGE_TASKS_PATH, INSPECTION_RESULTS } from '../garageConstants';
 import { GarageReinspectionForm, GarageRepairForm } from './GarageMaintenanceForms';

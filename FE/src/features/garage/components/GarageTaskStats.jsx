@@ -1,4 +1,4 @@
-import { DispatchStats } from '../../bookings/components/BookingStats';
+import { DispatchStats } from '../../shared/booking/BookingStats';
 import { TASK_TYPES } from '../garageConstants';
 
 const CARDS = [
