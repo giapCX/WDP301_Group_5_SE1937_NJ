@@ -24,6 +24,8 @@ test('workflow 4 owns cancellation, refund, incident approvals, disputes and iti
   app.use((req, _res, next) => { req.user = actors[req.get('test-actor')]; next(); });
   app.use('/operator/operations', routes.operator); app.use('/manager/operation-approvals', routes.manager); app.use('/renter/bookings', routes.renter);
   app.use('/operator/bookings', charges.operatorBookingRoutes); app.use('/renter/bookings', charges.renterBookingRoutes);
+  app.use('/manager/dashboard', require('../src/routes/manager-dashboard.routes'));
+  app.use('/operator/bookings', require('../src/routes/booking.routes'));
   app.use('/operator/booking-change-requests', changes); app.use('/renter/bookings', renterChanges); app.use(errors);
   server = app.listen(0, '127.0.0.1'); await new Promise((resolve) => server.once('listening', resolve));
   const base = 'http://127.0.0.1:' + server.address().port;
@@ -148,5 +150,48 @@ test('workflow 4 owns cancellation, refund, incident approvals, disputes and iti
   assert.equal((await api('/operator/booking-change-requests/' + activeChange.data.data.change_request_id + '/approve', 'operator', {}, 'PATCH')).status, 200);
   assert.equal((await models.TripWorkflow.findOne({ booking_id: 106 })).stage, 'tour');
 
+
+  const quotes = require('../src/services/booking-quote.service');
+  const contracts = require('../src/services/passenger-contract.service');
+  const payments = require('../src/services/renter-payment.service');
+  await create(107, { booking_status: 'pending', paid_total: 0, requested_seats: 7, service_type: 'roundtrip', quote_requested_at: new Date(),
+    pickup_time: new Date('2099-02-01T01:00:00Z'), estimated_end_time: new Date('2099-02-02T12:00:00Z') });
+  assert.equal((await api('/operator/bookings/contract-company', 'operator')).status, 409);
+  assert.equal((await api('/manager/dashboard/contract-profile', 'operator')).status, 403);
+  const companyProfile = { name:'VietTour Demo', address:'Địa chỉ thử nghiệm', taxId:'DEMO-MST', phone:'0900000002' };
+  assert.equal((await api('/manager/dashboard/contract-profile', 'operator', companyProfile, 'PUT')).status, 403);
+  const savedProfile = await api('/manager/dashboard/contract-profile', 'manager', companyProfile, 'PUT');
+  assert.equal(savedProfile.status, 200);
+  assert.equal(savedProfile.data.representative, sample.users[1].full_name);
+  const companyView = await api('/operator/bookings/contract-company', 'operator');
+  assert.equal(companyView.status, 200);
+  assert.equal(companyView.data.data.taxId, companyProfile.taxId);
+  const offeredContract = await quotes.sendQuote(107, { calculation: { outwardKm:150, returnKm:150, kmRate:12000, dispatchPercent:20, tolls:0, parking:0, otherFee:0, adjustment:0, reason:'' }, deposit:300000,
+    contract: { name:'VietTour Demo',address:'Địa chỉ thử nghiệm',taxId:'DEMO-MST',representative:'Đại diện demo',title:'Quản lý',phone:'0900000001',distanceKm:300,penaltyTerms:'Theo chính sách đã thỏa thuận' } }, 3);
+  assert.equal(offeredContract.transport_contract.company.representative, sample.users[1].full_name);
+  assert.equal(offeredContract.transport_contract.company.phone, companyProfile.phone);
+  assert.equal(offeredContract.transport_contract.company.managerId, 2);
+  await api('/manager/dashboard/contract-profile', 'manager', { ...companyProfile, name:'Đơn vị đổi tên sau khi gửi' }, 'PUT');
+  assert.equal((await models.Booking.findOne({ booking_id:107 })).transport_contract.company.name, companyProfile.name);
+  assert.equal(offeredContract.transport_contract.tollsAndParking, 'Lái xe chịu trách nhiệm.');
+  assert.equal(offeredContract.transport_contract.driverExpenses, 'Ăn nghỉ theo đoàn.');
+  const fixedTerms = await contracts.proposal({ distanceKm:300, penaltyTerms:'Thỏa thuận demo', tollsAndParking:'Ghi đè từ client', driverExpenses:'Ghi đè từ client' }, offeredContract, 3);
+  assert.equal(fixedTerms.tollsAndParking, 'Lái xe chịu trách nhiệm.');
+  assert.equal(fixedTerms.driverExpenses, 'Ăn nghỉ theo đoàn.');
+  const renter = { name:'Khách Demo',address:'Địa chỉ thử nghiệm',identity:'DEMO-IDENTITY',phone:'0900000007',luggageKg:20 };
+  const document = await contracts.preview(107, 7, { quoteId:offeredContract.quote_offer.id,renter });
+  const signature = { quoteId:offeredContract.quote_offer.id,termsAccepted:true,contractAccepted:true,documentHash:document.hash,renter };
+  await assert.rejects(quotes.acceptQuote(107, 7, {...signature,documentHash:'outdated'}), {statusCode:409});
+  await assert.rejects(quotes.acceptQuote(107, 7, {...signature,contractAccepted:false}), {statusCode:400});
+  await quotes.acceptQuote(107, 7, signature);
+  assert.equal((await models.Booking.findOne({booking_id:107})).transport_contract.status,'signed_pending_payment');
+  process.env.PAYMENT_MODE='simulation';
+  const failedAttempt = await payments.checkout(107,7);
+  await payments.simulate(107,7,{attemptId:failedAttempt.attemptId,outcome:'failed'});
+  assert.equal((await models.Booking.findOne({booking_id:107})).transport_contract.status,'signed_pending_payment');
+  const paidAttempt = await payments.checkout(107,7);
+  await payments.simulate(107,7,{attemptId:paidAttempt.attemptId,outcome:'success'});
+  const activeContract = (await models.Booking.findOne({booking_id:107})).transport_contract;
+  assert.equal(activeContract.status,'active'); assert.equal(activeContract.hash,document.hash); assert.ok(activeContract.activatedAt);
 
 });

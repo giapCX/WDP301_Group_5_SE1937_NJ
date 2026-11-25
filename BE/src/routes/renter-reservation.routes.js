@@ -29,6 +29,12 @@ router.get('/:id/quote-review', requireRenter, async (req, res) => {
     contact: booking.renter, stops: booking.trip_stops,
   });
 });
+router.post('/:id/contract-preview', requireRenter, async (req, res) => {
+  const data = await require('../services/passenger-contract.service').preview(
+    reservations.positiveId(req.params.id), req.user.user_id, req.body || {},
+  );
+  res.set('Cache-Control', 'no-store').json({ success: true, data });
+});
 router.post('/:id/accept-quote', requireRenter, async (req, res) => {
   const status = await acceptQuote(reservations.positiveId(req.params.id), req.user.user_id, req.body);
   res.json({ status });

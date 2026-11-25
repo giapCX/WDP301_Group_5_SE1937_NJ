@@ -1,5 +1,10 @@
 import apiClient from '../../../api/client';
 
+export async function fetchContractCompany(_params, signal) {
+  const response = await apiClient.get('/operator/bookings/contract-company', { signal });
+  return response.data.data;
+}
+
 export async function fetchBookings(params, signal) {
   const response = await apiClient.get('/operator/bookings', { params, signal });
   return response.data.data;

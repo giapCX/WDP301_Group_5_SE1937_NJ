@@ -44,6 +44,8 @@ async function sendQuote(bookingId, input, operatorId) {
   if (booking.cancellation?.status === 'pending') throw new HttpError(409, 'Đơn đang chờ xử lý hủy');
   const calculation = calculateQuote(booking.service_type, input?.calculation);
   const subtotal = calculation.subtotal;
+  const transportContract = await require('./passenger-contract.service').proposal(input?.contract, booking, operatorId);
+  transportContract.stops = await require('../models').TripStop.find({ booking_id: bookingId }).sort({ stop_order: 1 }).select('location arrival_at departure_at -_id').lean();
   const deposit = readAmount(input?.deposit, 'Tiền đặt cọc');
   await findVehicle(booking, null);
   if (!(await require('../repositories/booking-readiness.repository').availableDrivers(booking)).length) throw new HttpError(409, 'Chưa có tài xế đủ điều kiện và còn lịch để phục vụ; cần đề xuất lịch khác.');
@@ -62,6 +64,7 @@ async function sendQuote(bookingId, input, operatorId) {
     booking_status: 'quoted', estimated_price: subtotal, additional_charge: 0,
     pricing_breakdown: { subtotal, surcharge: 0, discount, total },
     quote_calculation: calculation,
+    transport_contract: transportContract,
     quote_offer: { id: randomUUID(), sent_by: operatorId, sent_at: new Date(),
       promotion_id: promotion?.promotion_id, promotion_code: promotion?.code },
     deposit_due: deposit,
@@ -84,17 +87,21 @@ async function acceptQuote(bookingId, renterId, input) {
     if (booking.quote_offer.accepted_at) return booking.booking_status;
     if (booking.booking_status !== 'quoted') throw new HttpError(409, 'Đơn chưa có báo giá để xác nhận.');
 
+    if (input.contractAccepted !== true) throw new HttpError(400, 'Cần tích xác nhận ký hợp đồng');
+    const signed = require('./passenger-contract.service').render(booking, input.renter);
+    if (signed.hash !== input.documentHash) throw new HttpError(409, 'Nội dung hợp đồng đã thay đổi; xem lại trước khi ký');
     const vehicle = await findVehicle(booking, session);
     const locked = await lockVehicleSchedule(vehicle.vehicle_id, session);
     if (!locked) throw new HttpError(409, 'Xe vừa thay đổi. Vui lòng thử lại.');
     const now = new Date();
-    const status = booking.deposit_due > 0 ? 'awaiting_payment' : 'confirmed';
+    const status = 'awaiting_payment';
     const update = await Booking.updateOne({
       booking_id: bookingId, renter_id: renterId, booking_status: 'quoted', 'quote_offer.id': input.quoteId,
     }, { $set: {
       booking_status: status, vehicle_id: vehicle.vehicle_id, reviewed_by: booking.quote_offer.sent_by,
       reviewed_at: now, 'quote_offer.accepted_at': now, terms_accepted_at: now, terms_version: TERMS_VERSION,
       paid_total: 0,
+      transport_contract: { ...booking.transport_contract, status: 'signed_pending_payment', document: signed.document, hash: signed.hash, signedBy: renterId, signedAt: now, acceptanceMethod: 'checkbox' },
     } }, { session });
     if (!update.modifiedCount) throw new HttpError(409, 'Báo giá đã thay đổi. Vui lòng tải lại.');
     if (booking.quote_offer.promotion_id) await BookingPromotion.create([{

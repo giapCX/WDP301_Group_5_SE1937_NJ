@@ -10,6 +10,7 @@ export const MANAGER_NAVIGATION = [
   { label: 'Phê duyệt & Định mức', href: '/manager/approvals', icon: 'check' },
   { label: 'Bảng giá dịch vụ', href: '/manager/pricing', icon: 'chart' },
   { label: 'Chính sách dịch vụ', href: '/manager/policies', icon: 'settings' },
+  { label: 'Hồ sơ hợp đồng', href: '/manager/contract-profile', icon: 'settings' },
   { label: 'Khuyến mãi', href: '/manager/promotions', icon: 'chart' },
   { label: 'Nhật ký hoạt động', href: '/manager/audit', icon: 'check' },
 ];

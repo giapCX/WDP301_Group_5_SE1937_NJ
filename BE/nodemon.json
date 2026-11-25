@@ -1,0 +1,6 @@
+{
+  "watch": ["server.js", "src", "dal", "middlewares", ".env"],
+  "ext": "js,json,env",
+  "ignore": ["tests/**", "scripts/**", "storage/**", "**/*.log"],
+  "delay": "1500ms"
+}

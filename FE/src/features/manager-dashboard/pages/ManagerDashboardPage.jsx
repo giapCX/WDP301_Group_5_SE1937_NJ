@@ -12,6 +12,7 @@ import useManagerDashboard from '../hooks/useManagerDashboard';
 import { ApprovalWorkspace, DriverWorkspace, FleetWorkspace, RevenueWorkspace } from './ManagerWorkspaces';
 import { exportManagerReport } from '../utils/exportManagerReport';
 import { formatCurrency, formatPercent, monthLabel } from '../utils/managerDashboardFormatters';
+import ContractCompanyProfile from '../components/ContractCompanyProfile';
 import ResourceWorkspace from '../../management/components/ResourceWorkspace.jsx';
 import '../styles/managerDashboard.css';
 
@@ -20,10 +21,10 @@ export default function ManagerDashboardPage() {
   const [notice, setNotice] = useState('');
   const location = useLocation();
   const requestedView = location.pathname.split('/').filter(Boolean).at(-1) || 'dashboard';
-  const view = ['dashboard', 'fleet', 'drivers', 'approvals', 'revenue', 'pricing', 'policies', 'promotions', 'audit'].includes(requestedView)
+  const view = ['dashboard', 'fleet', 'drivers', 'approvals', 'revenue', 'pricing', 'policies', 'promotions', 'audit', 'contract-profile'].includes(requestedView)
     ? requestedView
     : 'dashboard';
-  const dashboard = useManagerDashboard(!['pricing', 'policies', 'promotions', 'audit'].includes(view));
+  const dashboard = useManagerDashboard(!['pricing', 'policies', 'promotions', 'audit', 'contract-profile'].includes(view));
   const metrics = dashboard.data?.metrics;
   const periodLabel = monthLabel(dashboard.year, dashboard.month);
   const page = {
@@ -56,6 +57,7 @@ export default function ManagerDashboardPage() {
       eyebrow: 'CẤU HÌNH GIÁ DỊCH VỤ', title: 'Bảng giá dịch vụ',
       description: 'Thiết lập giá tuyến, đơn vị thời gian, giới hạn quãng đường và phụ phí.',
     },
+    'contract-profile': { eyebrow: 'THÔNG TIN BÊN VẬN TẢI', title: 'Hồ sơ hợp đồng', description: 'Thông tin đơn vị và Manager đại diện được tự điền vào hợp đồng.' },
     policies: {
       eyebrow: 'CHÍNH SÁCH DỊCH VỤ', title: 'Chính sách hủy & phụ phí',
       description: 'Quản lý điều kiện hủy, hoàn tiền, phí chờ, vượt giờ và vượt km.',
@@ -98,8 +100,9 @@ export default function ManagerDashboardPage() {
           {dashboard.error && <div className="manager-feedback error" role="alert">{dashboard.error}<button type="button" onClick={dashboard.refresh}>Thử lại</button></div>}
           {notice && <div className="manager-feedback" role="status">{notice}<button type="button" onClick={() => setNotice('')}>Đóng</button></div>}
           {dashboard.loading && !dashboard.data && <div className="manager-loading" role="status"><span/>Đang tải số liệu vận hành…</div>}
-          {!['pricing', 'policies', 'promotions', 'audit'].includes(view) && !dashboard.error && !dashboard.loading && !dashboard.data && <div className="manager-feedback" role="status">Chưa có dữ liệu để hiển thị.</div>}
+          {!['pricing', 'policies', 'promotions', 'audit', 'contract-profile'].includes(view) && !dashboard.error && !dashboard.loading && !dashboard.data && <div className="manager-feedback" role="status">Chưa có dữ liệu để hiển thị.</div>}
 
+          {view === 'contract-profile' && <ContractCompanyProfile/>}
           {['pricing', 'policies', 'promotions', 'audit'].includes(view) && <ResourceWorkspace workspace={view} actor="manager" onNotice={setNotice}/>}
           {dashboard.data && (view === 'dashboard' ? <>
             <section className="manager-metrics" aria-label="Chỉ số vận hành">

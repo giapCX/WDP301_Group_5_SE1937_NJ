@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
-import { fetchQuoteRates, previewBookingQuote, getBookingError } from '../api/bookingApi';
+import { fetchQuoteRates, previewBookingQuote, getBookingError, fetchContractCompany } from '../api/bookingApi';
+import useHomeResource from '../../home/hooks/useHomeResource';
 import { money } from '../bookingConstants';
 
 export default function BookingQuoteForm({ booking, busy, onSend }) {
+  const [companyRevision, setCompanyRevision] = useState(0);
+  const company = useHomeResource(fetchContractCompany, `${booking.booking_id}:${companyRevision}`);
   const tour = booking.service_type === 'tour';
   const saved = booking.quote_calculation?.inputs;
   const [values, setValues] = useState(saved || { outwardKm: '', returnKm: '', kmRate: '',
@@ -94,12 +97,83 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
         <span>{line.label} ({line.quantity} × {money(line.unit_price)})</span><strong>{money(line.amount)}</strong>
       </div>)}
       <div className="cost-line total"><span>Tổng trước ưu đãi</span><strong>{money(preview.subtotal)}</strong></div>
-      <form onSubmit={(event) => { event.preventDefault(); onSend({ calculation: preview.inputs, deposit: Number(deposit) }); }}>
-        <label>Tiền đặt cọc (₫)<input className="form-control" type="number" min="0" step="1" required
-          value={deposit} onChange={(event) => setDeposit(event.target.value)}/></label>
-        <p>Tiền cọc gợi ý ban đầu bằng 30% giá trước ưu đãi; kiểm tra lại theo giá sau ưu đãi khi gửi.</p>
-        <button className="dispatch-button primary" disabled={busy || calculating} type="submit">{busy ? 'Đang gửi…' : 'Gửi báo giá cho khách'}</button>
-      </form>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              const fields = new FormData(event.currentTarget);
+              const contract = Object.fromEntries(
+                [
+                  "distanceKm",
+                  "penaltyTerms",
+                ].map((key) => [key, fields.get("contract_" + key)]),
+              );
+              onSend({
+                calculation: preview.inputs,
+                deposit: Number(deposit),
+                contract,
+              });
+            }}
+          >
+            <fieldset disabled={busy}>
+              <legend>Thông tin hợp đồng đính kèm</legend>
+              <p>Thông tin bên vận tải được lấy tự động từ hồ sơ Manager.</p>
+              <button type="button" disabled={busy || company.loading} onClick={() => setCompanyRevision((value) => value + 1)}>Tải lại hồ sơ Manager</button>
+              {company.loading && <p role="status">Đang tải hồ sơ Manager…</p>}
+              {company.error && <p role="alert">{getBookingError(company.error)}</p>}
+              {company.data && <dl>
+                {Object.entries({ name: 'Tên đơn vị vận tải', address: 'Địa chỉ đơn vị', taxId: 'Mã số thuế', representative: 'Người đại diện bên A', title: 'Chức vụ', phone: 'Điện thoại đơn vị' }).map(([key, label]) => (
+                  <div key={key}><dt>{label}</dt><dd>{company.data[key]}</dd></div>
+                ))}
+              </dl>}
+              <p><strong>Điều khoản có sẵn trong hợp đồng:</strong></p>
+              <ul>
+                <li>Tiền phí cầu đường, bãi đỗ xe: lái xe chịu trách nhiệm.</li>
+                <li>Ăn nghỉ của lái xe: ăn nghỉ theo đoàn.</li>
+              </ul>
+              {Object.entries({
+                distanceKm: "Cự ly hành trình (km)",
+                penaltyTerms: "Thỏa thuận hủy / phạt vi phạm",
+              }).map(([key, label]) => (
+                <label key={key}>
+                  {label}
+                  <input
+                    className="form-control"
+                    required
+                    maxLength={1000}
+                    name={"contract_" + key}
+                    defaultValue={
+                      booking.transport_contract?.company?.[key] ||
+                      booking.transport_contract?.[key] ||
+                      ""
+                    }
+                  />
+                </label>
+              ))}
+            </fieldset>
+            <label>
+              Tiền đặt cọc (₫)
+              <input
+                className="form-control"
+                type="number"
+                min="0"
+                step="1"
+                required
+                value={deposit}
+                onChange={(event) => setDeposit(event.target.value)}
+              />
+            </label>
+            <p>
+              Tiền cọc gợi ý ban đầu bằng 30% giá trước ưu đãi; kiểm tra lại
+              theo giá sau ưu đãi khi gửi.
+            </p>
+            <button
+              className="dispatch-button primary"
+              disabled={busy || calculating || !company.data}
+              type="submit"
+            >
+              {busy ? "Đang gửi…" : "Gửi báo giá kèm hợp đồng"}
+            </button>
+          </form>
     </div>}
   </section>;
 }

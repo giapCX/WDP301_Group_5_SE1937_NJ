@@ -15,8 +15,8 @@ export async function loadSeatOptions(_params, signal) {
 export async function createReservation(payload) {
   return (await api.post(bookings, payload)).data;
 }
-export async function acceptReservationQuote(id, quoteId) {
-  return (await api.post(bookings + '/' + id + '/accept-quote', { quoteId, termsAccepted: true })).data;
+export async function acceptReservationQuote(id, quoteId, signature = {}) {
+  return (await api.post(bookings + '/' + id + '/accept-quote', { quoteId, termsAccepted: true, ...signature })).data;
 }
 export async function loadQuoteReview(id, signal) {
   return (await api.get(bookings + '/' + id + '/quote-review', { signal })).data;

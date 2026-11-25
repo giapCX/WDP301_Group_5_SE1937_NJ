@@ -104,6 +104,7 @@ async function decide(id, input, actor) {
       }
       await reserveRefunds(booking, request.refund_amount, request.reason, 'cancellation:' + request.id, actor, session);
       booking.booking_status = 'cancelled';
+      if (booking.transport_contract) { booking.transport_contract = { ...booking.transport_contract, status: 'cancelled', cancelledAt: new Date() }; }
       booking.checkout_attempt = undefined;
       const assignments = await TripAssignment.find({ booking_id: booking.booking_id, assignment_status: { $in: ['assigned', 'accepted', 'in_progress'] } }).session(session).lean();
       await TripAssignment.updateMany({ booking_id: booking.booking_id, assignment_status: { $in: ['assigned', 'accepted'] } }, { $set: { assignment_status: 'cancelled' } }, { session });

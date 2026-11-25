@@ -4,6 +4,14 @@ const requireManager = require('../middleware/require-manager.middleware');
 const { findManagerDashboard } = require('../repositories/manager-dashboard.repository');
 
 const router = express.Router();
+const contractCompany = require('../services/contract-company.service');
+
+router.get('/contract-profile', requireManager, async (req, res) => {
+  res.set('Cache-Control', 'no-store').json(await contractCompany.managerProfile(req.user.user_id));
+});
+router.put('/contract-profile', requireManager, async (req, res) => {
+  res.json(await contractCompany.saveManagerProfile(req.user.user_id, req.body));
+});
 
 function parsePeriodNumber(value, field, fallback, minimum, maximum) {
   if (value === undefined) return fallback;
