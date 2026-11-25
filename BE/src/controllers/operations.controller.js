@@ -2,7 +2,7 @@ const operations = require('../services/operations.service');
 const cancellation = require('../services/cancellation.service');
 const incidents = require('../services/incident-management.service');
 const success = (res, data) => res.set('Cache-Control', 'no-store').json({ success: true, data });
-const list = (kind) => async (req, res) => success(res, await operations.list(kind, req.query));
+const list = (kind) => async (req, res) => success(res, await operations.list(kind, req.query, req.user));
 const cancellationPreview = async (req, res) => success(res, await cancellation.preview(req.params.id, req.user));
 const requestCancellation = async (req, res) => success(res, await cancellation.request(req.params.id, req.body || {}, req.user));
 const decideCancellation = async (req, res) => success(res, await cancellation.decide(req.params.id, req.body || {}, req.user));

@@ -9,11 +9,17 @@ function page(query = {}) {
   if (number > 1000000) throw new HttpError(400, 'Trang không hợp lệ');
   return { page: number, limit: 10, skip: (number - 1) * 10 };
 }
-async function list(kind, query = {}, renterId) {
+async function list(kind, query = {}, renterId, managerExceptionsOnly = false) {
   const { page: number, limit, skip } = page(query);
   const model = { cancellations: Booking, incidents: Incident, refunds: Refund }[kind];
   if (!model) throw new HttpError(400, 'Loại hồ sơ không hợp lệ');
   const filter = kind === 'cancellations' ? { 'cancellation.id': { $exists: true } } : {};
+  if (kind === 'cancellations' && managerExceptionsOnly) {
+    filter.$expr = { $gt: [
+      '$cancellation.fee',
+      { $subtract: [{ $ifNull: ['$paid_total', 0] }, { $ifNull: ['$refunded_total', 0] }] },
+    ] };
+  }
   if (query.booking_id !== undefined) filter.booking_id = positiveId(query.booking_id, 'Booking');
   if (renterId !== undefined) {
     const owned = await Booking.find({ renter_id: renterId }).select('booking_id').lean();

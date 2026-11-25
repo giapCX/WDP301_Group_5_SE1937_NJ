@@ -5,7 +5,7 @@ const repository = require('../repositories/management.repository');
 
 const deriveKey = promisify(scrypt);
 const ADMIN_RESOURCES = new Set(['users', 'roles', 'audit_logs']);
-const MANAGER_RESOURCES = new Set(['vehicles', 'driver_profiles', 'pricing_rules', 'service_policies', 'promotions', 'audit_logs', 'reports']);
+const MANAGER_RESOURCES = new Set(['pricing_rules', 'service_policies', 'promotions', 'audit_logs', 'reports']);
 const ID_FIELDS = { users: 'user_id', roles: 'role_id', vehicles: 'vehicle_id', driver_profiles: 'driver_id', pricing_rules: 'rule_id', service_policies: 'policy_id', promotions: 'promotion_id' };
 const clean = (data) => data && typeof data === 'object' && !Array.isArray(data) ? data : {};
 const text = (value, field, max) => {

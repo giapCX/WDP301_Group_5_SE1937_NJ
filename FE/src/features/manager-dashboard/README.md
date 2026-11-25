@@ -1,5 +1,7 @@
 # Manager dashboard
 
-Dashboard và các workspace cho Manager. Page, components, hook, API client, formatters và styles được tách theo feature. Chỉ số, trạng thái đội xe, doanh thu, booking, hiệu suất tài xế và cảnh báo lấy từ `GET /api/manager/dashboard`. Hồ sơ xe/tài xế, phê duyệt, bảng giá, chính sách, khuyến mãi và nhật ký là nghiệp vụ Manager; API kiểm tra role/permission phía server.
+Dashboard Manager tập trung vào booking, thanh toán đã ghi nhận, hoàn tiền và cấu hình dịch vụ. Ngoại lệ hủy, phương án sự cố, hoàn tiền và bảo dưỡng ảnh hưởng an toàn có hàng đợi phê duyệt riêng. Theo dõi số lượng xe và giấy phép tài xế không thuộc màn hình Manager.
 
-Backend yêu cầu session đăng nhập có vai trò `manager`. Endpoint tổng hợp dữ liệu từ `vehicles`, `bookings`, `payments`, `driver_profiles`, `trip_assignments`, `maintenance_records`, `incidents` và `users`. Các trường không có trong schema hiện tại, chẳng hạn đồng hồ kilomet, không được tự tạo trên giao diện.
+Admin quản lý tài khoản, vai trò, quyền và nhật ký trong `/admin/roles-permissions`. Admin không duyệt booking, hoàn tiền, sự cố hay bảo dưỡng; các quyết định nghiệp vụ nằm trong phân hệ Manager, Operator hoặc Gara theo quyền đã thiết kế.
+
+Backend yêu cầu session active có vai trò `manager` cho dashboard và hàng đợi quyết định. Báo cáo lấy từ `bookings`, `payments` và `refunds`; cấu hình dịch vụ dùng các API quản trị có kiểm tra vai trò và quyền phía máy chủ.

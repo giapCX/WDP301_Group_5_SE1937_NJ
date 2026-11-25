@@ -3,7 +3,7 @@ const requireManager = require('../middleware/require-manager.middleware');
 const service = require('../services/garage-maintenance.service');
 
 const router = Router();
-router.use(requireManager);
+router.use(requireManager('maintenance.review'));
 router.get('/', async (req, res) => {
   res.set('Cache-Control', 'no-store').json({ success: true, data: await service.listApprovals() });
 });
