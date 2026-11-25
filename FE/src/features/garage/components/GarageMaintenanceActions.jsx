@@ -34,6 +34,11 @@ export default function GarageMaintenanceActions({ task, onUpdate }) {
     }));
   }
 
+  function closeForm() {
+    setForm('');
+    setError('');
+  }
+
   return (
     <>
       {task.damage_sources?.map((source) => (
@@ -68,8 +73,8 @@ export default function GarageMaintenanceActions({ task, onUpdate }) {
       {!archived && !awaitingApproval && (
         <>
           {form === 'repair' && <GarageRepairForm maintenance={maintenance} needsApproval={needsApproval} busy={busy}
-            onSave={(details) => run(() => recordGarageRepair(id, details))} onCancel={() => setForm('')} />}
-          {form === 'recheck' && <GarageReinspectionForm busy={busy} onSave={recheck} onCancel={() => setForm('')} />}
+            onSave={(details) => run(() => recordGarageRepair(id, details))} onCancel={closeForm} onError={setError} />}
+          {form === 'recheck' && <GarageReinspectionForm busy={busy} onSave={recheck} onCancel={closeForm} onError={setError} />}
           {!form && (
             <div className="garage-maintenance-actions">
               <button className="dispatch-button subtle compact" disabled={busy} onClick={() => setForm('repair')}>

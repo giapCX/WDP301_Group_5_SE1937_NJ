@@ -11,6 +11,21 @@ export default function GarageInspectionForm({ onSave, minOdometer = 0, returnin
   const result = Object.values(checklist).includes('failed') ? 'failed' : 'passed';
   const evidenceRequired = !returning || result === 'failed';
 
+  function invalidField(event) {
+    if (event.defaultPrevented) return;
+    event.preventDefault();
+    const { name, validity } = event.target;
+    if (name === 'odometer') {
+      setError(validity.rangeUnderflow && minOdometer > 0
+        ? 'Số km tiếp nhận không được thấp hơn lúc bàn giao.'
+        : 'Vui lòng nhập số km đồng hồ hợp lệ.');
+    } else if (name === 'fuel_percent') {
+      setError('Mức nhiên liệu phải là số nguyên từ 0 đến 100%.');
+    } else {
+      setError('Vui lòng chọn kết quả cho đủ 8 hạng mục.');
+    }
+  }
+
   async function submit(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -44,7 +59,7 @@ export default function GarageInspectionForm({ onSave, minOdometer = 0, returnin
   }
 
   return (
-    <form className="garage-check-form" onSubmit={submit}>
+    <form className="garage-check-form" onSubmit={submit} onInvalid={invalidField}>
       <fieldset className="garage-check-fields" disabled={saving}>
         <legend>Checklist an toàn</legend>
         <div className="garage-check-grid">
