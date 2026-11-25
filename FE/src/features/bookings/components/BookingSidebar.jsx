@@ -33,6 +33,10 @@ export default function BookingSidebar() {
           <Icon name="calendar" />
           Thay đổi lịch trình
         </NavLink>
+        <NavLink to="/operator/operations" aria-label="Phụ phí, hủy chuyến và sự cố">
+          <Icon name="list" />
+          Phụ phí &amp; sự cố
+        </NavLink>
         <NavLink
           to="/operator/booking-management"
           className={({ isActive }) => (isActive ? 'active' : '')}

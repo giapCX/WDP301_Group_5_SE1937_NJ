@@ -15,6 +15,9 @@ const homepageRoutes = require('./src/routes/homepage.routes');
 const renterDashboardRoutes = require('./src/routes/renter-dashboard.routes');
 const managerDashboardRoutes = require('./src/routes/manager-dashboard.routes');
 const managementRoutes = require('./src/routes/management.routes');
+const operationsRoutes = require('./src/routes/operations.routes');
+const garageWorkflowRoutes = require('./src/routes/garage-workflow.routes');
+const managerMaintenanceRoutes = require('./src/routes/manager-maintenance.routes');
 
 require('dotenv').config({ path: require('node:path').join(__dirname, '.env'), quiet: true });
 const { router: authRoutes, attachUser } = require('./src/routes/auth.routes');
@@ -30,9 +33,14 @@ app.get('/api', (req, res) => {
 });
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
-app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver', '/api/admin'], attachUser);
+app.use(['/api/operator', '/api/renter', '/api/manager', '/api/driver', '/api/admin', '/api/garage'], attachUser);
 app.use('/api/manager/dashboard', managerDashboardRoutes);
 app.use(['/api/admin/management', '/api/manager/management'], managementRoutes);
+app.use('/api/operator/operations', operationsRoutes.operator);
+app.use('/api/renter/bookings', operationsRoutes.renter);
+app.use('/api/manager/operation-approvals', operationsRoutes.manager);
+app.use('/api/manager/maintenance-approvals', managerMaintenanceRoutes);
+app.use('/api/garage', garageWorkflowRoutes);
 app.use('/api/driver', driverDashboardRoutes);
 app.use('/api/renter/dashboard', renterDashboardRoutes);
 app.use('/api/operator', operatorOverviewRoutes);

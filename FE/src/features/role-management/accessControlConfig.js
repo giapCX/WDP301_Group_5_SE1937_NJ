@@ -1,5 +1,5 @@
 export const ADMIN_NAVIGATION = [
-  { label: 'Tổng quan', icon: 'grid', workspace: 'dashboard' },
+  { label: 'Tổng quan quản trị', icon: 'grid', workspace: 'dashboard' },
   { label: 'Quản lý người dùng', icon: 'users', workspace: 'users' },
   { label: 'Vai trò & quyền', icon: 'shield', workspace: 'permissions' },
   { label: 'Nhật ký', icon: 'lock', workspace: 'audit' },
@@ -23,6 +23,7 @@ export const PERMISSION_GROUPS = [
       { id: 'vehicle.read', label: 'Xem hồ sơ và tình trạng phương tiện' },
       { id: 'vehicle.write', label: 'Đăng ký xe mới và cập nhật hồ sơ xe' },
       { id: 'vehicle.review', label: 'Duyệt hồ sơ xe và xác nhận kiểm định' },
+      { id: 'maintenance.review', label: 'Duyệt phiếu bảo dưỡng ảnh hưởng an toàn' },
       { id: 'listing.manage', label: 'Quản lý danh sách xe cho thuê' },
       { id: 'garage.manage', label: 'Tiếp nhận và bàn giao xe tại gara' },
     ],
@@ -50,7 +51,7 @@ export const PERMISSION_GROUPS = [
     title: 'ĐẶT XE & HỢP ĐỒNG',
     permissions: [
       { id: 'booking.read.all', label: 'Xem và quản lý tất cả yêu cầu đặt xe' },
-      { id: 'booking.review', label: 'Tạo, xác nhận hoặc từ chối booking' },
+      { id: 'booking.review', label: 'Xem xét booking và phê duyệt ngoại lệ vận hành' },
       { id: 'booking.change.read', label: 'Xem lịch sử và yêu cầu thay đổi lịch trình' },
       { id: 'contract.sign', label: 'Tạo và ký hợp đồng thuê xe' },
       { id: 'booking.read.own', label: 'Xem booking và hợp đồng của bản thân' },

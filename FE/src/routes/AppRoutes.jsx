@@ -7,6 +7,8 @@ import VietTourHomePage from '../features/home/pages/VietTourHomePage.js';
 import RenterDashboardPage from '../features/renter-dashboard/pages/RenterDashboardPage.js';
 import RolePermissionManagementPage from '../features/role-management/pages/RolePermissionManagementPage.jsx';
 import ManagerDashboardPage from '../features/manager-dashboard/pages/ManagerDashboardPage.jsx';
+import OperationsPage from '../features/operations/pages/OperationsPage.jsx';
+import ManagerMaintenanceApprovalsPage from '../features/garage/pages/ManagerMaintenanceApprovalsPage.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import CartPage from '../pages/CartPage.jsx';
@@ -39,6 +41,8 @@ export default function AppRoutes() {
       </Route>
       <Route element={<RequireRole role="manager" />}>
         <Route path="/manager" element={<Navigate to="/manager/dashboard" replace />} />
+        <Route path="/manager/operation-approvals" element={<OperationsPage manager />} />
+        <Route path="/manager/maintenance-approvals" element={<ManagerMaintenanceApprovalsPage />} />
         <Route path="/manager/:section" element={<ManagerDashboardPage />} />
       </Route>
       <Route element={<RequireRole role="renter" />}>
@@ -46,6 +50,7 @@ export default function AppRoutes() {
       </Route>
       <Route element={<RequireRole role="operator" />}>
         <Route path="/operator/dashboard" element={<OperatorDashboard />} />
+        <Route path="/operator/operations" element={<OperationsPage />} />
         <Route path="/operator/trip-monitoring" element={<TripMonitoringPage />} />
         <Route path="/operator/vehicles" element={<AvailableVehiclesPage />} />
         <Route

@@ -42,7 +42,7 @@ export default function RolePermissionManagementPage() {
             <div className="heading-copy">
               <div className="eyebrow"><span/> TRUNG TÂM QUẢN TRỊ</div>
               <h1>{activeLabel}</h1>
-              <p>Quản lý dữ liệu và quyền truy cập VietTour theo vai trò được cấp.</p>
+              <p>Admin quản lý tài khoản và cấu hình quyền cho từng vai trò. Booking, thanh toán, điều phối và bảo dưỡng được xử lý trong phân hệ actor tương ứng.</p>
             </div>
             <div className="heading-actions">
               {activeNavigation === 'dashboard' && <button className="button button-outline" type="button" onClick={() => exportAccountsCsv(accessControl.accounts)}><AccessControlIcon name="download" size={16}/> Xuất tài khoản</button>}

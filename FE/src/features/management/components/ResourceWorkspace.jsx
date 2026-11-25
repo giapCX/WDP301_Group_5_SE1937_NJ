@@ -3,7 +3,7 @@ import { createManagementResource, listManagementResource, updateManagementResou
 import { RESOURCE_CONFIG } from '../resourceManagementConfig.js';
 import '../styles/management.css';
 
-const ID_FIELD = { users: 'user_id', vehicles: 'vehicle_id', driver_profiles: 'driver_id', pricing_rules: 'rule_id', service_policies: 'policy_id', promotions: 'promotion_id', reports: 'name' };
+const ID_FIELD = { users: 'user_id', pricing_rules: 'rule_id', service_policies: 'policy_id', promotions: 'promotion_id', reports: 'name' };
 const getValue = (row, path) => path.split('.').reduce((value, key) => value?.[key], row);
 const pretty = (value) => value instanceof Date ? value.toLocaleDateString('vi-VN') : value == null || value === '' ? '—' : typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value) ? new Intl.DateTimeFormat('vi-VN').format(new Date(value)) : String(value);
 
@@ -11,9 +11,7 @@ function Editor({ config, roles, item, onClose, onSave }) {
   const [initialValues] = useState(() => {
     const initial = {};
     config.fields.forEach(([key, , type]) => {
-      if (key === 'registration' || key === 'insurance' || key === 'inspection') initial[key] = item?.documents?.[key] || '';
-      else if (key === 'photos') initial[key] = (item?.photos || []).join('\n');
-      else initial[key] = type === 'date' && item?.[key] ? String(item[key]).slice(0, 10) : item?.[key] ?? '';
+      initial[key] = type === 'date' && item?.[key] ? String(item[key]).slice(0, 10) : item?.[key] ?? '';
     });
     return initial;
   });
@@ -29,15 +27,7 @@ function Editor({ config, roles, item, onClose, onSave }) {
     }
     config.fields.forEach(([key, , type]) => {
       if (type === 'number' && payload[key] !== undefined) payload[key] = Number(payload[key]);
-      if (key === 'photos' && payload.photos !== undefined) payload.photos = String(payload.photos || '').split('\n').map((url) => url.trim()).filter(Boolean);
     });
-    if (config.resource === 'vehicles') {
-      const documentFields = ['registration', 'insurance', 'inspection'];
-      if (!item || documentFields.some((key) => payload[key] !== undefined)) {
-        payload.documents = Object.fromEntries(documentFields.map((key) => [key, payload[key] ?? initialValues[key]]));
-      }
-      ['registration', 'insurance', 'inspection'].forEach((key) => delete payload[key]);
-    }
     setSaving(true);
     try { await onSave(payload); } finally { setSaving(false); }
   }
@@ -89,15 +79,6 @@ export default function ResourceWorkspace({ workspace, onNotice, actor = 'admin'
     } catch (failure) { onNotice(failure.response?.data?.message || 'Không thể lưu dữ liệu.'); }
   }
 
-  async function decide(item, approval_status) {
-    const id = item[ID_FIELD[config.resource]];
-    try {
-      await updateManagementResource(config.resource, id, { approval_status }, actor);
-      await refresh();
-      onNotice(approval_status === 'approved' ? 'Đã phê duyệt hồ sơ.' : 'Đã từ chối hồ sơ.');
-    } catch (failure) { onNotice(failure.response?.data?.message || 'Không thể cập nhật trạng thái.'); }
-  }
-
   async function changeStatus(item, status) {
     try {
       await updateManagementResource(config.resource, item[ID_FIELD[config.resource]], { status }, actor);
@@ -112,8 +93,6 @@ export default function ResourceWorkspace({ workspace, onNotice, actor = 'admin'
     {loading ? <p role="status" className="resource-loading">Đang tải dữ liệu…</p> : <div className="people-table-wrap"><table className="people-table"><thead><tr>{config.columns.map(([key, label]) => <th key={key}>{label.toLocaleUpperCase('vi')}</th>)}<th>THAO TÁC</th></tr></thead>
       <tbody>{visibleItems.map((item) => <tr key={item[ID_FIELD[config.resource]] || String(item._id)}>{config.columns.map(([key]) => <td key={key}>{pretty(getValue(item, key))}</td>)}<td className="resource-actions">
         {config.resource === 'users' && <button type="button" className="text-link" onClick={() => changeStatus(item, item.status === 'active' ? 'locked' : 'active')}>{item.status === 'active' ? 'Khóa' : 'Mở khóa'}</button>}
-        {config.resource === 'vehicles' && item.approval_status === 'pending' && <><button type="button" className="text-link" onClick={() => decide(item, 'approved')}>Duyệt</button><button type="button" className="text-link" onClick={() => decide(item, 'rejected')}>Từ chối</button></>}
-        {config.resource === 'driver_profiles' && item.approval_status !== 'approved' && <><button type="button" className="text-link" onClick={() => decide(item, 'approved')}>Duyệt</button><button type="button" className="text-link" onClick={() => decide(item, 'rejected')}>Từ chối</button></>}
         {['pricing_rules', 'service_policies', 'promotions'].includes(config.resource) ? <button type="button" className="text-link" onClick={() => changeStatus(item, item.status === 'active' ? 'inactive' : 'active')}>{item.status === 'active' ? 'Ngừng dùng' : 'Kích hoạt'}</button> : null}
         {!config.readOnly && <button type="button" className="text-link" onClick={() => setEditor({ item })}>Sửa</button>}
       </td></tr>)}{!visibleItems.length && <tr><td colSpan={config.columns.length + 1} className="resource-empty">{onlyPending ? 'Không có hồ sơ đang chờ phê duyệt.' : 'Chưa có dữ liệu trong hệ thống.'}</td></tr>}</tbody>

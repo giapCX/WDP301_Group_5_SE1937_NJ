@@ -7,7 +7,7 @@ export default function ManagerSidebar() {
     <aside className="manager-sidebar">
       <a className="manager-brand" href="/" aria-label="VietTour Mobility">
         <span className="manager-brand-mark">V</span>
-        <span><b>VietTour Mobility</b><small>QUẢN TRỊ ĐỘI XE</small></span>
+        <span><b>VietTour Mobility</b><small>ĐIỀU HÀNH DỊCH VỤ</small></span>
       </a>
       <div className="manager-nav-caption">PHÂN HỆ ĐIỀU HÀNH</div>
       <nav className="manager-nav" aria-label="Điều hướng Manager">

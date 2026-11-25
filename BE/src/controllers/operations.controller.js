@@ -1,0 +1,16 @@
+const operations = require('../services/operations.service');
+const cancellation = require('../services/cancellation.service');
+const incidents = require('../services/incident-management.service');
+const success = (res, data) => res.set('Cache-Control', 'no-store').json({ success: true, data });
+const list = (kind) => async (req, res) => success(res, await operations.list(kind, req.query, req.user));
+const cancellationPreview = async (req, res) => success(res, await cancellation.preview(req.params.id, req.user));
+const requestCancellation = async (req, res) => success(res, await cancellation.request(req.params.id, req.body || {}, req.user));
+const decideCancellation = async (req, res) => success(res, await cancellation.decide(req.params.id, req.body || {}, req.user));
+const refundDecision = async (req, res) => success(res, await cancellation.decideRefund(req.params.id, req.body || {}, req.user));
+const reportIncident = async (req, res) => success(res, await incidents.report(req.params.id, req.body || {}, req.user));
+const proposeIncident = async (req, res) => success(res, await incidents.propose(req.params.id, req.body || {}, req.user));
+const approveIncident = async (req, res) => success(res, await incidents.approve(req.params.id, req.body || {}, req.user));
+const resolveIncident = async (req, res) => success(res, await incidents.resolve(req.params.id, req.body || {}, req.user));
+const bookingOperations = async (req, res) => success(res, await operations.summary(req.params.id, req.user));
+const replaceDriver = async (req, res) => success(res, await incidents.replaceDriver(req.params.id, req.body || {}, req.user));
+module.exports = { replaceDriver, list, cancellationPreview, requestCancellation, decideCancellation, refundDecision, reportIncident, proposeIncident, approveIncident, resolveIncident, bookingOperations };

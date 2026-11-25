@@ -38,5 +38,15 @@ function requireResourcePermission(request, _response, next) {
   return next();
 }
 
+function requirePermission(permission) {
+  return function permissionGuard(request, _response, next) {
+    if (!request.permissions?.includes(permission)) {
+      return next(new HttpError(403, 'Vai trò hiện tại chưa được cấp quyền cho thao tác này.'));
+    }
+    return next();
+  };
+}
+
 module.exports = requireManagementRole;
 module.exports.requireResourcePermission = requireResourcePermission;
+module.exports.requirePermission = requirePermission;

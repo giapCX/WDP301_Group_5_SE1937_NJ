@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const ID_FIELDS = { users: 'user_id', roles: 'role_id', vehicles: 'vehicle_id', driver_profiles: 'driver_id', pricing_rules: 'rule_id', service_policies: 'policy_id', promotions: 'promotion_id' };
+const ID_FIELDS = { users: 'user_id', roles: 'role_id', pricing_rules: 'rule_id', service_policies: 'policy_id', promotions: 'promotion_id' };
 const { PAID_PAYMENT_STATUSES } = require('../config/manager-dashboard.constants');
 
 const database = () => mongoose.connection.db;
@@ -41,26 +41,17 @@ async function audit(event) {
 }
 
 async function managementReports() {
-  const [fleet, drivers, paid, unpaid, refunds] = await Promise.all([
-    collection('vehicles').aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]).toArray(),
-    collection('driver_profiles').aggregate([{ $group: { _id: '$availability_status', count: { $sum: 1 } } }]).toArray(),
+  const [paid, unpaid, refunds] = await Promise.all([
     collection('payments').aggregate([{ $match: { $or: [{ payment_status: { $in: [...PAID_PAYMENT_STATUSES] } }, { status: { $in: [...PAID_PAYMENT_STATUSES] } }] } }, { $group: { _id: null, amount: { $sum: '$amount' }, count: { $sum: 1 } } }]).toArray(),
     collection('payments').aggregate([{ $match: { payment_status: { $in: ['pending', 'unpaid', 'processing'] } } }, { $group: { _id: null, amount: { $sum: '$amount' }, count: { $sum: 1 } } }]).toArray(),
     collection('refunds').aggregate([{ $match: { refund_status: 'completed' } }, { $group: { _id: null, amount: { $sum: '$amount' }, count: { $sum: 1 } } }]).toArray(),
   ]);
-  const grouped = (rows) => Object.fromEntries(rows.map(({ _id, count }) => [String(_id || 'unknown'), count]));
-  const vehicleStatuses = grouped(fleet);
-  const driverStatuses = grouped(drivers);
   return [
     { name: 'Doanh thu đã thu', value: paid[0]?.amount || 0, unit: 'VND' },
     { name: 'Giao dịch đã thu', value: paid[0]?.count || 0, unit: 'giao dịch' },
     { name: 'Khoản chưa thu', value: unpaid[0]?.amount || 0, unit: 'VND' },
     { name: 'Hoàn tiền đã xử lý', value: refunds[0]?.amount || 0, unit: 'VND' },
     { name: 'Số khoản hoàn tiền', value: refunds[0]?.count || 0, unit: 'khoản' },
-    { name: 'Xe đang hoạt động', value: vehicleStatuses.available || 0, unit: 'xe' },
-    { name: 'Xe đang bảo dưỡng', value: vehicleStatuses.maintenance || 0, unit: 'xe' },
-    { name: 'Tài xế sẵn sàng', value: driverStatuses.available || 0, unit: 'người' },
-    { name: 'Tài xế đang nhận chuyến', value: driverStatuses.busy || 0, unit: 'người' },
   ];
 }
 

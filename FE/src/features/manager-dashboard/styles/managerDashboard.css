@@ -168,3 +168,6 @@
 .manager-footer { padding-top: 3px; }
 @media (max-width: 1100px) { .manager-analytics-grid { grid-template-columns: minmax(0, 1.2fr) minmax(260px, .95fr); }.manager-operations-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .manager-topbar { height: 52px; padding-inline: 10px; }.manager-operations-overview { grid-template-columns: 1fr; }.manager-content { padding: 12px 10px; }.manager-fleet-toolbar { padding: 10px; }.manager-fleet-controls { flex-wrap: wrap; }.manager-fleet-tabs { overflow-x: auto; }.manager-table-pagination { align-items: flex-start; flex-direction: column; }.manager-analytics-grid { grid-template-columns: 1fr; } }
+ .manager-quick-links { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; }
+ .manager-quick-links .manager-button { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
+ .manager-content > .resource-workspace, .manager-content > .acl-panel { margin-bottom: 12px; }
