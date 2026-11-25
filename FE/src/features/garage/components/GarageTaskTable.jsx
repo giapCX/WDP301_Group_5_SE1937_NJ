@@ -1,7 +1,7 @@
 import { Link, useOutletContext } from 'react-router-dom';
-import Icon from '../../bookings/components/BookingIcon';
-import { DispatchStatus } from '../../bookings/components/BookingStatus';
-import { bookingCode, dateTime } from '../../bookings/bookingConstants';
+import Icon from '../../shared/booking/BookingIcon';
+import { DispatchStatus } from '../../shared/booking/BookingStatus';
+import { bookingCode, dateTime } from '../../shared/booking/bookingConstants';
 import { GARAGE_TASKS_PATH, TASK_STATUSES, TASK_TYPES } from '../garageConstants';
 
 function TaskLink({ task }) {

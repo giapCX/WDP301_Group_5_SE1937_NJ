@@ -5,13 +5,13 @@ import DriverSidebar from '../components/DriverSidebar';
 import DriverStats from '../components/DriverStats';
 import DriverTripTable from '../components/DriverTripTable';
 import DriverTripDetail from '../components/DriverTripDetail';
-import BookingStatus from '../../bookings/components/BookingStatus';
-import Icon from '../../bookings/components/BookingIcon';
-import { bookingCode, dateTime } from '../../bookings/bookingConstants';
-import '../../bookings/styles/bookings.css';
+import BookingStatus from '../../shared/booking/BookingStatus';
+import Icon from '../../shared/booking/BookingIcon';
+import { bookingCode, dateTime } from '../../shared/booking/bookingConstants';
+import '../../shared/booking/bookings.css';
 import '../styles/driver.css';
-import DriverWorkflowPanel from '../../trip-workflow/components/DriverWorkflowPanel';
-import '../../trip-workflow/styles/workflow.css';
+import DriverWorkflowPanel from '../workflow/DriverWorkflowPanel';
+import '../../operator/trip-workflow/styles/workflow.css';
 
 export default function DriverDashboardPage() {
   const user = useOutletContext();

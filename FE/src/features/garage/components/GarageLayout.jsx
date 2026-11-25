@@ -1,9 +1,9 @@
 import { Outlet, useLocation, useMatch, useOutletContext } from 'react-router-dom';
 import SignOutButton from '../../auth/components/SignOutButton';
-import Icon from '../../bookings/components/BookingIcon';
+import Icon from '../../shared/booking/BookingIcon';
 import { GARAGE_TASKS_PATH, getGarageTaskView } from '../garageConstants';
 import GarageSidebar from './GarageSidebar';
-import '../../bookings/styles/bookings.css';
+import '../../shared/booking/bookings.css';
 import '../styles/garage.css';
 
 export default function GarageLayout() {
