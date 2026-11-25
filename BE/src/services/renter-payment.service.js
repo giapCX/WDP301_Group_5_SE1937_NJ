@@ -60,11 +60,12 @@ async function recordPayment({ bookingId, attemptId, amount, reference, method, 
     const purpose = attempt.purpose ?? due?.purpose;
     const status = purpose === 'balance' ? 'completed' : 'awaiting_payment';
     if (!purpose || booking.booking_status !== status || (attempt.amount ?? due?.amount) !== amount) return false;
+    if (paid && purpose !== 'balance' && booking.transport_contract && booking.transport_contract.status !== 'signed_pending_payment') return false;
     const update = paid ? {
       $inc: { paid_total: amount },
       $unset: { checkout_attempt: '', checkout_failed_at: '' },
       ...(purpose !== 'balance' && { $set: {
-        booking_status: 'confirmed', ...(purpose === 'deposit' && { deposit_paid_at: new Date() }),
+        booking_status: 'confirmed', ...(booking.transport_contract && { 'transport_contract.status': 'active', 'transport_contract.activatedAt': new Date(), 'transport_contract.paymentReference': reference }), ...(purpose === 'deposit' && { deposit_paid_at: new Date() }),
       } }),
     } : { $set: { checkout_failed_at: new Date() }, $unset: { checkout_attempt: '' } };
     const updated = await Booking.updateOne(
@@ -86,6 +87,7 @@ async function checkout(bookingId, renterId) {
   const booking = await Booking.findOne(filter).lean();
   if (!booking) throw new HttpError(404, 'Không tìm thấy đơn đặt xe.');
   if (booking.cancellation?.status === 'pending') throw new HttpError(409, 'Đơn đang chờ Operator xử lý hủy');
+  if (booking.transport_contract && booking.transport_contract.status === 'proposed') throw new HttpError(409, 'Cần ký hợp đồng trước khi thanh toán');
   const due = paymentDue(booking);
   if (!due) throw new HttpError(409, 'Đơn chưa đến bước thanh toán.');
   const amount = booking.checkout_attempt?.amount ?? due.amount;

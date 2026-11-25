@@ -4,6 +4,14 @@ const requireManager = require('../middleware/require-manager.middleware');
 const { findManagerDashboard } = require('../repositories/manager-dashboard.repository');
 
 const router = express.Router();
+const contractCompany = require('../services/contract-company.service');
+
+router.get('/contract-profile', requireManager(), async (req, res) => {
+  res.set('Cache-Control', 'no-store').json(await contractCompany.managerProfile(req.user.user_id));
+});
+router.put('/contract-profile', requireManager(), async (req, res) => {
+  res.json(await contractCompany.saveManagerProfile(req.user.user_id, req.body));
+});
 
 function parsePeriodNumber(value, field, fallback, minimum, maximum) {
   if (value === undefined) return fallback;
@@ -15,13 +23,11 @@ function parsePeriodNumber(value, field, fallback, minimum, maximum) {
   return parsed;
 }
 
-router.get('/', requireManager, async (request, response) => {
+router.get('/', requireManager(), async (request, response) => {
   const now = new Date();
   const year = parsePeriodNumber(request.query.year, 'year', now.getFullYear(), 2000, now.getFullYear() + 1);
   const month = parsePeriodNumber(request.query.month, 'month', now.getMonth() + 1, 1, 12);
-  const vehicleStatus = typeof request.query.status === 'string' ? request.query.status.trim() : '';
-  const search = typeof request.query.search === 'string' ? request.query.search.trim().slice(0, 100) : '';
-  const dashboard = await findManagerDashboard({ year, month, vehicleStatus, search });
+  const dashboard = await findManagerDashboard({ year, month });
   response.set('Cache-Control', 'no-store').json(dashboard);
 });
 

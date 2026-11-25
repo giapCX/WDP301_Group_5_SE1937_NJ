@@ -1,3 +1,4 @@
+import { ContractDocument } from '../../renter-reservations/components/PassengerContract';
 import BookingAvailableVehicles from './BookingAvailableVehicles';
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
@@ -238,6 +239,7 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                 </div>)}
                 {booking.quote_calculation.inputs?.reason && <p>Lý do điều chỉnh / phụ phí: {booking.quote_calculation.inputs.reason}</p>}
               </section>}
+              {booking.transport_contract && <section className="review-section"><h3>Hợp đồng vận chuyển</h3><p>{({proposed:'Đã gửi đề xuất, chờ Renter ký',signed_pending_payment:'Renter đã ký, chờ thanh toán',active:'Đã kích hoạt sau thanh toán',cancelled:'Đã hủy'})[booking.transport_contract.status]}</p>{booking.transport_contract.document && <details><summary>Xem bản hợp đồng đã ký</summary><ContractDocument document={booking.transport_contract.document} signature={booking.transport_contract}/></details>}</section>}
               {booking.reviewed_at && (
                 <section className="review-section">
                   <h3>Thông tin xử lý</h3>

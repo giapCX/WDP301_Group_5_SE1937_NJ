@@ -12,6 +12,10 @@ router.post('/:id/quote-preview', requireOperator, async (req, res) => {
   res.json({ success: true, data });
 });
 router.get('/quote-rates', requireOperator, (req, res) => res.json({ success: true, data: rates }));
+router.get('/contract-company', requireOperator, async (_req, res) => {
+  const data = await require('../services/contract-company.service').contractCompany();
+  res.set('Cache-Control', 'no-store').json({ success: true, data });
+});
 
 router.get('/', requireOperator, bookingController.getBookings);
 router.get('/:id/available-vehicles', requireOperator, bookingController.getAvailableVehicles);

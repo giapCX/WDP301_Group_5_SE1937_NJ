@@ -37,6 +37,11 @@ module.exports = createModel(
       default: null,
       maxlength: 20,
     },
+    contract_company: {
+      name: { type: String, maxlength: 255 },
+      address: { type: String, maxlength: 255 },
+      taxId: { type: String, maxlength: 255 },
+    },
     password_hash: {
       type: String,
       required: true,

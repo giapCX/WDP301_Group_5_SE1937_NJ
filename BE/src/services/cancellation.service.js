@@ -85,6 +85,10 @@ async function decide(id, input, actor) {
     if (!request || request.id !== input.requestId || request.status !== 'pending') throw new HttpError(409, 'Yêu cầu đã thay đổi hoặc được xử lý');
     await assertCancellable(booking, session);
     await reconcilePaid(booking, session);
+    const remainingPaid = (booking.paid_total || 0) - (booking.refunded_total || 0);
+    if (actor.role_name === 'manager' && request.fee <= remainingPaid) {
+      throw new HttpError(403, 'Manager chỉ xử lý ngoại lệ khi phí hủy vượt số tiền đã thu; yêu cầu thông thường thuộc Operator.');
+    }
     if (booking.vehicle_id) await lockVehicleSchedule(booking.vehicle_id, session);
     if (input.decision === 'approve') {
       // Use the policy snapshot from request time; new payments/refunds change the refundable balance.
@@ -104,6 +108,7 @@ async function decide(id, input, actor) {
       }
       await reserveRefunds(booking, request.refund_amount, request.reason, 'cancellation:' + request.id, actor, session);
       booking.booking_status = 'cancelled';
+      if (booking.transport_contract) { booking.transport_contract = { ...booking.transport_contract, status: 'cancelled', cancelledAt: new Date() }; }
       booking.checkout_attempt = undefined;
       const assignments = await TripAssignment.find({ booking_id: booking.booking_id, assignment_status: { $in: ['assigned', 'accepted', 'in_progress'] } }).session(session).lean();
       await TripAssignment.updateMany({ booking_id: booking.booking_id, assignment_status: { $in: ['assigned', 'accepted'] } }, { $set: { assignment_status: 'cancelled' } }, { session });

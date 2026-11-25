@@ -13,12 +13,11 @@ export default function AdminSidebar({ activeItem, onNavigate }) {
       <nav className="acl-nav" aria-label="Điều hướng quản trị">
         {ADMIN_NAVIGATION.map(({ label, icon, workspace }) => (
           <button key={workspace} type="button" onClick={() => onNavigate(workspace)} className={`acl-nav-item ${activeItem === workspace ? 'is-active' : ''}`}>
-            <AccessControlIcon name={icon} size={17}/><span>{label}</span>{activeItem === label && <i/>}
+            <AccessControlIcon name={icon} size={17}/><span>{label}</span>{activeItem === workspace && <i/>}
           </button>
         ))}
       </nav>
       <div className="acl-sidebar-bottom">
-        <button type="button" className="acl-nav-item"><AccessControlIcon name="settings" size={17}/><span>Cài đặt hệ thống</span></button>
         <div className="acl-support"><span className="support-icon">?</span><span><b>Cần hỗ trợ?</b><small>Liên hệ đội ngũ kỹ thuật</small></span><AccessControlIcon name="chevron" size={14}/></div>
       </div>
     </aside>

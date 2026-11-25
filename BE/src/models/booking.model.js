@@ -128,6 +128,7 @@ module.exports = createModel(
     deposit_due: Number,
     deposit_paid_at: Date,
     paid_total: Number,
+    transport_contract: { type: require('mongoose').Schema.Types.Mixed },
     quote_calculation: {
       inputs: { type: require('mongoose').Schema.Types.Mixed },
       lines: [{ _id: false, label: String, quantity: Number, unit_price: Number, amount: Number }],
