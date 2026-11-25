@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { bookingCode } from '../../bookings/bookingConstants';
-import Icon from '../../bookings/components/BookingIcon';
+import { bookingCode } from '../../shared/booking/bookingConstants';
+import Icon from '../../shared/booking/BookingIcon';
 import GarageTaskFilters from '../components/GarageTaskFilters';
 import GarageTaskStats from '../components/GarageTaskStats';
 import GarageTaskTable from '../components/GarageTaskTable';

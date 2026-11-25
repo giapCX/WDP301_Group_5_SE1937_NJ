@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import SignOutButton from '../../auth/components/SignOutButton';
-import Icon from '../../bookings/components/BookingIcon';
+import Icon from '../../shared/booking/BookingIcon';
 
 export default function DriverSidebar() {
   return (

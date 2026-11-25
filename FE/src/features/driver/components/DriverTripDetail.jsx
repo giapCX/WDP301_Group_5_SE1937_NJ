@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { driverError, fetchDriverTrip } from '../api/driverApi';
-import Icon from '../../bookings/components/BookingIcon';
-import BookingStatus from '../../bookings/components/BookingStatus';
-import { bookingCode, dateTime, BOOKING_STATUSES } from '../../bookings/bookingConstants';
+import Icon from '../../shared/booking/BookingIcon';
+import BookingStatus from '../../shared/booking/BookingStatus';
+import { bookingCode, dateTime, BOOKING_STATUSES } from '../../shared/booking/bookingConstants';
 
 export default function DriverTripDetail({
   id,

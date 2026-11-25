@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { dateTime } from '../../bookings/bookingConstants';
+import { dateTime } from '../../shared/booking/bookingConstants';
 import { createVehicleHandover, garageError, recheckVehicleHandover } from '../api/garageApi';
 
 export default function GarageHandoverActions({ task, onUpdate }) {

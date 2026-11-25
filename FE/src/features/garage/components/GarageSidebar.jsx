@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import Icon from '../../bookings/components/BookingIcon';
-import { DispatchSidebar } from '../../bookings/components/BookingSidebar';
+import Icon from '../../shared/booking/BookingIcon';
+import { DispatchSidebar } from '../../shared/booking/BookingSidebar';
 import { GARAGE_TASKS_PATH, GARAGE_TASK_VIEWS } from '../garageConstants';
 
 export default function GarageSidebar({ activeView }) {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import useOperations from '../hooks/useOperations';
 import { ActionForm, History, Feedback, labels } from './OperationShared';
-import { money } from '../../bookings/bookingConstants';
+import { money } from '../../shared/booking/bookingConstants';
 export const chargeTypes = { overtime: 'Quá giờ', extra_km: 'Vượt km', waiting: 'Chờ khách', other: 'Khác' };
 export function ChargeFields({ record = {} }) { return <><div className="op-grid"><label>Loại phí<select name="type" defaultValue={record.type || 'overtime'}>{Object.entries(chargeTypes).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
   <label>Số lượng<input name="quantity" type="number" required min="0.001" step="0.001" defaultValue={record.quantity || 1}/></label>

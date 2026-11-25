@@ -1,9 +1,9 @@
 import { useOutletContext } from 'react-router-dom';
-import BookingSidebar from '../../bookings/components/BookingSidebar';
-import OperatorTopbar from '../../../pages/operator/OperatorTopbar';
+import BookingSidebar from '../../shared/booking/BookingSidebar';
+import OperatorTopbar from '../../operator/OperatorTopbar';
 import ManagerSidebar from '../../manager-dashboard/components/ManagerSidebar';
 import SignOutButton from '../../auth/components/SignOutButton';
-import '../../bookings/styles/bookings.css';
+import '../../shared/booking/bookings.css';
 import '../../manager-dashboard/styles/managerDashboard.css';
 import '../styles/operations.css';
 export default function OperationsLayout({ manager, title, children }) {

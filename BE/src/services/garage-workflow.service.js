@@ -21,6 +21,7 @@ function assertOdometer(odometer) {
 }
 
 async function saveTripInspection(input, bookingId, vehicleId, staffId) {
+  // Luu ket qua kiem tra ban giao hoac tiep nhan xe gan voi chuyen di.
   const { result, odometer, inspection_type: type } = input;
   const returning = type === 'return';
   const evidenceRequired = !returning || result !== 'passed';
@@ -97,6 +98,7 @@ async function inspectionPhoto(id, index) {
 }
 
 async function recordInspection(input, staffId) {
+  // Dieu phoi viec ghi nhan bien ban kiem tra xe cua Gara.
   const type = input.inspection_type;
   if (!['handover', 'return', 'periodic'].includes(type)) throw new HttpError(400, 'Loại kiểm tra không hợp lệ');
   const vehicleId = positiveId(input.vehicle_id, 'vehicle_id');

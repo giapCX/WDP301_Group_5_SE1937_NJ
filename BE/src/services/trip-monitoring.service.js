@@ -12,6 +12,7 @@ function positive(value, name) {
   return Number(value);
 }
 async function list(query = {}) {
+  // Kiem tra bo loc va phan trang truoc khi lay danh sach theo doi chuyen.
   const page = query.page === undefined ? 1 : positive(query.page, 'page');
   const limit = query.limit === undefined ? 10 : positive(query.limit, 'limit');
   const status = query.status === undefined ? 'in_progress' : query.status;
@@ -22,6 +23,7 @@ async function list(query = {}) {
   return repository.list({ status, page, limit });
 }
 async function detail(value) {
+  // Lay chi tiet booking, phan cong va tien do hanh trinh theo booking_id.
   const result = await repository.detail(positive(value, 'booking_id'));
   if (!result) throw new HttpError(404, 'Không tìm thấy chuyến đi');
   return result;

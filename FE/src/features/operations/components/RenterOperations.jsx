@@ -7,7 +7,7 @@ import OperatorCancellation from './OperatorCancellation';
 import IncidentCard from './IncidentCard';
 import IncidentReportForm from './IncidentReportForm';
 import RenterChangeForm from './RenterChangeForm';
-import { dateTime, money } from '../../bookings/bookingConstants';
+import { dateTime, money } from '../../shared/booking/bookingConstants';
 import '../styles/operations.css';
 export default function RenterOperations({ booking, onUpdated }) {
   const [tab, setTab] = useState('changes');

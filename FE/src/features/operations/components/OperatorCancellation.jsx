@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import useOperations from '../hooks/useOperations';
 import { ActionForm, Feedback } from './OperationShared';
-import { money } from '../../bookings/bookingConstants';
+import { money } from '../../shared/booking/bookingConstants';
 export default function OperatorCancellation({ id, renter, onDone }) {
   const [open, setOpen] = useState(false);
   const base = renter ? `/renter/bookings/${id}` : `/operator/operations/bookings/${id}`;

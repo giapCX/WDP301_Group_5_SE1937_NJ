@@ -1,7 +1,7 @@
 import IncidentDriverReplacement from './IncidentDriverReplacement';
 import { Link } from 'react-router-dom';
 import { ActionForm, History, labels } from './OperationShared';
-import { dateTime, money } from '../../bookings/bookingConstants';
+import { dateTime, money } from '../../shared/booking/bookingConstants';
 const actionLabels = { support: 'Hỗ trợ khách', compensation: 'Bồi thường / hoàn tiền', replace_vehicle: 'Đổi xe', replace_driver: 'Đổi tài xế', change_itinerary: 'Điều chỉnh lịch trình' };
 export default function IncidentCard({ record, manager, renter, onDone }) {
   const proposal = record.resolution_approval;
