@@ -8,8 +8,8 @@ import { getSession } from '../../auth/api/authApi.js';
 import SignOutButton from '../../auth/components/SignOutButton.js';
 import { dashboardForRole } from '../../auth/dashboardRoutes.js';
 import useHomeResource from '../hooks/useHomeResource.js';
-import { destinations, hotline, services, standards } from '../homeContent.js';
-import { heroPhoto, routePhoto } from '../homePhotos.js';
+import { destinations, heroContent, hotline, services, standards } from '../homeContent.js';
+import { getPrimaryVehiclePhoto, getVehicleReferencePhoto } from '../../shared/vehicle/vehiclePhotos.js';
 import '../styles/homepage.css';
 
 const nav = [['Trang chủ', '#trang-chu'], ['Dịch vụ', '#dich-vu'], ['Đội xe', '#doi-xe'],
@@ -50,6 +50,18 @@ export default function VietTourHomePage() {
   const [query, setQuery] = useState(null);
   const searching = Boolean(query?.startAt);
   const vehicles = useHomeResource(loadVehicles, query);
+  const heroSelection = (vehicles.data ?? []).map((vehicle) => ({
+    vehicle,
+    photo: getPrimaryVehiclePhoto(vehicle),
+  })).find(({ photo }) => photo);
+  const heroVehicle = heroSelection?.vehicle;
+  const heroPhoto = heroSelection?.photo || getVehicleReferencePhoto();
+  const heroImageAlt = heroPhoto?.isReference
+    ? heroContent.vehiclePhotoAlt
+    : [heroVehicle?.brand, heroVehicle?.model].filter(Boolean).join(' ');
+  const heroPhotoLabel = heroPhoto?.isReference
+    ? heroContent.referencePhotoLabel
+    : heroContent.vehiclePhotoLabel;
   const reviews = useHomeResource(loadReviews);
   const selectedSeats = query?.minSeats || 7;
   const session = useHomeResource(getSession);
@@ -91,13 +103,21 @@ export default function VietTourHomePage() {
       ),
     ),
     h('main', null,
-      h('section', { id: 'trang-chu', className: 'vt-h-hero', style: { '--vt-h-photo': 'url("' + heroPhoto + '")' } },
-        h('div', { className: 'vt-h-wrap' },
-          h('p', { className: 'vt-h-hero-label' }, 'Xe du lịch VietTour'),
-          h('h1', null, 'Trải nghiệm du lịch trọn vẹn cùng xe đời mới & tài xế riêng tận tâm'),
-          h('p', null, 'Chọn xe cho chuyến đưa đón khứ hồi hoặc hành trình nhiều điểm dừng.'),
-          h('div', { className: 'vt-h-benefits' }, standards.map(([icon, title]) =>
-            h('span', { key: title }, h(Icon, { name: icon }), title))),
+      h('section', { id: 'trang-chu', className: 'vt-h-hero' },
+        h('div', { className: 'vt-h-wrap vt-h-hero-layout' },
+          h('div', { className: 'vt-h-hero-copy' },
+            h('p', { className: 'vt-h-hero-label' }, heroContent.eyebrow),
+            h('h1', null, heroContent.title),
+            h('p', null, heroContent.description),
+            h('div', { className: 'vt-h-hero-actions' },
+              h('a', { className: 'vt-h-button', href: '#tim-xe' }, heroContent.primaryAction),
+              h('a', { className: 'vt-h-outline', href: '#dich-vu' }, heroContent.secondaryAction)),
+            h('div', { className: 'vt-h-hero-proof' }, standards.slice(0, 3).map(([icon, title]) =>
+              h('span', { key: title }, h(Icon, { name: icon }), title))),
+          ),
+          h('figure', { className: 'vt-h-hero-visual' },
+            h('img', { src: heroPhoto?.src, alt: heroImageAlt, loading: 'eager' }),
+            h('figcaption', null, h(Icon, { name: 'verified_user' }), heroPhotoLabel)),
         ),
       ),
       h(BookingSearch, { mode, onModeChange: setMode, destination, onDestinationChange: setDestination, onSearch: search }),
@@ -146,7 +166,6 @@ export default function VietTourHomePage() {
               onClick: () => { setDestination(name); showSearch('roundtrip'); },
             }, name), h('p', null, description))))),
         ),
-        h('img', { src: routePhoto, alt: 'Bản đồ minh họa hành trình du lịch', loading: 'lazy' }),
       ),
       h('section', { className: 'vt-h-wrap vt-h-section', id: 'danh-gia' },
         h('h2', null, 'Cảm nhận từ khách hàng'),

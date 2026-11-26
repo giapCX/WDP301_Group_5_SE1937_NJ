@@ -1,34 +1,47 @@
 import { createElement as h, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from './HomeIcon.js';
+import { getPrimaryVehiclePhoto } from '../../shared/vehicle/vehiclePhotos.js';
+import { vehiclePhotoContent } from '../homeContent.js';
 
 const currency = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
-function VehiclePhoto({ name, src }) {
+function VehiclePhoto({ photo, name, seatCount }) {
+  const [usingFallback, setUsingFallback] = useState(false);
   const [failed, setFailed] = useState(false);
-  return h('figure', null,
-    !failed
-      ? h('img', { src, alt: name, loading: 'lazy', onError: () => setFailed(true) })
-      : h('span', { className: 'vt-h-car-no-photo' }, 'Chưa có ảnh xe'),
-  );
-}
+  const displayedPhoto = usingFallback ? photo?.fallback : photo;
 
-function photoUrls(value) {
-  return Array.isArray(value) ? value.filter((src) => typeof src === 'string' && /^https?:\/\/\S+$/i.test(src)) : [];
+  if (!displayedPhoto || failed) {
+    return h('figure', { className: 'vt-h-car-photo vt-h-car-photo--empty' },
+      h(Icon, { name: 'directions_car' }),
+      h('figcaption', null, vehiclePhotoContent.unavailable));
+  }
+
+  function handleImageError() {
+    if (!usingFallback && photo.fallback) {
+      setUsingFallback(true);
+      return;
+    }
+    setFailed(true);
+  }
+
+  return h('figure', { className: 'vt-h-car-photo' },
+    h('img', {
+      src: displayedPhoto.src,
+      alt: displayedPhoto.isReference ? vehiclePhotoContent.referenceAlt(seatCount) : name,
+      loading: 'lazy',
+      onError: handleImageError,
+    }),
+    displayedPhoto.isReference && h('figcaption', null, vehiclePhotoContent.referenceNotice));
 }
 
 function VehicleGallery({ vehicle, name }) {
-  const actual = new Set(photoUrls(vehicle.photos));
-  const urls = [...new Set([...actual, ...photoUrls(vehicle.illustration_photos)])].slice(0, 4);
-  if (!urls.length) return h('p', { className: 'vt-h-gallery-label' }, 'Chưa có ảnh xe.');
-
   return h('div', { className: 'vt-h-gallery' },
-    h('div', { className: 'vt-h-vehicle-photos' }, urls.map((src, index) =>
-      h(VehiclePhoto, { key: src, src,
-        name: name + ' – ảnh ' + (index + 1) + (actual.has(src) ? '' : ' (minh họa)') }))),
-    urls.some((src) => !actual.has(src)) && h('p', { className: 'vt-h-gallery-label' },
-      urls.some((src) => actual.has(src)) ? 'Bộ ảnh có ảnh minh họa' : 'Ảnh minh họa theo mẫu xe'),
-  );
+    h(VehiclePhoto, {
+      photo: getPrimaryVehiclePhoto(vehicle),
+      name,
+      seatCount: vehicle.seats ?? vehicle.seat_count,
+    }));
 }
 
 export default function VehicleGrid({ vehicles, hotline }) {
@@ -41,12 +54,13 @@ export default function VehicleGrid({ vehicles, hotline }) {
   );
   return h('div', { className: 'vt-h-vehicle-grid' }, vehicles.map((vehicle) => {
       const name = [vehicle.brand, vehicle.model].filter(Boolean).join(' ');
+      const seatCount = vehicle.seats ?? vehicle.seat_count;
       return h('article', { className: 'vt-h-car', key: vehicle._id },
         h(VehicleGallery, { vehicle, name }),
         h('div', { className: 'vt-h-car-content' },
           h('h3', null, name),
           h('div', { className: 'vt-h-car-specs' },
-            h('span', null, h(Icon, { name: 'groups' }), vehicle.seats, ' chỗ'),
+            h('span', null, h(Icon, { name: 'groups' }), seatCount, ' chỗ'),
             vehicle.vehicle_type && h('span', null, h(Icon, { name: 'directions_car' }), vehicle.vehicle_type),
             vehicle.manufacture_year && h('span', null, h(Icon, { name: 'calendar_month' }), vehicle.manufacture_year),
           ),

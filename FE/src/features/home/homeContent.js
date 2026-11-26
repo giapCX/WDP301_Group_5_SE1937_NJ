@@ -1,3 +1,14 @@
+export const heroContent = Object.freeze({
+  eyebrow: 'VietTour Mobility · Xe riêng có tài xế',
+  title: 'Đi xa an tâm, mỗi chuyến đi theo cách của bạn',
+  description: 'Từ chuyến đưa đón đúng giờ đến hành trình nhiều điểm dừng, VietTour giúp bạn chủ động chọn xe, lịch trình và nhận báo giá trước khi xác nhận.',
+  primaryAction: 'Tìm xe phù hợp',
+  secondaryAction: 'Khám phá dịch vụ',
+  vehiclePhotoAlt: 'Ảnh chụp xe du lịch trong đội xe',
+  referencePhotoLabel: 'Ảnh thật tham khảo theo hạng xe',
+  vehiclePhotoLabel: 'Ảnh xe từ dữ liệu phương tiện',
+});
+
 export const services = [
   {
     id: 'roundtrip', icon: 'sync_alt', title: 'Đưa đón khứ hồi',
@@ -28,3 +39,9 @@ export const destinations = [
   { name: 'Cần Thơ', description: 'Khám phá miền sông nước theo lịch trình riêng.' },
 ];
 export const hotline = { href: 'tel:19006886', label: '1900 6886' };
+
+export const vehiclePhotoContent = Object.freeze({
+  referenceAlt: (seatCount) => `Ảnh chụp xe tham khảo hạng ${seatCount} chỗ`,
+  referenceNotice: 'Ảnh thật tham khảo theo hạng xe; chưa xác nhận đúng mẫu xe này.',
+  unavailable: 'Chưa có ảnh xe',
+});

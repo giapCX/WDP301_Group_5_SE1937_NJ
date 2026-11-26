@@ -1,1 +1,3 @@
-export const loginPhoto = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBMT-9LHyTi6sVXvZmQnX_bqW6DoG3ZksyEd8see0MeAVdHr9qEvWMk9e3LrMCFuVR0kXC_3y6D_ZV8ybxtIzDVqzB_6jNEoNC2m7idE2I89dW61ACjEAbqqy0eIGZE8-0-R2xs7Ybn-hWCrsTXV09im2o_M4KedTAFH75fcNYH3OEePgzYADj5SFFiza7uHbF5Voo0jx8Z491gklo-3W6A7BdjYUl2xIIgFeQWU34';
+import vehiclePhoto from '../../../assets/images/vehicles/suv-palisade.jpg';
+
+export const loginPhoto = vehiclePhoto;

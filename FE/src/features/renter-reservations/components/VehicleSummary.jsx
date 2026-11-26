@@ -4,7 +4,7 @@ import { money, vehicleName } from '../reservationFormat.js';
 export default function VehicleSummary({ vehicle }) {
   const [failed, setFailed] = useState(false);
   const name = vehicleName(vehicle);
-  const photo = [vehicle.photos, vehicle.illustration_photos].flat()
+  const photo = (Array.isArray(vehicle.photos) ? vehicle.photos : [])
     .find((value) => typeof value === 'string' && /^https?:\/\//i.test(value));
 
   return (

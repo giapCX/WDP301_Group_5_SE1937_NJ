@@ -10,8 +10,7 @@ export default function BookingCard({ booking, selected, onSelect }) {
   const status = booking.booking_status;
   const service = services.find(({ value }) => value === booking.service_type);
   const vehicle = booking.vehicle;
-  const photo = [vehicle?.photos, vehicle?.illustration_photos].flat()
-    .find((value) => typeof value === 'string' && /^https?:\/\//i.test(value));
+  const photo = (Array.isArray(vehicle?.photos) ? vehicle.photos : []).find((value) => typeof value === 'string' && /^https?:\/\/\S+$/i.test(value));
 
   return (
     <article className="rv-panel rv-booking" data-selected={selected}>

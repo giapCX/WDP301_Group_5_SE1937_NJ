@@ -38,7 +38,7 @@ export function LoginIntro() {
     h('h1', null, 'Khởi đầu hành trình tinh tế & an tâm'),
     h('p', null, 'Trải nghiệm dịch vụ xe riêng có tài xế, đón đúng giờ và xem giá trước khi đặt chuyến.'),
     h('figure', null,
-      h('img', { src: loginPhoto, alt: 'Tài xế đón khách bên xe limousine VietTour tại khu nghỉ dưỡng' }),
+      h('img', { src: loginPhoto, alt: 'Ảnh chụp xe SUV du lịch' }),
       h('figcaption', null, h(Icon, { name: 'verified_user' }), 'Xe riêng có tài xế'),
     ),
     h('div', { className: 'vt-login-intro-details' },
