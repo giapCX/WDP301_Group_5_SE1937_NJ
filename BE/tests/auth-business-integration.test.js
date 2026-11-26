@@ -8,17 +8,15 @@ const chargeRoutes = require('../src/routes/additional-charge.routes');
 const historyRoutes = require('../src/routes/renter-booking-change.routes');
 const overviewRoutes = require('../src/routes/operator-overview.routes');
 const errors = require('../middlewares/error.middleware');
+const { connectTestDatabase } = require('./helpers/test-database');
 
 test('merged session auth interoperates with Operator and Renter business APIs', async () => {
   const dbName = `merged_auth_test_${process.pid}_${Date.now()}`;
-  await mongoose.connect(
-    process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27018/?replicaSet=rentalLocal',
-    { dbName, autoIndex: false },
-  );
+  await connectTestDatabase(mongoose, dbName, { autoIndex: false });
   let server;
   try {
     for (const [name, rows] of Object.entries(data))
-      await mongoose.connection.db.collection(name).insertMany(rows);
+      if (rows.length) await mongoose.connection.db.collection(name).insertMany(rows);
     const app = express();
     app.use(express.json());
     app.use('/api/auth', router);
@@ -61,7 +59,8 @@ test('merged session auth interoperates with Operator and Renter business APIs',
       headers: { Cookie: operator.cookie },
     });
     assert.equal(vehicles.status, 200);
-    assert.equal((await vehicles.json()).data.items.length, 3);
+    assert.deepEqual((await vehicles.json()).data.items.map(({ vehicle_id }) => vehicle_id),
+      data.vehicles.filter(({ status }) => status === 'available').map(({ vehicle_id }) => vehicle_id));
     assert.equal((await fetch(base + '/api/operator/dashboard')).status, 401);
     const renter = await login('demo8@example.com');
     assert.equal(

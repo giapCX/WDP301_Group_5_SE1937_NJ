@@ -2,7 +2,6 @@ export const ADMIN_NAVIGATION = [
   { label: 'Tổng quan quản trị', icon: 'grid', workspace: 'dashboard' },
   { label: 'Quản lý người dùng', icon: 'users', workspace: 'users' },
   { label: 'Vai trò & quyền', icon: 'shield', workspace: 'permissions' },
-  { label: 'Nhật ký', icon: 'lock', workspace: 'audit' },
 ];
 
 export const PERMISSION_GROUPS = [
@@ -23,7 +22,6 @@ export const PERMISSION_GROUPS = [
       { id: 'vehicle.read', label: 'Xem hồ sơ và tình trạng phương tiện' },
       { id: 'vehicle.write', label: 'Đăng ký xe mới và cập nhật hồ sơ xe' },
       { id: 'vehicle.review', label: 'Duyệt hồ sơ xe và xác nhận kiểm định' },
-      { id: 'maintenance.review', label: 'Duyệt phiếu bảo dưỡng ảnh hưởng an toàn' },
       { id: 'listing.manage', label: 'Quản lý danh sách xe cho thuê' },
       { id: 'garage.manage', label: 'Tiếp nhận và bàn giao xe tại gara' },
     ],
@@ -43,7 +41,6 @@ export const PERMISSION_GROUPS = [
     permissions: [
       { id: 'pricing.manage', label: 'Tạo và cập nhật bảng giá dịch vụ' },
       { id: 'policy.manage', label: 'Quản lý chính sách hủy và phụ phí' },
-      { id: 'promotion.manage', label: 'Tạo và quản lý chương trình khuyến mãi' },
     ],
   },
   {

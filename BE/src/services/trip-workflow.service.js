@@ -10,6 +10,9 @@ const { positiveId: positive, nextId, retryDuplicateId } = require('../utils/num
 const addTripHistory = require('../utils/trip-history');
 const handovers = require('./vehicle-handover.service');
 const { openMaintenance, openForDamage, releaseVehicleIfReady } = require('./garage-maintenance.service');
+const { SUPPORTED_VEHICLE_SEAT_COUNTS, supportsVehicleSeatCount } = require('../config/vehicle.constants');
+const { TRIP_WORKFLOW_MESSAGES } = require('../config/workflow.constants');
+const { isPickupConfirmationAvailable } = require('../utils/pickup-confirmation');
 
 const ACTIVE_ASSIGNMENTS = ['assigned', 'accepted', 'in_progress'];
 const RESERVED_VEHICLE_STATUSES = ['awaiting_payment', 'confirmed', 'in_progress'];
@@ -48,7 +51,7 @@ async function assertTripVehicleSeats(booking, vehicle, session = null) {
   const previousVehicle = dispatchSeatCount(booking) == null && booking.vehicle_id != null
     ? await Vehicle.findOne({ vehicle_id: booking.vehicle_id }).select('seat_count').session(session).lean() : null;
   const seats = requestedSeats({ ...booking, requested_seat_count: dispatchSeatCount(booking) ?? previousVehicle?.seat_count });
-  if (vehicle.seat_count < seats) throw new HttpError(409, `Khách yêu cầu xe từ ${seats} chỗ.`);
+  if (!supportsVehicleSeatCount(vehicle.seat_count) || vehicle.seat_count < seats) throw new HttpError(409, `Khách yêu cầu xe từ ${seats} chỗ.`);
   return seats;
 }
 function vehicleCanDispatch(vehicle) {
@@ -108,7 +111,7 @@ async function dispatchData() {
     .populate({ path: 'vehicle', select: 'vehicle_id plate_number brand model seat_count status -_id' }).lean();
   const [drivers, vehicles, reservations, maintenanceIds, inspections] = await Promise.all([
     DriverProfile.find().populate({ path: 'user', select: 'full_name phone status -_id' }).lean(),
-    Vehicle.find().select('vehicle_id plate_number brand model seat_count status approval_status -_id').lean(),
+    Vehicle.find({ seat_count: { $in: SUPPORTED_VEHICLE_SEAT_COUNTS } }).select('vehicle_id plate_number brand model seat_count status approval_status -_id').lean(),
     Booking.find({ vehicle_id: { $ne: null }, booking_status: { $in: RESERVED_VEHICLE_STATUSES } })
       .select('booking_id vehicle_id pickup_time estimated_end_time -_id').lean(),
     MaintenanceRecord.distinct('vehicle_id', openMaintenance()),
@@ -318,6 +321,10 @@ async function mutateDriver(bookingId, actorId, action, input = {}) {
     if (kind === 'arrived_pickup') workflow.stage = 'at_pickup';
     if (kind === 'picked_up') {
       if (!['to_pickup', 'at_pickup'].includes(workflow.stage)) throw new HttpError(409, 'Chưa thể xác nhận đón khách');
+      const booking = await Booking.findOne({ booking_id: id }).select('pickup_time').lean();
+      if (!isPickupConfirmationAvailable(booking?.pickup_time, now())) {
+        throw new HttpError(409, TRIP_WORKFLOW_MESSAGES.PICKUP_CONFIRMATION_WINDOW);
+      }
       workflow.stage = workflow.service_type === 'tour' ? 'tour' : 'outbound'; workflow.started_at ||= now(); workflow.picked_up_at = now(); await Booking.updateOne({ booking_id: id }, { $set: { booking_status: 'in_progress' } }); await Vehicle.updateOne({ vehicle_id: workflow.vehicle_id }, { $set: { status: 'in_use' } });
     }
     if (kind === 'outbound_completed') {
@@ -328,7 +335,9 @@ async function mutateDriver(bookingId, actorId, action, input = {}) {
     }
     if (kind === 'return_pickup') {
       if (workflow.service_type !== 'round_trip' || workflow.stage !== 'return_waiting') throw new HttpError(409, 'Chưa đến bước đón lượt về');
-      if (workflow.return_pickup_time && now() < workflow.return_pickup_time) throw new HttpError(409, 'Chưa đến giờ đón khách lượt về');
+      if (!isPickupConfirmationAvailable(workflow.return_pickup_time, now())) {
+        throw new HttpError(409, TRIP_WORKFLOW_MESSAGES.PICKUP_CONFIRMATION_WINDOW);
+      }
       workflow.stage = 'return';
       workflow.return_started_at = now();
     }
@@ -390,12 +399,21 @@ async function driverTrips(userId) {
   const bookings = await Booking.find({ booking_id: { $in: ids } }).populate({ path: 'vehicle', select: 'plate_number brand model -_id' }).populate({ path: 'renter', select: 'full_name phone -_id' }).lean();
   const stops = await TripStop.find({ booking_id: { $in: ids } }).sort({ booking_id: 1, stop_order: 1 }).lean();
   const records = await handovers.driverRecords(workflows.map((workflow) => workflow.handover_inspection_id), profile.driver_id);
-  return workflows.map((workflow) => ({
-    workflow,
-    booking: bookings.find((booking) => booking.booking_id === workflow.booking_id),
-    stops: stops.filter((stop) => stop.booking_id === workflow.booking_id),
-    handover: records.get(workflow.handover_inspection_id),
-  }));
+  return workflows.map((workflow) => {
+    const booking = bookings.find((item) => item.booking_id === workflow.booking_id);
+    const confirmationTime = now();
+    return {
+      workflow: {
+        ...workflow,
+        can_confirm_pickup: isPickupConfirmationAvailable(booking?.pickup_time, confirmationTime),
+        can_confirm_return_pickup: isPickupConfirmationAvailable(workflow.return_pickup_time, confirmationTime),
+        pickup_confirmation_message: TRIP_WORKFLOW_MESSAGES.PICKUP_CONFIRMATION_WINDOW,
+      },
+      booking,
+      stops: stops.filter((stop) => stop.booking_id === workflow.booking_id),
+      handover: records.get(workflow.handover_inspection_id),
+    };
+  });
 }
 async function reportIncident(bookingId, driverUserId, input) {
   // Ghi nhan su co, xe hong hoac yeu cau doi diem dung de Operator xu ly.
@@ -431,7 +449,7 @@ async function reportIncident(bookingId, driverUserId, input) {
       const bookingCode = 'VT-' + String(booking_id).padStart(6, '0');
       await openForDamage({
         vehicleId: workflow.vehicle_id, staffId: driverUserId,
-        description: `Báo hỏng trong chuyến ${bookingCode}: ${description}`, requiresApproval: true,
+        description: `Báo hỏng trong chuyến ${bookingCode}: ${description}`,
       }, session);
     } else {
       workflow.stage = kind === 'customer_route_change' ? 'routed_to_booking_changes' : 'incident_open';

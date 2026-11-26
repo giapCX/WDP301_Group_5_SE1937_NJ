@@ -11,14 +11,13 @@ import ContractCompanyProfile from '../components/ContractCompanyProfile';
 import ResourceWorkspace from '../../management/components/ResourceWorkspace.jsx';
 import '../styles/managerDashboard.css';
 
-const CONFIGURATION_VIEWS = new Set(['pricing', 'policies', 'promotions', 'audit', 'contract-profile']);
+const CONFIGURATION_VIEWS = new Set(['pricing', 'policies', 'audit', 'contract-profile']);
 const VIEW_CONTENT = {
   'contract-profile': { eyebrow: 'THÔNG TIN BÊN VẬN TẢI', title: 'Hồ sơ hợp đồng', description: 'Thông tin đơn vị và Manager đại diện được tự điền vào hợp đồng.' },
   dashboard: { eyebrow: 'TỔNG QUAN DỊCH VỤ', title: 'Tổng quan & Báo cáo', description: 'Theo dõi booking, khoản thu và hoàn tiền trong hệ thống.' },
   revenue: { eyebrow: 'DOANH THU & TÀI CHÍNH', title: 'Doanh thu & Tài chính', description: 'Đối chiếu khoản thu đã thanh toán, booking và hoàn tiền.' },
   pricing: { eyebrow: 'CẤU HÌNH DỊCH VỤ', title: 'Bảng giá dịch vụ', description: 'Quản lý quy tắc giá dịch vụ đã cấu hình trong hệ thống.' },
   policies: { eyebrow: 'CHÍNH SÁCH DỊCH VỤ', title: 'Chính sách dịch vụ', description: 'Quản lý chính sách hủy chuyến và các khoản phụ phí.' },
-  promotions: { eyebrow: 'ƯU ĐÃI DỊCH VỤ', title: 'Khuyến mãi', description: 'Tạo và quản lý chương trình ưu đãi cho khách thuê.' },
   audit: { eyebrow: 'KIỂM SOÁT VẬN HÀNH', title: 'Nhật ký hoạt động', description: 'Tra cứu thay đổi cấu hình do các actor thực hiện.' },
 };
 
@@ -27,7 +26,6 @@ function ManagerQuickLinks() {
     ['/manager/operation-approvals?tab=cancellations', 'Ngoại lệ hủy chuyến'],
     ['/manager/operation-approvals?tab=incidents', 'Duyệt phương án sự cố'],
     ['/manager/operation-approvals?tab=refunds', 'Duyệt và hoàn tiền mô phỏng'],
-    ['/manager/maintenance-approvals', 'Duyệt bảo dưỡng ảnh hưởng an toàn'],
   ];
   return <section className="manager-panel" aria-labelledby="manager-queue-heading">
     <div className="manager-panel-heading"><div><h2 id="manager-queue-heading">Hàng đợi quyết định</h2><p>Chỉ xử lý ngoại lệ cần Manager phê duyệt.</p></div></div>

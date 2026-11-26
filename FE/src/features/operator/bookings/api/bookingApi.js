@@ -54,6 +54,6 @@ export function getBookingError(error) {
 export async function previewBookingQuote(id, calculation) {
   return (await apiClient.post(`/operator/bookings/${id}/quote-preview`, { calculation })).data.data;
 }
-export async function fetchQuoteRates() {
-  return (await apiClient.get('/operator/bookings/quote-rates')).data.data;
+export async function fetchQuotePricingRule(bookingId) {
+  return (await apiClient.get(`/operator/bookings/quote-pricing/${bookingId}`)).data.data;
 }

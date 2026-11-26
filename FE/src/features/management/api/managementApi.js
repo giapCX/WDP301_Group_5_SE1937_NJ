@@ -15,3 +15,8 @@ export async function createManagementResource(resource, payload, actor = 'admin
 export async function updateManagementResource(resource, id, payload, actor = 'admin') {
   return apiClient.patch(endpoint(actor, `${resource}/${id}`), payload);
 }
+
+export async function listDriverCandidates(actor = 'operator', signal) {
+  const { data } = await apiClient.get(`/${actor}/management/driver-candidates`, { signal });
+  return data.items;
+}

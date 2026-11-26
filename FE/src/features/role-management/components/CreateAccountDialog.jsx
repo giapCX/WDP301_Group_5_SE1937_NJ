@@ -23,7 +23,7 @@ export default function CreateAccountDialog({ roles, onClose, onSubmit }) {
         <label>Họ và tên<input name="full_name" value={form.full_name} onChange={setField} maxLength={120} required/></label>
         <label>Email<input name="email" type="email" value={form.email} onChange={setField} maxLength={150} required/></label>
         <label>Số điện thoại<input name="phone" type="tel" value={form.phone} onChange={setField} maxLength={20}/></label>
-        <label>Vai trò<select name="role_id" value={form.role_id} onChange={setField} required><option value="">Chọn vai trò</option>{roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}</select></label>
+        <label>Vai trò<select name="role_id" value={form.role_id} onChange={setField} required><option value="">Chọn vai trò</option>{roles.filter((role) => role.role_name !== 'renter').map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}</select></label>
         <label>Mật khẩu khởi tạo<input name="password" type="password" value={form.password} onChange={setField} minLength={12} maxLength={128} required/></label>
         <div className="modal-actions"><button type="button" className="button button-outline" onClick={onClose}>Hủy</button><button type="submit" className="button button-primary" disabled={saving}>{saving ? 'Đang tạo…' : 'Tạo tài khoản'}</button></div>
       </form>

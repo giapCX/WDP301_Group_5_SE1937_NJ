@@ -1,4 +1,5 @@
 const { createModel } = require('./model-factory');
+const { USER_STATUSES } = require('../config/workflow.constants');
 
 module.exports = createModel(
   'User',
@@ -50,7 +51,7 @@ module.exports = createModel(
     status: {
       type: String,
       required: true,
-      maxlength: 20,
+      enum: USER_STATUSES,
     },
     created_at: {
       type: Date,

@@ -1,8 +1,9 @@
 const { randomUUID } = require('node:crypto');
-const { Booking, Promotion, BookingPromotion } = require('../models');
+const { Booking } = require('../models');
 const { runInTransaction, lockVehicleSchedule } = require('../repositories/booking.repository');
 const { findAssignableVehicle } = require('../repositories/renter-reservation.repository');
 const HttpError = require('../utils/http-error');
+const pricingRules = require('../repositories/pricing-rule.repository');
 
 const { calculateQuote } = require('./quote-calculator');
 
@@ -31,7 +32,8 @@ async function previewQuote(bookingId, input) {
   if (!booking.quote_requested_at || !['pending', 'quoted'].includes(booking.booking_status)) {
     throw new HttpError(409, 'Booking không ở bước xem xét báo giá.');
   }
-  return calculateQuote(booking, input?.calculation);
+  const rule = await pricingRules.findActive(booking);
+  return calculateQuote(booking, input?.calculation, rule);
 }
 
 async function sendQuote(bookingId, input, operatorId) {
@@ -42,31 +44,26 @@ async function sendQuote(bookingId, input, operatorId) {
   }
 
   if (booking.cancellation?.status === 'pending') throw new HttpError(409, 'Đơn đang chờ xử lý hủy');
-  const calculation = calculateQuote(booking, input?.calculation);
+  const rule = await pricingRules.findActive(booking, input?.pricing_rule);
+  const calculation = calculateQuote(booking, input?.calculation, rule);
   const subtotal = calculation.subtotal;
   const transportContract = await require('./passenger-contract.service').proposal(input?.contract, booking, operatorId);
   transportContract.stops = await require('../models').TripStop.find({ booking_id: bookingId }).sort({ stop_order: 1 }).select('location arrival_at departure_at -_id').lean();
   const deposit = readAmount(input?.deposit, 'Tiền đặt cọc');
   await findVehicle(booking, null);
   if (!(await require('../repositories/booking-readiness.repository').availableDrivers(booking)).length) throw new HttpError(409, 'Chưa có tài xế đủ điều kiện và còn lịch để phục vụ; cần đề xuất lịch khác.');
-  const promotion = booking.requested_promotion_code ? await Promotion.findOne({
-    code: booking.requested_promotion_code, status: 'active', valid_until: { $gte: new Date() },
-    discount_percent: { $gt: 0, $lte: 100 },
-  }).lean() : null;
-  const discount = Math.round(subtotal * ((promotion?.discount_percent ?? 0) / 100));
-  const total = subtotal - discount;
-  if (deposit > total) throw new HttpError(400, 'Tiền đặt cọc không được lớn hơn giá sau ưu đãi.');
+  const total = subtotal;
+  if (deposit > total) throw new HttpError(400, 'Tiền đặt cọc không được lớn hơn tổng báo giá.');
   const updated = await Booking.findOneAndUpdate({
     booking_id: bookingId,
     booking_status: booking.booking_status,
     'quote_offer.id': booking.quote_offer?.id ?? { $exists: false },
   }, { $set: {
     booking_status: 'quoted', estimated_price: subtotal, additional_charge: 0,
-    pricing_breakdown: { subtotal, surcharge: 0, discount, total },
+    pricing_breakdown: { subtotal, surcharge: 0, total },
     quote_calculation: calculation,
     transport_contract: transportContract,
-    quote_offer: { id: randomUUID(), sent_by: operatorId, sent_at: new Date(),
-      promotion_id: promotion?.promotion_id, promotion_code: promotion?.code },
+    quote_offer: { id: randomUUID(), sent_by: operatorId, sent_at: new Date() },
     deposit_due: deposit,
   } }, { returnDocument: 'after' }).select('-_id -renter_request_id').lean();
 
@@ -104,10 +101,6 @@ async function acceptQuote(bookingId, renterId, input) {
       transport_contract: { ...booking.transport_contract, status: 'signed_pending_payment', document: signed.document, hash: signed.hash, signedBy: renterId, signedAt: now, acceptanceMethod: 'checkbox' },
     } }, { session });
     if (!update.modifiedCount) throw new HttpError(409, 'Báo giá đã thay đổi. Vui lòng tải lại.');
-    if (booking.quote_offer.promotion_id) await BookingPromotion.create([{
-      booking_id: bookingId, promotion_id: booking.quote_offer.promotion_id,
-      discount_amount: booking.pricing_breakdown.discount,
-    }], { session });
     return status;
   });
 }

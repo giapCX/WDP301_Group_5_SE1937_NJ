@@ -1,10 +1,11 @@
 const { Router, json, urlencoded } = require('express');
 const requireGarage = require('../middleware/require-garage.middleware');
+const { requireRolePermission } = require('../middleware/require-management-role.middleware');
 const controller = require('../controllers/garage-workflow.controller');
 const damage = require('../controllers/garage-damage.controller');
 
 const router = Router();
-router.use(requireGarage);
+router.use(requireGarage, requireRolePermission('garage.manage'));
 router.get('/tasks', controller.tasks);
 router.get('/tasks/:taskId/:vehicleId', controller.taskDetail);
 router.get('/inspections/:id/photos/:index', controller.inspectionPhoto);

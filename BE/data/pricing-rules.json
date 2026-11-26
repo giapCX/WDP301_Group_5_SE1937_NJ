@@ -1,0 +1,54 @@
+[
+  {
+    "seat_count": 7,
+    "roundtrip_rule_id": 4,
+    "tour_rule_id": 25,
+    "market_reference": "7-seat standard tourist vehicle",
+    "source_url": "https://saigonstartravel.com/bang-gia-thue-xe-du-lich-tai-tphcm",
+    "km_rate": 9500,
+    "dispatch_percent": 20,
+    "day_rate": 1890000,
+    "included_km_per_day": 100,
+    "extra_km_rate": 9500,
+    "driver_night_rate": 100000
+  },
+  {
+    "seat_count": 16,
+    "roundtrip_rule_id": 6,
+    "tour_rule_id": 7,
+    "market_reference": "16-seat standard tourist vehicle",
+    "source_url": "https://saigonstartravel.com/bang-gia-thue-xe-du-lich-tai-tphcm",
+    "km_rate": 12000,
+    "dispatch_percent": 20,
+    "day_rate": 2160000,
+    "included_km_per_day": 100,
+    "extra_km_rate": 12000,
+    "driver_night_rate": 150000
+  },
+  {
+    "seat_count": 29,
+    "roundtrip_rule_id": 8,
+    "tour_rule_id": 9,
+    "market_reference": "29-seat standard tourist vehicle",
+    "source_url": "https://saigonstartravel.com/bang-gia-thue-xe-du-lich-tai-tphcm",
+    "km_rate": 18000,
+    "dispatch_percent": 20,
+    "day_rate": 3500000,
+    "included_km_per_day": 100,
+    "extra_km_rate": 18000,
+    "driver_night_rate": 200000
+  },
+  {
+    "seat_count": 9,
+    "roundtrip_rule_id": 12,
+    "tour_rule_id": 13,
+    "market_reference": "9-seat limousine reference; price varies by route and vehicle class",
+    "source_url": "https://saigonstartravel.com/bang-gia-thue-xe-limousine-tphcm",
+    "km_rate": 10000,
+    "dispatch_percent": 20,
+    "day_rate": 4190000,
+    "included_km_per_day": 100,
+    "extra_km_rate": 10000,
+    "driver_night_rate": 150000
+  }
+]

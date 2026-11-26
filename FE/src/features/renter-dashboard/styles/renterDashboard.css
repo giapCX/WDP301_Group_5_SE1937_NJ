@@ -124,18 +124,16 @@
 .vt-r-trip-placeholder { display: grid; place-items: center; color: var(--r-blue); background: #eef4fb; }
 .vt-r-trip-placeholder .vt-h-icon { font-size: 2.25rem; }
 .vt-r-trip h3 { margin: 8px 0 0; font-size: 1rem; font-weight: 700; }
-.vt-r-trip small, .vt-r-offers small { display: block; color: var(--r-muted); font-size: .8125rem; }
+.vt-r-trip small { display: block; color: var(--r-muted); font-size: .8125rem; }
 .vt-r-trip details { margin-block: 10px; font-size: .875rem; }
 .vt-r-trip summary { cursor: pointer; font-weight: 650; }
 .vt-r-trip ol { margin: 6px 0 0; padding-left: 24px; }
 .vt-r-trip .vt-r-button { margin-top: 10px; }
 .vt-r-badge { display: inline-block; padding: 3px 8px; border-radius: 7px; color: #485a70; background: #edf1f6; font-size: .875rem; font-weight: 650; }
 .vt-r-badge[data-status="confirmed"], .vt-r-badge[data-status="in_progress"] { color: #2058a4; background: #eaf2ff; }
-.vt-r-badge[data-status="completed"], .vt-r-offer-discount { color: #116858; background: #e5f5ef; }
+.vt-r-badge[data-status="completed"] { color: #116858; background: #e5f5ef; }
 .vt-r-badge[data-status="cancelled"], .vt-r-badge[data-status="rejected"] { color: #a32c3b; background: #fdeef0; }
-.vt-r-offers { display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; }
-.vt-r-offers li, .vt-r-empty { padding: 10px 12px; border-radius: 7px; background: #f4f7fb; }
-.vt-r-offers li > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 5px; margin-bottom: 4px; overflow-wrap: anywhere; }
+.vt-r-empty { padding: 10px 12px; border-radius: 7px; background: #f4f7fb; }
 .vt-r-empty { margin: 0; color: var(--r-muted); }
 .vt-r-error { color: #a32c3b; border-color: #f0c9cf; }
 .vt-r-table-wrap { overflow-x: auto; }

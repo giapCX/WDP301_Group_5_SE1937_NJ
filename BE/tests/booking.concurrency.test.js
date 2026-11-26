@@ -4,13 +4,11 @@ const mongoose = require('mongoose');
 const { Booking, Vehicle } = require('../src/models');
 const service = require('../src/services/booking.service');
 const sample = require('../src/config/sample-data');
+const { connectTestDatabase } = require('./helpers/test-database');
 
 test('real replica transactions prevent overlapping approvals and roll back losing writes', async () => {
   const databaseName = `booking_concurrency_test_${process.pid}_${Date.now()}`;
-  await mongoose.connect(
-    process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27017/?replicaSet=rentalLocal',
-    { dbName: databaseName, serverSelectionTimeoutMS: 5000, autoIndex: false },
-  );
+  await connectTestDatabase(mongoose, databaseName, { serverSelectionTimeoutMS: 5000, autoIndex: false });
   try {
     const hello = await mongoose.connection.db.admin().command({ hello: 1 });
     assert.ok(hello.setName, 'This test requires a replica set');

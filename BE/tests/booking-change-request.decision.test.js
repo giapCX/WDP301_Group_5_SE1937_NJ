@@ -7,11 +7,11 @@ const service = require('../src/services/booking-change-request.service');
 const data = require('../src/config/sample-data');
 const routes = require('../src/routes/booking-change-request.routes');
 const errorMiddleware = require('../middlewares/error.middleware');
+const { connectTestDatabase } = require('./helpers/test-database');
 
 test('change decisions are atomic, detect stale snapshots and enforce Operator access', async () => {
   const dbName = `change_decision_test_${process.pid}_${Date.now()}`;
-  await mongoose.connect(process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27017/?replicaSet=rentalLocal', {
-    dbName,
+  await connectTestDatabase(mongoose, dbName, {
     autoIndex: false,
   });
   let server;

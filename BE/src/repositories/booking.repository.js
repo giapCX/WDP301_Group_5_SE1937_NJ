@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { SUPPORTED_VEHICLE_SEAT_COUNTS, supportedSeatCountsAtLeast } = require('../config/vehicle.constants');
 const { Booking, TripStop, Vehicle } = require('../models');
 const HttpError = require('../utils/http-error');
 
@@ -228,8 +229,10 @@ async function findAvailableVehicles({
     {
       $match: {
         status: { $in: statuses },
-        ...(minSeats && { seat_count: { $gte: minSeats }, price_per_day: { $gt: 0 } }),
-        ...(seatCount !== undefined && !minSeats && { seat_count: seatCount }),
+        seat_count: minSeats ? { $in: supportedSeatCountsAtLeast(minSeats) } :
+          seatCount !== undefined ? { $in: SUPPORTED_VEHICLE_SEAT_COUNTS.filter((value) => value === seatCount) } :
+            { $in: SUPPORTED_VEHICLE_SEAT_COUNTS },
+        ...(minSeats && { price_per_day: { $gt: 0 } }),
       },
     },
     {

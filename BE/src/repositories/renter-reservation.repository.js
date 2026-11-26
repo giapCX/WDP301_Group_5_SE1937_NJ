@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { Booking, TripAssignment, Vehicle } = require('../models');
 const { findAvailableVehicles } = require('./booking.repository');
+const { SUPPORTED_VEHICLE_SEAT_COUNTS } = require('../config/vehicle.constants');
 
 async function nextIds(model, key, count, session) {
   const last = await model.findOne().sort({ [key]: -1 }).select(key).session(session).lean();
@@ -34,10 +35,7 @@ async function findAssignableVehicle({ bookingId, pickupTime, estimatedEndTime, 
 }
 
 async function findSeatOptions() {
-  const seats = await Vehicle.distinct('seat_count', {
-    status: { $in: ['available', 'in_use'] }, price_per_day: { $gt: 0 },
-  });
-  return seats.filter((value) => Number.isSafeInteger(value) && value > 0).sort((a, b) => a - b);
+  return SUPPORTED_VEHICLE_SEAT_COUNTS;
 }
 
 async function listBookings(renterId, before) {

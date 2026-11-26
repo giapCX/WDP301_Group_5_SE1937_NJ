@@ -5,12 +5,12 @@ const HttpError = require('../utils/http-error');
 const { positiveId } = require('../utils/numeric-id');
 const damage = require('./garage-damage.service');
 const maintenance = require('./garage-maintenance.service');
+const { VEHICLE_SUMMARY_FIELDS } = require('../config/management.constants');
 
 const HANDOVER_STAGES = ['awaiting_driver', 'awaiting_vehicle'];
 const RETURN_STAGES = ['awaiting_vehicle_return', 'vehicle_return_issue'];
 const TASK_STAGES = [...HANDOVER_STAGES, ...RETURN_STAGES, 'vehicle_replacement_required'];
 const FAILED = ['fail', 'failed'];
-const VEHICLE_FIELDS = 'vehicle_id plate_number brand model status -_id';
 const INSPECTION_ORDER = { inspected_at: -1, inspection_id: -1 };
 
 function dayStart(date) {
@@ -46,7 +46,7 @@ async function tripTasks(workflows) {
     VehicleInspection.find({ booking_id: { $in: bookingIds }, inspection_type: { $in: ['handover', 'return'] } })
       .sort(INSPECTION_ORDER).lean(),
     VehicleHandover.find({ booking_id: { $in: bookingIds } }).lean(),
-    Vehicle.find({ vehicle_id: { $in: workflows.map((item) => item.vehicle_id) } }).select(VEHICLE_FIELDS).lean(),
+    Vehicle.find({ vehicle_id: { $in: workflows.map((item) => item.vehicle_id) } }).select(VEHICLE_SUMMARY_FIELDS).lean(),
     Booking.find({ booking_id: { $in: bookingIds } })
       .select('booking_id pickup_location dropoff_location pickup_time estimated_end_time -_id').lean(),
     DriverProfile.find({ driver_id: { $in: workflows.map((item) => item.driver_id) } })
@@ -91,11 +91,11 @@ async function tripTasks(workflows) {
 
 async function maintenanceTasks() {
   const records = await MaintenanceRecord.find(maintenance.openMaintenance())
-    .sort({ started_at: 1, maintenance_id: 1 }).populate('vehicle', VEHICLE_FIELDS).lean();
+    .sort({ started_at: 1, maintenance_id: 1 }).populate('vehicle', VEHICLE_SUMMARY_FIELDS).lean();
   return records.map(({ vehicle, ...record }) => ({
     id: `maintenance-${record.maintenance_id}`, vehicle_id: record.vehicle_id, vehicle,
     type: 'MAINTENANCE',
-    status: ['in_progress', 'awaiting_approval'].includes(record.maintenance_status) ? record.maintenance_status : 'pending',
+    status: ['in_progress', 'awaiting_approval'].includes(record.maintenance_status) ? 'in_progress' : 'pending',
     maintenance: record, driver: null, due_at: record.started_at, workflow_stage: null, note: record.description,
   }));
 }
@@ -128,7 +128,7 @@ async function returnDetails(taskId, booking_id, vehicle_id, workflow, active) {
   const [before_inspection, damage_report, vehicle] = await Promise.all([
     findTripInspection(booking_id, vehicle_id, 'handover', beforeId),
     FAILED.includes(inspection?.result) ? damage.findForInspection(inspection.inspection_id) : null,
-    active ? active.vehicle : Vehicle.findOne({ vehicle_id }).select(VEHICLE_FIELDS).lean(),
+    active ? active.vehicle : Vehicle.findOne({ vehicle_id }).select(VEHICLE_SUMMARY_FIELDS).lean(),
   ]);
   return {
     ...(active || { id: taskId, booking_id, vehicle_id, type: 'RETURN_IN', status: 'completed', archived: true }),
@@ -157,7 +157,7 @@ async function taskDetails(taskId, vehicleId) {
   if (!handover) return null;
   const [inspection, vehicle] = await Promise.all([
     VehicleInspection.findOne({ booking_id, vehicle_id, inspection_type: 'handover', inspection_id: handover.inspection_id }).lean(),
-    Vehicle.findOne({ vehicle_id }).select(VEHICLE_FIELDS).lean(),
+    Vehicle.findOne({ vehicle_id }).select(VEHICLE_SUMMARY_FIELDS).lean(),
   ]);
   return {
     id: taskId, booking_id, vehicle_id, type: 'HANDOVER_OUT', status: 'completed',

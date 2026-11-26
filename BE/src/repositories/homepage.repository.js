@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Vehicle } = require('../models');
+const { SUPPORTED_VEHICLE_SEAT_COUNTS } = require('../config/vehicle.constants');
 const catalogAvailability = { $or: [
   { operational_status: 'available', approval_status: 'approved' },
   { operational_status: { $exists: false }, status: 'available' },
@@ -18,7 +19,7 @@ async function findVehicles({ seats, start, end, type, minPrice, maxPrice, price
       dailyPrice: rentalRate,
       bookingVehicleId: { $ifNull: ['$vehicle_id', '$_id'] },
     } },
-    { $match: { seats: { $gte: seats } } },
+    { $match: { seats: { $in: SUPPORTED_VEHICLE_SEAT_COUNTS.filter((count) => count >= seats) } } },
   ];
   if (type) pipeline.push({ $match: { vehicle_type: type } });
   if (minPrice !== undefined || maxPrice !== undefined || priceBelow !== undefined) {
@@ -64,7 +65,7 @@ function findReviews() {
 }
 
 function findVehicleDetails(vehicleId) {
-  return Vehicle.collection.findOne({ vehicle_id: vehicleId }, { projection: {
+  return Vehicle.collection.findOne({ vehicle_id: vehicleId, seat_count: { $in: SUPPORTED_VEHICLE_SEAT_COUNTS } }, { projection: {
     _id: 0, vehicle_id: 1, brand: 1, model: 1, vehicle_type: 1, description: 1,
     photos: 1, illustration_photos: 1, manufacture_year: 1, fuel_type: 1,
     seats: seatCount,
@@ -73,12 +74,14 @@ function findVehicleDetails(vehicleId) {
 }
 
 function findVehicleTypes() {
-  return Vehicle.collection.distinct('vehicle_type', { vehicle_type: { $type: 'string', $ne: '' } });
+  return Vehicle.collection.distinct('vehicle_type', {
+    vehicle_type: { $type: 'string', $ne: '' }, seat_count: { $in: SUPPORTED_VEHICLE_SEAT_COUNTS },
+  });
 }
 
 async function findVehicleFilters() {
   const [options] = await Vehicle.aggregate([
-    { $match: catalogAvailability },
+    { $match: { ...catalogAvailability, seat_count: { $in: SUPPORTED_VEHICLE_SEAT_COUNTS } } },
     { $project: { seats: seatCount, dailyPrice: rentalRate, vehicle_type: 1 } },
     { $group: { _id: null, seats: { $addToSet: '$seats' }, prices: { $addToSet: '$dailyPrice' }, types: { $addToSet: '$vehicle_type' } } },
   ]);
@@ -88,7 +91,7 @@ async function findVehicleFilters() {
     .map(Math.floor)
     .filter(Number.isSafeInteger);
   return {
-    seats: (options?.seats ?? []).filter((value) => Number.isSafeInteger(value) && value > 0).sort(ascending),
+    seats: SUPPORTED_VEHICLE_SEAT_COUNTS.filter((value) => (options?.seats ?? []).includes(value)).sort(ascending),
     prices: [...new Set(priceBands)].sort(ascending),
     types: (options?.types ?? []).filter((value) => typeof value === 'string' && value.trim()).sort(),
   };

@@ -2,6 +2,7 @@ const { Booking, TripStop } = require('../models');
 const bookingRepository = require('../repositories/booking.repository');
 const reservationRepository = require('../repositories/renter-reservation.repository');
 const HttpError = require('../utils/http-error');
+const { supportsVehicleSeatCount, SUPPORTED_VEHICLE_SEAT_COUNTS } = require('../config/vehicle.constants');
 
 function positiveId(value) {
   const id = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value;
@@ -57,6 +58,9 @@ function readTrip(input = {}) {
     return { location: readText(stop.location, 'Điểm tham quan'), arrival_at: arrival, departure_at: departure };
   }) : [];
   const requestedSeats = positiveId(input.requestedSeats);
+  if (!supportsVehicleSeatCount(requestedSeats)) {
+    throw new HttpError(400, `Only ${SUPPORTED_VEHICLE_SEAT_COUNTS.join(', ')}-seat vehicle classes are available.`);
+  }
   const passengerCount = positiveId(input.passengerCount);
   if (passengerCount > requestedSeats) throw new HttpError(400, 'Số hành khách không được vượt quá số chỗ yêu cầu.');
   return {
@@ -67,7 +71,6 @@ function readTrip(input = {}) {
     dropoff: readText(input.dropoff, 'Điểm trả cuối'),
     returnPickup: serviceType === 'roundtrip' ? readText(input.returnPickup, 'Điểm đón về') : '',
     notes: readText(input.notes, 'Yêu cầu bổ sung', 1000, true),
-    promotionCode: readText(input.promotionCode, 'Mã giảm giá', 40, true).toUpperCase(),
   };
 }
 
@@ -90,7 +93,6 @@ async function create(input, renterId) {
       return_pickup_location: trip.returnPickup, dropoff_location: trip.dropoff, special_requests: trip.notes,
       pickup_time: trip.pickupTime, estimated_end_time: trip.endTime,
       return_pickup_time: trip.serviceType === 'roundtrip' ? trip.returnTime : undefined,
-      requested_promotion_code: trip.promotionCode,
       renter_request_id: requestId, booking_status: 'pending', quote_requested_at: new Date(), created_at: new Date(),
     }], { session });
     const stops = trip.serviceType === 'tour' ? trip.itinerary : [

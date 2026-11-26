@@ -1,13 +1,5 @@
-const { Schema } = require('mongoose');
 const { createModel } = require('./model-factory');
-
-const approvalSchema = new Schema({
-  decision: { type: String, enum: ['approve', 'reject'], required: true },
-  note: { type: String, maxlength: 1000 },
-  manager_id: { type: Number, required: true },
-  inspection_id: { type: Number, required: true },
-  decided_at: { type: Date, required: true },
-}, { _id: false });
+const { MAINTENANCE_STATUSES } = require('../config/workflow.constants');
 
 module.exports = createModel(
   'MaintenanceRecord',
@@ -45,7 +37,7 @@ module.exports = createModel(
     maintenance_status: {
       type: String,
       required: true,
-      maxlength: 30,
+      enum: MAINTENANCE_STATUSES,
     },
     started_at: {
       type: Date,
@@ -60,8 +52,6 @@ module.exports = createModel(
     repair_completed_at: { type: Date },
     repair_recorded_by: { type: Number },
     reinspection_id: { type: Number, default: null },
-    requires_manager_approval: { type: Boolean, default: false },
-    approvals: { type: [approvalSchema], default: undefined },
   },
   [
     {

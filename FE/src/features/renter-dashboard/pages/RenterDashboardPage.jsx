@@ -18,7 +18,6 @@ const metrics = [
   ['total', 'Tổng chuyến đã đặt', 'receipt_long', 'blue'],
   ['completed', 'Chuyến đã hoàn thành', 'verified', 'teal'],
   ['upcoming', 'Chuyến đi sắp tới', 'calendar_month', 'indigo'],
-  ['offers', 'Ưu đãi đang có', 'redeem', 'orange'],
 ];
 const configuredGroupSeats = Number(import.meta.env.VITE_RENTER_GROUP_MIN_SEATS);
 const groupMinimumSeats = Number.isSafeInteger(configuredGroupSeats) && configuredGroupSeats > 0
@@ -104,7 +103,7 @@ function TripHistory({ history }) {
 }
 
 function RenterContent({ data }) {
-  const { currentTrip, history, offers, stats } = data;
+  const { currentTrip, history, stats } = data;
 
   return (
     <>
@@ -122,19 +121,6 @@ function RenterContent({ data }) {
           {currentTrip
             ? <TripDetails key={currentTrip.booking_id} trip={currentTrip}/>
             : <p className="vt-r-empty">Bạn chưa có chuyến đang diễn ra hoặc sắp khởi hành.</p>}
-        </section>
-        <section id="uu-dai" className="vt-r-panel">
-          <h2>Ưu đãi đang có</h2>
-          {offers.length ? (
-            <ul className="vt-r-offers">
-              {offers.map((offer) => (
-                <li key={offer.promotion_id}>
-                  <div><strong>{offer.code}</strong><span className="vt-r-badge vt-r-offer-discount">Giảm {offer.discount_percent}%</span></div>
-                  <small>Hạn sử dụng · {formatDate(offer.valid_until)}</small>
-                </li>
-              ))}
-            </ul>
-          ) : <p className="vt-r-empty">Hiện chưa có ưu đãi.</p>}
         </section>
       </div>
       <TripHistory history={history}/>

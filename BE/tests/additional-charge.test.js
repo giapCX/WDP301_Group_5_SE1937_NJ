@@ -8,10 +8,11 @@ const service = require('../src/services/additional-charge.service');
 const bookingRepository = require('../src/repositories/booking.repository');
 const routes = require('../src/routes/additional-charge.routes');
 const errors = require('../middlewares/error.middleware');
+const { connectTestDatabase } = require('./helpers/test-database');
 
 test('embedded charge lifecycle keeps totals and history atomic without a new collection', async () => {
   const dbName = `charges_test_${process.pid}_${Date.now()}`;
-  await mongoose.connect('mongodb://127.0.0.1:27018/?replicaSet=rentalLocal', {
+  await connectTestDatabase(mongoose, dbName, {
     dbName,
     autoIndex: false,
     serverSelectionTimeoutMS: 5000,

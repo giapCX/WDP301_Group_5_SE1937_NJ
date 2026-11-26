@@ -5,13 +5,15 @@ const { promisify } = require('node:util');
 const mail = require('../services/registration-mail.service');
 const HttpError = require('../utils/http-error');
 const normalizePhone = require('../utils/phone');
+const { AUTH_CONFIG } = require('../config/auth.constants');
 
 const deriveKey = promisify(scrypt);
-const otpSecret = process.env.OTP_SECRET || randomBytes(32);
-const otpLifetime = 10 * 60 * 1000;
-const resendDelay = 60 * 1000;
 const normalize = (value) => typeof value === 'string' ? value.trim() : '';
-const hashOtp = (email, id, code) => createHmac('sha256', otpSecret).update(JSON.stringify([email, id, code])).digest('hex');
+function hashOtp(email, id, code) {
+  const secret = process.env.OTP_SECRET?.trim();
+  if (!secret || Buffer.byteLength(secret) < 32) throw new HttpError(503, 'Máy chủ chưa cấu hình OTP_SECRET ổn định (tối thiểu 32 byte).');
+  return createHmac('sha256', secret).update(JSON.stringify([email, id, code])).digest('hex');
+}
 
 function readEmail(value) {
   const email = normalize(value).toLowerCase();
@@ -49,10 +51,10 @@ module.exports = function registrationRoutes(limitRequests) {
       await challenges.updateOne({ _id: email, resendAt: { $lte: new Date(now) } }, {
         $set: { id, fullName, phone, passwordHash: 'scrypt$' + salt + '$' + key.toString('hex'),
           digest: hashOtp(email, id, code), attempts: 0,
-          expiresAt: new Date(now + otpLifetime), resendAt: new Date(now + resendDelay) },
+          expiresAt: new Date(now + AUTH_CONFIG.OTP_LIFETIME_MS), resendAt: new Date(now + AUTH_CONFIG.OTP_RESEND_DELAY_MS) },
       }, { upsert: true });
     } catch (error) {
-      if (error.code === 11000) throw new HttpError(429, 'Vui lòng chờ 60 giây trước khi gửi lại mã.');
+      if (error.code === 11000) throw new HttpError(429, `Vui lòng chờ ${Math.ceil(AUTH_CONFIG.OTP_RESEND_DELAY_MS / 1000)} giây trước khi gửi lại mã.`);
       throw error;
     }
     try {
@@ -76,7 +78,7 @@ module.exports = function registrationRoutes(limitRequests) {
     if (!role) throw new HttpError(503, 'Chưa cấu hình vai trò Người thuê trong cơ sở dữ liệu.');
     const challenges = db.collection('registration_otps');
     const eligible = { _id: email, id: challengeId, phone: { $type: 'string' },
-      expiresAt: { $gt: new Date() }, attempts: { $lt: 5 } };
+      expiresAt: { $gt: new Date() }, attempts: { $lt: AUTH_CONFIG.OTP_MAX_ATTEMPTS } };
     const challenge = await challenges.findOneAndDelete({ ...eligible, digest: hashOtp(email, challengeId, code) });
     if (!challenge) {
       await challenges.updateOne(eligible, { $inc: { attempts: 1 } });

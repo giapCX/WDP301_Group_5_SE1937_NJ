@@ -1,4 +1,5 @@
 const { createModel } = require('./model-factory');
+const { DRIVER_AVAILABILITY_STATUSES } = require('../config/workflow.constants');
 
 module.exports = createModel(
   'DriverProfile',
@@ -35,7 +36,7 @@ module.exports = createModel(
     availability_status: {
       type: String,
       required: true,
-      maxlength: 30,
+      enum: DRIVER_AVAILABILITY_STATUSES,
     },
     approved_at: {
       type: Date,

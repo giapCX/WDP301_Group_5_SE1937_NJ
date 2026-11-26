@@ -41,7 +41,13 @@ async function booking(id, actor, session = null) {
   return record;
 }
 async function policy(session) {
-  return mongoose.connection.db.collection('service_policies').findOne({ status: 'active' }, { session, sort: { updated_at: -1, policy_id: -1 } });
+  const now = new Date();
+  const policies = await mongoose.connection.db.collection('service_policies').find({
+    status: 'active', effective_from: { $lte: now },
+    $or: [{ effective_to: null }, { effective_to: { $gt: now } }],
+  }, { session }).limit(2).toArray();
+  if (policies.length > 1) throw new HttpError(409, 'Có nhiều chính sách cùng hiệu lực; Manager cần điều chỉnh thời hạn trước khi xử lý.');
+  return policies[0] || null;
 }
 async function summary(id, actor) {
   const record = await booking(id, actor);

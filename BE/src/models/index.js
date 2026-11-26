@@ -7,8 +7,6 @@ const Booking = require('./booking.model');
 const TripStop = require('./trip-stop.model');
 const TripAssignment = require('./trip-assignment.model');
 const TripStatusUpdate = require('./trip-status-update.model');
-const Promotion = require('./promotion.model');
-const BookingPromotion = require('./booking-promotion.model');
 const Payment = require('./payment.model');
 const Refund = require('./refund.model');
 const VehicleInspection = require('./vehicle-inspection.model');
@@ -18,6 +16,8 @@ const Review = require('./review.model');
 const TripWorkflow = require('./trip-workflow.model');
 const VehicleHandover = require('./vehicle-handover.model');
 const VehicleDamage = require('./vehicle-damage.model');
+const PricingRule = require('./pricing-rule.model');
+const ServicePolicy = require('./service-policy.model');
 
 module.exports = {
   BookingChangeRequest,
@@ -29,8 +29,6 @@ module.exports = {
   TripStop,
   TripAssignment,
   TripStatusUpdate,
-  Promotion,
-  BookingPromotion,
   Payment,
   Refund,
   VehicleInspection,
@@ -40,4 +38,6 @@ module.exports = {
   TripWorkflow,
   VehicleHandover,
   VehicleDamage,
+  PricingRule,
+  ServicePolicy,
 };

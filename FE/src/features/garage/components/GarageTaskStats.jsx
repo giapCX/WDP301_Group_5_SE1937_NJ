@@ -5,7 +5,6 @@ const CARDS = [
   { type: 'HANDOVER_OUT', label: TASK_TYPES.HANDOVER_OUT, icon: 'list', tone: 'blue' },
   { type: 'RETURN_IN', label: TASK_TYPES.RETURN_IN, icon: 'car', tone: 'teal' },
   { type: 'MAINTENANCE', label: 'Phiếu bảo dưỡng', icon: 'wrench', tone: 'blue' },
-  { status: 'awaiting_approval', label: 'Chờ Manager duyệt', icon: 'clock', tone: 'purple' },
 ];
 
 export default function GarageTaskStats({ tasks }) {

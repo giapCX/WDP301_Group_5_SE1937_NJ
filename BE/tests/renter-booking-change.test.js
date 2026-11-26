@@ -7,11 +7,11 @@ const data = require('../src/config/sample-data');
 const service = require('../src/services/renter-booking-change.service');
 const routes = require('../src/routes/renter-booking-change.routes');
 const errors = require('../middlewares/error.middleware');
+const { connectTestDatabase } = require('./helpers/test-database');
 
 test('renter submissions validate ownership, price and serialize pending requests', async () => {
   const dbName = `renter_change_test_${process.pid}_${Date.now()}`;
-  await mongoose.connect(process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27017/?replicaSet=rentalLocal', {
-    dbName,
+  await connectTestDatabase(mongoose, dbName, {
     autoIndex: false,
   });
   let server;

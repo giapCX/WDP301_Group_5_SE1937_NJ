@@ -9,10 +9,8 @@ export default function GarageMaintenanceActions({ task, onUpdate }) {
   const [form, setForm] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const { maintenance, reinspection, status, archived, needs_approval: needsApproval } = task;
+  const { maintenance, reinspection, status, archived } = task;
   const id = maintenance.maintenance_id;
-  const lastDecision = maintenance.approvals?.at(-1);
-  const awaitingApproval = status === 'awaiting_approval';
 
   async function run(action) {
     setBusy(true);
@@ -60,19 +58,10 @@ export default function GarageMaintenanceActions({ task, onUpdate }) {
           <div>{reinspection.condition_note}</div>
         </div>
       )}
-      {lastDecision?.decision === 'reject' && (
-        <p className="dispatch-alert">Manager trả phiếu · {lastDecision.note}</p>
-      )}
       {status === 'completed' && <p className="garage-check-hint">Đã hoàn tất phiếu bảo dưỡng · {dateTime(maintenance.completed_at)}</p>}
-      {awaitingApproval && (
-        <div className="garage-maintenance-actions">
-          <p className="garage-check-hint" role="status">Phiếu đang chờ Manager duyệt.</p>
-          <button className="dispatch-button subtle compact" onClick={onUpdate}>Làm mới</button>
-        </div>
-      )}
-      {!archived && !awaitingApproval && (
+      {!archived && (
         <>
-          {form === 'repair' && <GarageRepairForm maintenance={maintenance} needsApproval={needsApproval} busy={busy}
+          {form === 'repair' && <GarageRepairForm maintenance={maintenance} busy={busy}
             onSave={(details) => run(() => recordGarageRepair(id, details))} onCancel={closeForm} onError={setError} />}
           {form === 'recheck' && <GarageReinspectionForm busy={busy} onSave={recheck} onCancel={closeForm} onError={setError} />}
           {!form && (
@@ -88,7 +77,7 @@ export default function GarageMaintenanceActions({ task, onUpdate }) {
               {reinspection?.result === 'passed' && (
                 <button className="dispatch-button primary compact" disabled={busy}
                   onClick={() => run(() => updateGarageMaintenance(id, 'completed', reinspection.inspection_id))}>
-                  {needsApproval ? 'Gửi Manager duyệt' : 'Hoàn tất phiếu'}
+                  Hoàn tất phiếu
                 </button>
               )}
             </div>

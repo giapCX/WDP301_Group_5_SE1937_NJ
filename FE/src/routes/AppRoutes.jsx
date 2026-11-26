@@ -12,8 +12,6 @@ import TripPlannerPage from '../features/renter-reservations/pages/TripPlannerPa
 import MyBookingsPage from '../features/renter-reservations/pages/MyBookingsPage.jsx';
 import RolePermissionManagementPage from '../features/role-management/pages/RolePermissionManagementPage.jsx';
 import ManagerDashboardPage from '../features/manager-dashboard/pages/ManagerDashboardPage.jsx';
-import ManagerMaintenanceApprovalsPage from '../features/garage/pages/ManagerMaintenanceApprovalsPage.jsx';
-import { MAINTENANCE_APPROVALS_PATH } from '../features/manager-dashboard/managerDashboardConfig.js';
 import GarageLayout from '../features/garage/components/GarageLayout.jsx';
 import GarageDashboardPage from '../features/garage/pages/GarageDashboardPage.jsx';
 import GarageTaskPage from '../features/garage/pages/GarageTaskPage.jsx';
@@ -25,6 +23,7 @@ import AvailableVehiclesPage from '../features/operator/AvailableVehiclesPage.js
 import DriverDashboardPage from '../features/driver/pages/DriverDashboardPage.jsx';
 import TripMonitoringPage from '../features/operator/trip-monitoring/pages/TripMonitoringPage.jsx';
 import TripDispatchPage from '../features/operator/trip-workflow/pages/TripDispatchPage.jsx';
+import OperatorFleetPage from '../features/operator/OperatorFleetPage.jsx';
 
 export default function AppRoutes() {
   return (
@@ -44,7 +43,6 @@ export default function AppRoutes() {
       <Route element={<RequireRole role="manager" />}>
         <Route path="/manager/operation-approvals" element={<OperationsPage manager/>}/>
         <Route path="/manager/dashboard" element={<ManagerDashboardPage />} />
-        <Route path={MAINTENANCE_APPROVALS_PATH} element={<ManagerMaintenanceApprovalsPage />} />
         <Route path="/manager" element={<Navigate to="/manager/dashboard" replace />} />
         <Route path="/manager/:section" element={<ManagerDashboardPage />} />
       </Route>
@@ -67,6 +65,7 @@ export default function AppRoutes() {
         <Route path="/operator/trip-monitoring" element={<TripMonitoringPage />} />
         <Route path="/operator/dispatch" element={<TripDispatchPage />} />
         <Route path="/operator/vehicles" element={<AvailableVehiclesPage />} />
+        <Route path="/operator/fleet" element={<OperatorFleetPage />} />
         <Route path="/operator/booking-management" element={<BookingManagementPage key="management" initialStatus="" screen="management" />} />
         <Route path="/operator/bookings" element={<BookingManagementPage />} />
         <Route path="/operator/booking-change-requests" element={<BookingModificationPage />} />

@@ -6,14 +6,12 @@ const { Booking, Vehicle } = require('../src/models');
 const routes = require('../src/routes/booking.routes');
 const errorMiddleware = require('../middlewares/error.middleware');
 const data = require('../src/config/sample-data');
+const { connectTestDatabase } = require('./helpers/test-database');
 
 test('available vehicles API filters actual conflicts and returns useful errors', async () => {
   const databaseName = `available_vehicles_test_${process.pid}_${Date.now()}`;
   let server;
-  await mongoose.connect(
-    process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27017/?replicaSet=rentalLocal',
-    { dbName: databaseName, autoIndex: false, serverSelectionTimeoutMS: 5000 },
-  );
+  await connectTestDatabase(mongoose, databaseName, { autoIndex: false, serverSelectionTimeoutMS: 5000 });
   try {
     const pickup = new Date('2099-01-02T00:00:00Z');
     const end = new Date('2099-01-03T00:00:00Z');
@@ -22,7 +20,7 @@ test('available vehicles API filters actual conflicts and returns useful errors'
       pickup_time: pickup,
       estimated_end_time: end,
     };
-    await Vehicle.insertMany(data.vehicles);
+    await Vehicle.insertMany(data.vehicles.filter((vehicle) => vehicle.vehicle_id <= 5));
     await Booking.insertMany([
       { ...template, booking_id: 1, vehicle_id: 1 },
       { ...template, booking_id: 2, vehicle_id: 3, booking_status: 'confirmed' },

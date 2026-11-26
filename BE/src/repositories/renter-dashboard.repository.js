@@ -9,9 +9,7 @@ const historyLimit = 5;
 async function findRenterDashboard(renterId, now = new Date()) {
   const { db } = mongoose.connection;
   const upcoming = { booking_status: 'confirmed', pickup_time: { $gte: now } };
-  const promotions = { status: 'active', valid_until: { $gte: now } };
-  const [[activity], [offers]] = await Promise.all([
-    db.collection('bookings').aggregate([
+  const activityRows = await db.collection('bookings').aggregate([
       { $match: { renter_id: renterId } },
       { $facet: {
         totals: [{ $group: { _id: '$booking_status', count: { $sum: 1 } } }],
@@ -29,16 +27,8 @@ async function findRenterDashboard(renterId, now = new Date()) {
           { $project: bookingFields },
         ],
       } },
-    ]).toArray(),
-    db.collection('promotions').aggregate([
-      { $match: promotions },
-      { $facet: {
-        total: [{ $count: 'count' }],
-        items: [{ $sort: { valid_until: 1, promotion_id: 1 } }, { $limit: historyLimit },
-          { $project: { _id: 0, promotion_id: 1, code: 1, discount_percent: 1, valid_until: 1 } }],
-      } },
-    ]).toArray(),
-  ]);
+    ]).toArray();
+  const activity = activityRows[0];
 
   const currentTrip = activity.active[0] || null;
   if (currentTrip) {
@@ -61,11 +51,9 @@ async function findRenterDashboard(renterId, now = new Date()) {
       total: activity.totals.reduce((total, item) => total + item.count, 0),
       completed: activity.totals.find(({ _id }) => _id === 'completed')?.count || 0,
       upcoming: activity.upcoming[0]?.count || 0,
-      offers: offers.total[0]?.count || 0,
     },
     currentTrip,
     history: activity.history,
-    offers: offers.items,
   };
 }
 

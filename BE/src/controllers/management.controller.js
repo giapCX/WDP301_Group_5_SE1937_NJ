@@ -15,4 +15,9 @@ async function update(request, response) {
   response.json(result);
 }
 
-module.exports = { create, list, update };
+async function driverCandidates(request, response) {
+  const items = await service.listDriverCandidates();
+  response.set('Cache-Control', 'no-store').json({ items });
+}
+
+module.exports = { create, driverCandidates, list, update };

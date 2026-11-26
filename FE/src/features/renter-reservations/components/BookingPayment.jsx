@@ -58,7 +58,7 @@ export default function BookingPayment({ booking, checkoutAvailable, paymentMode
       {booking.pricing_breakdown && <PriceSummary price={booking.pricing_breakdown}/>}
       <p><strong>{label} · {money(amount)}</strong></p>
       {booking.checkout_failed_at && <p className="rv-error" role="alert">Giao dịch trước không thành công. Bạn có thể thanh toán lại.</p>}
-      <p>{simulated ? 'Chế độ mô phỏng dùng để test, không thu tiền thật và không cần nhập thông tin thẻ.' : needsProvider ? 'Chọn phương thức khả dụng trên trang thanh toán Stripe.' : 'Ưu đãi đã chi trả toàn bộ đơn.'}</p>
+      <p>{simulated ? 'Chế độ mô phỏng dùng để test, không thu tiền thật và không cần nhập thông tin thẻ.' : needsProvider ? 'Chọn phương thức khả dụng trên trang thanh toán Stripe.' : 'Không có khoản cần thanh toán.'}</p>
       {needsProvider && !checkoutAvailable && <p className="rv-notice">Thanh toán trực tuyến chưa được cấu hình.</p>}
       {error && <p className="rv-error" role="alert">{error}</p>}
       <button className="rv-button rv-primary" type="button" hidden={Boolean(attempt)} onClick={pay} disabled={paying || (needsProvider && !checkoutAvailable)}>

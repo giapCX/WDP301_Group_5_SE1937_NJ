@@ -36,7 +36,7 @@ Kiểm tra các giá trị sau:
 
 ```env
 PORT=9999
-MONGO_URI=mongodb://127.0.0.1:27017/tourist_car_rental_demo
+MONGO_URI=mongodb://127.0.0.1:27017/tourist_car_rental_demo?replicaSet=rentalLocal
 CLIENT_ORIGIN=http://localhost:3000
 NODE_ENV=development
 ```
@@ -139,7 +139,7 @@ Các trang theo vai trò hiện có:
 | Vai trò | Trang sau đăng nhập |
 | --- | --- |
 | Manager | `/manager/dashboard` |
-| Operator | `/operator/bookings`; có thêm `/operator/dashboard`, `/operator/vehicles` và `/operator/trip-monitoring` |
+| Operator | `/operator/bookings`; có thêm `/operator/dashboard`, `/operator/fleet`, `/operator/vehicles` và `/operator/trip-monitoring` |
 | Garage staff | `/garage/tasks` |
 | Driver | `/driver/dashboard` |
 | Renter | `/renter/dashboard` |
@@ -188,7 +188,7 @@ Khi đã đăng nhập, trang `/login` ẩn lựa chọn đăng nhập/đăng k�
 
 - Frontend cần cổng `3000`; backend cần cổng `9999`; MongoDB cần cổng `27017`.
 - Nếu Vite báo `Port 3000 is already in use`, đóng tiến trình frontend cũ rồi chạy lại.
-- Nếu MongoDB Server đã chiếm `27017`, không chạy `npm run db:local`; hãy dùng instance MongoDB đó và URI `mongodb://127.0.0.1:27017/tourist_car_rental_demo`.
+- MongoDB hiện được dùng tại cổng `27017` với replica set `rentalLocal`; giữ `MONGO_URI=mongodb://127.0.0.1:27017/tourist_car_rental_demo?replicaSet=rentalLocal` trong `BE/.env`.
 
 ### Booking báo cần replica set
 
@@ -197,8 +197,8 @@ MongoDB standalone đủ để đăng nhập và xem dashboard. Một số thao 
 ### Đặt chuyến và thanh toán cho Người thuê
 
 - Mở `/renter/bookings/new` để đặt chuyến theo số chỗ và `/renter/bookings` để theo dõi yêu cầu. Khi Operator duyệt, hệ thống chọn xe đủ chỗ còn lịch có giá thuê ngày thấp nhất. Tổng tiền giữ theo báo giá đã chấp nhận. Cần MongoDB replica set trong `BE/.env` để gửi yêu cầu, duyệt đơn và ghi nhận thanh toán.
-- Nếu MongoDB standalone đang dùng cổng mặc định, chạy `npm --prefix BE run db:local -- 27018` để khởi tạo database local riêng. Đặt `MONGO_URI` theo URI script in ra rồi chạy `npm --prefix BE run seed` nếu cần tạo dữ liệu demo trong database đó.
-- Renter gửi lịch trình để chờ báo giá. Operator nhập giá trước ưu đãi và số tiền cọc trên chi tiết đơn. My Bookings hiển thị giá sau ưu đãi và tiền cần đặt cọc.
+- Nếu MongoDB ở cổng `27017` chưa bật replica set, cần cấu hình instance đó với tên `rentalLocal` theo hướng dẫn MongoDB trước khi chạy các luồng ghi booking; không cần đổi cổng hoặc tạo DB khác.
+- Renter gửi lịch trình để chờ báo giá. Operator nhập giá và số tiền cọc trên chi tiết đơn. My Bookings hiển thị báo giá và tiền cần đặt cọc.
 - Để bật Stripe Checkout, cấu hình `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` và `CLIENT_ORIGIN` trong `BE/.env`. Stripe hiển thị phương thức phù hợp theo cấu hình tài khoản và giao dịch. Đăng ký endpoint `/api/payments/stripe/webhook` nhận `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded` và `checkout.session.async_payment_failed`. Dùng khóa test khi kiểm thử.
 - Khi Renter xác nhận báo giá, hệ thống kiểm tra và giữ xe để chờ đặt cọc. Sau khi chuyến đi kết thúc, Operator đánh dấu hoàn tất để Renter thanh toán phần còn lại, tính cả phụ phí đã xác nhận và trừ số tiền đã trả.
 
@@ -206,7 +206,7 @@ MongoDB standalone đủ để đăng nhập và xem dashboard. Một số thao 
 
 Môi trường development mặc định sử dụng thanh toán mô phỏng, không cần Stripe và không thu tiền thật. Có thể đặt PAYMENT_MODE=simulation trong BE/.env. NODE_ENV=production luôn tắt mô phỏng; PAYMENT_MODE=stripe dùng lại luồng Stripe hiện có.
 
-Renter mở My Bookings, ký hợp đồng rồi chọn Đặt cọc mô phỏng. Chọn **Mô phỏng thành công** để ghi nhận cọc, xác nhận đơn và kích hoạt hợp đồng. Với hợp đồng đã ký đang chờ đặt cọc, chọn **Mô phỏng thất bại** hoặc **Hủy thanh toán** sẽ hủy hợp đồng và đơn, hiển thị lý do và khóa thanh toán. Giao dịch thất bại được ghi nhận với trạng thái `failed`. Sau khi chuyến hoàn tất, **Hủy thanh toán** phần còn lại cũng hủy hợp đồng và khóa thanh toán. Chuyến vẫn ở trạng thái hoàn thành và số tiền đã thu được giữ nguyên. Backend tính số tiền và yêu cầu Renter đăng nhập đúng tài khoản sở hữu đơn. Giao dịch mô phỏng dùng `payment_method=simulation` và mã `SIM-`.
+Renter mở My Bookings, ký hợp đồng rồi chọn Đặt cọc mô phỏng. Chọn **Mô phỏng thành công** để ghi nhận cọc, xác nhận đơn và kích hoạt hợp đồng. Thanh toán thất bại được ghi nhận với trạng thái `failed` và cho phép thử lại; chỉ **Hủy thanh toán** mới hủy hợp đồng và booking đang chờ cọc. Sau khi chuyến hoàn tất, hủy lần thanh toán phần còn lại không đổi trạng thái chuyến hoặc số tiền đã thu. Backend tính số tiền và yêu cầu Renter đăng nhập đúng tài khoản sở hữu đơn. Giao dịch mô phỏng dùng `payment_method=simulation` và mã `SIM-`.
 
 ### Workflow người 4
 

@@ -1,4 +1,4 @@
-export function GarageRepairForm({ maintenance, needsApproval, busy, onSave, onCancel, onError }) {
+export function GarageRepairForm({ maintenance, busy, onSave, onCancel, onError }) {
   function submit(event) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -11,7 +11,6 @@ export function GarageRepairForm({ maintenance, needsApproval, busy, onSave, onC
     onSave({
       repair_work: work,
       repair_result: result,
-      affects_safety: data.has('safety'),
     });
   }
 
@@ -21,7 +20,6 @@ export function GarageRepairForm({ maintenance, needsApproval, busy, onSave, onC
         <legend>Kết quả sửa chữa</legend>
         <label>Công việc đã thực hiện<textarea name="work" rows={2} maxLength={1000} defaultValue={maintenance.repair_work} required /></label>
         <label>Kết quả sửa chữa<textarea name="result" rows={2} maxLength={1000} defaultValue={maintenance.repair_result} required /></label>
-        {!needsApproval && <label className="garage-safety-option"><input type="checkbox" name="safety" /> Ảnh hưởng an toàn</label>}
         <div className="garage-maintenance-actions">
           <button className="dispatch-button primary compact">Lưu kết quả sửa chữa</button>
           <button className="dispatch-button subtle compact" type="button" onClick={onCancel}>Hủy</button>

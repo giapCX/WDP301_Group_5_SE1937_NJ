@@ -224,7 +224,7 @@ export default function BookingReview({ id, onClose, onUpdated }) {
                   <strong>{money(booking.additional_charge)}</strong>
                 </div>
                 <div className="cost-line total">
-                  <span>Tổng trước khuyến mãi</span>
+                  <span>Tổng dự kiến</span>
                   <strong>
                     {money(booking.estimated_price + booking.additional_charge)}
                   </strong>

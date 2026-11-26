@@ -42,6 +42,7 @@ export default function BookingSidebar() {
       <NavLink to="/operator/booking-change-requests" aria-label="Thay đổi lịch trình"><Icon name="calendar" />Thay đổi lịch trình</NavLink>
       <NavLink to="/operator/booking-management"><Icon name="list" />Quản lý đặt xe</NavLink>
       <NavLink to="/operator/operations"><Icon name="list"/>Phụ phí, hủy và sự cố</NavLink>
+      <NavLink to="/operator/fleet"><Icon name="car" />Hồ sơ xe và tài xế</NavLink>
       <NavLink to="/operator/vehicles"><Icon name="car" />Xe sẵn sàng</NavLink>
     </DispatchSidebar>
   );

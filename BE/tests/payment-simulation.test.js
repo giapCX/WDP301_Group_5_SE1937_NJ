@@ -4,7 +4,7 @@ const repository = require('../src/repositories/booking.repository');
 const reservations = require('../src/repositories/renter-reservation.repository');
 const { Booking, Payment } = require('../src/models');
 
-test('simulation records payments once, cancels contracts awaiting payment and checks ownership', async (context) => {
+test('simulation records failures for retry, cancels only on explicit cancellation and checks ownership', async (context) => {
   context.mock.method(repository, 'runInTransaction', async (action) => action(null));
   context.mock.method(reservations, 'nextIds', async () => 1);
   // Load after transaction helpers are stubbed: no database or payment provider is used.
@@ -65,22 +65,29 @@ test('simulation records payments once, cancels contracts awaiting payment and c
   assert.equal(booking.paid_total, 0);
   assert.equal(booking.booking_status, 'awaiting_payment');
   assert.equal(rows.length, 2);
-  for (const [outcome, reason] of [['failed', 'payment_failed'], ['cancelled', 'payment_cancelled']]) {
-    reset();
-    booking.transport_contract = { status: 'signed_pending_payment', id: 'signed-contract' };
-    const result = await payments.simulate(7, 9, { attemptId: 'test-attempt', outcome });
-    assert.equal(result.contractCancelled, true);
-    assert.equal(booking.booking_status, 'cancelled');
-    assert.equal(booking.transport_contract.status, 'cancelled');
-    assert.equal(booking.transport_contract.cancellationReason, reason);
-    assert.ok(booking.transport_contract.cancelledAt instanceof Date);
-    assert.equal(booking.transport_contract.id, 'signed-contract');
-    assert.equal(booking.paid_total, 0);
-    assert.equal(booking.checkout_attempt, undefined);
-    assert.equal(payments.paymentDue(booking), null);
-    await assert.rejects(payments.checkout(7, 9), { statusCode: 409 });
-    await assert.rejects(payments.simulate(7, 9, { attemptId: 'test-attempt', outcome: 'success' }), { statusCode: 409 });
-  }
+  reset();
+  booking.transport_contract = { status: 'signed_pending_payment', id: 'signed-contract' };
+  const failed = await payments.simulate(7, 9, { attemptId: 'test-attempt', outcome: 'failed' });
+  assert.equal(failed.contractCancelled, false);
+  assert.equal(booking.booking_status, 'awaiting_payment');
+  assert.equal(booking.transport_contract.status, 'signed_pending_payment');
+  assert.equal(booking.checkout_attempt, undefined);
+  assert.deepEqual(payments.paymentDue(booking), { purpose: 'deposit', amount: 300000 });
+
+  reset();
+  booking.transport_contract = { status: 'signed_pending_payment', id: 'signed-contract' };
+  const cancelled = await payments.simulate(7, 9, { attemptId: 'test-attempt', outcome: 'cancelled' });
+  assert.equal(cancelled.contractCancelled, true);
+  assert.equal(booking.booking_status, 'cancelled');
+  assert.equal(booking.transport_contract.status, 'cancelled');
+  assert.equal(booking.transport_contract.cancellationReason, 'payment_cancelled');
+  assert.ok(booking.transport_contract.cancelledAt instanceof Date);
+  assert.equal(booking.transport_contract.id, 'signed-contract');
+  assert.equal(booking.paid_total, 0);
+  assert.equal(booking.checkout_attempt, undefined);
+  assert.equal(payments.paymentDue(booking), null);
+  await assert.rejects(payments.checkout(7, 9), { statusCode: 409 });
+  await assert.rejects(payments.simulate(7, 9, { attemptId: 'test-attempt', outcome: 'success' }), { statusCode: 409 });
   assert.equal(rows.length, 3);
   assert.equal(rows.at(-1).payment_status, 'failed');
   reset();
@@ -96,8 +103,8 @@ test('simulation records payments once, cancels contracts awaiting payment and c
   booking.transport_contract = { status: 'active', id: 'signed-contract' };
   booking.paid_total = 300000;
   booking.checkout_attempt = { id: 'balance-attempt', amount: 700000, purpose: 'balance' };
-  const cancelled = await payments.simulate(7, 9, { attemptId: 'balance-attempt', outcome: 'cancelled' });
-  assert.equal(cancelled.contractCancelled, true);
+  const cancelledBalance = await payments.simulate(7, 9, { attemptId: 'balance-attempt', outcome: 'cancelled' });
+  assert.equal(cancelledBalance.contractCancelled, true);
   assert.equal(booking.booking_status, 'completed');
   assert.equal(booking.transport_contract.status, 'cancelled');
   assert.equal(booking.transport_contract.cancellationReason, 'payment_cancelled');

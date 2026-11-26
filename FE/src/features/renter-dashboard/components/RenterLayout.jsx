@@ -13,7 +13,6 @@ const navigation = [
   [bookingPath, 'My Bookings', 'receipt_long'],
   [dashboardPath + '#chuyen-di', 'Chuyến đi hiện tại', 'route'],
   [dashboardPath + '#lich-su', 'Lịch sử chuyến đi', 'history'],
-  [dashboardPath + '#uu-dai', 'Ưu đãi', 'redeem'],
 ];
 
 function activeLink({ pathname, hash }) {

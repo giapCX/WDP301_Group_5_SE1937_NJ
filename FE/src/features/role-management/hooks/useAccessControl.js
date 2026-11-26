@@ -23,16 +23,9 @@ function accountPresentation(user) {
     tone: role === 'manager' ? 'avatar-violet' : role === 'admin' ? 'avatar-blue' : 'avatar-green' };
 }
 
-function auditPresentation(event) {
-  return { id: String(event._id), title: event.summary || `${event.action} ${event.resource}`, actor: event.actor_role || 'Hệ thống',
-    time: new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(event.created_at)),
-    type: event.action === 'create' ? 'info' : event.action === 'update' ? 'success' : 'warning' };
-}
-
 export default function useAccessControl() {
   const [roles, setRoles] = useState([]);
   const [accounts, setAccounts] = useState([]);
-  const [auditEvents, setAuditEvents] = useState([]);
   const [matrix, setMatrix] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,14 +35,13 @@ export default function useAccessControl() {
     setLoading(true);
     setError('');
     try {
-      const [roleRows, userRows, auditRows] = await Promise.all([
-        listManagementResource('roles'), listManagementResource('users'), listManagementResource('audit_logs'),
+      const [roleRows, userRows] = await Promise.all([
+        listManagementResource('roles'), listManagementResource('users'),
       ]);
       const nextRoles = roleRows.map(rolePresentation);
       setRoles(nextRoles);
       setMatrix(makeMatrix(nextRoles));
       setAccounts(userRows.map(accountPresentation));
-      setAuditEvents(auditRows.map(auditPresentation));
     } catch (failure) {
       setError(failure.response?.data?.message || 'Không thể tải dữ liệu quản trị.');
     } finally {
@@ -67,20 +59,6 @@ export default function useAccessControl() {
         [roleId]: !current[permissionId]?.[roleId],
       },
     }));
-  }
-
-  async function addRole(name) {
-    const normalizedName = name.trim();
-    if (!normalizedName) return false;
-    try {
-      await createManagementResource('roles', { role_name: normalizedName, permissions: [] });
-      await refresh();
-      setToast(`Đã tạo vai trò “${normalizedName}”`);
-      return true;
-    } catch (failure) {
-      setToast(failure.response?.data?.message || 'Không thể tạo vai trò.');
-      return false;
-    }
   }
 
   async function saveMatrix() {
@@ -119,10 +97,8 @@ export default function useAccessControl() {
 
   return {
     accounts,
-    auditEvents,
     matrix,
     roles,
-    addRole,
     saveMatrix,
     setToast,
     toast,

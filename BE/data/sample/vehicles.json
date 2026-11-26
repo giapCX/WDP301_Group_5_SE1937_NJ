@@ -1,15 +1,5 @@
 [
   {
-    "vehicle_id": 1,
-    "plate_number": "51A-DEMO01",
-    "brand": "Toyota",
-    "model": "Vios",
-    "seat_count": 5,
-    "price_per_day": 800000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
     "vehicle_id": 2,
     "plate_number": "51A-DEMO02",
     "brand": "Mitsubishi",
@@ -46,126 +36,6 @@
     "model": "Carnival",
     "seat_count": 7,
     "price_per_day": 1600000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 6,
-    "plate_number": "51A-DEMO06",
-    "brand": "Toyota",
-    "model": "Camry",
-    "seat_count": 5,
-    "price_per_day": 1200000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 7,
-    "plate_number": "51A-DEMO07",
-    "brand": "Toyota",
-    "model": "Corolla Cross",
-    "seat_count": 5,
-    "price_per_day": 1100000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 8,
-    "plate_number": "51A-DEMO08",
-    "brand": "Hyundai",
-    "model": "Accent",
-    "seat_count": 5,
-    "price_per_day": 800000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 9,
-    "plate_number": "51A-DEMO09",
-    "brand": "Honda",
-    "model": "City",
-    "seat_count": 5,
-    "price_per_day": 850000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 10,
-    "plate_number": "51A-DEMO10",
-    "brand": "Honda",
-    "model": "Civic",
-    "seat_count": 5,
-    "price_per_day": 1100000,
-    "status": "in_use",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 11,
-    "plate_number": "51A-DEMO11",
-    "brand": "Mazda",
-    "model": "Mazda3",
-    "seat_count": 5,
-    "price_per_day": 950000,
-    "status": "maintenance",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 12,
-    "plate_number": "51A-DEMO12",
-    "brand": "Mazda",
-    "model": "CX-5",
-    "seat_count": 5,
-    "price_per_day": 1200000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 13,
-    "plate_number": "51A-DEMO13",
-    "brand": "Kia",
-    "model": "K3",
-    "seat_count": 5,
-    "price_per_day": 900000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 14,
-    "plate_number": "51A-DEMO14",
-    "brand": "Kia",
-    "model": "Seltos",
-    "seat_count": 5,
-    "price_per_day": 1000000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 15,
-    "plate_number": "51A-DEMO15",
-    "brand": "VinFast",
-    "model": "VF 5",
-    "seat_count": 5,
-    "price_per_day": 850000,
-    "status": "in_use",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 16,
-    "plate_number": "51A-DEMO16",
-    "brand": "VinFast",
-    "model": "VF 8",
-    "seat_count": 5,
-    "price_per_day": 1400000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 17,
-    "plate_number": "51A-DEMO17",
-    "brand": "Hyundai",
-    "model": "Tucson",
-    "seat_count": 5,
-    "price_per_day": 1200000,
     "status": "available",
     "schedule_version": 0
   },
@@ -280,16 +150,6 @@
     "schedule_version": 0
   },
   {
-    "vehicle_id": 29,
-    "plate_number": "51A-DEMO29",
-    "brand": "Hyundai",
-    "model": "Staria",
-    "seat_count": 8,
-    "price_per_day": 1800000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
     "vehicle_id": 30,
     "plate_number": "51A-DEMO30",
     "brand": "Ford",
@@ -357,46 +217,6 @@
     "seat_count": 29,
     "price_per_day": 3200000,
     "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 37,
-    "plate_number": "51A-DEMO37",
-    "brand": "THACO",
-    "model": "Bluesky",
-    "seat_count": 35,
-    "price_per_day": 4200000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 38,
-    "plate_number": "51A-DEMO38",
-    "brand": "Hyundai",
-    "model": "Universe",
-    "seat_count": 45,
-    "price_per_day": 5500000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 39,
-    "plate_number": "51A-DEMO39",
-    "brand": "THACO",
-    "model": "Cruiser",
-    "seat_count": 45,
-    "price_per_day": 5500000,
-    "status": "available",
-    "schedule_version": 0
-  },
-  {
-    "vehicle_id": 40,
-    "plate_number": "51A-DEMO40",
-    "brand": "THACO",
-    "model": "Bluesky",
-    "seat_count": 47,
-    "price_per_day": 5700000,
-    "status": "in_use",
     "schedule_version": 0
   }
 ]

@@ -4,19 +4,20 @@ const { inspectionPhoto } = require('../controllers/garage-workflow.controller')
 const { photo: damagePhoto } = require('../controllers/garage-damage.controller');
 const requireOperator = require('../middleware/require-operator.middleware');
 const requireDriver = require('../middleware/require-driver.middleware');
+const { requireRolePermission } = require('../middleware/require-management-role.middleware');
 const HttpError = require('../utils/http-error');
 
 const operator = Router();
 operator.use(requireOperator);
-operator.get('/', controller.dispatch);
-operator.post('/:id/assign', controller.assign);
-operator.post('/:id/replace-vehicle', controller.replaceVehicle);
-operator.post('/:id/reassign-return', controller.reassignReturn);
-operator.post('/:id/incidents/:incidentId/resolve', controller.resolve);
-operator.get('/:bookingId/incidents/:incidentId/damage-photos/:index', damagePhoto);
+operator.get('/', requireRolePermission('booking.read.all'), controller.dispatch);
+operator.post('/:id/assign', requireRolePermission('booking.review'), controller.assign);
+operator.post('/:id/replace-vehicle', requireRolePermission('booking.review'), controller.replaceVehicle);
+operator.post('/:id/reassign-return', requireRolePermission('booking.review'), controller.reassignReturn);
+operator.post('/:id/incidents/:incidentId/resolve', requireRolePermission('booking.review'), controller.resolve);
+operator.get('/:bookingId/incidents/:incidentId/damage-photos/:index', requireRolePermission('booking.read.all'), damagePhoto);
 
 const driver = Router();
-driver.use(requireDriver);
+driver.use(requireDriver, requireRolePermission('booking.read.own'));
 driver.get('/', controller.trips);
 driver.get('/:bookingId/handover/:id/photos/:index', inspectionPhoto);
 driver.post('/:id/incident', controller.incident);

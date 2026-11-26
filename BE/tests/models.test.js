@@ -5,6 +5,11 @@ const data = require('../src/config/sample-data');
 const workflowDate = new Date('2026-11-24T00:00:00Z');
 const fixtures = {
   ...data,
+  service_policies: [{
+    policy_id: 1, name: 'Test policy', cancellation_fee_percent: 0, waiting_fee_per_hour: 0,
+    overtime_fee_per_hour: 0, extra_km_fee: 0, refund_days: 0, effective_from: workflowDate,
+    effective_to: null, status: 'draft', created_at: workflowDate, updated_at: workflowDate,
+  }],
   trip_workflows: [{
     booking_id: 1,
     service_type: 'one_way',
@@ -61,7 +66,8 @@ test('booking defaults preserve numeric references and existing timestamps', () 
 
 test('DBML primary, one-to-one and compound uniqueness is declared', () => {
   for (const Model of Object.values(models)) {
-    const key = Object.keys(fixtures[Model.collection.name][0])[0];
+    const key = Object.keys(Model.schema.paths).find((field) => Model.schema.path(field).options.unique) ||
+      Object.keys(fixtures[Model.collection.name][0])[0];
     assert.ok(
       Model.schema
         .indexes()

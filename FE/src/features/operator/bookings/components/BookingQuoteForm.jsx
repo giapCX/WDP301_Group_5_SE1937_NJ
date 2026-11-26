@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchQuoteRates, previewBookingQuote, getBookingError, fetchContractCompany } from '../api/bookingApi';
+import { fetchQuotePricingRule, previewBookingQuote, getBookingError, fetchContractCompany } from '../api/bookingApi';
 import useHomeResource from '../../../home/hooks/useHomeResource';
 import { money } from '../../../shared/booking/bookingConstants';
 
@@ -8,8 +8,7 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
   const tour = booking.service_type === 'tour';
   const saved = booking.quote_calculation?.inputs;
   const [values, setValues] = useState(() => {
-    const defaults = tour ? { dayRate: '', totalKm: '', kmRate: '', nights: 0, nightRate: 300000 }
-      : { outwardKm: '', returnKm: '', kmRate: '', dispatchPercent: 20 };
+    const defaults = tour ? { totalKm: '', nights: 0 } : { outwardKm: '', returnKm: '' };
     return Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key, saved?.[key] ?? value]));
   });
   const rentalDays = booking.rental_days;
@@ -18,13 +17,13 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
   const [error, setError] = useState('');
   const [calculating, setCalculating] = useState(false);
   const [ratesReady, setRatesReady] = useState(false);
+  const [pricingRule, setPricingRule] = useState(null);
   const [deposit, setDeposit] = useState(booking.deposit_due ?? '');
   useEffect(() => {
     let active = true;
-    fetchQuoteRates().then((rates) => {
+    fetchQuotePricingRule(booking.booking_id).then((rule) => {
       if (!active) return;
-      const rate = rates[booking.requested_seats];
-      if (!saved && rate) setValues((current) => ({ ...current, kmRate: rate[0], ...(tour && { dayRate: rate[1] }) }));
+      setPricingRule(rule);
       setRatesReady(true);
     }).catch((failure) => { if (active) setError(getBookingError(failure)); });
     return () => { active = false; };
@@ -55,28 +54,33 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
   return <section className="review-section">
     <h3>{booking.booking_status === 'quoted' ? 'Xem xét lại báo giá' : 'Xem xét và tính giá'}</h3>
     <p>{tour ? 'Đồng hành du lịch' : 'Đưa đi – đón về'} · Xe từ {booking.requested_seats} chỗ</p>
-    {tour && rentalDays && <p>{rentalDays} ngày thuê theo lịch booking · Tối đa {maxNights} đêm lưu trú. Giá ngày gồm 100 km.</p>}
+    {pricingRule && <dl className="quote-rate-summary">
+      {tour ? <>
+        <dt>Giá gói/ngày</dt><dd>{money(pricingRule.day_rate)}</dd>
+        <dt>Km bao gồm/ngày</dt><dd>{pricingRule.included_km_per_day} km</dd>
+        <dt>Phí vượt km</dt><dd>{money(pricingRule.extra_km_rate)}/km</dd>
+        <dt>Lưu trú tài xế</dt><dd>{money(pricingRule.driver_night_rate)}/đêm</dd>
+      </> : <>
+        <dt>Đơn giá/km</dt><dd>{money(pricingRule.km_rate)}</dd>
+        <dt>Phí điều xe</dt><dd>{pricingRule.dispatch_percent}%</dd>
+      </>}
+    </dl>}
+    {tour && rentalDays && <p>{rentalDays} ngày thuê theo lịch booking · Tối đa {maxNights} đêm lưu trú. Định mức km/ngày theo bảng giá đang áp dụng.</p>}
     {tour && !rentalDays && <p className="dispatch-alert" role="alert">Thời gian thuê trong booking không hợp lệ.</p>}
-    {booking.requested_promotion_code && <p>Mã ưu đãi khách yêu cầu: {booking.requested_promotion_code}. Hệ thống kiểm tra và áp dụng khi gửi báo giá.</p>}
     {error && <p className="dispatch-alert" role="alert">{error}</p>}
     <form onSubmit={calculate}>
       <fieldset disabled={busy || calculating || !ratesReady || (tour && !rentalDays)}>
         <legend>Thông số tính giá</legend>
         <div className="review-route">
           {tour ? <>
-            {numeric('dayRate', 'Đơn giá/ngày (₫)')}
             {numeric('totalKm', 'Tổng quãng đường (km)', '0.1')}
-            {numeric('kmRate', 'Đơn giá/km vượt (₫)')}
             {numeric('nights', 'Số đêm lưu trú tài xế', '1', maxNights)}
             {Number(values.nights) > maxNights && <p className="dispatch-alert" role="alert">
               Đã nhập {values.nights} đêm cho {rentalDays} ngày thuê. Nhập tối đa {maxNights} đêm.
             </p>}
-            {numeric('nightRate', 'Đơn giá lưu trú/đêm (₫)')}
           </> : <>
             {numeric('outwardKm', 'Quãng đường lượt đi (km)', '0.1')}
             {numeric('returnKm', 'Quãng đường lượt về (km)', '0.1')}
-            {numeric('kmRate', 'Đơn giá/km (₫)')}
-            {numeric('dispatchPercent', 'Phí điều xe (%)', '0.1')}
           </>}
         </div>
         <button className="dispatch-button primary" type="submit">{calculating ? 'Đang tính…' : 'Tính giá dự kiến'}</button>
@@ -86,7 +90,7 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
       {preview.lines.map((line) => <div className="cost-line" key={line.label}>
         <span>{line.label} ({line.quantity} × {money(line.unit_price)})</span><strong>{money(line.amount)}</strong>
       </div>)}
-      <div className="cost-line total"><span>Tổng trước ưu đãi</span><strong>{money(preview.subtotal)}</strong></div>
+      <div className="cost-line total"><span>Tổng dự kiến</span><strong>{money(preview.subtotal)}</strong></div>
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -99,6 +103,7 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
               );
               onSend({
                 calculation: preview.inputs,
+                pricing_rule: preview.pricing_rule,
                 deposit: Number(deposit),
                 contract,
               });
@@ -152,8 +157,8 @@ export default function BookingQuoteForm({ booking, busy, onSend }) {
               />
             </label>
             <p>
-              Tiền cọc gợi ý ban đầu bằng 30% giá trước ưu đãi; kiểm tra lại
-              theo giá sau ưu đãi khi gửi.
+              Tiền cọc gợi ý ban đầu bằng 30% tổng dự kiến; kiểm tra lại
+              theo báo giá khi gửi.
             </p>
             <button
               className="dispatch-button primary"

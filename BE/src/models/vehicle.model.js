@@ -1,4 +1,5 @@
 const { createModel } = require('./model-factory');
+const { VEHICLE_STATUSES } = require('../config/workflow.constants');
 
 module.exports = createModel(
   'Vehicle',
@@ -43,8 +44,8 @@ module.exports = createModel(
       type: Number,
       required: true,
       validate: {
-        validator: Number.isFinite,
-        message: 'Must be finite',
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer VND amount',
       },
     },
     schedule_version: {
@@ -61,7 +62,7 @@ module.exports = createModel(
     status: {
       type: String,
       required: true,
-      maxlength: 30,
+      enum: VEHICLE_STATUSES,
     },
   },
   [],

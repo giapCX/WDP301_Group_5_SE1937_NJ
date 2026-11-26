@@ -9,10 +9,11 @@ const charges = require('../src/routes/additional-charge.routes');
 const changes = require('../src/routes/booking-change-request.routes');
 const renterChanges = require('../src/routes/renter-booking-change.routes');
 const errors = require('../middlewares/error.middleware');
+const { connectTestDatabase } = require('./helpers/test-database');
 
 test('workflow 4 owns cancellation, refund, incident approvals, disputes and itinerary pricing', async (context) => {
   const dbName = 'operations_test_' + process.pid + '_' + Date.now();
-  await mongoose.connect(process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27018/?replicaSet=rentalLocal', { dbName, serverSelectionTimeoutMS: 5000 });
+  await connectTestDatabase(mongoose, dbName, { serverSelectionTimeoutMS: 5000 });
   let server;
   context.after(async () => { if (server) await new Promise((resolve) => server.close(resolve)); await mongoose.connection.dropDatabase(); await mongoose.disconnect(); });
   for (const Model of Object.values(models)) await Model.createCollection();
@@ -37,7 +38,7 @@ test('workflow 4 owns cancellation, refund, incident approvals, disputes and iti
     return models.Booking.create({ ...sample.bookings[0], booking_id: id, renter_id: 7, vehicle_id: 2,
       pickup_time: new Date('2099-01-01T01:00:00Z'), estimated_end_time: new Date('2099-01-02T10:00:00Z'),
       booking_status: 'confirmed', requested_seat_count: 7, estimated_price: 1000000, additional_charge: 0,
-      paid_total: 300000, pricing_breakdown: { subtotal: 1000000, surcharge: 0, discount: 0, total: 1000000 }, ...extra });
+      paid_total: 300000, pricing_breakdown: { subtotal: 1000000, surcharge: 0, total: 1000000 }, ...extra });
   }
   async function paid(id, amount = 300000) { return models.Payment.create({ payment_id: id, booking_id: id, amount, payment_method: 'simulation', payment_status: 'paid', purpose: 'deposit', paid_at: new Date() }); }
   await create(101); await paid(101);
@@ -47,7 +48,8 @@ test('workflow 4 owns cancellation, refund, incident approvals, disputes and iti
   assert.equal((await api('/renter/bookings/101/operations', 'other')).status, 404);
   assert.equal((await api('/operator/operations/refunds?page=0', 'operator')).status, 400);
   assert.equal((await api('/renter/bookings/101/cancellation-preview', 'renter')).status, 409);
-  await mongoose.connection.db.collection('service_policies').insertOne({ policy_id: 1, name: 'Demo cancellation 10%', cancellation_fee_percent: 10, status: 'active', updated_at: new Date() });
+  await mongoose.connection.db.collection('service_policies').insertOne({ policy_id: 1, name: 'Demo cancellation 10%', cancellation_fee_percent: 10,
+    effective_from: new Date('2020-01-01T00:00:00Z'), effective_to: null, status: 'active', updated_at: new Date() });
   const preview = await api('/renter/bookings/101/cancellation-preview', 'renter');
   assert.equal(preview.data.data.fee, 100000); assert.equal(preview.data.data.refund_amount, 200000);
   const requested = await api('/renter/bookings/101/cancellation', 'renter', { reason: 'Đổi kế hoạch' });
@@ -162,6 +164,8 @@ test('workflow 4 owns cancellation, refund, incident approvals, disputes and iti
   const quotes = require('../src/services/booking-quote.service');
   const contracts = require('../src/services/passenger-contract.service');
   const payments = require('../src/services/renter-payment.service');
+  await mongoose.connection.db.collection('pricing_rules').insertOne({ rule_id: 1, name: 'Test roundtrip rate', service_type: 'roundtrip',
+    seat_count: 7, km_rate: 12000, dispatch_percent: 20, status: 'active', updated_at: new Date() });
   await create(107, { booking_status: 'pending', paid_total: 0, requested_seats: 7, service_type: 'roundtrip', quote_requested_at: new Date(),
     pickup_time: new Date('2099-02-01T01:00:00Z'), estimated_end_time: new Date('2099-02-02T12:00:00Z') });
   assert.equal((await api('/operator/bookings/contract-company', 'operator')).status, 409);

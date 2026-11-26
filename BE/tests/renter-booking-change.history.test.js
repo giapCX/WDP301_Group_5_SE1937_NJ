@@ -6,11 +6,11 @@ const models = require('../src/models');
 const data = require('../src/config/sample-data');
 const routes = require('../src/routes/renter-booking-change.routes');
 const errors = require('../middlewares/error.middleware');
+const { connectTestDatabase } = require('./helpers/test-database');
 
 test('renter history HTTP enforces ownership, filters and ten-row pagination', async () => {
   const dbName = `renter_history_test_${process.pid}_${Date.now()}`;
-  await mongoose.connect(process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27017/?replicaSet=rentalLocal', {
-    dbName,
+  await connectTestDatabase(mongoose, dbName, {
     autoIndex: false,
   });
   let server;

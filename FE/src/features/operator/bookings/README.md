@@ -39,7 +39,7 @@ Booking cũ thiếu số chỗ bị chặn điều phối bằng lỗi 409; khô
 
 ## Operator xem xét và tính báo giá
 
-Renter gửi yêu cầu báo giá từ form lộ trình, đơn ở trạng thái pending và hiển thị Chờ xem xét, chưa thanh toán. Operator mở chi tiết đơn để xem lịch trình rồi nhập thông số và chọn Tính giá dự kiến. Backend tính lại khi gửi, không nhận tổng tiền do client tự tính. Bảng tính được lưu trong quote_calculation, không làm thay đổi cách áp dụng ưu đãi/thanh toán hiện có.
+Renter gửi yêu cầu báo giá từ form lộ trình, đơn ở trạng thái pending và hiển thị Chờ xem xét, chưa thanh toán. Operator mở chi tiết đơn để xem lịch trình rồi nhập thông số và chọn Tính giá dự kiến. Backend tính lại khi gửi, không nhận tổng tiền do client tự tính. Bảng tính được lưu trong quote_calculation và dùng làm căn cứ cho thanh toán.
 
 Đơn giá tham khảo đồ án nằm trong BE/src/services/quote-calculator.js. Có mức 4/7/16/29/45 chỗ; số chỗ khác cần nhập đơn giá thủ công. Roundtrip tính km hai lượt và tỷ lệ điều xe. Tour nhập giờ phục vụ mỗi ngày bằng dấu phẩy (ví dụ 8, 10, 8), tính 100 km/ngày và 8 giờ/ngày; không lấy giờ nghỉ đêm làm giờ phục vụ. Operator nhập số đêm, phí cầu đường, đỗ xe và phụ phí. Điều chỉnh tăng/giảm hoặc phụ phí khác bắt buộc ghi lý do. Các khoản tiền được làm tròn đến VND trên từng dòng. Tiền cọc vẫn do Operator kiểm tra trước khi gửi.
 

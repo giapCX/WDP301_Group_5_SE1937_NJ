@@ -20,7 +20,8 @@ function cancellationPrice(booking, policy, at = new Date()) {
   const total = amount(booking.pricing_breakdown?.total ?? booking.estimated_price);
   const fee = Math.round(total * percent / 100);
   return { fee, refund_amount: Math.max(0, paid - refunded - fee),
-    policy: { policy_id: policy.policy_id, name: policy.name, fee_percent: percent, free_hours: freeHours, hours_before: hours } };
+    policy: { policy_id: policy.policy_id, name: policy.name, fee_percent: percent, free_hours: freeHours,
+      hours_before: hours, effective_from: policy.effective_from, effective_to: policy.effective_to } };
 }
 async function reconcilePaid(booking, session) {
   const records = await Payment.find({ booking_id: booking.booking_id, payment_status: 'paid' }).session(session).lean();
@@ -95,6 +96,8 @@ async function decide(id, input, actor) {
       const current = cancellationPrice(booking, request.policy ? {
         policy_id: request.policy.policy_id, name: request.policy.name,
         cancellation_fee_percent: request.policy.fee_percent,
+        free_cancellation_hours: request.policy.free_hours,
+        effective_from: request.policy.effective_from, effective_to: request.policy.effective_to,
       } : null, request.requested_at);
       if (current.refund_amount !== request.refund_amount || current.fee !== request.fee) throw new HttpError(409, 'Số tiền đã thay đổi; cần từ chối và lập lại yêu cầu hủy');
       if (input.feeOverride !== undefined) {
@@ -141,7 +144,7 @@ async function decideRefund(id, input, actor) {
     refund.refund_status = { approve: 'approved', reject: 'rejected', complete: 'completed' }[input.decision];
     refund.decision_note = reason;
     if (input.decision === 'complete') {
-      if (!['simulation', 'promotion'].includes(payment.payment_method)) throw new HttpError(409, 'Chỉ hoàn tiền mô phỏng cho giao dịch demo; không ghi nhận hoàn thật.');
+      if (payment.payment_method !== 'simulation') throw new HttpError(409, 'Chỉ hoàn tiền mô phỏng cho giao dịch demo; không ghi nhận hoàn thật.');
       const completed = await Refund.find({ payment_id: payment.payment_id, refund_status: 'completed' }).session(session).lean();
       if (completed.reduce((sum, item) => sum + item.amount, 0) + refund.amount > payment.amount) throw new HttpError(409, 'Số tiền hoàn vượt số đã thu');
       refund.completed_at = new Date(); refund.provider_reference = 'SIM-REFUND-' + refund.refund_id;

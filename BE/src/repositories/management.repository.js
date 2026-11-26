@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const ID_FIELDS = { users: 'user_id', roles: 'role_id', pricing_rules: 'rule_id', service_policies: 'policy_id', promotions: 'promotion_id' };
+const { RESOURCE_ID_FIELDS: ID_FIELDS } = require('../config/management.constants');
 const { PAID_PAYMENT_STATUSES } = require('../config/manager-dashboard.constants');
 
 const database = () => mongoose.connection.db;

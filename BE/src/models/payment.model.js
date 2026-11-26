@@ -1,4 +1,5 @@
 const { createModel } = require('./model-factory');
+const { PAYMENT_STATUSES } = require('../config/workflow.constants');
 
 module.exports = createModel(
   'Payment',
@@ -25,8 +26,8 @@ module.exports = createModel(
       type: Number,
       required: true,
       validate: {
-        validator: Number.isFinite,
-        message: 'Must be finite',
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer VND amount',
       },
     },
     payment_method: {
@@ -37,7 +38,7 @@ module.exports = createModel(
     payment_status: {
       type: String,
       required: true,
-      maxlength: 30,
+      enum: PAYMENT_STATUSES,
     },
     paid_at: {
       type: Date,

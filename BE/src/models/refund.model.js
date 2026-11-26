@@ -1,4 +1,5 @@
 const { createModel } = require('./model-factory');
+const { REFUND_STATUSES } = require('../config/workflow.constants');
 
 module.exports = createModel(
   'Refund',
@@ -30,8 +31,8 @@ module.exports = createModel(
       type: Number,
       required: true,
       validate: {
-        validator: Number.isFinite,
-        message: 'Must be finite',
+        validator: Number.isSafeInteger,
+        message: 'Must be a safe integer VND amount',
       },
     },
     reason: {
@@ -42,7 +43,7 @@ module.exports = createModel(
     refund_status: {
       type: String,
       required: true,
-      maxlength: 30,
+      enum: REFUND_STATUSES,
     },
     approved_by: {
       type: Number,

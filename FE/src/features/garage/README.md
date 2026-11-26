@@ -9,10 +9,10 @@
 | UC-G03 | Gara Staff, Driver | Gara lập biên bản từ kết quả đạt. Driver xem hồ sơ và xác nhận đúng xe trong vòng 24 giờ trước giờ đón. | Xe chuyển sang `in_use`. Driver có thể từ chối kèm lý do để Gara kiểm tra lại. Xe thay thế giữa chuyến có thể được nhận ngoài khung giờ bàn giao ban đầu. |
 | UC-G04 | Gara Staff, Driver | Sau khi Driver gửi báo cáo sau chuyến, Gara ghi nhận tiếp nhận, nhập số km và đối chiếu hồ sơ trước chuyến. Driver xác nhận đã trả xe. | Chuyến hoàn tất sau xác nhận. Xe đạt có thể về `available`. Xe không đạt giữ trạng thái `maintenance` và có phiếu bảo dưỡng. |
 | UC-G05 | Gara Staff, Operator | Từ hồ sơ tiếp nhận không đạt, ghi hạng mục hỏng, mô tả, dùng ảnh lúc tiếp nhận hoặc tải ảnh mới. Có thể chọn **Chuyển Operator xử lý**. | Lưu báo cáo kèm bằng chứng. Nếu chuyển xử lý, Operator thấy sự cố trong trang Điều phối. Việc đóng sự cố giữ nguyên trạng thái của chuyến đã hoàn tất. |
-| UC-G06 | Gara Staff | Mở phiếu, ghi công việc, kết quả sửa và kiểm tra lại trên cùng phiếu. | Kiểm tra không đạt thì giữ phiếu mở. Khi đạt, Gara hoàn tất phiếu thường hoặc gửi Manager duyệt nếu ảnh hưởng an toàn. |
-| UC-G07 | Manager | Xem phiếu ở `/manager/maintenance-approvals`. Duyệt kết quả hoặc trả phiếu kèm lý do. | Quyết định được lưu với người duyệt, thời điểm và mã lần kiểm tra. Phiếu trả về cần ghi sửa chữa và kiểm tra mới. Xe chỉ sẵn sàng khi đã về Gara và hết phiếu đang mở. |
+| UC-G06 | Gara Staff | Mở phiếu, ghi công việc, kết quả sửa và kiểm tra lại trên cùng phiếu. | Kiểm tra không đạt thì giữ phiếu mở. Kiểm tra đạt và xe đã về Gara thì Gara tự hoàn tất phiếu. |
+| UC-G07 | Gara | Tự hoàn tất phiếu sau khi sửa chữa và kiểm tra lại đạt. Xe chỉ sẵn sàng khi đã về Gara và hết phiếu đang mở. |
 
-Phanh, lốp, đèn, thiết bị an toàn và báo hỏng giữa chuyến yêu cầu Manager duyệt. Gara có thể đánh dấu thêm **Ảnh hưởng an toàn** khi ghi sửa chữa. Operator chỉ có thể phân công lại xe sau khi xe đáp ứng điều kiện bảo dưỡng, lịch và sức chứa.
+Phanh, lốp, đèn, thiết bị an toàn và báo hỏng giữa chuyến vẫn cần sửa chữa, kiểm tra lại đạt và xác nhận xe đã về Gara. Manager không duyệt phiếu bảo dưỡng. Operator chỉ có thể phân công lại xe sau khi xe đáp ứng điều kiện bảo dưỡng, lịch và sức chứa.
 
 ## Activity Diagram
 
@@ -37,11 +37,7 @@ flowchart TD
     N --> O
     O --> P{"Kiểm tra sau sửa đạt?"}
     P -->|Không| O
-    P -->|Có| Q{"Cần Manager duyệt?"}
-    Q -->|Không| S["Hoàn tất phiếu"]
-    Q -->|Có| R{"Manager duyệt phiếu?"}
-    R -->|"Trả phiếu kèm lý do"| O
-    R -->|Duyệt| S
+    P -->|Có| S["Gara hoàn tất phiếu"]
     S --> M
     M -->|Có| T["Xe tiếp tục bảo dưỡng"]
     M -->|Không| U["Xe sẵn sàng"]
@@ -55,7 +51,6 @@ sequenceDiagram
     actor Gara as Gara Staff
     participant API
     participant DB as MongoDB
-    actor Manager
 
     Driver->>API: Chấp nhận phân công
     Gara->>API: Ghi checklist trước chuyến đạt
@@ -69,17 +64,10 @@ sequenceDiagram
     Gara->>API: Lưu báo cáo hư hỏng và ảnh
     Driver->>API: Xác nhận đã trả xe
     API->>DB: Hoàn tất chuyến, giữ xe maintenance
-    Gara->>API: Ghi sửa chữa, kiểm tra đạt và gửi duyệt
-    API->>DB: Lưu phiếu awaiting_approval
-    Manager->>API: Xem và quyết định cho lần kiểm tra này
-    alt Trả phiếu
-        API->>DB: Lưu lý do, đưa phiếu về in_progress
-        Note over Gara,DB: Gara ghi sửa chữa và kiểm tra lại trước khi gửi duyệt
-    else Duyệt
-        API->>DB: Lưu quyết định và hoàn tất phiếu
-        opt Xe đã về Gara và không còn phiếu mở
-            API->>DB: Đặt xe available
-        end
+    Gara->>API: Ghi sửa chữa, kiểm tra đạt và hoàn tất phiếu
+    API->>DB: Hoàn tất khi xe đã về Gara và không còn phiếu mở
+    opt Xe đủ điều kiện khai thác
+        API->>DB: Đặt xe available
     end
 ```
 
@@ -93,7 +81,7 @@ Kết nối tới cùng URI mà backend dùng trong `MONGO_URI`. Các bước ki
 | `vehicle_inspections` | `inspection_id`, `vehicle_id`, `inspection_type`, `inspected_at`, `before_inspection_id`, `maintenance_id`, `checklist`, `odometer`, `fuel_percent`, `photo_count` |
 | `vehicle_handovers` | `inspection_id`, `driver_id`, `status`, `prepared_at`, `responded_at`, `refusal_reason` |
 | `vehicle_damages` | `inspection_id`, `damaged_items`, `evidence_source`, `incident_id`, `maintenance_id` |
-| `maintenance_records` | `maintenance_id`, `vehicle_id`, `maintenance_status`, `repair_work`, `repair_result`, `repair_completed_at`, `reinspection_id`, `approvals` |
+| `maintenance_records` | `maintenance_id`, `vehicle_id`, `maintenance_status`, `repair_work`, `repair_result`, `repair_completed_at`, `reinspection_id` |
 | `vehicles` | `vehicle_id`, `plate_number`, `status` |
 
 Tìm chuyến theo `booking_id`, rồi dùng `vehicle_id` để xem trạng thái xe. Từ lần kiểm tra tiếp nhận không đạt, dùng `inspection_id` để tìm báo cáo hư hỏng và `maintenance_id` để tìm phiếu sửa chữa.
@@ -106,19 +94,19 @@ Dùng bốn phiên trình duyệt độc lập hoặc đổi tài khoản khi t�
 2. **Gara** vào `/garage/tasks`, mở checklist, đánh dấu cả tám mục đạt, nhập số km `1400`, nhiên liệu `65` và ảnh. Lưu kiểm tra rồi chọn **Lập biên bản bàn giao**.
 3. **Driver** làm mới mục **Phân công và cập nhật hành trình**, mở biên bản và chọn **Xác nhận hiện trạng và nhận xe**. Chọn **Đã đón khách**, **Hoàn thành lượt đi**, rồi **Xác nhận trả khách & gửi báo cáo** với số km cuối `1500`.
 4. **Gara** mở nhiệm vụ **Tiếp nhận xe**, nhập `1505` km, chọn **Phanh – Không đạt**, đánh dấu đạt cho các mục còn lại và tải ảnh. Lưu tiếp nhận rồi **Lập báo cáo hư hỏng**. **Driver** làm mới và **Xác nhận trả xe cho Gara**. Trong Compass, booking phải hoàn tất còn xe ở `maintenance`.
-5. **Gara** mở phiếu bảo dưỡng, ghi công việc và kết quả, kiểm tra lại đạt rồi **Gửi Manager duyệt**. **Manager** vào `/manager/maintenance-approvals`, chọn **Trả phiếu về Gara** và ghi lý do.
-6. **Gara** làm mới phiếu, ghi sửa chữa và kiểm tra lại, rồi gửi lại. **Manager** chọn **Duyệt hoàn tất bảo dưỡng**. Làm mới hồ sơ Gara và Compass. Nếu đây là phiếu mở cuối cùng, xe chuyển về `available`.
+5. **Gara** mở phiếu bảo dưỡng, ghi công việc và kết quả, kiểm tra lại đạt rồi tự **Hoàn tất phiếu**. Xe chỉ được đưa lại vào khai thác khi không còn chuyến đang sử dụng hoặc phiếu bảo dưỡng đang mở.
+6. **Gara** làm mới phiếu, ghi sửa chữa và kiểm tra lại đạt. Gara tự hoàn tất; nếu xe đã về và đây là phiếu mở cuối cùng, xe chuyển về `available`.
 
-Nếu danh sách Manager đang trống, thực hiện đến bước gửi duyệt để có hồ sơ chờ xử lý. Ở danh sách Gara, chọn **Đặt lại bộ lọc** nếu nhiệm vụ nằm ngoài ngày đang chọn.
+Ở danh sách Gara, chọn **Đặt lại bộ lọc** nếu nhiệm vụ nằm ngoài ngày đang chọn.
 
 ## Kiểm thử tự động
 
 Chạy từ thư mục gốc. Đổi cổng hoặc tên replica set trong `TEST_MONGO_URI` cho khớp máy đang chạy.
 
 ```powershell
-$env:TEST_MONGO_URI = 'mongodb://127.0.0.1:27018/?replicaSet=rentalLocal'
+$env:TEST_MONGO_URI = 'mongodb://127.0.0.1:27017/?replicaSet=rentalLocal'
 node --test BE/tests/garage-pre-trip-inspection.test.js
 npm.cmd --prefix FE run build
 ```
 
-Test tạo database riêng và xóa sau khi chạy. Các ca bao gồm Driver từ chối nhận xe, đổi xe giữa chuyến, trả xe đạt và không đạt, bằng chứng hư hỏng, Manager trả/duyệt phiếu, quyết định trùng, phân quyền và chặn điều phối khi xe còn bảo dưỡng.
+Test tạo database riêng và xóa sau khi chạy. Các ca bao gồm Driver từ chối nhận xe, đổi xe giữa chuyến, trả xe đạt và không đạt, bằng chứng hư hỏng, Gara tự hoàn tất phiếu sau kiểm tra đạt, quyết định trùng, phân quyền và chặn điều phối khi xe còn bảo dưỡng.

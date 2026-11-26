@@ -5,29 +5,39 @@ const mongoose = require('mongoose');
 const HttpError = require('../utils/http-error');
 const normalizePhone = require('../utils/phone');
 const registration = require('./registration.routes');
+const { AUTH_COLLECTIONS, AUTH_CONFIG } = require('../config/auth.constants');
 
 const router = express.Router();
 const deriveKey = promisify(scrypt);
-const cookieName = 'viettour_session';
+const cookieName = AUTH_CONFIG.SESSION_COOKIE_NAME;
 const cookieOptions = { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' };
 const digest = (token) => createHash('sha256').update(token).digest('hex');
-const sessions = () => mongoose.connection.db.collection('auth_sessions');
-const users = () => mongoose.connection.db.collection('users');
-const attempts = new Map();
-const windowMs = 15 * 60 * 1000;
+const sessions = () => mongoose.connection.db.collection(AUTH_COLLECTIONS.SESSIONS);
+const users = () => mongoose.connection.db.collection(AUTH_COLLECTIONS.USERS);
+const loginAttempts = () => mongoose.connection.db.collection(AUTH_COLLECTIONS.LOGIN_ATTEMPTS);
+let loginAttemptIndex;
 
-function limitLogin(req, _res, next) {
+async function limitLogin(req, _res, next) {
   const now = Date.now();
-  for (const [ip, entry] of attempts) {
-    if (entry.until <= now) attempts.delete(ip);
+  try {
+    loginAttemptIndex ||= loginAttempts().createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+    await loginAttemptIndex;
+    const expiresAt = new Date(now + AUTH_CONFIG.LOGIN_ATTEMPT_WINDOW_MS);
+    const key = digest(req.ip || req.socket.remoteAddress || 'unknown');
+    const result = await loginAttempts().findOneAndUpdate({ _id: key }, [{ $set: {
+      count: { $cond: [{ $gt: ['$expiresAt', new Date(now)] }, { $add: [{ $ifNull: ['$count', 0] }, 1] }, 1] },
+      expiresAt: { $cond: [{ $gt: ['$expiresAt', new Date(now)] }, '$expiresAt', expiresAt] },
+    } }], { upsert: true, returnDocument: 'after' });
+    const attempt = result?.value && typeof result.value === 'object' ? result.value : result;
+    if (attempt.count > AUTH_CONFIG.LOGIN_ATTEMPT_MAX) {
+      return next(new HttpError(429, 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau.'));
+    }
+    req.loginAttemptKey = key;
+    return next();
+  } catch (error) {
+    loginAttemptIndex = undefined;
+    return next(error);
   }
-  const attempt = attempts.get(req.ip) || { count: 0, until: now + windowMs };
-  if (attempt.count >= 15 || (!attempts.has(req.ip) && attempts.size >= 5000)) {
-    throw new HttpError(429, 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau.');
-  }
-  attempt.count++;
-  attempts.set(req.ip, attempt);
-  next();
 }
 
 async function publicUser(user) {
@@ -77,12 +87,12 @@ router.post('/login', limitLogin, async (req, res) => {
 
 async function startSession(req, res, user, remember = false) {
   const token = randomBytes(32).toString('hex');
-  const maxAge = (remember === true ? 30 * 24 : 12) * 60 * 60 * 1000;
+  const maxAge = remember === true ? AUTH_CONFIG.REMEMBER_SESSION_DURATION_MS : AUTH_CONFIG.SESSION_DURATION_MS;
   await sessions().createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
   await sessions().insertOne({ _id: digest(token), userId: user.user_id, expiresAt: new Date(Date.now() + maxAge) });
   const previous = sessionId(req);
   if (previous) await sessions().deleteOne({ _id: previous });
-  attempts.delete(req.ip);
+  await loginAttempts().deleteOne({ _id: req.loginAttemptKey });
   res.cookie(cookieName, token, { ...cookieOptions, ...(remember === true && { maxAge }) });
   res.json({ user });
 }

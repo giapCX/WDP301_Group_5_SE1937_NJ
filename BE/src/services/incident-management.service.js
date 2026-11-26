@@ -54,7 +54,7 @@ async function approve(id, input, actor) {
       if (proposal.action === 'replace_vehicle') {
         await require('../repositories/booking.repository').lockVehicleSchedule(workflow.vehicle_id, session);
         await Vehicle.updateOne({ vehicle_id: workflow.vehicle_id }, { $set: { status: 'maintenance' } }, { session });
-        await require('./garage-maintenance.service').openForDamage({ vehicleId: workflow.vehicle_id, staffId: actor.user_id, description: proposal.note, requiresApproval: true }, session);
+        await require('./garage-maintenance.service').openForDamage({ vehicleId: workflow.vehicle_id, staffId: actor.user_id, description: proposal.note }, session);
         workflow.stage = 'vehicle_replacement_required';
       } else if (proposal.action === 'change_itinerary') workflow.stage = 'routed_to_booking_changes';
       else workflow.stage = 'incident_open';

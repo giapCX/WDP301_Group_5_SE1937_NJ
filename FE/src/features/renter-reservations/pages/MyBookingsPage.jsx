@@ -10,7 +10,6 @@ import ReservationLayout from '../components/ReservationLayout.jsx';
 import useRenterBookings from '../hooks/useRenterBookings.js';
 
 const contractCancellationMessages = {
-  payment_failed: 'Hợp đồng đã bị hủy do thanh toán mô phỏng thất bại.',
   payment_cancelled: 'Hợp đồng đã bị hủy do bạn hủy thanh toán mô phỏng.',
 };
 
@@ -71,7 +70,7 @@ export default function MyBookingsPage() {
           {selected?.additional_charges?.some((charge) => charge.status === 'disputed') && <p role="status" className="rv-notice">Tạm dừng thanh toán để Operator giải quyết phụ phí đang tranh chấp.</p>}
           {selected?.paymentDue && <BookingPayment key={selected.booking_id + ':' + selected.paymentDue.purpose}
             booking={selected} paymentMode={bookings.paymentMode} checkoutAvailable={bookings.checkoutAvailable} onPaid={(outcome, contractCancelled) => {
-              const message = contractCancelled ? contractCancellationMessages[outcome === 'failed' ? 'payment_failed' : 'payment_cancelled'] :
+              const message = contractCancelled ? contractCancellationMessages.payment_cancelled :
                 outcome === 'success' ? `Đơn #${selected.booking_id}: thanh toán mô phỏng thành công, không thu tiền thật.` :
                 outcome === 'failed' ? 'Đã mô phỏng thất bại. Chưa ghi nhận tiền; bạn có thể thanh toán lại.' :
                 outcome === 'cancelled' ? 'Đã hủy phiên thanh toán mô phỏng.' : 'Đã cập nhật thanh toán.';

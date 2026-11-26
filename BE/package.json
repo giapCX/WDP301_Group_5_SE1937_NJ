@@ -4,10 +4,12 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test tests/*.test.js",
     "start": "nodemon server",
     "seed": "node scripts/seed.js",
     "seed:check": "node scripts/seed.js --check",
+    "seed:pricing:check": "node scripts/seed-pricing-rules.js --check",
+    "seed:pricing": "node scripts/seed-pricing-rules.js --apply",
     "seed:manager-demo": "node scripts/seed-manager-demo.js",
     "db:booking-review-fields": "node scripts/add-booking-review-fields.js",
     "test:models": "node --test tests/models.test.js",

@@ -172,12 +172,11 @@ async function approveChangeRequest(id, reviewerId) {
     );
     if (!updated) throw new HttpError(409, 'Booking đã được xử lý bởi người khác');
     if (booking.quote_offer?.accepted_at) {
-      const oldPrice = booking.pricing_breakdown;
+      const surcharge = booking.pricing_breakdown.surcharge || 0;
       const newSubtotal = request.after.estimated_price;
-      const discount = oldPrice.subtotal > 0 ? Math.round(newSubtotal * oldPrice.discount / oldPrice.subtotal) : 0;
-      const total = newSubtotal + (oldPrice.surcharge || 0) - discount;
+      const total = newSubtotal + surcharge;
       const Booking = require('../models').Booking;
-      await Booking.updateOne({ booking_id: booking.booking_id }, { $set: { pricing_breakdown: { ...oldPrice, subtotal: newSubtotal, discount, total } },
+      await Booking.updateOne({ booking_id: booking.booking_id }, { $set: { pricing_breakdown: { subtotal: newSubtotal, surcharge, total } },
         $push: { operation_events: { action: 'change_approved', actor_id: reviewer, at: new Date(), note: 'Đã áp dụng lịch trình và giá được chấp nhận' } } }, { session });
       if ((booking.paid_total || 0) - (booking.refunded_total || 0) > total) {
         await require('./cancellation.service').reserveRefunds(booking, booking.paid_total - (booking.refunded_total || 0) - total,

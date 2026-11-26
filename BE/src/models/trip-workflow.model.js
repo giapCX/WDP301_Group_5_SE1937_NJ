@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { createModel } = require('./model-factory');
+const { TRIP_WORKFLOW_STAGES, DRIVER_RESPONSES, TRIP_LEGS } = require('../config/workflow.constants');
 
 const historySchema = new mongoose.Schema({
   action: { type: String, required: true },
@@ -16,12 +17,12 @@ module.exports = createModel('TripWorkflow', 'trip_workflows', {
   return_dropoff_location: { type: String, default: null, maxlength: 255 },
   driver_id: { type: Number, required: true },
   vehicle_id: { type: Number, required: true },
-  driver_response: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
-  stage: { type: String, required: true, default: 'awaiting_driver' },
+  driver_response: { type: String, enum: DRIVER_RESPONSES, default: 'pending' },
+  stage: { type: String, enum: TRIP_WORKFLOW_STAGES, required: true, default: 'awaiting_driver' },
   handover_inspection_id: { type: Number },
   return_inspection_id: { type: Number },
   resume_stage: { type: String, default: null },
-  leg: { type: String, enum: ['outbound', 'return'], default: 'outbound' },
+  leg: { type: String, enum: TRIP_LEGS, default: 'outbound' },
   vehicle_received: { type: Boolean, default: false },
   vehicle_returned: { type: Boolean, default: false },
   vehicle_received_at: { type: Date, default: null },

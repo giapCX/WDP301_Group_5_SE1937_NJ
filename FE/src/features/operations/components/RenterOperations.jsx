@@ -22,7 +22,7 @@ export default function RenterOperations({ booking, onUpdated }) {
     </>}
     {tab === 'changes' && <>
     {((booking.booking_status === 'confirmed' && new Date(booking.pickup_time) > new Date()) || booking.booking_status === 'in_progress') && <RenterChangeForm booking={booking} onDone={refresh}/>}
-    {result.data?.changes.map((request) => <article key={request.change_request_id} className="op-card"><h3>Đổi lịch #{request.change_request_id} · {labels[request.request_status]}</h3><p>{request.reason}</p><p>{dateTime(request.after.pickup_time)} → {dateTime(request.after.estimated_end_time)}</p><p>Giá trước ưu đãi đề xuất: {money(request.after.estimated_price)} · Chênh lệch {money(request.price_difference)}</p>{request.rejection_reason && <p>{request.rejection_reason}</p>}
+    {result.data?.changes.map((request) => <article key={request.change_request_id} className="op-card"><h3>Đổi lịch #{request.change_request_id} · {labels[request.request_status]}</h3><p>{request.reason}</p><p>{dateTime(request.after.pickup_time)} → {dateTime(request.after.estimated_end_time)}</p><p>Giá đề xuất: {money(request.after.estimated_price)} · Chênh lệch {money(request.price_difference)}</p>{request.rejection_reason && <p>{request.rejection_reason}</p>}
       {request.price_offer && <p>Operator: {request.price_offer.reason} · {request.price_offer.accepted_at ? 'Bạn đã chấp nhận giá' : 'Chờ bạn xem xét'}</p>}
       {request.request_status === 'pending' && request.price_offer && !request.price_offer.accepted_at && <ActionForm title="Chấp nhận giá thay đổi" path={`/renter/bookings/change-requests/${request.change_request_id}/accept-price`} payload={{ offerId: request.price_offer.id }} onDone={refresh} label="Đồng ý giá thay đổi"/>}
     </article>)}

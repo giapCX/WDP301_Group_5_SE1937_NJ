@@ -25,7 +25,7 @@ export const GARAGE_TASK_VIEWS = [
   },
   {
     key: 'maintenance', type: 'MAINTENANCE', label: 'Phiếu bảo dưỡng', icon: 'wrench',
-    description: 'Ghi kết quả sửa chữa, kiểm tra lại và theo dõi phiếu chờ Manager duyệt.',
+    description: 'Ghi kết quả sửa chữa, kiểm tra lại và hoàn tất phiếu bảo dưỡng.',
     emptyTitle: 'Chưa có phiếu bảo dưỡng đang mở',
   },
 ].map((view) => ({ ...view, search: view.type ? `?view=${view.key}` : '' }));
@@ -38,7 +38,6 @@ export function getGarageTaskView(search) {
 export const TASK_STATUSES = {
   pending: { label: 'Chờ thực hiện', tone: 'red' },
   in_progress: { label: 'Đang thực hiện', tone: 'purple' },
-  awaiting_approval: { label: 'Chờ Manager duyệt', tone: 'purple' },
   completed: { label: 'Đã hoàn thành', tone: 'teal' },
   failed: { label: 'Không đạt', tone: 'red' },
 };

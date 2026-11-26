@@ -48,7 +48,7 @@ Evidence chỉ là tối đa 10 URL HTTPS, không upload hay đọc nội dung U
 
 ## Tổng tiền và concurrency
 
-Chỉ confirmed/disputed được tính vào bookings.additional_charge; draft/cancelled không tính. Tranh chấp giữ số tiền tới khi quyết định. Uphold giữ tổng, waive trừ số tiền. Transaction đọc và ghi booking cùng session; các thao tác đồng thời trên cùng booking có write conflict và retry, không cộng/trừ hai lần khi confirm/cancel lặp. Lịch sử và tổng cập nhật cùng nhau. Cần replica set local 27018.
+Chỉ confirmed/disputed được tính vào bookings.additional_charge; draft/cancelled không tính. Tranh chấp giữ số tiền tới khi quyết định. Uphold giữ tổng, waive trừ số tiền. Transaction đọc và ghi booking cùng session; các thao tác đồng thời trên cùng booking có write conflict và retry, không cộng/trừ hai lần khi confirm/cancel lặp. Lịch sử và tổng cập nhật cùng nhau. Cần replica set local trên cổng MongoDB được cấu hình trong `BE/.env` (mặc định `27017`).
 
 Dữ liệu cũ có tổng phụ phí nhưng không có chi tiết: giữ nguyên tổng đó làm phần chưa đối soát, không bịa khoản chi tiết. Mỗi thao tác chỉ cộng/trừ phần đóng góp của khoản đang xử lý. Vì vậy tổng mảng có thể chưa bằng tổng booking đối với dữ liệu cũ. Migration npm run db:embedded-charges chỉ thêm mảng [] còn thiếu, không reset tổng/mảng đã có. npm run seed cũng gọi migration.
 

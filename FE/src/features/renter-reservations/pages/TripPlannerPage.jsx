@@ -8,9 +8,9 @@ import { errorMessage, services, toTripTime } from '../reservationFormat.js';
 
 const steps = ['Chọn dịch vụ', 'Lộ trình và thời gian', 'Chờ xem xét'];
 
-function tripPayload(trip, promotionCode) {
+function tripPayload(trip) {
   return {
-    ...trip, promotionCode, requestedSeats: Number(trip.requestedSeats), passengerCount: Number(trip.passengerCount),
+    ...trip, requestedSeats: Number(trip.requestedSeats), passengerCount: Number(trip.passengerCount),
     pickupTime: toTripTime(trip.pickupTime), endTime: toTripTime(trip.endTime), finalTime: toTripTime(trip.finalTime),
     stops: trip.stops.map(({ location, arrival, departure }) => ({ location, arrival: toTripTime(arrival), departure: toTripTime(departure) })),
   };
@@ -37,7 +37,7 @@ function Planner({ seatOptions, state }) {
 
   async function submitTrip(event) {
     event.preventDefault();
-    const fields = new FormData(event.currentTarget);
+      const fields = new FormData(event.currentTarget);
     const itinerary = {
       ...trip,
       pickupTime: fields.get('pickupTime'),
@@ -55,7 +55,7 @@ function Planner({ seatOptions, state }) {
     setError('');
     try {
       const booking = await createReservation({
-        ...tripPayload(itinerary, fields.get('promotionCode')),
+        ...tripPayload(itinerary),
         requestId: id,
       });
       setRequestedBooking(booking.bookingId);
@@ -102,7 +102,6 @@ function Planner({ seatOptions, state }) {
           </div>}
           {step === 1 && <form onSubmit={submitTrip}>
             <TripForm trip={trip} onChange={updateTrip} seatCount={trip.requestedSeats} onTimeError={setError}/>
-            <label>Mã giảm giá (nếu có)<input name="promotionCode" maxLength="40"/></label>
             <p>Operator sẽ xem xét lịch trình và gửi báo giá trong My Bookings. Bạn chưa cần thanh toán ở bước này.</p>
             <div className="rv-actions">
               <button className="rv-button" type="button" disabled={busy} onClick={() => setStep(0)}>Quay lại</button>

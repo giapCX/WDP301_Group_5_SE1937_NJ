@@ -27,12 +27,6 @@ export function inspectionPhotoUrl(id, index) {
 export async function updateGarageMaintenance(id, status, inspectionId) {
   return (await api.patch(`/garage/maintenance/${id}`, { status, inspection_id: inspectionId })).data.data;
 }
-export async function getManagerMaintenanceApprovals(signal) {
-  return (await api.get('/manager/maintenance-approvals', { signal })).data.data;
-}
-export async function decideManagerMaintenanceApproval(id, input) {
-  return (await api.patch(`/manager/maintenance-approvals/${id}`, input)).data.data;
-}
 export async function recordGarageRepair(id, input) {
   return (await api.patch(`/garage/maintenance/${id}/repair`, input)).data.data;
 }

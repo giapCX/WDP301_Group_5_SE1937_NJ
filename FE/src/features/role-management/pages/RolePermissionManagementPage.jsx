@@ -4,9 +4,7 @@ import SignOutButton from '../../auth/components/SignOutButton.js';
 import AccessControlIcon from '../components/AccessControlIcon';
 import AccessControlMetrics from '../components/AccessControlMetrics';
 import AccountsPanel from '../components/AccountsPanel';
-import AddRoleDialog from '../components/AddRoleDialog';
 import AdminSidebar from '../components/AdminSidebar';
-import AuditPanel from '../components/AuditPanel';
 import PermissionMatrix from '../components/PermissionMatrix';
 import useAccessControl from '../hooks/useAccessControl';
 import { ADMIN_NAVIGATION } from '../accessControlConfig';
@@ -18,7 +16,6 @@ export default function RolePermissionManagementPage() {
   const user = useOutletContext();
   const [activeNavigation, setActiveNavigation] = useState('dashboard');
   const [activeTab, setActiveTab] = useState('Ma trận phân quyền');
-  const [isRoleDialogOpen, setRoleDialogOpen] = useState(false);
   const accessControl = useAccessControl();
   const activeLabel = ADMIN_NAVIGATION.find((item) => item.workspace === activeNavigation)?.label || 'Tổng quan';
 
@@ -42,11 +39,11 @@ export default function RolePermissionManagementPage() {
             <div className="heading-copy">
               <div className="eyebrow"><span/> TRUNG TÂM QUẢN TRỊ</div>
               <h1>{activeLabel}</h1>
-              <p>Admin quản lý tài khoản và cấu hình quyền cho từng vai trò. Booking, thanh toán, điều phối và bảo dưỡng được xử lý trong phân hệ actor tương ứng.</p>
+          <p>Admin quản lý tài khoản nhân sự và quyền truy cập. Booking, thanh toán, điều phối và bảo dưỡng được xử lý trong phân hệ actor tương ứng.</p>
             </div>
             <div className="heading-actions">
               {activeNavigation === 'dashboard' && <button className="button button-outline" type="button" onClick={() => exportAccountsCsv(accessControl.accounts)}><AccessControlIcon name="download" size={16}/> Xuất tài khoản</button>}
-              {activeNavigation === 'permissions' && <><button className="button button-light" type="button" onClick={() => setRoleDialogOpen(true)}><AccessControlIcon name="plus" size={16}/> Thêm vai trò</button><button className="button button-primary" type="button" onClick={accessControl.saveMatrix}><AccessControlIcon name="check" size={16}/> Lưu thay đổi</button></>}
+              {activeNavigation === 'permissions' && <button className="button button-primary" type="button" onClick={accessControl.saveMatrix}><AccessControlIcon name="check" size={16}/> Lưu thay đổi</button>}
             </div>
           </section>
 
@@ -54,10 +51,7 @@ export default function RolePermissionManagementPage() {
           {accessControl.loading && <p role="status" className="resource-loading">Đang tải dữ liệu quản trị…</p>}
           {!accessControl.loading && activeNavigation === 'dashboard' && <>
             <AccessControlMetrics accounts={accessControl.accounts} roles={accessControl.roles} matrix={accessControl.matrix}/>
-            <section className="acl-bottom-grid">
-              <AccountsPanel accounts={accessControl.accounts} roles={accessControl.roles} onViewAll={() => setActiveNavigation('users')} onCreate={accessControl.createAccount} onToggleStatus={accessControl.toggleAccountStatus}/>
-              <AuditPanel events={accessControl.auditEvents} onViewAll={() => setActiveNavigation('audit')}/>
-            </section>
+            <AccountsPanel accounts={accessControl.accounts} roles={accessControl.roles} onViewAll={() => setActiveNavigation('users')} onCreate={accessControl.createAccount} onToggleStatus={accessControl.toggleAccountStatus}/>
           </>}
           {!accessControl.loading && activeNavigation === 'permissions' && <PermissionMatrix
             activeTab={activeTab}
@@ -67,12 +61,11 @@ export default function RolePermissionManagementPage() {
             onNotice={accessControl.setToast}
             roles={accessControl.roles}
           />}
-          {!accessControl.loading && ['users', 'audit'].includes(activeNavigation) && <ResourceWorkspace workspace={activeNavigation} onNotice={accessControl.setToast}/>}
+          {!accessControl.loading && activeNavigation === 'users' && <ResourceWorkspace workspace="users" onNotice={accessControl.setToast}/>}
           <footer className="acl-footer"><span>VietTour · Không gian quản trị</span><span><i/> Dữ liệu từ hệ thống <b>·</b> v1.0</span></footer>
         </div>
       </main>
 
-      {isRoleDialogOpen && <AddRoleDialog onClose={() => setRoleDialogOpen(false)} onSubmit={accessControl.addRole}/>}
       {accessControl.toast && <div className="acl-toast" role="status"><span><AccessControlIcon name="check" size={15}/></span>{accessControl.toast}<button type="button" aria-label="Đóng thông báo" onClick={() => accessControl.setToast('')}>×</button></div>}
     </div>
   );

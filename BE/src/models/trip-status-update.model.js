@@ -1,4 +1,5 @@
 const { createModel } = require('./model-factory');
+const { TRIP_UPDATE_TYPES } = require('../config/workflow.constants');
 
 module.exports = createModel(
   'TripStatusUpdate',
@@ -32,7 +33,7 @@ module.exports = createModel(
     trip_status: {
       type: String,
       required: true,
-      maxlength: 30,
+      enum: TRIP_UPDATE_TYPES,
     },
     updated_at: {
       type: Date,

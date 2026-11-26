@@ -1,4 +1,5 @@
 const { createModel } = require('./model-factory');
+const { ASSIGNMENT_STATUSES } = require('../config/workflow.constants');
 
 module.exports = createModel(
   'TripAssignment',
@@ -44,7 +45,7 @@ module.exports = createModel(
     assignment_status: {
       type: String,
       required: true,
-      maxlength: 30,
+      enum: ASSIGNMENT_STATUSES,
     },
   },
   [

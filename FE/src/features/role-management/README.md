@@ -12,4 +12,4 @@ Màn quản lý vai trò và quyền theo cấu trúc feature của `FE/src/feat
 
 Backend dùng session đăng nhập, kiểm tra vai trò và quyền ở các endpoint management. Danh sách tài khoản, vai trò, hồ sơ xe/tài xế, giá, chính sách, báo cáo và nhật ký được đọc từ MongoDB. Thao tác ghi cập nhật nguồn dữ liệu và tạo audit event.
 
-Admin phụ trách tài khoản, vai trò/quyền và nhật ký. Hồ sơ xe/tài xế, phê duyệt, bảng giá, chính sách, khuyến mãi và báo cáo thuộc workspace Manager; API từ chối truy cập chéo theo actor.
+Admin phụ trách tài khoản, vai trò/quyền và nhật ký. Manager quản lý bảng giá, chính sách và báo cáo.

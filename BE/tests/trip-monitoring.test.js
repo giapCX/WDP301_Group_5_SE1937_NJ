@@ -6,17 +6,15 @@ const models = require('../src/models');
 const data = require('../src/config/sample-data');
 const routes = require('../src/routes/trip-monitoring.routes');
 const errors = require('../middlewares/error.middleware');
+const { connectTestDatabase } = require('./helpers/test-database');
 
 test('Trip Monitoring reads assignments, latest updates and sorted itinerary with Operator guard', async () => {
   const dbName = `monitoring_test_${process.pid}_${Date.now()}`;
-  await mongoose.connect(
-    process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27018/?replicaSet=rentalLocal',
-    { dbName, autoIndex: false, serverSelectionTimeoutMS: 5000 },
-  );
+  await connectTestDatabase(mongoose, dbName, { autoIndex: false, serverSelectionTimeoutMS: 5000 });
   let server;
   try {
     for (const [name, rows] of Object.entries(data))
-      await mongoose.connection.db.collection(name).insertMany(rows);
+      if (rows.length) await mongoose.connection.db.collection(name).insertMany(rows);
     let user;
     const app = express();
     app.use((req, res, next) => {
@@ -59,11 +57,11 @@ test('Trip Monitoring reads assignments, latest updates and sorted itinerary wit
       update_id: 999,
       booking_id: 3,
       updated_by: 6,
-      trip_status: 'arrived',
+      trip_status: 'arrived_pickup',
       updated_at: new Date('2099-01-01T00:00:00Z'),
     });
-    assert.equal((await get('')).data.items[0].latest_update.trip_status, 'arrived');
-    assert.equal((await get('/3')).data.updates[0].trip_status, 'arrived');
+    assert.equal((await get('')).data.items[0].latest_update.trip_status, 'arrived_pickup');
+    assert.equal((await get('/3')).data.updates[0].trip_status, 'arrived_pickup');
     await models.TripAssignment.create({
       assignment_id: 999,
       booking_id: 3,

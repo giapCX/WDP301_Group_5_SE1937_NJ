@@ -206,7 +206,7 @@ export default function DriverWorkflowPanel() {
                         </button>
                       )}
                       <button
-                        disabled={waiting}
+                        disabled={waiting || !w.can_confirm_pickup}
                         onClick={() => update(item, "picked_up")}
                       >
                         Đã đón khách
@@ -233,7 +233,7 @@ export default function DriverWorkflowPanel() {
                   {w.stage === "return_waiting" && (
                     <>
                       <button
-                        disabled={waiting}
+                        disabled={waiting || !w.can_confirm_return_pickup}
                         onClick={() => update(item, "return_pickup")}
                       >
                         Đã đón khách lượt về
@@ -307,6 +307,18 @@ export default function DriverWorkflowPanel() {
                     />
                   )}
                 </div>
+                {["to_pickup", "at_pickup"].includes(w.stage) &&
+                  !w.can_confirm_pickup && (
+                    <small className="workflow-muted" role="status">
+                      {w.pickup_confirmation_message}
+                    </small>
+                  )}
+                {w.stage === "return_waiting" &&
+                  !w.can_confirm_return_pickup && (
+                    <small className="workflow-muted" role="status">
+                      {w.pickup_confirmation_message}
+                    </small>
+                  )}
                 {(w.stage === "awaiting_vehicle" ||
                   item.handover?.status === "accepted") && (
                   <DriverVehicleHandover

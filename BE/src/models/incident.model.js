@@ -1,4 +1,5 @@
 const { createModel } = require('./model-factory');
+const { INCIDENT_STATUSES } = require('../config/workflow.constants');
 
 module.exports = createModel(
   'Incident',
@@ -42,7 +43,7 @@ module.exports = createModel(
     incident_status: {
       type: String,
       required: true,
-      maxlength: 30,
+      enum: INCIDENT_STATUSES,
     },
     resolution_note: {
       type: String,

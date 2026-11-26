@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { createModel } = require('./model-factory');
+const { CHANGE_REQUEST_STATUSES } = require('../config/workflow.constants');
 
 const stopSchema = new mongoose.Schema(
   {
@@ -19,7 +20,7 @@ const itinerarySchema = new mongoose.Schema(
     pickup_time: { type: Date, required: true },
     estimated_end_time: { type: Date, required: true },
     destination: String, return_pickup_location: String, return_pickup_time: Date,
-    estimated_price: { type: Number, required: true, min: 0 },
+    estimated_price: { type: Number, required: true, min: 0, validate: Number.isSafeInteger },
     trip_stops: { type: [stopSchema], required: true, default: undefined },
   },
   { _id: false },
@@ -52,11 +53,11 @@ module.exports = createModel(
     reason: { type: String, required: true, trim: true, maxlength: 2000 },
     before: { type: itinerarySchema, required: true },
     after: { type: itinerarySchema, required: true },
-    price_difference: { type: Number, required: true },
+    price_difference: { type: Number, required: true, validate: Number.isSafeInteger },
     request_status: {
       type: String,
       required: true,
-      enum: ['pending', 'approved', 'rejected', 'cancelled'],
+      enum: CHANGE_REQUEST_STATUSES,
       default: 'pending',
     },
     price_offer: { id: String, sent_by: Number, sent_at: Date, reason: String, accepted_at: Date },

@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
+const { supportsVehicleSeatCount } = require('../config/vehicle.constants');
 const { DriverProfile, User, TripAssignment, Booking, MaintenanceRecord, VehicleInspection, Vehicle } = require('../models');
 async function vehicleReady(vehicleId, end, session = null) {
   const vehicle = await Vehicle.findOne({ vehicle_id: vehicleId }).session(session).lean();
-  if (!vehicle || ['pending', 'rejected'].includes(vehicle.approval_status)) return false;
+  if (!vehicle || !supportsVehicleSeatCount(vehicle.seat_count) || ['pending', 'rejected'].includes(vehicle.approval_status)) return false;
   if (await MaintenanceRecord.exists({ vehicle_id: vehicleId, maintenance_status: { $nin: ['completed', 'closed', 'cancelled'] } }).session(session)) return false;
   const latest = await VehicleInspection.findOne({ vehicle_id: vehicleId, result: { $in: ['pass', 'passed', 'fail', 'failed'] } }).sort({ inspected_at: -1, inspection_id: -1 }).session(session).lean();
   return !['fail', 'failed'].includes(latest?.result);

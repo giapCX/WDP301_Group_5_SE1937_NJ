@@ -7,17 +7,15 @@ const data = require('../src/config/sample-data');
 const { router: auth, attachUser } = require('../src/routes/auth.routes');
 const routes = require('../src/routes/driver-dashboard.routes');
 const errors = require('../middlewares/error.middleware');
+const { connectTestDatabase } = require('./helpers/test-database');
 
 test('Driver dashboard uses real assignments and isolates each authenticated driver', async () => {
   const dbName = `driver_dashboard_test_${process.pid}_${Date.now()}`;
-  await mongoose.connect(
-    process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27018/?replicaSet=rentalLocal',
-    { dbName, autoIndex: false, serverSelectionTimeoutMS: 10000 },
-  );
+  await connectTestDatabase(mongoose, dbName, { autoIndex: false, serverSelectionTimeoutMS: 10000 });
   let server;
   try {
     for (const [name, rows] of Object.entries(data))
-      await mongoose.connection.db.collection(name).insertMany(rows);
+      if (rows.length) await mongoose.connection.db.collection(name).insertMany(rows);
     const app = express();
     app.use(express.json());
     app.use('/api/auth', auth);
