@@ -44,7 +44,7 @@ export const TASK_STATUSES = {
 };
 
 export const CHECKLIST_ITEMS = [
-  ['exterior', 'Ngoại thất'], ['interior', 'Nội thất'], ['tires', 'Lốp xe'], ['lights', 'Đèn'],
+  ['exterior', 'Ngoại thất'], ['interior', 'Nội thất'], ['tires', 'Tình trạng lốp xe'], ['lights', 'Đèn'],
   ['brakes', 'Phanh'], ['fuel', 'Nhiên liệu'], ['documents', 'Giấy tờ'], ['safety', 'Thiết bị an toàn'],
 ];
 export const CHECKLIST_LABELS = Object.fromEntries(CHECKLIST_ITEMS);

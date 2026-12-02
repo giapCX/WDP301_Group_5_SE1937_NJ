@@ -59,10 +59,10 @@ export default function GarageInspectionForm({ onSave, minOdometer = 0, returnin
       <fieldset className="garage-check-fields" disabled={saving}>
         <legend>Số km và hiện trạng</legend>
         <div className="garage-check-grid garage-check-measurements">
-          <label>Số km đồng hồ (km)<input name="odometer" type="number" min={minOdometer} step="any" required /></label>
-          <label>Nhiên liệu (%)<input name="fuel_percent" type="number" min="0" max="100" required /></label>
+          <label>Số km đồng hồ (km)<input name="odometer" type="number" min={minOdometer} step="any"  /></label>
+          <label>Nhiên liệu (%)<input name="fuel_percent" type="number" min="0" max="100"  /></label>
         </div>
-        <label>Ghi chú tình trạng xe<textarea name="condition_note" rows={3} maxLength={1000} required /></label>
+        <label>Ghi chú tình trạng xe<textarea name="condition_note" rows={3} maxLength={1000}  /></label>
         <GaragePhotoInput label="Ảnh hiện trạng" onError={setError} />
       </fieldset>
       {error && <p className="dispatch-alert" role="alert">{error}</p>}

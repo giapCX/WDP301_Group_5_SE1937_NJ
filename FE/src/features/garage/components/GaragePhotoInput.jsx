@@ -34,7 +34,7 @@ export default function GaragePhotoInput({ label, onError }) {
     <>
       <label>
         {label}
-        <input name="photos" type="file" multiple required accept={IMAGE_TYPES.join(',')}
+        <input name="photos" type="file" multiple onInvalid={"Vui lòng nhập"} accept={IMAGE_TYPES.join(',')}
           onChange={checkPhotos} aria-describedby={hintId}
         />
       </label>
