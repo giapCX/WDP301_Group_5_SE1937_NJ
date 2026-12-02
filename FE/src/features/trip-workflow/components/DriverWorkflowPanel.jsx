@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Icon from '../../bookings/components/BookingIcon';
 import { bookingCode, dateTime } from '../../bookings/bookingConstants';
 import { driverTripAction, getDriverWorkflow, reportTripIncident, workflowError } from '../api/tripWorkflowApi';
+import DriverIncidentActions from './DriverIncidentActions';
 import DriverVehicleHandover from './DriverVehicleHandover';
 
 const labels = { awaiting_driver: 'Chờ bạn phản hồi phân công', awaiting_vehicle: 'Chờ Gara kiểm tra và bàn giao xe', to_pickup: 'Đang tới điểm đón', at_pickup: 'Đã đến điểm đón', outbound: 'Đang phục vụ lượt đi', tour: 'Đang đồng hành tham quan', return_waiting: 'Chờ giờ đón khách lượt về', return: 'Đang đưa khách về', awaiting_report: 'Xác nhận trả khách và gửi báo cáo', awaiting_vehicle_return: 'Chờ Gara tiếp nhận xe', completed: 'Hoàn tất chuyến', reassignment_required: 'Đã từ chối, chờ Operator phân công lại', vehicle_replacement_required: 'Báo xe hỏng, chờ Operator đổi xe', incident_open: 'Đã báo sự cố, chờ hỗ trợ', vehicle_return_issue: 'Gara ghi nhận xe cần xử lý', return_reassignment_required: 'Chờ Operator bố trí tài xế lượt về', routed_to_booking_changes: 'Đã chuyển Operator xử lý đổi lịch trình' };
@@ -18,7 +19,16 @@ export default function DriverWorkflowPanel() {
   async function update(item, kind, extra = {}) { await perform(item.workflow.booking_id, 'update', { kind, ...extra }); }
   async function delay(item) { const reason = window.prompt('Lý do chậm:'); if (!reason?.trim()) return; const minutes = window.prompt('Chậm bao nhiêu phút?'); if (minutes) await update(item, 'delayed', { reason, minutes: Number(minutes) }); }
   async function report(item) { const km = window.prompt('Số km cuối:'); if (km === null) return; const summary = window.prompt('Báo cáo sau chuyến (tình trạng khách/xe, phát sinh):'); if (summary?.trim()) await perform(item.workflow.booking_id, 'report', { end_odometer: Number(km), summary }); }
-  async function incident(item, kind) { const promptText = kind === 'vehicle_failure' ? 'Mô tả hỏng xe và vị trí hiện tại:' : kind === 'customer_route_change' ? 'Khách muốn đổi điểm dừng nào? Ghi rõ điểm hiện tại và điểm khách muốn đổi sang:' : 'Mô tả sự cố và hỗ trợ cần thiết:'; const description = window.prompt(promptText); if (description?.trim()) { setBusy(`incident-${item.workflow.booking_id}`); setError(''); try { await reportTripIncident(item.workflow.booking_id, { kind, description: description.trim() }); await load(); } catch (failure) { setError(workflowError(failure)); } finally { setBusy(''); } } }
+  async function submitIncident(bookingId, details) {
+    setBusy(`incident-${bookingId}`);
+    setError('');
+    try {
+      await reportTripIncident(bookingId, details);
+      await load();
+    } finally {
+      setBusy('');
+    }
+  }
   return <section className="workflow-driver-section" id="driver-workflow"><div className="workflow-section-heading"><div><span className="section-eyebrow">THỰC HIỆN CHUYẾN</span><h2>Phân công và cập nhật hành trình</h2></div><button className="dispatch-button subtle" onClick={load}><Icon name="refresh" size={14} /> Làm mới</button></div>
     {error && <div className="dispatch-alert" role="alert">{error}</div>}
     {items.length === 0 ? <p className="workflow-muted">Chưa có phân công cần thao tác.</p> : <div className="workflow-driver-list">{items.map((item) => { const w = item.workflow; const b = item.booking; const id = w.booking_id; const waiting = busy.startsWith(`${id}-`) || busy === `incident-${id}`; return <article className="workflow-driver-card" key={id}>
@@ -40,11 +50,7 @@ export default function DriverWorkflowPanel() {
           </button>
         )}
         {!['completed', 'reassignment_required', 'routed_to_booking_changes', 'vehicle_replacement_required'].includes(w.stage) && (
-          <>
-            <button className="workflow-secondary" disabled={waiting} onClick={() => incident(item, 'other')}>Báo sự cố / yêu cầu hỗ trợ</button>
-            <button className="workflow-secondary" disabled={waiting} onClick={() => incident(item, 'customer_route_change')}>Khách đổi điểm dừng</button>
-            <button className="workflow-danger" disabled={waiting} onClick={() => incident(item, 'vehicle_failure')}>Báo xe hỏng</button>
-          </>
+          <DriverIncidentActions busy={waiting} onReport={(details) => submitIncident(id, details)} />
         )}
       </div>
       {(w.stage === 'awaiting_vehicle' || item.handover?.status === 'accepted') && (
